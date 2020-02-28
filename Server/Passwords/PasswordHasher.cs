@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.Extensions.Options;
 
@@ -16,6 +17,7 @@ namespace Frederikskaj2.Reservations.Server.Passwords
         private const int FormatMarker = 0x01;
         private readonly PasswordOptions options;
         private readonly IRandomNumberGenerator randomNumberGenerator;
+        private readonly string randomPasswordHash;
 
         public PasswordHasher(IRandomNumberGenerator randomNumberGenerator, IOptions<PasswordOptions> options)
         {
@@ -29,6 +31,8 @@ namespace Frederikskaj2.Reservations.Server.Passwords
 
             if (this.options.PasswordIterationCount < 1)
                 throw new ConfigurationException("Invalid password hash iteration count.");
+
+            randomPasswordHash = CreateRandomPasswordHash();
         }
 
         public string HashPassword(string password)
@@ -65,6 +69,9 @@ namespace Frederikskaj2.Reservations.Server.Passwords
                     return PasswordVerificationResult.Failed; // Unknown format marker.
             }
         }
+
+        public void DelayAsIfAPasswordIsBeingChecked(string providedPassword)
+            => VerifyHashedPassword(randomPasswordHash, providedPassword);
 
         private byte[] HashPasswordV3(string password) =>
             HashPasswordV3(
@@ -142,5 +149,19 @@ namespace Frederikskaj2.Reservations.Server.Passwords
             | (uint) buffer[offset + 1] << 16
             | (uint) buffer[offset + 2] << 8
             | buffer[offset + 3];
+
+        private string CreateRandomPasswordHash()
+        {
+            var randomBytes = randomNumberGenerator.CreateRandomBytes(8);
+            var randomValue = BitConverter.ToUInt64(randomBytes, 0);
+            var randomPassword = new StringBuilder();
+            while (randomValue > 0)
+            {
+                randomPassword.Append((char) (randomValue%26 + 'a'));
+                randomValue /= 26;
+            }
+
+            return HashPassword(randomPassword.ToString());
+        }
     }
 }

@@ -1,0 +1,58 @@
+﻿@page "/user/sign-in"
+@using System.Net
+@using System.Text
+@using System.Text.Json
+@inject HttpClient HttpClient
+
+<div class="main">
+    @if (badEmailOrPassword)
+    {
+        <div class="alert alert-danger fade show" role="alert">
+            Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få et nyt password.</a>
+            <button type="button" class="close" aria-label="Luk" @onclick="RemoveAlert">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    <EditForm Model="request" OnValidSubmit="Submit">
+        <div class="form-row">
+            <div class="form-group col-sm-2">
+                <label>Mail:</label>
+                <InputText class="form-control" type="email" @bind-Value="request.Email" />
+                <small class="form-text text-muted"><ValidationMessage For="@(() => request.Email)" /></small>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-2">
+                <label>Adgangskode:</label>
+                <InputText class="form-control" type="password" @bind-Value="request.Password" />
+                <small class="form-text text-muted"><ValidationMessage For="@(() => request.Password)" /></small>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Log ind
+        </button>
+        <DataAnnotationsValidator />
+    </EditForm>
+</div>
+
+@code {
+
+    private readonly SignInRequest request = new SignInRequest();
+    private bool badEmailOrPassword;
+
+    private async Task Submit()
+    {
+        badEmailOrPassword = false;
+        using var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        var response = await HttpClient.PostAsync("user/sign-in", content);
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            badEmailOrPassword = true;
+    }
+
+    private void RemoveAlert()
+    {
+        badEmailOrPassword = false;
+    }
+
+}

@@ -16,7 +16,7 @@ namespace Frederikskaj2.Reservations.Server.Passwords
 
             return services
                 .AddSingleton<IRandomNumberGenerator, CryptographicRandomNumberGenerator>()
-                .AddScoped<IPasswordHasher, PasswordHasher>()
+                .AddSingleton<IPasswordHasher, PasswordHasher>()
                 .Configure<PasswordOptions>(configuration.GetSection("Password"));
         }
     }

@@ -4,5 +4,6 @@
     {
         string HashPassword(string password);
         PasswordVerificationResult VerifyHashedPassword(string hashedPassword, string providedPassword);
+        void DelayAsIfAPasswordIsBeingChecked(string providedPassword);
     }
 }
