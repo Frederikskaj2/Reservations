@@ -1,0 +1,17 @@
+﻿<div class="user-info">
+    <AuthorizeView>
+        <Authorizing>
+            <text>Vent...</text>
+        </Authorizing>
+        <Authorized>
+            <img src="img/user.svg" />
+            <div>
+                <span class="username">@context.User.Identity.Name</span>
+                <a class="sign-out" href="user/sign-out">Sign out</a>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <a class="sign-in" href="user/sign-in">Log ind</a>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>

@@ -1,0 +1,20 @@
+﻿@inherits LayoutComponentBase
+
+<div class="top-bar">
+    <div class="logo">Frederikskaj&nbsp;2</div>
+    <NavLink href="" class="nav-tab" Match="NavLinkMatch.All">
+        <div>Fælleshus</div>
+    </NavLink>
+    <NavLink href="calendar" class="nav-tab">
+        <div>Kalender</div>
+    </NavLink>
+    <NavLink href="my-reservations" class="nav-tab">
+        <div>Mine reservationer</div>
+    </NavLink>
+
+    <User />
+</div>
+
+<div class="content">
+    @Body
+</div>
