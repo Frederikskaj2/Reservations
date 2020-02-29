@@ -24,6 +24,8 @@ namespace Frederikskaj2.Reservations.Client
             // See https://github.com/dotnet/aspnetcore/issues/18733#issuecomment-585817720
             services.AddAuthorizationCore(options => { });
             services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+
+            services.AddScoped<ApplicationState>();
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿<CascadingAuthenticationState>
+﻿@inject ApplicationState ApplicationState
+@inject NavigationManager NavigationManager
+
+<CascadingAuthenticationState>
     <Router AppAssembly="typeof(Program).Assembly" Context="routeData">
         <Found>
             <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
@@ -6,7 +9,9 @@
                     <div class="main">
                         <h1>Du er ikke logget ind</h1>
                         <p>Log ind for at fortsætte.</p>
-                        <a class="btn btn-danger" href="user/sign-in">Log ind</a>
+                        <p><button class="btn btn-primary" type="button" @onclick="SignIn">Log ind</button></p>
+                        <p>Hvis du ikke har en bruger kan du oprette dig.</p>
+                        <p><button class="btn btn-secondary" type="button" @onclick="SignUp">Opret bruger</button></p>
                     </div>
                 </NotAuthorized>
                 <Authorizing>
@@ -23,3 +28,19 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+
+    private void SignIn()
+    {
+        ApplicationState.RedirectUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.NavigateTo("sign-in");
+    }
+
+    private void SignUp()
+    {
+        ApplicationState.RedirectUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.NavigateTo("sign-up");
+    }
+
+}

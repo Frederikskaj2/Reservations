@@ -1,27 +1,21 @@
-﻿@page "/sign-in"
-@using System.Net
-@using System.Text
-@using System.Text.Json
+﻿@page "/sign-up"
 @inject ApplicationState ApplicationState
 @inject HttpClient HttpClient
 
 <div class="main">
-    <p>Har du ikke allerede en bruger, så kan du <a href="sign-up">oprette dig som bruger</a>.</p>
-    @if (badEmailOrPassword)
-    {
-        <div class="alert alert-danger fade show" role="alert">
-            Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få et nyt password.</a>
-            <button type="button" class="close" aria-label="Luk" @onclick="RemoveAlert">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    }
     <EditForm Model="request" OnValidSubmit="Submit">
         <div class="form-row">
             <div class="form-group col-sm-2">
                 <label>Mail:</label>
                 <InputText class="form-control" type="email" @bind-Value="request.Email" />
                 <small class="form-text text-muted"><ValidationMessage For="@(() => request.Email)" /></small>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-2">
+                <label>Fulde navn:</label>
+                <InputText class="form-control" @bind-Value="request.FullName" />
+                <small class="form-text text-muted"><ValidationMessage For="@(() => request.FullName)" /></small>
             </div>
         </div>
         <div class="form-row">
@@ -33,12 +27,19 @@
         </div>
         <div class="form-row">
             <div class="form-group col-sm-2">
+                <label>Gentag adgangskode:</label>
+                <InputText class="form-control" type="password" @bind-Value="request.RepeatedPassword" />
+                <small class="form-text text-muted"><ValidationMessage For="@(() => request.RepeatedPassword)" /></small>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-2">
                 <InputCheckbox @bind-Value="request.IsPersistent" />
                 <label class="form-check-label">Husk mig</label>
             </div>
         </div>
         <button type="submit" class="btn btn-primary">
-            Log ind
+            Opret bruger
         </button>
         <DataAnnotationsValidator />
     </EditForm>
@@ -46,22 +47,12 @@
 
 @code {
 
-    private readonly SignInRequest request = new SignInRequest();
-    private bool badEmailOrPassword;
+    private readonly SignUpRequest request = new SignUpRequest();
 
     private async Task Submit()
     {
         request.RedirectUri = ApplicationState.RedirectUrl;
-        badEmailOrPassword = false;
-        using var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync("user/sign-in", content);
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-            badEmailOrPassword = true;
-    }
-
-    private void RemoveAlert()
-    {
-        badEmailOrPassword = false;
+        await HttpClient.PostJsonAsync("user/sign-up", request);
     }
 
 }

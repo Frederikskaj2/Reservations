@@ -2,7 +2,7 @@
 
 namespace Frederikskaj2.Reservations.Shared
 {
-    public class CreateUserRequest
+    public class SignUpRequest
     {
         [Required(ErrorMessage = "Angiv din email")]
         [EmailAddress(ErrorMessage = "Angiv en korrekt email")]
@@ -17,5 +17,12 @@ namespace Frederikskaj2.Reservations.Shared
         [Required(ErrorMessage = "Du skal vælge en adgangskode")]
         [StringLength(100, ErrorMessage = "Teksten er for lang")]
         public string Password { get; set; } = string.Empty;
+
+        [Compare(nameof(Password), ErrorMessage = "Adgangskoden er ikke den samme")]
+        public string? ConfirmPassword { get; set; }
+
+        public bool IsPersistent { get; set; }
+
+        public string? RedirectUri { get; set; }
     }
 }

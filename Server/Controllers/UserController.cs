@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Server.State;
 using Frederikskaj2.Reservations.Shared;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,8 +31,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             ? new UserInfo { Name = User.Identity.Name, IsAuthenticated = true }
             : UnknownUser;
 
-        [HttpPost("create")]
-        public async Task<IActionResult> Create(CreateUserRequest request)
+        [HttpPost("sign-up")]
+        public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
         {
             var user = new User
             {
@@ -36,12 +40,16 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 FullName = request.FullName,
                 HashedPassword = passwordHasher.HashPassword(request.Password)
             };
-            return Ok();
+            await db.Users.AddAsync(user);
+            await db.SaveChangesAsync();
+
+            await SignIn(user, request.IsPersistent);
+
+            return Redirect(request.RedirectUri);
         }
 
-
         [HttpPost("sign-in")]
-        public async Task<IActionResult> SignIn(SignInRequest request)
+        public async Task<IActionResult> SignIn([FromBody] SignInRequest request)
         {
             var email = request.Email!.ToLowerInvariant();
 
@@ -64,8 +72,43 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 await db.SaveChangesAsync();
             }
 
-            return Ok();
+            await SignIn(user, request.IsPersistent);
+
+            return Redirect(request.RedirectUri);
         }
 
+
+        [HttpGet("sign-out")]
+        public async Task<IActionResult> SignOut()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Redirect(string.Empty);
+        }
+
+        public override RedirectResult Redirect(string? redirectUri)
+        {
+            var relativeRedirectUri = !string.IsNullOrEmpty(redirectUri) && Url.IsLocalUrl(redirectUri)
+                ? redirectUri
+                : string.Empty;
+            return base.Redirect($"~/{relativeRedirectUri}");
+        }
+
+        private async Task SignIn(User user, bool isPersistent)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim("FullName", user.FullName)
+            };
+            if (user.IsAdministrator)
+                claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authenticationProperties = new AuthenticationProperties { IsPersistent = isPersistent };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authenticationProperties);
+        }
     }
 }

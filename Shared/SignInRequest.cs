@@ -12,5 +12,9 @@ namespace Frederikskaj2.Reservations.Shared
         [Required(ErrorMessage = "Angiv din adgangskode")]
         [StringLength(100, ErrorMessage = "Teksten er for lang")]
         public string? Password { get; set; }
+
+        public bool IsPersistent { get; set; }
+
+        public string? RedirectUri { get; set; }
     }
 }
