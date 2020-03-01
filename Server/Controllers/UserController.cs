@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Server.State;
@@ -8,7 +9,9 @@ using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using SignInResult = Frederikskaj2.Reservations.Shared.SignInResult;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
@@ -27,12 +30,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpGet("")]
-        public UserInfo GetUser() => User.Identity.IsAuthenticated
-            ? new UserInfo { Name = User.Identity.Name, IsAuthenticated = true }
-            : UnknownUser;
+        public UserInfo GetUser() => GetUser(User.Identity);
 
         [HttpPost("sign-up")]
-        public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
+        public async Task<SignUpResponse> SignUp([FromBody] SignUpRequest request)
         {
             var user = new User
             {
@@ -41,15 +42,24 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 HashedPassword = passwordHasher.HashPassword(request.Password)
             };
             await db.Users.AddAsync(user);
-            await db.SaveChangesAsync();
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException exception)
+            {
+                if (exception.InnerException is SqliteException sqliteException && sqliteException.SqliteErrorCode == 19)
+                    return new SignUpResponse { Result = SignUpResult.DuplicateEmail };
+                return new SignUpResponse { Result = SignUpResult.GeneralError };
+            }
 
-            await SignIn(user, request.IsPersistent);
+            var identity = await SignIn(user, request.IsPersistent);
 
-            return Redirect(request.RedirectUri);
+            return new SignUpResponse { User = GetUser(identity) };
         }
 
         [HttpPost("sign-in")]
-        public async Task<IActionResult> SignIn([FromBody] SignInRequest request)
+        public async Task<SignInResponse> SignIn([FromBody] SignInRequest request)
         {
             var email = request.Email!.ToLowerInvariant();
 
@@ -58,13 +68,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (user == null)
             {
                 passwordHasher.DelayAsIfAPasswordIsBeingChecked(request.Password!);
-                return BadRequest();
+                return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
             }
 
             var verificationResult = passwordHasher.VerifyHashedPassword(user.HashedPassword, request.Password!);
 
             if (verificationResult == PasswordVerificationResult.Failed)
-                return BadRequest();
+                return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
 
             if (verificationResult == PasswordVerificationResult.SuccessRehashNeeded)
             {
@@ -72,33 +82,32 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 await db.SaveChangesAsync();
             }
 
-            await SignIn(user, request.IsPersistent);
+            var identity = await SignIn(user, request.IsPersistent);
 
-            return Redirect(request.RedirectUri);
+            return new SignInResponse { User = GetUser(identity) };
         }
 
-
-        [HttpGet("sign-out")]
+        [HttpPost("sign-out")]
         public async Task<IActionResult> SignOut()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return Redirect(string.Empty);
+            return Ok();
         }
 
-        public override RedirectResult Redirect(string? redirectUri)
-        {
-            var relativeRedirectUri = !string.IsNullOrEmpty(redirectUri) && Url.IsLocalUrl(redirectUri)
-                ? redirectUri
-                : string.Empty;
-            return base.Redirect($"~/{relativeRedirectUri}");
-        }
+        private UserInfo GetUser(IIdentity identity) => identity.IsAuthenticated
+            ? new UserInfo
+            {
+                Name = identity.Name, IsAuthenticated = true,
+                IsAdministrator = User.HasClaim(ClaimTypes.Role, "Administrator")
+            }
+            : UnknownUser;
 
-        private async Task SignIn(User user, bool isPersistent)
+        private async Task<ClaimsIdentity> SignIn(User user, bool isPersistent)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Email),
-                new Claim("FullName", user.FullName)
+                new Claim("FullName", user.FullName),
             };
             if (user.IsAdministrator)
                 claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
@@ -109,6 +118,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authenticationProperties);
+
+            return claimsIdentity;
         }
     }
 }

@@ -1,4 +1,8 @@
-﻿<div class="user-info">
+﻿@inject HttpClient HttpClient
+@inject IAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<div class="user-info">
     <AuthorizeView>
         <Authorizing>
             <text>Vent...</text>
@@ -7,7 +11,7 @@
             <img src="img/user.svg" />
             <div>
                 <span class="username">@context.User.Identity.Name</span>
-                <a class="sign-out" href="user/sign-out">Sign out</a>
+                <a class="sign-out" @onclick="SignOut" href="#">Log ud</a>
             </div>
         </Authorized>
         <NotAuthorized>
@@ -15,3 +19,14 @@
         </NotAuthorized>
     </AuthorizeView>
 </div>
+
+@code {
+
+    private async Task SignOut()
+    {
+        await HttpClient.PostAsync("user/sign-out", null);
+        AuthenticationStateProvider.UpdateUser(new UserInfo());
+        NavigationManager.NavigateTo("/");
+    }
+
+}

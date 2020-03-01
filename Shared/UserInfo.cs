@@ -4,5 +4,6 @@
     {
         public string? Name { get; set; }
         public bool IsAuthenticated { get; set; }
+        public bool IsAdministrator { get; set; }
     }
 }

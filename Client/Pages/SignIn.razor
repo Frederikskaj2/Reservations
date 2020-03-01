@@ -1,17 +1,25 @@
 ﻿@page "/sign-in"
-@using System.Net
-@using System.Text
-@using System.Text.Json
 @inject ApplicationState ApplicationState
 @inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject ServerAuthenticationStateProvider AuthenticationStateProvider
 
 <div class="main">
-    <p>Har du ikke allerede en bruger, så kan du <a href="sign-up">oprette dig som bruger</a>.</p>
-    @if (badEmailOrPassword)
+    <p><a href="sign-up">Opret en ny bruger</a> hvis du ikke allerede har en bruger.</p>
+    @if (signInResult == SignInResult.InvalidEmailOrPassword)
     {
         <div class="alert alert-danger fade show" role="alert">
-            Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få et nyt password.</a>
-            <button type="button" class="close" aria-label="Luk" @onclick="RemoveAlert">
+            Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
+            <button type="button" class="close" aria-label="Luk" @onclick="ClearErrorMessage">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    else if (signInResult == SignInResult.GeneralError)
+    {
+        <div class="alert alert-danger fade show" role="alert">
+            Du blev ikke logget ind. Der skete en fejl.
+            <button type="button" class="close" aria-label="Luk" @onclick="ClearErrorMessage">
                 <span aria-hidden="true">&times;</span>
             </button>
         </div>
@@ -47,21 +55,34 @@
 @code {
 
     private readonly SignInRequest request = new SignInRequest();
-    private bool badEmailOrPassword;
+    private SignInResult signInResult;
 
     private async Task Submit()
     {
-        request.RedirectUri = ApplicationState.RedirectUrl;
-        badEmailOrPassword = false;
-        using var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync("user/sign-in", content);
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-            badEmailOrPassword = true;
+        ClearErrorMessage();
+        var response = await HttpClient.PostJsonAsync<SignInResponse>("user/sign-in", request);
+        if (response.Result == SignInResult.Success)
+        {
+            AuthenticationStateProvider.UpdateUser(response.User!);
+            if (ApplicationState.RedirectUrl != null)
+            {
+                var redirectUrl = ApplicationState.RedirectUrl;
+                ApplicationState.RedirectUrl = null;
+                NavigationManager.NavigateTo(redirectUrl);
+            }
+        }
+        else
+            SetErrorMessage(response.Result);
     }
 
-    private void RemoveAlert()
+    private void ClearErrorMessage()
     {
-        badEmailOrPassword = false;
+        signInResult = default;
+    }
+
+    private void SetErrorMessage(SignInResult result)
+    {
+        signInResult = result;
     }
 
 }

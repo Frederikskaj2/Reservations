@@ -15,14 +15,11 @@ namespace Frederikskaj2.Reservations.Shared
         public string FullName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Du skal vælge en adgangskode")]
-        [StringLength(100, ErrorMessage = "Teksten er for lang")]
         public string Password { get; set; } = string.Empty;
 
         [Compare(nameof(Password), ErrorMessage = "Adgangskoden er ikke den samme")]
         public string? ConfirmPassword { get; set; }
 
         public bool IsPersistent { get; set; }
-
-        public string? RedirectUri { get; set; }
     }
 }

@@ -1,8 +1,28 @@
 ﻿@page "/sign-up"
 @inject ApplicationState ApplicationState
 @inject HttpClient HttpClient
+@inject IAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 <div class="main">
+    @if (signUpResult == SignUpResult.DuplicateEmail)
+    {
+        <div class="alert alert-danger fade show" role="alert">
+            Der findes allerede en bruger med mail @request.Email. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
+            <button type="button" class="close" aria-label="Luk" @onclick="ClearErrorMessage">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    else if (signUpResult == SignUpResult.GeneralError)
+    {
+        <div class="alert alert-danger fade show" role="alert">
+            Din bruger blev ikke oprettet. Der skete en fejl.
+            <button type="button" class="close" aria-label="Luk" @onclick="ClearErrorMessage">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
     <EditForm Model="request" OnValidSubmit="Submit">
         <div class="form-row">
             <div class="form-group col-sm-2">
@@ -28,8 +48,8 @@
         <div class="form-row">
             <div class="form-group col-sm-2">
                 <label>Gentag adgangskode:</label>
-                <InputText class="form-control" type="password" @bind-Value="request.RepeatedPassword" />
-                <small class="form-text text-muted"><ValidationMessage For="@(() => request.RepeatedPassword)" /></small>
+                <InputText class="form-control" type="password" @bind-Value="request.ConfirmPassword" />
+                <small class="form-text text-muted"><ValidationMessage For="@(() => request.ConfirmPassword)" /></small>
             </div>
         </div>
         <div class="form-row">
@@ -48,11 +68,33 @@
 @code {
 
     private readonly SignUpRequest request = new SignUpRequest();
+    private SignUpResult signUpResult;
 
     private async Task Submit()
     {
-        request.RedirectUri = ApplicationState.RedirectUrl;
-        await HttpClient.PostJsonAsync("user/sign-up", request);
+        ClearErrorMessage();
+        var response = await HttpClient.PostJsonAsync<SignUpResponse>("user/sign-up", request);
+        if (response.Result == SignUpResult.Success)
+        {
+            AuthenticationStateProvider.UpdateUser(response.User!);
+            if (ApplicationState.RedirectUrl != null)
+            {
+                var redirectUrl = ApplicationState.RedirectUrl;
+                ApplicationState.RedirectUrl = null;
+                NavigationManager.NavigateTo(redirectUrl);
+            }
+        }
+        else
+            SetErrorMessage(response.Result);
     }
 
+    private void ClearErrorMessage()
+    {
+        signUpResult = default;
+    }
+
+    private void SetErrorMessage(SignUpResult result)
+    {
+        signUpResult = result;
+    }
 }
