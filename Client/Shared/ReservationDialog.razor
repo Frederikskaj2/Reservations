@@ -1,0 +1,94 @@
+﻿@inject CultureInfo CultureInfo
+@inject ReservationsOptions ReservationsOptions
+
+<BSModal @ref="@modal">
+    @if (Reservation?.Resource != null)
+    {
+        <BSModalHeader OnClick="@(() => modal.Hide())">Reservér @Reservation.Resource.Name</BSModalHeader>
+        <BSModalBody>
+            <BSBasicForm>
+                <BSFormGroup IsRow="true">
+                    <BSLabel For="reservation-check-in" SM="4">Fra</BSLabel>
+                    <BSCol SM="8">
+                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-check-in" Value="@GetCheckInTime()" />
+                    </BSCol>
+                </BSFormGroup>
+                <BSFormGroup IsRow="true">
+                    <BSLabel For="reservation-duration-in-days" SM="4">Antal dage</BSLabel>
+                    <BSCol SM="8">
+                        <BSBasicInput InputType="InputType.Number" Id="reservation-duration-in-days" @bind-Value="@Reservation.DurationInDays" min="@MinimumDays" max="@MaximumDays" />
+                    </BSCol>
+                </BSFormGroup>
+                <BSFormGroup IsRow="true">
+                    <BSLabel For="reservation-check-out" SM="4">Til</BSLabel>
+                    <BSCol SM="8">
+                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-check-out" Value="@GetCheckOutTime()" />
+                    </BSCol>
+                </BSFormGroup>
+                <BSFormGroup IsRow="true">
+                    <BSLabel For="reservation-price" SM="4">Pris</BSLabel>
+                    <BSCol SM="8">
+                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-price" Value="@GetPrice()" />
+                    </BSCol>
+                </BSFormGroup>
+                <BSFormGroup IsRow="true">
+                    <BSLabel For="reservation-deposit" SM="4">Depositum</BSLabel>
+                    <BSCol SM="8">
+                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-deposit" Value="@GetDeposit()" />
+                    </BSCol>
+                </BSFormGroup>
+            </BSBasicForm>
+        </BSModalBody>
+        <BSModalFooter>
+            <BSButton Color="Color.Primary" OnClick="@OnConfirm">Reservér</BSButton>
+            <BSButton Color="Color.Secondary" OnClick="@OnCancel">Annullér</BSButton>
+        </BSModalFooter>
+    }
+</BSModal>
+
+@code {
+
+    private BSModal modal = null!;
+
+    [Parameter]
+    public ResourceReservation? Reservation { get; set; }
+
+    [Parameter]
+    public int MinimumDays { get; set; }
+
+    [Parameter]
+    public int MaximumDays { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    public void Show()
+    {
+        modal.Show();
+    }
+
+    public void Hide()
+    {
+        modal.Hide();
+    }
+
+    private string GetCheckInTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date + ReservationsOptions.CheckInTime);
+
+    private string GetCheckOutTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date.AddDays(Reservation.DurationInDays) + ReservationsOptions.CheckOutTime);
+
+    private string GetPrice()
+    {
+        return 1234.56M.ToString("C0", CultureInfo);
+    }
+
+    private string GetDeposit()
+    {
+        return 123.45M.ToString("C0", CultureInfo);
+    }
+
+    private string FormatTime(DateTime time) => $"{CultureInfo.TextInfo.ToTitleCase(time.ToString("dddd", CultureInfo))} den {time.ToString("d. MMMM yyyy", CultureInfo)} kl. {time.ToString("HH:mm", CultureInfo)}";
+
+}

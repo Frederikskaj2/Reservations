@@ -1,41 +1,55 @@
 ﻿@page "/calendar"
+@inject ApplicationState ApplicationState
+@inject CultureInfo CultureInfo
 @inject HttpClient HttpClient;
 @inject ReservationsOptions ReservationsOptions;
 
-<div class="main">
+<div class="container-fluid container-with-sidebar">
     @if (!isInitialized)
     {
         <p>Vent...</p>
     }
     else
     {
-        <form>
-            <div class="form-row">
-                <div class="form-col">
-                    <select class="form-control form-control-lg" @onchange="UpdateCalendar">
-                        @{
-                            var isFirst = true;
-                            foreach (var (date, text) in months!)
-                            {
-                                <option value="@date" selected="@isFirst">@text</option>
-                                isFirst = false;
+        <div class="calendar">
+            <form>
+                <div class="row">
+                    <div class="col">
+                        <select class="form-control" @onchange="UpdateCalendar">
+                            @{
+                                var isFirst = true;
+                                foreach (var (date, text) in months!)
+                                {
+                                    <option value="@date" selected="@isFirst">@text</option>
+                                    isFirst = false;
+                                }
                             }
-                        }
-                    </select>
-                </div>
-                <div class="form-col">
-                    <select class="form-control form-control-lg" @bind="currentResourceId">
-                        @{
-                            foreach (var resource in orderedResources!)
+                        </select>
+                    </div>
+                    <div class="col">
+                        <select class="form-control" @bind="currentResourceId">
+                            @foreach (var resource in orderedResources!)
                             {
                                 <option value="@resource.Id">@resource.Name</option>
                             }
-                        }
-                    </select>
+                        </select>
+                    </div>
                 </div>
-            </div>
-        </form>
-        <div class="calendar">
+                <div class="row">
+                    <div class="col">
+                        <div class="legend-container">
+                            @{
+                                var resourceCounter = 1;
+                                foreach (var resource in orderedResources!)
+                                {
+                                    <span class="legend-icon resource-@(resourceCounter++)"></span>
+                                    <span class="legend-text@(resource.Id == currentResourceId ? " legend-selected-resource" : string.Empty)">@resource.Name</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </form>
             <table class="table table-bordered">
                 <thead>
                     <tr>
@@ -58,17 +72,14 @@
                                 @{
                                     for (var i = 0; i < 7; i += 1)
                                     {
-                                        <td class="@string.Join(' ', GetCalendarDayClasses(day))">
+                                        var localDay = day;
+                                        var makeReservation = GetIsResourceAvailable(day, currentResourceId) ? () => MakeReservation(localDay) : DoNothing;
+                                        resourceCounter = 1;
+                                        <td class="@string.Join(' ', GetCalendarDayClasses(day))" @onclick="@makeReservation">
                                             <div class="day">@day.Day</div>
-                                            @foreach (var resource in orderedResources!)
+                                            @foreach (var classes in orderedResources!.Select(resource => GetResourceClasses(day, resource.Id, resourceCounter++)))
                                             {
-                                                var (classes, showResourceName) = GetResourceClasses(day, resource.Id);
-                                                <div class="@string.Join(' ', classes)">
-                                                    @if (showResourceName)
-                                                    {
-                                                        <text>@resources![resource.Id].Name</text>
-                                                    }
-                                                </div>
+                                                <div class="@string.Join(' ', classes)"></div>
                                             }
                                         </td>
                                         day = day.AddDays(1);
@@ -83,12 +94,14 @@
 
             </p>
         </div>
+        <div class="sidebar"></div>
+        <ReservationDialog @ref="@reservationDialog" Reservation="@ApplicationState.Reservation.Reservations.LastOrDefault()" MinimumDays="1" MaximumDays="14" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
     }
 </div>
 
 @code {
 
-    private static readonly CultureInfo DanishCultureInfo = CultureInfo.GetCultureInfo("da-DK");
+    private static readonly Action DoNothing = () => { };
     private bool isInitialized;
     private DateTime today;
     private DateTime reservationsAreNotAllowedBefore;
@@ -99,6 +112,12 @@
     private List<Resource>? orderedResources;
     private int currentResourceId;
     private Dictionary<(DateTime, int), bool>? reservations;
+    private ReservationDialog reservationDialog = null!;
+
+    private void UpdateCalendar(ChangeEventArgs e)
+    {
+        ParseCurrentMonth(e.Value.ToString());
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -109,7 +128,7 @@
         months = GetMonths()
             .Select(date => (
                 date.ToString("yyyy-MM", CultureInfo.InvariantCulture),
-                    DanishCultureInfo.TextInfo.ToTitleCase(date.ToString("MMMM yyyy", DanishCultureInfo))))
+                    CultureInfo.TextInfo.ToTitleCase(date.ToString("MMMM yyyy", CultureInfo))))
             .ToList();
         ParseCurrentMonth(months[0].Date);
 
@@ -117,14 +136,17 @@
         orderedResources = resources.Values.OrderBy(r => r.Sequence).ToList();
         currentResourceId = orderedResources[0].Id;
 
-        reservations = (await HttpClient.GetJsonAsync<IEnumerable<ResourceReservation>>("resource-reservations")).ToDictionary(rr => (rr.Date, rr.ResourceId), _ => false);
+        reservations = await GetReservations();
 
         isInitialized = true;
     }
 
-    private void UpdateCalendar(ChangeEventArgs e)
+    private async Task<Dictionary<(DateTime Date, int ResourceId), bool>> GetReservations()
     {
-        ParseCurrentMonth(e.Value.ToString());
+        var firstMonday = GetPreviousMonday(GetMonthStart(today));
+        var requestUri = $"resource-reservations?fromDate={firstMonday:O}";
+        var resourceReservations = await HttpClient.GetJsonAsync<IEnumerable<ResourceReservation>>(requestUri);
+        return resourceReservations.ToDictionary(rr => (rr.Date, rr.ResourceId), _ => false);
     }
 
     private void ParseCurrentMonth(string date)
@@ -134,13 +156,20 @@
 
     private IEnumerable<DateTime> GetMonths()
     {
-        var month = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var month = GetMonthStart(today);
         var endMonth = today.AddDays(ReservationsOptions.ReservationIsNotAllowedAfterDaysFromNow);
         while (month <= endMonth)
         {
             yield return month;
             month = month.AddMonths(1);
         }
+    }
+
+    private bool GetIsResourceAvailable(DateTime day, int resourceId)
+    {
+        var isReservationAllowed = reservationsAreNotAllowedBefore <= day && day <= reservationsAreNotAllowedAfter;
+        var isSelectedResourceInUse = reservations!.ContainsKey((day, currentResourceId));
+        return isReservationAllowed && !isSelectedResourceInUse;
     }
 
     private IEnumerable<string> GetCalendarDayClasses(DateTime day)
@@ -152,38 +181,54 @@
         if (isToday)
             yield return "calendar-today";
         var isReservationAllowed = reservationsAreNotAllowedBefore <= day && day <= reservationsAreNotAllowedAfter;
-        if (!isReservationAllowed)
-            yield return "calendar-unavailable";
         var isSelectedResourceInUse = reservations!.ContainsKey((day, currentResourceId));
-        if (isSelectedResourceInUse)
+        if (isReservationAllowed && !isSelectedResourceInUse)
+            yield return "resource-available";
+        else
             yield return "resource-unavailable";
     }
 
-    private (IEnumerable<string> Classes, bool ShowResourceName) GetResourceClasses(DateTime day, int resourceId)
+    private IEnumerable<string> GetResourceClasses(DateTime day, int resourceId, int resourceNumber)
     {
+        yield return "resource";
         var isResourceInUse = reservations!.ContainsKey((day, resourceId));
+        if (!isResourceInUse)
+            yield break;
+        yield return $"resource-{resourceNumber}";
         var hasAdjacentReservationBefore = reservations!.ContainsKey(((day.AddDays(-1), resourceId)));
+        if (hasAdjacentReservationBefore)
+            yield return "resource-extend-left";
         var hasAdjacentReservationAfter = reservations!.ContainsKey(((day.AddDays(1), resourceId)));
+        if (hasAdjacentReservationAfter)
+            yield return "resource-extend-right";
         var isSelectedResource = resourceId == currentResourceId;
-        var showResourceName = isResourceInUse && (day.DayOfWeek == DayOfWeek.Monday || !hasAdjacentReservationBefore);
-
-        return (GetClasses(), showResourceName);
-
-        IEnumerable<string> GetClasses()
-        {
-            yield return "resource";
-            if (isResourceInUse)
-            {
-                yield return "resource-unavailable";
-                if (hasAdjacentReservationBefore)
-                    yield return "resource-extend-left";
-                if (hasAdjacentReservationAfter)
-                    yield return "resource-extend-right";
-                if (!isSelectedResource)
-                    yield return "resource-not-current";
-            }
-        }
+        if (!isSelectedResource)
+            yield return "resource-not-current";
     }
+
+    private void MakeReservation(DateTime day)
+    {
+        var reservation = new ResourceReservation
+        {
+            Resource = resources![currentResourceId],
+            Date = day,
+            DurationInDays = 1
+        };
+        ApplicationState.Reservation!.Reservations!.Add(reservation);
+        reservationDialog.Show();
+    }
+
+    private void CancelReservation()
+    {
+        reservationDialog.Hide();
+    }
+
+    private void ConfirmReservation()
+    {
+        reservationDialog.Hide();
+    }
+
+    private static DateTime GetMonthStart(DateTime day) => new DateTime(day.Year, day.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
     private static DateTime GetPreviousMonday(DateTime day) => day.AddDays(-((((int) day.DayOfWeek) + 6)%7));
 

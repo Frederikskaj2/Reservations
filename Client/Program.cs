@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Threading.Tasks;
+using BlazorStrap;
 using Microsoft.AspNetCore.Blazor.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +23,8 @@ namespace Frederikskaj2.Reservations.Client
 
         private static void ConfigureServices(IServiceCollection services)
         {
+            services.AddBootstrapCss();
+
             // See https://github.com/dotnet/aspnetcore/issues/18733#issuecomment-585817720
             services.AddAuthorizationCore(options => { });
             services.AddScoped<ServerAuthenticationStateProvider>();
@@ -30,7 +34,7 @@ namespace Frederikskaj2.Reservations.Client
                 sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
 
             services.AddScoped<ApplicationState>();
-
+            services.AddSingleton(CultureInfo.GetCultureInfo("da-DK"));
             services.AddSingleton<ReservationsOptions>();
         }
     }

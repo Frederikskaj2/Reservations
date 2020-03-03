@@ -1,20 +1,14 @@
-﻿body, html {
+﻿:active:focus {
+    outline: none;
+}
+
+html, body, main {
     height: 100%;
 }
 
 body {
-    flex-direction: column;
     font-family: 'Roboto';
-    overflow-y: hidden;
     padding-top: 5rem;
-}
-
-form {
-    width: 100%;
-}
-
-.form-group.row > .col-form-label {
-    text-align: right;
 }
 
 .top-bar {
@@ -44,19 +38,6 @@ form {
     margin: 0;
     padding: 0.3rem 1.8rem;
     position: relative;
-}
-
-.content {
-    background-color: white;
-    display: flex;
-    height: 100%;
-    z-index: 1;
-}
-
-.main {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 1.5rem !important;
 }
 
 .nav-tab {
@@ -107,147 +88,6 @@ form {
         z-index: 1;
     }
 
-.sidebar {
-    background-color: #2b2b2b;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    width: 20rem;
-}
-
-.order-contents {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 2rem 1.5rem 1.5rem 1.5rem;
-}
-
-    .order-contents h2 {
-        color: #fff2cc;
-        font-size: 1.3rem;
-        font-weight: 300;
-        margin-bottom: 1rem;
-        text-transform: uppercase;
-    }
-
-.dialog-container {
-    animation: dialog-container-entry 0.2s;
-    background-color: rgba(0, 0, 0, 0.5);
-    bottom: 0;
-    display: flex;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    z-index: 2000;
-}
-
-@keyframes dialog-container-entry {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-.dialog {
-    align-self: center;
-    animation: dialog-entry 0.4s;
-    animation-timing-function: cubic-bezier(0.075, 0.820, 0.165, 1.000);
-    background-color: white;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
-    display: flex;
-    flex-direction: column;
-    margin: auto;
-    max-height: calc(100% - 3rem);
-    width: 700px;
-    z-index: 2000;
-}
-
-@keyframes dialog-entry {
-    0% {
-        transform: translateY(30px) scale(0.95);
-    }
-
-    100% {
-        transform: translateX(0px) scale(1.0);
-    }
-}
-
-.dialog-title {
-    background-color: #444;
-    color: #fff2cc;
-    padding: 1.3rem 2rem;
-}
-
-    .dialog-title h2 {
-        color: white;
-        font-size: 1.4rem;
-        line-height: 1.3rem;
-        margin: 0;
-        text-transform: uppercase;
-    }
-
-.dialog-body {
-    flex-grow: 1;
-    padding: 0.5rem 3rem 1rem 0;
-}
-
-.dialog-buttons {
-    align-items: center;
-    background-color: #eee;
-    display: flex;
-    flex-shrink: 0;
-    height: 4rem;
-    padding: 0 1rem;
-}
-
-.dialog-body > div {
-    align-items: center;
-    display: flex;
-    margin-top: 1rem;
-}
-
-.dialog-body label {
-    margin: 0 1.5rem;
-    text-align: right;
-    width: 200px;
-}
-
-.dialog-body input, .dialog-body select {
-    flex-grow: 1;
-    width: unset;
-}
-
-.dialog-body .size-label {
-    min-width: 110px;
-    text-align: right;
-}
-
-.form-message {
-    font-weight: 700;
-    padding: 0.5rem;
-}
-
-a.sign-in {
-    background: none;
-    border: 1.5px solid white;
-    border-radius: 0.7em;
-    color: white;
-    cursor: pointer;
-    font-weight: 100;
-    padding: 0.2rem 0.8rem 0.1rem 0.8rem;
-    text-transform: uppercase;
-    transition: 0.2s ease-out;
-}
-
-    a.sign-in:hover {
-        background-color: rgba(255, 255, 255, 0.3);
-        border-color: #fff2cc;
-        color: #fff2cc;
-    }
-
 .user-info {
     align-items: center;
     display: flex;
@@ -273,25 +113,66 @@ a.sign-in {
         font-size: 0.8rem;
     }
 
-.loading-bar {
-    background-color: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    height: 6px;
-    left: calc(50% - 250px);
-    overflow: hidden;
-    position: absolute;
-    top: calc(50% - 3px);
-    width: 500px;
+.container-with-sidebar {
+    display: flex;
+    justify-content: space-between;
+    padding-right: 0;
+    min-height: 100%;
 }
 
-    .loading-bar::after {
-        animation: progressbar-slide 1s infinite;
-        animation-timing-function: ease-in-out;
-        background-color: #dc105a;
-        content: '';
-        display: block;
-        height: 100%;
-        width: 200px;
+.sidebar {
+    background-color: #2b2b2b;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    width: 20rem;
+}
+
+div.text {
+    font-family: 'Roboto Slab';
+    margin: 2rem;
+}
+
+    div.text > * {
+        line-height: 2;
+    }
+
+    div.text > h1 {
+        font-family: 'Roboto';
+        font-size: 1.44rem;
+        font-weight: bold;
+    }
+
+.reservation-contents {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+}
+
+    .reservation-contents h2 {
+        color: #fff2cc;
+        font-size: 1.3rem;
+        font-weight: 300;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+    }
+
+a.sign-in {
+    background: none;
+    border: 1.5px solid white;
+    border-radius: 0.7em;
+    color: white;
+    cursor: pointer;
+    font-weight: 100;
+    padding: 0.2rem 0.8rem 0.1rem 0.8rem;
+    text-transform: uppercase;
+    transition: 0.2s ease-out;
+}
+
+    a.sign-in:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-color: #fff2cc;
+        color: #fff2cc;
     }
 
 .valid.modified:not([type=checkbox]) {
@@ -306,85 +187,104 @@ a.sign-in {
     color: red;
 }
 
-div.text {
-    font-family: 'Roboto Slab';
-    margin: 0 3rem;
+.calendar {
+    margin: 2rem;
 }
 
-    div.text > * {
-        line-height: 2rem;
-        max-width: 60rem;
+    .calendar .legend-container {
+        margin-top: 2rem;
+        display: flex;
+        align-items: center;
     }
 
-    div.text > h1 {
-        font-family: 'Roboto';
-        font-size: 1.44rem;
+    .calendar .legend-icon {
+        float: left;
+        width: 2rem;
+        height: 2rem;
+        margin: 0.5rem;
+        border: 1px solid rgba(0, 0, 0, .2);
+    }
+
+    .calendar .legend-text {
+        margin-right: 2rem;
+    }
+
+    .calendar .legend-selected-resource {
         font-weight: bold;
     }
 
-input.form-control, select.form-control {
-    width: 40rem;
-    margin-right: 2rem;
-}
-
-.calendar {
-    margin-top: 2rem;
-}
-
     .calendar table {
+        margin-top: 2rem;
         width: auto;
     }
 
     .calendar td {
-        width: 12rem;
+        width: 6rem;
         padding: 0 0 0.75rem 0;
+    }
+
+    .calendar .resource-1 {
+        background-color: hsl(210, 100%, 50%);
+    }
+
+    .calendar .resource-2 {
+        background-color: hsl(270, 100%, 50%);
+    }
+
+    .calendar .resource-3 {
+        background-color: hsl(285, 100%, 50%);
+    }
+
+    .calendar td.resource-available {
+        background-color: hsl(120, 50%, 90%);
         cursor: pointer;
     }
 
-        .calendar td.calendar-unavailable {
-            background-color: #f5deb3;
-            cursor: not-allowed;
-        }
+    .calendar td.resource-unavailable {
+        background-color: hsl(0, 50%, 90%);
+        cursor: not-allowed;
+    }
 
-        .calendar td.calendar-today {
-            background-color: #fff2cc;
-        }
+    .calendar td.calendar-today {
+        background-color: hsl(60, 50%, 90%);
+    }
 
-        .calendar td.calendar-other-month {
-            background-color: #CCC;
-        }
+    .calendar td.calendar-other-month {
+        background-color: #CCC;
+    }
 
-        .calendar td.resource-unavailable {
-            cursor: not-allowed;
-        }
+    .calendar td .day {
+        font-size: 0.67rem;
+        padding: 0.25rem 0.75rem;
+    }
 
-        .calendar td .day {
-            font-size: 0.67rem;
-            padding: 0.75rem;
-        }
+    .calendar td .resource {
+        width: 4.5rem;
+        height: 1.5rem;
+        padding: 0.75rem 0;
+        margin: 0 0.75rem;
+    }
 
-        .calendar td .resource {
-            font-size: 0.8rem;
-            text-align: center;
-            height: 3rem;
-            padding: 0.75rem 0;
-            margin: 0 0.75rem;
-        }
+    .calendar td .resource-extend-left {
+        width: 5.25rem;
+        margin-left: 0;
+        padding-left: 0.75rem;
+    }
 
-        .calendar td .resource-extend-left {
-            margin-left: 0;
-            padding-left: 0.75rem;
-        }
+    .calendar td .resource-extend-right {
+        width: 5.25rem;
+        margin-right: 0;
+        padding-right: 0.75rem;
+    }
 
-        .calendar td .resource-extend-right {
-            margin-right: 0;
-            padding-right: 0.75rem;
-        }
+    .calendar td .resource-extend-left.resource-extend-right {
+        width: 6rem;
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
 
-        .calendar td .resource-not-current {
-            opacity: 0.67;
-        }
-
-        .calendar td .resource-unavailable {
-            background-color: hsla(30, 100%, 60%, 67);
-        }
+    .calendar td .resource-not-current {
+        opacity: 0.33;
+    }

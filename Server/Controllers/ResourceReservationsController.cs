@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.State;
 using Frederikskaj2.Reservations.Shared;
@@ -18,6 +19,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             => this.db = db ?? throw new ArgumentNullException(nameof(db));
 
         [HttpGet]
-        public async Task<IEnumerable<ResourceReservation>> Get() => await db.ResourceReservations.ToListAsync();
+        public async Task<IEnumerable<ResourceReservation>> Get(DateTime fromDate)
+            => await db.ResourceReservations.Where(rr => rr.Date >= fromDate).ToListAsync();
     }
 }
