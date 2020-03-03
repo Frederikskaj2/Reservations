@@ -14,6 +14,10 @@ namespace Frederikskaj2.Reservations.Server.State
         }
 
         public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Resource> Resources { get; set; } = null!;
+        public DbSet<Reservation> Reservations { get; set; } = null!;
+        public DbSet<ResourceReservation> ResourceReservations { get; set; } = null!;
+        public DbSet<Apartment> Apartments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

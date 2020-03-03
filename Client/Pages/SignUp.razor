@@ -24,39 +24,29 @@
         </div>
     }
     <EditForm Model="request" OnValidSubmit="Submit">
-        <div class="form-row">
-            <div class="form-group col-sm-2">
-                <label>Mail:</label>
-                <InputText class="form-control" type="email" @bind-Value="request.Email" />
-                <small class="form-text text-muted"><ValidationMessage For="@(() => request.Email)" /></small>
-            </div>
+        <div class="form-group">
+            <label>Mail:</label>
+            <InputText class="form-control" type="email" @bind-Value="request.Email" />
+            <small class="form-text text-muted"><ValidationMessage For="@(() => request.Email)" /></small>
         </div>
-        <div class="form-row">
-            <div class="form-group col-sm-2">
-                <label>Fulde navn:</label>
-                <InputText class="form-control" @bind-Value="request.FullName" />
-                <small class="form-text text-muted"><ValidationMessage For="@(() => request.FullName)" /></small>
-            </div>
+        <div class="form-group">
+            <label>Fulde navn:</label>
+            <InputText class="form-control" @bind-Value="request.FullName" />
+            <small class="form-text text-muted"><ValidationMessage For="@(() => request.FullName)" /></small>
         </div>
-        <div class="form-row">
-            <div class="form-group col-sm-2">
-                <label>Adgangskode:</label>
-                <InputText class="form-control" type="password" @bind-Value="request.Password" />
-                <small class="form-text text-muted"><ValidationMessage For="@(() => request.Password)" /></small>
-            </div>
+        <div class="form-group">
+            <label>Adgangskode:</label>
+            <InputText class="form-control" type="password" @bind-Value="request.Password" />
+            <small class="form-text text-muted"><ValidationMessage For="@(() => request.Password)" /></small>
         </div>
-        <div class="form-row">
-            <div class="form-group col-sm-2">
-                <label>Gentag adgangskode:</label>
-                <InputText class="form-control" type="password" @bind-Value="request.ConfirmPassword" />
-                <small class="form-text text-muted"><ValidationMessage For="@(() => request.ConfirmPassword)" /></small>
-            </div>
+        <div class="form-group">
+            <label>Gentag adgangskode:</label>
+            <InputText class="form-control" type="password" @bind-Value="request.ConfirmPassword" />
+            <small class="form-text text-muted"><ValidationMessage For="@(() => request.ConfirmPassword)" /></small>
         </div>
-        <div class="form-row">
-            <div class="form-group col-sm-2">
-                <InputCheckbox @bind-Value="request.IsPersistent" />
-                <label class="form-check-label">Husk mig</label>
-            </div>
+        <div class="form-group">
+            <InputCheckbox @bind-Value="request.IsPersistent" />
+            <label class="form-check-label">Husk mig</label>
         </div>
         <button type="submit" class="btn btn-primary">
             Opret bruger

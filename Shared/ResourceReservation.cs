@@ -4,6 +4,8 @@ namespace Frederikskaj2.Reservations.Shared
 {
     public class ResourceReservation
     {
+        public int Id { get; set; }
+        public int ResourceId { get; set; }
         public Resource? Resource { get; set; }
         public DateTime Date { get; set; }
         public int DurationInDays { get; set; }
