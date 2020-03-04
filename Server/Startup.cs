@@ -7,6 +7,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using NodaTime;
+using NodaTime.Serialization.JsonNet;
 
 namespace Frederikskaj2.Reservations.Server
 {
@@ -24,7 +28,12 @@ namespace Frederikskaj2.Reservations.Server
 
             services
                 .AddControllers()
-                .AddNewtonsoftJson();
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                    options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+                });
 
             services
                 .AddAuthentication(options => options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme)
@@ -49,7 +58,6 @@ namespace Frederikskaj2.Reservations.Server
             app.UseAuthorization();
 
             app.UseClientSideBlazorFiles<Client.Program>();
-
 
             app.UseEndpoints(
                 endpoints =>

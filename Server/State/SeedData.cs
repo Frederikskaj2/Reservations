@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Frederikskaj2.Reservations.Shared;
+using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.State
 {
@@ -21,11 +22,12 @@ namespace Frederikskaj2.Reservations.Server.State
             db.Apartments.AddRange(apartments);
 
             var random = new Random();
-            var resourceReservations = new Dictionary<(DateTime, Resource), ResourceReservation>();
+            var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
+            var resourceReservations = new Dictionary<(LocalDate, Resource), ResourceReservation>();
             while (resourceReservations.Count < 40)
             {
                 var resource = resources[random.Next(resources.Length)];
-                var date = DateTime.UtcNow.Date.AddDays(random.Next(60));
+                var date = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo).Date.PlusDays(random.Next(60));
                 var key = (date, resource);
                 if (resourceReservations.ContainsKey(key))
                     continue;

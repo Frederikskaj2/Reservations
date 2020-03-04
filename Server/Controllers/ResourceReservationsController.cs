@@ -6,6 +6,7 @@ using Frederikskaj2.Reservations.Server.State;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime.Text;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
@@ -13,13 +14,26 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     [ApiController]
     public class ResourceReservationsController : Controller
     {
+        private static readonly LocalDatePattern DatePattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM-dd");
+
         private readonly ReservationsContext db;
 
         public ResourceReservationsController(ReservationsContext db)
             => this.db = db ?? throw new ArgumentNullException(nameof(db));
 
         [HttpGet]
-        public async Task<IEnumerable<ResourceReservation>> Get(DateTime fromDate)
-            => await db.ResourceReservations.Where(rr => rr.Date >= fromDate).ToListAsync();
+        public async Task<IEnumerable<ResourceReservation>> Get(string fromDate)
+        {
+            IQueryable<ResourceReservation> query = db.ResourceReservations;
+
+            var result = DatePattern.Parse(fromDate);
+            if (result.Success)
+            {
+                var date = result.Value;
+                query = query.Where(rr => rr.Date >= date);
+            }
+
+            return await query.ToListAsync();
+        }
     }
 }

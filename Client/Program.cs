@@ -1,10 +1,15 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BlazorStrap;
+using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Blazor.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using NodaTime;
+using NodaTime.Serialization.SystemTextJson;
 
 namespace Frederikskaj2.Reservations.Client
 {
@@ -33,8 +38,19 @@ namespace Frederikskaj2.Reservations.Client
             services.AddScoped<IAuthenticationStateProvider>(
                 sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
 
-            services.AddScoped<ApplicationState>();
+            var jsonSerializerOptions = new JsonSerializerOptions
+            {
+                IgnoreNullValues = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            }
+            .ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+            services.AddSingleton(jsonSerializerOptions);
+            services.AddSingleton<ApiClient>();
+
             services.AddSingleton(CultureInfo.GetCultureInfo("da-DK"));
+            services.AddDanishDateProvider();
+
+            services.AddScoped<ApplicationState>();
             services.AddSingleton<ReservationsOptions>();
         }
     }

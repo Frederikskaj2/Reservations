@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="$(BlazorVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.HttpClient" Version="$(BlazorVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="$(AspNetCoreVersion)" />
+    <PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.0.0-beta01" />
   </ItemGroup>
 
   <ItemGroup>

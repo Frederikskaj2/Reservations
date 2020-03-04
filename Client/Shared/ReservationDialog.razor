@@ -49,6 +49,7 @@
 @code {
 
     private BSModal modal = null!;
+    private LocalDateTimePattern pattern = null!;
 
     [Parameter]
     public ResourceReservation? Reservation { get; set; }
@@ -75,9 +76,14 @@
         modal.Hide();
     }
 
+    protected override void OnInitialized()
+    {
+        pattern = LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH:mm", CultureInfo);
+    }
+
     private string GetCheckInTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date + ReservationsOptions.CheckInTime);
 
-    private string GetCheckOutTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date.AddDays(Reservation.DurationInDays) + ReservationsOptions.CheckOutTime);
+    private string GetCheckOutTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date.PlusDays(Reservation.DurationInDays) + ReservationsOptions.CheckOutTime);
 
     private string GetPrice()
     {
@@ -89,6 +95,10 @@
         return 123.45M.ToString("C0", CultureInfo);
     }
 
-    private string FormatTime(DateTime time) => $"{CultureInfo.TextInfo.ToTitleCase(time.ToString("dddd", CultureInfo))} den {time.ToString("d. MMMM yyyy", CultureInfo)} kl. {time.ToString("HH:mm", CultureInfo)}";
+    private string FormatTime(LocalDateTime time)
+    {
+        var formatted = pattern.Format(time);
+        return CultureInfo.TextInfo.ToUpper(formatted[0]) + formatted.Substring(1);
+    }
 
 }
