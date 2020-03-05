@@ -1,4 +1,4 @@
-using Frederikskaj2.Reservations.Server.State;
+using Frederikskaj2.Reservations.Server.Domain;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

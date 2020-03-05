@@ -1,5 +1,6 @@
+using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Server.Passwords;
-using Frederikskaj2.Reservations.Server.State;
+using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -24,16 +25,18 @@ namespace Frederikskaj2.Reservations.Server
         {
             services
                 .AddDbContext<ReservationsContext>(options => options.UseSqlite("Data Source=Reservations.db"))
-                .AddPasswordServices(Configuration);
+                .AddPasswordServices(Configuration)
+                .AddScoped<IDataProvider, ServerDataProvider>();
 
             services
                 .AddControllers()
-                .AddNewtonsoftJson(options =>
-                {
-                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-                    options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                    options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
-                });
+                .AddNewtonsoftJson(
+                    options =>
+                    {
+                        options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                        options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                        options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+                    });
 
             services
                 .AddAuthentication(options => options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme)

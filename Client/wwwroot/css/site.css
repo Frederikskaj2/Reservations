@@ -201,97 +201,156 @@ a.sign-in {
     color: red;
 }
 
-.calendar {
+.calendar-container {
     margin: 2rem;
 }
 
-    .calendar .legend-container {
+    .calendar-container .legend-container {
         margin-top: 2rem;
         display: flex;
         align-items: center;
     }
 
-    .calendar .legend-icon {
+    .calendar-container .legend-icon {
         float: left;
-        width: 2rem;
-        height: 2rem;
+        width: 1.2rem;
+        height: 1.2rem;
         margin: 0.5rem;
         border: 1px solid rgba(0, 0, 0, .2);
     }
 
-    .calendar .legend-text {
+    .calendar-container .legend-text {
         margin-right: 2rem;
     }
 
-    .calendar .legend-selected-resource {
+    .calendar-container .legend-selected-resource {
         font-weight: bold;
     }
 
-    .calendar table {
-        margin-top: 2rem;
-        width: auto;
-    }
-
-    .calendar td {
-        width: 6rem;
-        padding: 0 0 0.75rem 0;
-    }
-
-    .calendar .resource-1 {
+    .calendar-container .resource-1 {
         background-color: hsl(210, 100%, 50%);
+        background-image: radial-gradient(rgba(255,255,255,.5) 1px, transparent 25%), radial-gradient(rgba(255,255,255,.5) 1px, transparent 25%);
+        background-size: 0.6rem 0.6rem, 0.6rem 0.6rem;
+        background-position: 0.5rem 0.3rem, 0.8rem 0.6rem;
+        background-repeat: repeat-x, repeat;
     }
 
-    .calendar .resource-2 {
-        background-color: hsl(270, 100%, 50%);
+    .calendar-container .resource-2 {
+        background-color: hsl(210, 100%, 50%);
+        background-image: repeating-linear-gradient(-45deg, transparent, transparent 15%, rgba(255,255,255,.5) 25%, transparent 35%, transparent 50%);
+        background-size: 0.6rem 0.6rem;
     }
 
-    .calendar .resource-3 {
-        background-color: hsl(285, 100%, 50%);
+    .calendar-container .resource-3 {
+        background-color: hsl(210, 100%, 50%);
+        background-image: repeating-linear-gradient(45deg, transparent, transparent 15%, rgba(255,255,255,.5) 25%, transparent 35%, transparent 50%);
+        background-size: 0.6rem 0.6rem;
     }
 
-    .calendar td.resource-available {
+.calendar {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(7, 6rem);
+    grid-template-rows: auto;
+    grid-auto-rows: 6rem;
+    border-top: 1px solid rgba(0, 0, 0, .2);
+    border-left: 1px solid rgba(0, 0, 0, .2);
+}
+
+    .calendar > div {
         background-color: hsl(120, 50%, 90%);
+        border-bottom: 1px solid rgba(0, 0, 0, .2);
+        border-right: 1px solid rgba(0, 0, 0, .2);
+    }
+
+    .calendar .calendar-day-of-week-1 {
+        grid-column: 1;
+    }
+
+    .calendar .calendar-day-of-week-2 {
+        grid-column: 2;
+    }
+
+    .calendar .calendar-day-of-week-3 {
+        grid-column: 3;
+    }
+
+    .calendar .calendar-day-of-week-4 {
+        grid-column: 4;
+    }
+
+    .calendar .calendar-day-of-week-5 {
+        grid-column: 5;
+    }
+
+    .calendar .calendar-day-of-week-6 {
+        grid-column: 6;
+    }
+
+    .calendar .calendar-day-of-week-7 {
+        grid-column: 7;
+    }
+
+    .calendar .calendar-header {
+        background-color: transparent;
+        font-weight: bold;
+        padding: 0.75rem;
+    }
+
+    .calendar .calendar-high-price {
+        background-color: hsl(120, 50%, 80%);
+    }
+
+    .calendar .resource-available {
         cursor: pointer;
     }
 
-    .calendar td.resource-unavailable {
-        background-color: hsl(0, 50%, 90%);
-        cursor: not-allowed;
+    .calendar .resource-unavailable {
+        pointer-events: none;
     }
 
-    .calendar td.calendar-today {
+    .calendar .calendar-today {
         background-color: hsl(60, 50%, 90%);
     }
 
-    .calendar td.calendar-other-month {
+    .calendar .calendar-other-month {
         background-color: #CCC;
     }
 
-    .calendar td .day {
+    .calendar .calendar-day {
+        margin: 0.1rem;
         font-size: 0.67rem;
-        padding: 0.25rem 0.75rem;
+        height: 1rem;
     }
 
-    .calendar td .resource {
-        width: 4.5rem;
-        height: 1.5rem;
-        padding: 0.75rem 0;
-        margin: 0 0.75rem;
+    .calendar .resource-available .calendar-day {
+        font-weight: bold;
+        color: hsl(20, 80%, 50%);
     }
 
-    .calendar td .resource-extend-left {
-        width: 5.25rem;
+    .calendar .resource-unavailable .calendar-day {
+        color: #AAA;
+    }
+
+    .calendar .resource {
+        width: 4.8rem;
+        height: 1.2rem;
+        margin: 0.1rem 0.6rem;
+    }
+
+    .calendar .resource-extend-left {
+        width: 5.4rem;
         margin-left: 0;
-        padding-left: 0.75rem;
+        padding-left: 0.6rem;
     }
 
-    .calendar td .resource-extend-right {
-        width: 5.25rem;
+    .calendar .resource-extend-right {
+        width: 5.4rem;
         margin-right: 0;
-        padding-right: 0.75rem;
+        padding-right: 0.6rem;
     }
 
-    .calendar td .resource-extend-left.resource-extend-right {
+    .calendar .resource-extend-left.resource-extend-right {
         width: 6rem;
         margin-left: 0;
         margin-right: 0;
@@ -299,6 +358,6 @@ a.sign-in {
         padding-right: 0;
     }
 
-    .calendar td .resource-not-current {
+    .calendar .resource-not-current {
         opacity: 0.33;
     }

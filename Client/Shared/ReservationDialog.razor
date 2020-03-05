@@ -1,5 +1,6 @@
 ﻿@inject CultureInfo CultureInfo
 @inject ReservationsOptions ReservationsOptions
+@inject IReservationPolicyProvider ReservationPolicyProvider
 
 <BSModal @ref="@modal">
     @if (Reservation?.Resource != null)
@@ -16,7 +17,12 @@
                 <BSFormGroup IsRow="true">
                     <BSLabel For="reservation-duration-in-days" SM="4">Antal dage</BSLabel>
                     <BSCol SM="8">
-                        <BSBasicInput InputType="InputType.Number" Id="reservation-duration-in-days" @bind-Value="@Reservation.DurationInDays" min="@MinimumDays" max="@MaximumDays" />
+                        <select id="reservation-duration-in-days" class="form-control" @onchange="@DurationInDaysChanged">
+                            @for (var i = MinimumDays; i <= MaximumDays; i += 1)
+                            {
+                                <option selected="@(i == Reservation.DurationInDays)">@i</option>
+                            }
+                        </select>
                     </BSCol>
                 </BSFormGroup>
                 <BSFormGroup IsRow="true">
@@ -26,15 +32,21 @@
                     </BSCol>
                 </BSFormGroup>
                 <BSFormGroup IsRow="true">
-                    <BSLabel For="reservation-price" SM="4">Pris</BSLabel>
+                    <BSLabel For="reservation-rent" SM="4">Leje</BSLabel>
                     <BSCol SM="8">
-                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-price" Value="@GetPrice()" />
+                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-rent" Value="@rent" />
                     </BSCol>
                 </BSFormGroup>
                 <BSFormGroup IsRow="true">
                     <BSLabel For="reservation-deposit" SM="4">Depositum</BSLabel>
                     <BSCol SM="8">
-                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-deposit" Value="@GetDeposit()" />
+                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-deposit" Value="@deposit" />
+                    </BSCol>
+                </BSFormGroup>
+                <BSFormGroup IsRow="true">
+                    <BSLabel For="reservation-total" SM="4">Til betaling</BSLabel>
+                    <BSCol SM="8">
+                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-total" Value="@total" />
                     </BSCol>
                 </BSFormGroup>
             </BSBasicForm>
@@ -50,21 +62,22 @@
 
     private BSModal modal = null!;
     private LocalDateTimePattern pattern = null!;
+    private IReservationPolicy? policy;
+    private string? rent;
+    private string? deposit;
+    private string? total;
 
     [Parameter]
     public ResourceReservation? Reservation { get; set; }
-
-    [Parameter]
-    public int MinimumDays { get; set; }
-
-    [Parameter]
-    public int MaximumDays { get; set; }
 
     [Parameter]
     public EventCallback OnConfirm { get; set; }
 
     [Parameter]
     public EventCallback OnCancel { get; set; }
+
+    public int MinimumDays { get; set; } = 1;
+    public int MaximumDays { get; set; } = 7;
 
     public void Show()
     {
@@ -81,19 +94,40 @@
         pattern = LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH:mm", CultureInfo);
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Reservation?.Resource != null)
+            policy = ReservationPolicyProvider.GetPolicy(Reservation!.Resource.Type);
+        await UpdatePrice();
+    }
+
+    private async Task DurationInDaysChanged(ChangeEventArgs e)
+    {
+        Console.WriteLine("DurationInDaysChanged" + e.Value);
+        if (int.TryParse((string) e.Value, NumberStyles.None, CultureInfo.InvariantCulture, out var durationInDays))
+        {
+            Reservation!.DurationInDays = durationInDays;
+            Console.WriteLine("DurationInDays = " + durationInDays);
+            await UpdatePrice();
+        }
+    }
+
+    private async Task UpdatePrice()
+    {
+        Console.WriteLine("UpdatePrice");
+        if (policy == null)
+            return;
+        var price = await policy.GetPrice(Reservation!);
+        rent = $"{FormatPrice(price.Rent)} (inklusiv rengøring {FormatPrice(price.CleaningFee)})";
+        deposit = FormatPrice(price.Deposit);
+        total = FormatPrice(price.Rent + price.CleaningFee + price.Deposit);
+
+        string FormatPrice(decimal value) => value.ToString("C0", CultureInfo);
+    }
+
     private string GetCheckInTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date + ReservationsOptions.CheckInTime);
 
     private string GetCheckOutTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date.PlusDays(Reservation.DurationInDays) + ReservationsOptions.CheckOutTime);
-
-    private string GetPrice()
-    {
-        return 1234.56M.ToString("C0", CultureInfo);
-    }
-
-    private string GetDeposit()
-    {
-        return 123.45M.ToString("C0", CultureInfo);
-    }
 
     private string FormatTime(LocalDateTime time)
     {

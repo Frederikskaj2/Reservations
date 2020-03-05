@@ -1,9 +1,10 @@
 ﻿@page "/calendar"
-@inject ApiClient ApiClient;
 @inject ApplicationState ApplicationState
 @inject CultureInfo CultureInfo
+@inject ClientDataProvider DataProvider
 @inject IDateProvider DateProvider
 @inject ReservationsOptions ReservationsOptions;
+@inject IReservationPolicyProvider ReservationPolicyProvider
 
 <div class="container-fluid container-with-sidebar">
     @if (!isInitialized)
@@ -12,16 +13,16 @@
     }
     else
     {
-        <div class="calendar">
+        <div class="calendar-container">
             <form>
                 <div class="row">
                     <div class="col">
-                        <select class="form-control" @onchange="UpdateCalendar">
+                        <select class="form-control" @onchange="MonthChanged">
                             @{
                                 var isFirst = true;
-                                foreach (var (date, text) in months!)
+                                foreach (var tuple in months!)
                                 {
-                                    <option value="@date" selected="@isFirst">@text</option>
+                                    <option value="@tuple.Date" selected="@isFirst">@tuple.Text</option>
                                     isFirst = false;
                                 }
                             }
@@ -51,49 +52,36 @@
                     </div>
                 </div>
             </form>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th scope="col">Mandag</th>
-                        <th scope="col">Tirsdag</th>
-                        <th scope="col">Onsdag</th>
-                        <th scope="col">Torsdag</th>
-                        <th scope="col">Fredag</th>
-                        <th scope="col">Lørdag</th>
-                        <th scope="col">Søndag</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        var nextMonth = currentMonth.PlusMonths(1);
-                        var day = GetPreviousMonday(currentMonth);
-                        while (day < nextMonth)
-                        {
-                            <tr>
-                                @{
-                                    for (var i = 0; i < 7; i += 1)
-                                    {
-                                        var localDay = day;
-                                        var makeReservation = GetIsResourceAvailable(day, currentResourceId) ? () => MakeReservation(localDay) : DoNothing;
-                                        resourceCounter = 1;
-                                        <td class="@string.Join(' ', GetCalendarDayClasses(day))" @onclick="@makeReservation">
-                                            <div class="day">@day.Day</div>
-                                            @foreach (var classes in orderedResources!.Select(resource => GetResourceClasses(day, resource.Id, resourceCounter++)))
-                                            {
-                                                <div class="@string.Join(' ', classes)"></div>
-                                            }
-                                        </td>
-                                        day = day.PlusDays(1);
-                                    }
+            <div class="calendar">
+                <div class="calendar-day-of-week-1 calendar-header">Mandag</div>
+                <div class="calendar-day-of-week-2 calendar-header">Tirsdag</div>
+                <div class="calendar-day-of-week-3 calendar-header">Onsdag</div>
+                <div class="calendar-day-of-week-4 calendar-header">Torsdag</div>
+                <div class="calendar-day-of-week-5 calendar-header">Fredag</div>
+                <div class="calendar-day-of-week-6 calendar-header">Lørdag</div>
+                <div class="calendar-day-of-week-7 calendar-header">Søndag</div>
+                @{
+                    var dayOfWeek = 1;
+                    var date = firstCalendarDate;
+                    while (date <= lastCalendarDate)
+                    {
+                        var day = calendar![date];
+                        var localDate = date;
+                        <div class="@GetCalendarDayClasses(day, dayOfWeek)" @onclick="@(() => MakeReservation(localDate))">
+                            <div class="calendar-day">@day.Date.Day</div>
+                            @{
+                                resourceCounter = 1;
+                                foreach (var classes in orderedResources!.Select(resource => GetResourceClasses(calendar[date.PlusDays(-1)], day, calendar[date.PlusDays(1)], resource.Id, resourceCounter++)))
+                                {
+                                    <div class="@classes"></div>
                                 }
-                            </tr>
-                        }
+                            }
+                        </div>
+                        date = date.PlusDays(1);
+                        dayOfWeek = dayOfWeek%7 + 1;
                     }
-                </tbody>
-            </table>
-            <p>
-
-            </p>
+                }
+            </div>
         </div>
         <div class="sidebar">
             @if (ApplicationState.Reservation.Reservations!.Count > 0)
@@ -121,73 +109,50 @@
                 </div>
             }
         </div>
-        <ReservationDialog @ref="@reservationDialog" Reservation="@currentReservation" MinimumDays="1" MaximumDays="14" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
+        <ReservationDialog @ref="@reservationDialog" Reservation="@currentReservation" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
     }
 </div>
 
 @code {
 
-    private static readonly Action DoNothing = () => { };
     private static readonly LocalDatePattern MonthPattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM");
     private bool isInitialized;
-    private LocalDate today;
-    private LocalDate reservationsAreNotAllowedBefore;
-    private LocalDate reservationsAreNotAllowedAfter;
-    private LocalDate currentMonth;
     private List<(string Date, string Text)>? months;
-    private Dictionary<int, Resource>? resources;
+    private IReadOnlyDictionary<int, Resource>? resources;
     private List<Resource>? orderedResources;
     private int currentResourceId;
-    private Dictionary<(LocalDate, int), bool>? reservations;
+    private Dictionary<LocalDate, Day>? calendar;
+    private LocalDate firstCalendarDate;
+    private LocalDate lastCalendarDate;
     private ResourceReservation? currentReservation;
     private ReservationDialog reservationDialog = null!;
 
-    private void UpdateCalendar(ChangeEventArgs e)
+    private async Task MonthChanged(ChangeEventArgs e)
     {
-        ParseCurrentMonth(e.Value.ToString());
+        await UpdateCalendar(ParseMonth(e.Value.ToString()));
     }
 
     protected override async Task OnInitializedAsync()
     {
-        today = DateProvider.Today;
-        reservationsAreNotAllowedBefore = today.PlusDays(ReservationsOptions.ReservationIsNotAllowedBeforeDaysFromNow);
-        reservationsAreNotAllowedAfter = today.PlusDays(ReservationsOptions.ReservationIsNotAllowedAfterDaysFromNow);
-
-        string Capitalize(string text) => CultureInfo.TextInfo.ToUpper(text[0]) + text.Substring(1);
-
         var pattern = LocalDatePattern.Create("MMMM yyyy", CultureInfo);
         months = GetMonths()
             .Select(date => (MonthPattern.Format(date), Capitalize(pattern.Format(date))))
             .ToList();
-        ParseCurrentMonth(months[0].Date);
 
-        resources = (await ApiClient.GetJsonAsync<IEnumerable<Resource>>("resources")).ToDictionary(r => r.Id);
+        resources = await DataProvider.GetResources();
         orderedResources = resources.Values.OrderBy(r => r.Sequence).ToList();
         currentResourceId = orderedResources[0].Id;
 
-        reservations = await GetReservations();
+        await UpdateCalendar(ParseMonth(months[0].Date));
 
         isInitialized = true;
-    }
 
-    private async Task<Dictionary<(LocalDate Date, int ResourceId), bool>> GetReservations()
-    {
-        var firstMonday = GetPreviousMonday(GetMonthStart(today));
-        var fromDate = firstMonday.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var requestUri = $"resource-reservations?fromDate={fromDate}";
-        var resourceReservations = await ApiClient.GetJsonAsync<IEnumerable<ResourceReservation>>(requestUri);
-        return resourceReservations.ToDictionary(rr => (rr.Date, rr.ResourceId), _ => false);
-    }
-
-    private void ParseCurrentMonth(string date)
-    {
-        var result = MonthPattern.Parse(date);
-        if (result.Success)
-            currentMonth = result.Value;
+        string Capitalize(string text) => CultureInfo.TextInfo.ToUpper(text[0]) + text.Substring(1);
     }
 
     private IEnumerable<LocalDate> GetMonths()
     {
+        var today = DateProvider.Today;
         var month = GetMonthStart(today);
         var endMonth = GetMonthStart(today.PlusDays(ReservationsOptions.ReservationIsNotAllowedAfterDaysFromNow));
         while (month <= endMonth)
@@ -195,56 +160,101 @@
             yield return month;
             month = month.PlusMonths(1);
         }
+
+        static LocalDate GetMonthStart(LocalDate d) => new LocalDate(d.Year, d.Month, 1);
     }
 
-    private bool GetIsResourceAvailable(LocalDate date, int resourceId)
+    private static LocalDate ParseMonth(string date) => MonthPattern.Parse(date).Value;
+
+    private async Task UpdateCalendar(LocalDate month)
     {
-        var isReservationAllowed = reservationsAreNotAllowedBefore <= date && date <= reservationsAreNotAllowedAfter;
-        var isSelectedResourceInUse = reservations!.ContainsKey((date, currentResourceId));
-        return isReservationAllowed && !isSelectedResourceInUse;
+        var today = DateProvider.Today;
+        var firstMonday = GetPreviousMonday(month);
+        var lastSunday = GetPreviousMonday(month.PlusMonths(1).PlusDays(-1)).PlusDays(6);
+        var reservationsLookup = (await DataProvider.GetReservationsAndCacheResult(firstMonday.PlusDays(-1), lastSunday.PlusDays(1))).ToLookup(rr => rr.Date);
+        var policy = ReservationPolicyProvider.GetPolicy(resources![currentResourceId].Type);
+        var days = new List<Day>();
+        var date = firstMonday.PlusDays(-1);
+        while (date <= lastSunday.PlusDays(1))
+        {
+            var day = new Day
+            {
+                Date = date,
+                IsToday = date == today,
+                IsCurrentMonth = date.Month == month.Month,
+                IsHighPriceDay = await DataProvider.IsHighPriceDay(date),
+                IsResourceAvailable = await policy.IsResourceAvailable(date, currentResourceId),
+                ReservedResourceIds = reservationsLookup[date].Select(rr => rr.ResourceId).ToHashSet()
+            };
+            days.Add(day);
+            date = date.PlusDays(1);
+        }
+        calendar = days.ToDictionary(day => day.Date);
+        firstCalendarDate = firstMonday;
+        lastCalendarDate = lastSunday;
+
+        static LocalDate GetPreviousMonday(LocalDate d)
+        {
+            var daysAfterMonday = ((int) d.DayOfWeek - 1)%7;
+            return d.PlusDays(-daysAfterMonday);
+        }
     }
 
-    private IEnumerable<string> GetCalendarDayClasses(LocalDate day)
+    private string GetCalendarDayClasses(Day day, int dayOfWeek)
     {
-        var isCurrentMonth = day.Month == currentMonth.Month;
-        if (!isCurrentMonth)
-            yield return "calendar-other-month";
-        var isToday = day == today;
-        if (isToday)
-            yield return "calendar-today";
-        var isReservationAllowed = reservationsAreNotAllowedBefore <= day && day <= reservationsAreNotAllowedAfter;
-        var isSelectedResourceInUse = reservations!.ContainsKey((day, currentResourceId));
-        if (isReservationAllowed && !isSelectedResourceInUse)
-            yield return "resource-available";
-        else
-            yield return "resource-unavailable";
+        return string.Join(' ', GetClasses());
+
+        IEnumerable<string> GetClasses()
+        {
+            yield return $"calendar-day-of-week-{dayOfWeek}";
+            if (day.IsToday)
+                yield return "calendar-today";
+            else if (!day.IsCurrentMonth)
+                yield return "calendar-other-month";
+            if (day.IsHighPriceDay)
+                yield return "calendar-high-price";
+            if (day.IsResourceAvailable)
+                yield return "resource-available";
+            else
+                yield return "resource-unavailable";
+        }
     }
 
-    private IEnumerable<string> GetResourceClasses(LocalDate day, int resourceId, int resourceNumber)
+    private string GetResourceClasses(Day previousDay, Day day, Day nextDay, int resourceId, int resourceNumber)
     {
-        yield return "resource";
-        var isResourceInUse = reservations!.ContainsKey((day, resourceId));
-        if (!isResourceInUse)
-            yield break;
-        yield return $"resource-{resourceNumber}";
-        var hasAdjacentReservationBefore = reservations!.ContainsKey(((day.PlusDays(-1), resourceId)));
-        if (hasAdjacentReservationBefore)
-            yield return "resource-extend-left";
-        var hasAdjacentReservationAfter = reservations!.ContainsKey(((day.PlusDays(1), resourceId)));
-        if (hasAdjacentReservationAfter)
-            yield return "resource-extend-right";
-        var isSelectedResource = resourceId == currentResourceId;
-        if (!isSelectedResource)
-            yield return "resource-not-current";
+        return string.Join(' ', GetClasses());
+
+        IEnumerable<string> GetClasses()
+        {
+
+            yield return "resource";
+            if (!day.ReservedResourceIds.Contains(resourceId))
+                yield break;
+            yield return $"resource-{resourceNumber}";
+            var hasAdjacentReservationBefore = previousDay.ReservedResourceIds.Contains(resourceId);
+            if (hasAdjacentReservationBefore)
+                yield return "resource-extend-left";
+            var hasAdjacentReservationAfter = nextDay.ReservedResourceIds.Contains(resourceId);
+            if (hasAdjacentReservationAfter)
+                yield return "resource-extend-right";
+            var isSelectedResource = resourceId == currentResourceId;
+            if (!isSelectedResource)
+                yield return "resource-not-current";
+        }
     }
 
-    private void MakeReservation(LocalDate day)
+    private async Task MakeReservation(LocalDate date)
     {
+        var resource = resources![currentResourceId];
+        var policy = ReservationPolicyProvider.GetPolicy(resource.Type);
+        var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(resource.Id, date);
+        reservationDialog.MinimumDays = minimumDays;
+        reservationDialog.MaximumDays = maximumDays;
         currentReservation = new ResourceReservation
         {
-            Resource = resources![currentResourceId],
-            Date = day,
-            DurationInDays = 1
+            Resource = resource,
+            Date = date,
+            DurationInDays = minimumDays
         };
         reservationDialog.Show();
     }
@@ -259,14 +269,6 @@
         ApplicationState.Reservation.Reservations!.Add(currentReservation!);
         reservationDialog.Hide();
         currentReservation = null;
-    }
-
-    private static LocalDate GetMonthStart(LocalDate date) => new LocalDate(date.Year, date.Month, 1);
-
-    private static LocalDate GetPreviousMonday(LocalDate date)
-    {
-        var daysAfterMonday = ((int) date.DayOfWeek - 1)%7;
-        return date.PlusDays(-daysAfterMonday);
     }
 
 }

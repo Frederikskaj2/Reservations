@@ -1,23 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Domain;
-using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
-    [Route("reservations")]
+    [Route("holidays")]
     [ApiController]
-    public class ReservationsController : Controller
+    public class HolidaysController : Controller
     {
         private readonly ReservationsContext db;
 
-        public ReservationsController(ReservationsContext db)
+        public HolidaysController(ReservationsContext db)
             => this.db = db ?? throw new ArgumentNullException(nameof(db));
 
         [HttpGet]
-        public async Task<IEnumerable<Reservation>> Get() => await db.Reservations.ToListAsync();
+        public async Task<IEnumerable<LocalDate>> Get() => await db.Holidays.Select(h => h.Date).OrderBy(date => date).ToListAsync();
     }
 }

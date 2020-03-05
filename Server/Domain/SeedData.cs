@@ -4,7 +4,7 @@ using System.Linq;
 using Frederikskaj2.Reservations.Shared;
 using NodaTime;
 
-namespace Frederikskaj2.Reservations.Server.State
+namespace Frederikskaj2.Reservations.Server.Domain
 {
     internal static class SeedData
     {
@@ -12,9 +12,9 @@ namespace Frederikskaj2.Reservations.Server.State
         {
             var resources = new[]
             {
-                new Resource { Sequence = 1, Name = "Fest-/aktivitetslokale" },
-                new Resource { Sequence = 2, Name = "Frederikke (soveværelse)" },
-                new Resource { Sequence = 3, Name = "Kaj (soveværelse)" }
+                new Resource { Sequence = 1, Type = ResourceType.BanquetFacilities, Name = "Fest-/aktivitetslokale" },
+                new Resource { Sequence = 2, Type = ResourceType.Bedroom, Name = "Frederikke (soveværelse)" },
+                new Resource { Sequence = 3, Type = ResourceType.Bedroom, Name = "Kaj (soveværelse)" }
             };
             db.Resources.AddRange(resources);
 
@@ -24,10 +24,10 @@ namespace Frederikskaj2.Reservations.Server.State
             var random = new Random();
             var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
             var resourceReservations = new Dictionary<(LocalDate, Resource), ResourceReservation>();
-            while (resourceReservations.Count < 40)
+            while (resourceReservations.Count < 50)
             {
                 var resource = resources[random.Next(resources.Length)];
-                var date = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo).Date.PlusDays(random.Next(60));
+                var date = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo).Date.PlusDays(random.Next(90) - 10);
                 var key = (date, resource);
                 if (resourceReservations.ContainsKey(key))
                     continue;
@@ -41,6 +41,20 @@ namespace Frederikskaj2.Reservations.Server.State
                 resourceReservations.Add(key, resourceReservation);
             }
             db.ResourceReservations.AddRange(resourceReservations.Values);
+
+            var holidays = new[]
+            {
+                new Holiday { Date = new LocalDate(2020, 4, 9) },
+                new Holiday { Date = new LocalDate(2020, 4, 10) },
+                new Holiday { Date = new LocalDate(2020, 4, 13) },
+                new Holiday { Date = new LocalDate(2020, 5, 8) },
+                new Holiday { Date = new LocalDate(2020, 5, 21) },
+                new Holiday { Date = new LocalDate(2020, 6, 1) },
+                new Holiday { Date = new LocalDate(2020, 12, 24) },
+                new Holiday { Date = new LocalDate(2020, 12, 25) },
+                new Holiday { Date = new LocalDate(2020, 12, 31) },
+            };
+            db.Holidays.AddRange(holidays);
 
             db.SaveChanges();
         }

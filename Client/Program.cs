@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -39,19 +38,20 @@ namespace Frederikskaj2.Reservations.Client
                 sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
 
             var jsonSerializerOptions = new JsonSerializerOptions
-            {
-                IgnoreNullValues = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }
-            .ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+                {
+                    IgnoreNullValues = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                }
+                .ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
             services.AddSingleton(jsonSerializerOptions);
             services.AddSingleton<ApiClient>();
+            services.AddSingleton<ClientDataProvider>();
+            services.AddSingleton<IDataProvider>(sp => sp.GetRequiredService<ClientDataProvider>());
 
             services.AddSingleton(CultureInfo.GetCultureInfo("da-DK"));
-            services.AddDanishDateProvider();
+            services.AddReservationsServices();
 
             services.AddScoped<ApplicationState>();
-            services.AddSingleton<ReservationsOptions>();
         }
     }
 }
