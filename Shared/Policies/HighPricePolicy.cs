@@ -8,19 +8,17 @@ namespace Frederikskaj2.Reservations.Shared
     public static class HighPricePolicy
     {
         public static bool IsHighPriceDay(LocalDate date, HashSet<LocalDate> holidays)
-            => IsHighPriceWeekDay(date) || holidays.Contains(date) || holidays.Contains(date.PlusDays(1));
+            => IsHighPriceDayOfWeek(date) || IsHolidayOrDayBeforeHoliday(date, holidays);
 
         public static async Task<bool> IsHighPriceDay(LocalDate date, Func<Task<HashSet<LocalDate>>> getHolidays)
-        {
-            if (IsHighPriceWeekDay(date))
-                return true;
-            var holidays = await getHolidays();
-            return holidays.Contains(date) || holidays.Contains(date.PlusDays(1));
-        }
+            => IsHighPriceDayOfWeek(date) || IsHolidayOrDayBeforeHoliday(date, await getHolidays());
 
-        private static bool IsHighPriceWeekDay(LocalDate date)
+        private static bool IsHighPriceDayOfWeek(LocalDate date)
             => date.DayOfWeek == IsoDayOfWeek.Friday
                || date.DayOfWeek == IsoDayOfWeek.Saturday
                || date.DayOfWeek == IsoDayOfWeek.Sunday;
+
+        private static bool IsHolidayOrDayBeforeHoliday(LocalDate date, HashSet<LocalDate> holidays)
+            => holidays.Contains(date) || holidays.Contains(date.PlusDays(1));
     }
 }

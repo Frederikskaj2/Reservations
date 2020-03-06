@@ -9,6 +9,6 @@ namespace Frederikskaj2.Reservations.Shared
         Task<(int MinimumDays, int MaximumDays)> GetReservationAllowedNumberOfDays(int resourceId, LocalDate date);
         Task<bool> IsResourceAvailable(LocalDate date, int resourceId);
         Task<bool> IsResourceAvailable(LocalDate date, int durationInDays, int resourceId);
-        Task<Price> GetPrice(ResourceReservation reservation);
+        Task<Price> GetPrice(Reservation reservation);
     }
 }

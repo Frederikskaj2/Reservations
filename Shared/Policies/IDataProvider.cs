@@ -7,8 +7,8 @@ namespace Frederikskaj2.Reservations.Shared
     public interface IDataProvider
     {
         Task<bool> IsHighPriceDay(LocalDate date);
-        Task<int> GetNumberOfHighPriceDays(ResourceReservation reservation);
-        Task<IEnumerable<ResourceReservation>> GetReservations(int resourceId, LocalDate fromDate, LocalDate toDate);
+        Task<int> GetNumberOfHighPriceDays(Reservation reservation);
+        Task<IEnumerable<Reservation>> GetReservations(int resourceId, LocalDate fromDate, LocalDate toDate);
         void Refresh();
     }
 }

@@ -18,8 +18,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         public DbSet<Apartment> Apartments { get; set; } = null!;
         public DbSet<Holiday> Holidays { get; set; } = null!;
+        public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<Reservation> Reservations { get; set; } = null!;
-        public DbSet<ResourceReservation> ResourceReservations { get; set; } = null!;
         public DbSet<Resource> Resources { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
 
@@ -36,14 +36,14 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Property(holiday => holiday.Date)
                 .HasConversion(localDateConverter);
 
-            modelBuilder.Entity<Reservation>()
+            modelBuilder.Entity<Order>()
                 .Property(reservation => reservation.CreatedTimestamp)
                 .HasConversion(instantConverter);
-            modelBuilder.Entity<Reservation>()
+            modelBuilder.Entity<Order>()
                 .Property(reservation => reservation.UpdatedTimestamp)
                 .HasConversion(instantConverter);
 
-            modelBuilder.Entity<ResourceReservation>()
+            modelBuilder.Entity<Reservation>()
                 .Property(resourceReservation => resourceReservation.Date)
                 .HasConversion(localDateConverter);
 

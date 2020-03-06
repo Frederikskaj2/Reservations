@@ -68,7 +68,10 @@
     private string? total;
 
     [Parameter]
-    public ResourceReservation? Reservation { get; set; }
+    public Reservation? Reservation { get; set; }
+
+    [Parameter]
+    public EventCallback OnReservationChanged { get; set; }
 
     [Parameter]
     public EventCallback OnConfirm { get; set; }
@@ -103,24 +106,22 @@
 
     private async Task DurationInDaysChanged(ChangeEventArgs e)
     {
-        Console.WriteLine("DurationInDaysChanged" + e.Value);
         if (int.TryParse((string) e.Value, NumberStyles.None, CultureInfo.InvariantCulture, out var durationInDays))
         {
             Reservation!.DurationInDays = durationInDays;
-            Console.WriteLine("DurationInDays = " + durationInDays);
             await UpdatePrice();
+            await OnReservationChanged.InvokeAsync(null);
         }
     }
 
     private async Task UpdatePrice()
     {
-        Console.WriteLine("UpdatePrice");
-        if (policy == null)
+        if (Reservation == null || policy == null)
             return;
-        var price = await policy.GetPrice(Reservation!);
-        rent = $"{FormatPrice(price.Rent)} (inklusiv rengøring {FormatPrice(price.CleaningFee)})";
-        deposit = FormatPrice(price.Deposit);
-        total = FormatPrice(price.Rent + price.CleaningFee + price.Deposit);
+        Reservation.Price = await policy.GetPrice(Reservation);
+        rent = $"{FormatPrice(Reservation.Price.Rent)} (inklusiv rengøring {FormatPrice(Reservation.Price.CleaningFee)})";
+        deposit = FormatPrice(Reservation.Price.Deposit);
+        total = FormatPrice(Reservation.Price.Rent + Reservation.Price.CleaningFee + Reservation.Price.Deposit);
 
         string FormatPrice(decimal value) => value.ToString("C0", CultureInfo);
     }

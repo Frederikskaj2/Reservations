@@ -23,24 +23,24 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             var random = new Random();
             var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
-            var resourceReservations = new Dictionary<(LocalDate, Resource), ResourceReservation>();
-            while (resourceReservations.Count < 50)
+            var reservations = new Dictionary<(LocalDate, Resource), Reservation>();
+            while (reservations.Count < 50)
             {
                 var resource = resources[random.Next(resources.Length)];
                 var date = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo).Date.PlusDays(random.Next(90) - 10);
                 var key = (date, resource);
-                if (resourceReservations.ContainsKey(key))
+                if (reservations.ContainsKey(key))
                     continue;
-                var resourceReservation = new ResourceReservation
+                var reservation = new Reservation
                 {
                     Date = date,
                     DurationInDays = 1,
                     Resource = resource,
                     Status = ReservationStatus.Reserved
                 };
-                resourceReservations.Add(key, resourceReservation);
+                reservations.Add(key, reservation);
             }
-            db.ResourceReservations.AddRange(resourceReservations.Values);
+            db.Reservations.AddRange(reservations.Values);
 
             var holidays = new[]
             {

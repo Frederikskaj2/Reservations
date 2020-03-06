@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject IBootstrapCss BootstrapCss
 
-<nav class="top-bar">
+<nav>
     <div class="logo">Frederikskaj&nbsp;2</div>
     <NavLink href="" class="nav-tab" Match="NavLinkMatch.All">
         <div>Fælleshus</div>
@@ -14,9 +14,9 @@
     </NavLink>
     <User />
 </nav>
-<main>
+<div class="contents">
     @Body
-</main>
+</div>
 
 @code
 {

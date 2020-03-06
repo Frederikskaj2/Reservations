@@ -1,0 +1,26 @@
+﻿@inject CultureInfo CultureInfo
+
+<div class="prices">
+    <div class="prices-header">Leje</div>
+    <div class="prices-header">Depositum</div>
+    <div class="prices-header">Til betaling</div>
+    <div>@GetRentAndCleaningFee()</div>
+    <div>@GetDeposit()</div>
+    <div>@GetTotal()</div>
+</div>
+
+@code
+{
+
+    [Parameter]
+    public Price? Price { get; set; }
+
+    private string GetRentAndCleaningFee() => Price != null ? FormatPrice(Price.Rent + Price.CleaningFee) : string.Empty;
+
+    private string GetDeposit() => Price != null ? FormatPrice(Price.Deposit) : string.Empty;
+
+    private string GetTotal() => Price != null ? FormatPrice(Price.Rent + Price.CleaningFee + Price.Deposit) : string.Empty;
+
+    private string FormatPrice(decimal value) => value.ToString("N0", CultureInfo);
+
+}

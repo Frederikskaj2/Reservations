@@ -19,7 +19,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             => await HighPricePolicy.IsHighPriceDay(
                 date, async () => (await db.Holidays.Select(h => h.Date).ToListAsync()).ToHashSet());
 
-        public async Task<int> GetNumberOfHighPriceDays(ResourceReservation reservation)
+        public async Task<int> GetNumberOfHighPriceDays(Reservation reservation)
         {
             var holidays = (await db.Holidays.Select(h => h.Date).ToListAsync()).ToHashSet();
             return Enumerable.Range(0, reservation.DurationInDays)
@@ -28,9 +28,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
             bool IsHighPriceDay(LocalDate date) => IsHighPriceWeekDay(date) || holidays.Contains(date);
         }
 
-        public async Task<IEnumerable<ResourceReservation>> GetReservations(
+        public async Task<IEnumerable<Reservation>> GetReservations(
             int resourceId, LocalDate fromDate, LocalDate toDate)
-            => await db.ResourceReservations
+            => await db.Reservations
                 .Where(rr => rr.ResourceId == resourceId && fromDate <= rr.Date && rr.Date <= toDate)
                 .OrderBy(rr => rr.Date)
                 .ToListAsync();
