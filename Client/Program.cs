@@ -2,7 +2,9 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
-using BlazorStrap;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Blazor.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -22,20 +24,28 @@ namespace Frederikskaj2.Reservations.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
             ConfigureServices(builder.Services);
-            await builder.Build().RunAsync();
+            var host = builder.Build();
+            host.Services
+                .UseBootstrapProviders()
+                .UseFontAwesomeIcons();
+            await host.RunAsync();
         }
 
         private static void ConfigureServices(IServiceCollection services)
         {
-            services.AddBootstrapCss();
+            services
+                .AddBlazorise(options => options.ChangeTextOnKeyPress = true)
+                .AddBootstrapProviders()
+                .AddFontAwesomeIcons();
 
             // See https://github.com/dotnet/aspnetcore/issues/18733#issuecomment-585817720
-            services.AddAuthorizationCore(options => { });
-            services.AddScoped<ServerAuthenticationStateProvider>();
-            services.AddScoped<AuthenticationStateProvider>(
-                sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
-            services.AddScoped<IAuthenticationStateProvider>(
-                sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
+            services
+                .AddAuthorizationCore(options => { })
+                .AddScoped<ServerAuthenticationStateProvider>()
+                .AddScoped<AuthenticationStateProvider>(
+                    sp => sp.GetRequiredService<ServerAuthenticationStateProvider>())
+                .AddScoped<IAuthenticationStateProvider>(
+                    sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
 
             var jsonSerializerOptions = new JsonSerializerOptions
                 {
@@ -43,15 +53,16 @@ namespace Frederikskaj2.Reservations.Client
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 }
                 .ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
-            services.AddSingleton(jsonSerializerOptions);
-            services.AddSingleton<ApiClient>();
-            services.AddSingleton<ClientDataProvider>();
-            services.AddSingleton<IDataProvider>(sp => sp.GetRequiredService<ClientDataProvider>());
+            services
+                .AddSingleton(jsonSerializerOptions)
+                .AddSingleton<ApiClient>()
+                .AddSingleton<ClientDataProvider>()
+                .AddSingleton<IDataProvider>(sp => sp.GetRequiredService<ClientDataProvider>());
 
-            services.AddSingleton(CultureInfo.GetCultureInfo("da-DK"));
-            services.AddReservationsServices();
-
-            services.AddScoped<ApplicationState>();
+            services
+                .AddSingleton(CultureInfo.GetCultureInfo("da-DK"))
+                .AddReservationsServices()
+                .AddScoped<ApplicationState>();
         }
     }
 }

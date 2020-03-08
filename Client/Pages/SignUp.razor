@@ -1,90 +1,120 @@
 ﻿@page "/sign-up"
+@inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
-@inject HttpClient HttpClient
 @inject IAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
-<div class="main">
-    @if (signUpResult == SignUpResult.DuplicateEmail)
-    {
-        <div class="alert alert-danger fade show" role="alert">
+<main>
+    <div class="form-container">
+        <Alert Color="Color.Danger" IsShow="@showDuplicateEmailAlert">
+            <CloseButton Clicked="@DismissDuplicateEmailAlert"/>
             Der findes allerede en bruger med mail @request.Email. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
-            <button type="button" class="close" aria-label="Luk" @onclick="ClearErrorMessage">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    }
-    else if (signUpResult == SignUpResult.GeneralError)
-    {
-        <div class="alert alert-danger fade show" role="alert">
-            Din bruger blev ikke oprettet. Der skete en fejl.
-            <button type="button" class="close" aria-label="Luk" @onclick="ClearErrorMessage">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    }
-    <EditForm Model="request" OnValidSubmit="Submit">
-        <div class="form-group">
-            <label>Mail:</label>
-            <InputText class="form-control" type="email" @bind-Value="request.Email" />
-            <small class="form-text text-muted"><ValidationMessage For="@(() => request.Email)" /></small>
-        </div>
-        <div class="form-group">
-            <label>Fulde navn:</label>
-            <InputText class="form-control" @bind-Value="request.FullName" />
-            <small class="form-text text-muted"><ValidationMessage For="@(() => request.FullName)" /></small>
-        </div>
-        <div class="form-group">
-            <label>Adgangskode:</label>
-            <InputText class="form-control" type="password" @bind-Value="request.Password" />
-            <small class="form-text text-muted"><ValidationMessage For="@(() => request.Password)" /></small>
-        </div>
-        <div class="form-group">
-            <label>Gentag adgangskode:</label>
-            <InputText class="form-control" type="password" @bind-Value="request.ConfirmPassword" />
-            <small class="form-text text-muted"><ValidationMessage For="@(() => request.ConfirmPassword)" /></small>
-        </div>
-        <div class="form-group">
-            <InputCheckbox @bind-Value="request.IsPersistent" />
-            <label class="form-check-label">Husk mig</label>
-        </div>
-        <button type="submit" class="btn btn-primary">
-            Opret bruger
-        </button>
-        <DataAnnotationsValidator />
-    </EditForm>
-</div>
+        </Alert>
+        <Alert Color="Color.Danger" IsShow="@showErrorAlert">
+            <CloseButton Clicked="@DismissErrorAlert" />
+            Der er sket en fejl. Din bruger blev ikke oprettet.
+        </Alert>
+        <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
+            <Field>
+                <FieldLabel>Mail</FieldLabel>
+                <FieldBody>
+                    <Validation>
+                        <TextEdit Role="TextRole.Email" @bind-Text="@request.Email">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextEdit>
+                    </Validation>
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>Fulde navn</FieldLabel>
+                <FieldBody>
+                    <Validation>
+                        <TextEdit @bind-Text="@request.FullName">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextEdit>
+                    </Validation>
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>Adgangskode</FieldLabel>
+                <FieldBody>
+                    <Validation>
+                        <TextEdit Role="TextRole.Password" @bind-Text="@request.Password">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextEdit>
+                    </Validation>
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>Gentag dgangskode</FieldLabel>
+                <FieldBody>
+                    <Validation>
+                        <TextEdit Role="TextRole.Password" @bind-Text="@request.ConfirmPassword">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextEdit>
+                    </Validation>
+                </FieldBody>
+            </Field>
+            <Field>
+                <CheckEdit @bind-Checked="@request.IsPersistent">Husk mig</CheckEdit>
+            </Field>
+            <Button Color="Color.Primary" Clicked="@Submit">Opret bruger</Button>
+        </Validations>
+    </div>
+</main>
 
 @code {
 
     private readonly SignUpRequest request = new SignUpRequest();
-    private SignUpResult signUpResult;
+    private bool showDuplicateEmailAlert;
+    private bool showErrorAlert;
+    Validations validations = null!;
 
     private async Task Submit()
     {
-        ClearErrorMessage();
-        var response = await HttpClient.PostJsonAsync<SignUpResponse>("user/sign-up", request);
-        if (response.Result == SignUpResult.Success)
+        if (!validations.ValidateAll())
+            return;
+
+        validations.ClearAll();
+        DismissDuplicateEmailAlert();
+        DismissErrorAlert();
+
+        var maybe = await ApiClient.PostJsonAsync<SignUpResponse>("user/sign-up", request);
+        if (maybe.TryGetValue(out var response))
         {
-            AuthenticationStateProvider.UpdateUser(response.User!);
-            if (ApplicationState.RedirectUrl != null)
+            if (response.Result == SignUpResult.Success)
             {
-                var redirectUrl = ApplicationState.RedirectUrl;
-                ApplicationState.RedirectUrl = null;
-                NavigationManager.NavigateTo(redirectUrl);
+                AuthenticationStateProvider.UpdateUser(response.User!);
+                if (ApplicationState.RedirectUrl != null)
+                {
+                    var redirectUrl = ApplicationState.RedirectUrl;
+                    ApplicationState.RedirectUrl = null;
+                    NavigationManager.NavigateTo(redirectUrl);
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("");
+                }
+            }
+            else if (response.Result == SignUpResult.DuplicateEmail)
+            {
+                showDuplicateEmailAlert = true;
+                return;
             }
         }
-        else
-            SetErrorMessage(response.Result);
+        showErrorAlert = true;
     }
 
-    private void ClearErrorMessage()
-    {
-        signUpResult = default;
-    }
+    private void DismissDuplicateEmailAlert() => showDuplicateEmailAlert = false;
 
-    private void SetErrorMessage(SignUpResult result)
-    {
-        signUpResult = result;
-    }
+    private void DismissErrorAlert() => showErrorAlert = false;
+
 }

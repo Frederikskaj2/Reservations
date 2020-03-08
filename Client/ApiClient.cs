@@ -23,12 +23,13 @@ namespace Frederikskaj2.Reservations.Client
             return JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
         }
 
-        public async Task<T> PostJsonAsync<T>(string requestUri, object content)
+        public async Task<Maybe<T>> PostJsonAsync<T>(string requestUri, object content)
         {
             var requestJson = JsonSerializer.Serialize(content, jsonSerializerOptions);
             using var requestContent = new StringContent(requestJson, Encoding.UTF8, "application/json");
             var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, requestUri) { Content = requestContent });
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+                return Maybe.None;
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
         }

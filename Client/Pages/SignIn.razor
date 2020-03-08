@@ -1,82 +1,96 @@
 ﻿@page "/sign-in"
+@inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
-@inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 @inject ServerAuthenticationStateProvider AuthenticationStateProvider
 
-<div class="main">
-    <p><a href="sign-up">Opret en ny bruger</a> hvis du ikke allerede har en bruger.</p>
-    @if (signInResult == SignInResult.InvalidEmailOrPassword)
-    {
-        <div class="alert alert-danger fade show" role="alert">
+<main>
+    <div class="form-container">
+        <Alert Color="Color.Danger" IsShow="@showInvalidEmailOrPasswordAlert">
+            <CloseButton Clicked="@DismissInvalidEmailOrPasswordAlert" />
             Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
-            <button type="button" class="close" aria-label="Luk" @onclick="ClearErrorMessage">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    }
-    else if (signInResult == SignInResult.GeneralError)
-    {
-        <div class="alert alert-danger fade show" role="alert">
-            Du blev ikke logget ind. Der skete en fejl.
-            <button type="button" class="close" aria-label="Luk" @onclick="ClearErrorMessage">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    }
-    <EditForm Model="request" OnValidSubmit="Submit">
-        <div class="form-group">
-            <label>Mail:</label>
-            <InputText class="form-control" type="email" @bind-Value="request.Email" />
-            <small class="form-text text-muted"><ValidationMessage For="@(() => request.Email)" /></small>
-        </div>
-        <div class="form-group">
-            <label>Adgangskode:</label>
-            <InputText class="form-control" type="password" @bind-Value="request.Password" />
-            <small class="form-text text-muted"><ValidationMessage For="@(() => request.Password)" /></small>
-        </div>
-        <div class="form-group">
-            <InputCheckbox @bind-Value="request.IsPersistent" />
-            <label class="form-check-label">Husk mig</label>
-        </div>
-        <button type="submit" class="btn btn-primary">
-            Log ind
-        </button>
-        <DataAnnotationsValidator />
-    </EditForm>
-</div>
+        </Alert>
+        <Alert Color="Color.Danger" IsShow="@showErrorAlert">
+            <CloseButton Clicked="@DismissErrorAlert" />
+            Der er sket en fejl. Du blev ikke logget ind.
+        </Alert>
+        <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
+            <Field>
+                <FieldLabel>Mail</FieldLabel>
+                <FieldBody>
+                    <Validation>
+                        <TextEdit Role="TextRole.Email" @bind-Text="@request.Email">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextEdit>
+                    </Validation>
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>Adgangskode</FieldLabel>
+                <FieldBody>
+                    <Validation>
+                        <TextEdit Role="TextRole.Password" @bind-Text="@request.Password">
+                            <Feedback>
+                                <ValidationError />
+                            </Feedback>
+                        </TextEdit>
+                    </Validation>
+                </FieldBody>
+            </Field>
+            <Field>
+                <CheckEdit @bind-Checked="@request.IsPersistent">Husk mig</CheckEdit>
+            </Field>
+            <Button Color="Color.Primary" Clicked="@Submit">Log ind</Button>
+        </Validations>
+    </div>
+</main>
 
 @code {
 
     private readonly SignInRequest request = new SignInRequest();
-    private SignInResult signInResult;
+    private bool showInvalidEmailOrPasswordAlert;
+    private bool showErrorAlert;
+    Validations validations = null!;
 
     private async Task Submit()
     {
-        ClearErrorMessage();
-        var response = await HttpClient.PostJsonAsync<SignInResponse>("user/sign-in", request);
-        if (response.Result == SignInResult.Success)
+        if (!validations.ValidateAll())
+            return;
+
+        validations.ClearAll();
+        DismissInvalidEmailOrPasswordAlert();
+        DismissErrorAlert();
+
+        var maybe = await ApiClient.PostJsonAsync<SignInResponse>("user/sign-in", request);
+        if (maybe.TryGetValue(out var response))
         {
-            AuthenticationStateProvider.UpdateUser(response.User!);
-            if (ApplicationState.RedirectUrl != null)
+            if (response.Result == SignInResult.Success)
             {
-                var redirectUrl = ApplicationState.RedirectUrl;
-                ApplicationState.RedirectUrl = null;
-                NavigationManager.NavigateTo(redirectUrl);
+                AuthenticationStateProvider.UpdateUser(response.User!);
+                if (ApplicationState.RedirectUrl != null)
+                {
+                    var redirectUrl = ApplicationState.RedirectUrl;
+                    ApplicationState.RedirectUrl = null;
+                    NavigationManager.NavigateTo(redirectUrl);
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("");
+                }
+            }
+            else if (response.Result == SignInResult.InvalidEmailOrPassword)
+            {
+                showInvalidEmailOrPasswordAlert = true;
+                return;
             }
         }
-        else
-            SetErrorMessage(response.Result);
+        showErrorAlert = true;
     }
 
-    private void ClearErrorMessage()
-    {
-        signInResult = default;
-    }
+    private void DismissInvalidEmailOrPasswordAlert() => showInvalidEmailOrPasswordAlert = false;
 
-    private void SetErrorMessage(SignInResult result)
-    {
-        signInResult = result;
-    }
+    private void DismissErrorAlert() => showErrorAlert = false;
 
 }

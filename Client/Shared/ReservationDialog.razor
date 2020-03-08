@@ -2,70 +2,75 @@
 @inject ReservationsOptions ReservationsOptions
 @inject IReservationPolicyProvider ReservationPolicyProvider
 
-<BSModal @ref="@modal">
+<Modal @ref="@modal">
     @if (Reservation?.Resource != null)
     {
-        <BSModalHeader OnClick="@(() => modal.Hide())">Reservér @Reservation.Resource.Name</BSModalHeader>
-        <BSModalBody>
-            <BSBasicForm>
-                <BSFormGroup IsRow="true">
-                    <BSLabel For="reservation-check-in" SM="4">Fra</BSLabel>
-                    <BSCol SM="8">
-                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-check-in" Value="@GetCheckInTime()" />
-                    </BSCol>
-                </BSFormGroup>
-                <BSFormGroup IsRow="true">
-                    <BSLabel For="reservation-duration-in-days" SM="4">Antal dage</BSLabel>
-                    <BSCol SM="8">
-                        <select id="reservation-duration-in-days" class="form-control" @onchange="@DurationInDaysChanged">
-                            @for (var i = MinimumDays; i <= MaximumDays; i += 1)
-                            {
-                                <option selected="@(i == Reservation.DurationInDays)">@i</option>
+    <ModalBackdrop />
+    <ModalContent>
+        <ModalHeader>
+            <ModalTitle>Reservér @Reservation.Resource.Name</ModalTitle>
+            <CloseButton Clicked="@Hide" />
+        </ModalHeader>
+        <ModalBody>
+            <Field IsHorizontal="true">
+                <FieldLabel ColumnSize="ColumnSize.Is4">Fra</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is8">
+                    <TextEdit IsPlaintext="true" Text="@GetCheckInTime()" />
+                </FieldBody>
+            </Field>
+            <Field IsHorizontal="true">
+                <FieldLabel ColumnSize="ColumnSize.Is4">Antal dage</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is8">
+                    <SelectEdit TValue="int" Value="@Reservation.DurationInDays" SelectedValueChanged="@DurationInDaysChanged">
+                        @for (var i = MinimumDays; i <= MaximumDays; i += 1)
+                        {
+                            var localI = i;
+                        <SelectItem Value="@localI">@localI</SelectItem>
                             }
-                        </select>
-                    </BSCol>
-                </BSFormGroup>
-                <BSFormGroup IsRow="true">
-                    <BSLabel For="reservation-check-out" SM="4">Til</BSLabel>
-                    <BSCol SM="8">
-                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-check-out" Value="@GetCheckOutTime()" />
-                    </BSCol>
-                </BSFormGroup>
-                <BSFormGroup IsRow="true">
-                    <BSLabel For="reservation-rent" SM="4">Leje</BSLabel>
-                    <BSCol SM="8">
-                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-rent" Value="@rent" />
-                    </BSCol>
-                </BSFormGroup>
-                <BSFormGroup IsRow="true">
-                    <BSLabel For="reservation-deposit" SM="4">Depositum</BSLabel>
-                    <BSCol SM="8">
-                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-deposit" Value="@deposit" />
-                    </BSCol>
-                </BSFormGroup>
-                <BSFormGroup IsRow="true">
-                    <BSLabel For="reservation-total" SM="4">Til betaling</BSLabel>
-                    <BSCol SM="8">
-                        <BSBasicInput InputType="InputType.Text" IsDisabled="true" IsPlaintext="true" Id="reservation-total" Value="@total" />
-                    </BSCol>
-                </BSFormGroup>
-            </BSBasicForm>
-        </BSModalBody>
-        <BSModalFooter>
-            <BSButton Color="Color.Primary" OnClick="@OnConfirm">Reservér</BSButton>
-            <BSButton Color="Color.Secondary" OnClick="@OnCancel">Annullér</BSButton>
-        </BSModalFooter>
+                    </SelectEdit>
+                </FieldBody>
+            </Field>
+            <Field IsHorizontal="true">
+                <FieldLabel ColumnSize="ColumnSize.Is4">Til</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is8">
+                    <TextEdit IsPlaintext="true" Text="@GetCheckOutTime()" />
+                </FieldBody>
+            </Field>
+            <Field IsHorizontal="true">
+                <FieldLabel ColumnSize="ColumnSize.Is4">Leje</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is8">
+                    <TextEdit IsPlaintext="true" Text="@rent" />
+                </FieldBody>
+            </Field>
+            <Field IsHorizontal="true">
+                <FieldLabel ColumnSize="ColumnSize.Is4">Depositum</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is8">
+                    <TextEdit IsPlaintext="true" Text="@deposit" />
+                </FieldBody>
+            </Field>
+            <Field IsHorizontal="true">
+                <FieldLabel ColumnSize="ColumnSize.Is4">Til betaling</FieldLabel>
+                <FieldBody ColumnSize="ColumnSize.Is8">
+                    <TextEdit IsPlaintext="true" Text="@total" />
+                </FieldBody>
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="@OnConfirm">Reservér</Button>
+            <Button Color="Color.Secondary" Clicked="@OnCancel">Annullér</Button>
+        </ModalFooter>
+    </ModalContent>
     }
-</BSModal>
+</Modal>
 
 @code {
 
-    private BSModal modal = null!;
+    private Modal modal = null!;
     private LocalDateTimePattern pattern = null!;
     private IReservationPolicy? policy;
-    private string? rent;
-    private string? deposit;
-    private string? total;
+    private string rent = string.Empty;
+    private string deposit = string.Empty;
+    private string total = string.Empty;
 
     [Parameter]
     public Reservation? Reservation { get; set; }
@@ -104,14 +109,11 @@
         await UpdatePrice();
     }
 
-    private async Task DurationInDaysChanged(ChangeEventArgs e)
+    private async Task DurationInDaysChanged(int value)
     {
-        if (int.TryParse((string) e.Value, NumberStyles.None, CultureInfo.InvariantCulture, out var durationInDays))
-        {
-            Reservation!.DurationInDays = durationInDays;
-            await UpdatePrice();
-            await OnReservationChanged.InvokeAsync(null);
-        }
+        Reservation!.DurationInDays = value;
+        await UpdatePrice();
+        await OnReservationChanged.InvokeAsync(null);
     }
 
     private async Task UpdatePrice()
