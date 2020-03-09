@@ -1,72 +1,71 @@
-﻿@inject CultureInfo CultureInfo
+﻿@inject FormattingService FormattingService
 @inject ReservationsOptions ReservationsOptions
 @inject IReservationPolicyProvider ReservationPolicyProvider
 
 <Modal @ref="@modal">
     @if (Reservation?.Resource != null)
     {
-    <ModalBackdrop />
-    <ModalContent>
-        <ModalHeader>
-            <ModalTitle>Reservér @Reservation.Resource.Name</ModalTitle>
-            <CloseButton Clicked="@Hide" />
-        </ModalHeader>
-        <ModalBody>
-            <Field IsHorizontal="true">
-                <FieldLabel ColumnSize="ColumnSize.Is4">Fra</FieldLabel>
-                <FieldBody ColumnSize="ColumnSize.Is8">
-                    <TextEdit IsPlaintext="true" Text="@GetCheckInTime()" />
-                </FieldBody>
-            </Field>
-            <Field IsHorizontal="true">
-                <FieldLabel ColumnSize="ColumnSize.Is4">Antal dage</FieldLabel>
-                <FieldBody ColumnSize="ColumnSize.Is8">
-                    <SelectEdit TValue="int" Value="@Reservation.DurationInDays" SelectedValueChanged="@DurationInDaysChanged">
-                        @for (var i = MinimumDays; i <= MaximumDays; i += 1)
-                        {
-                            var localI = i;
-                        <SelectItem Value="@localI">@localI</SelectItem>
+        <ModalBackdrop />
+        <ModalContent>
+            <ModalHeader>
+                <ModalTitle>Reservér @Reservation.Resource.Name</ModalTitle>
+                <CloseButton Clicked="@OnCancel" />
+            </ModalHeader>
+            <ModalBody>
+                <Field IsHorizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Fra</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit IsPlaintext="true" Text="@GetCheckInTime()" />
+                    </FieldBody>
+                </Field>
+                <Field IsHorizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Antal dage</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <SelectEdit TValue="int" Value="@Reservation.DurationInDays" SelectedValueChanged="@DurationInDaysChanged">
+                            @for (var i = MinimumDays; i <= MaximumDays; i += 1)
+                            {
+                                var localI = i;
+                                <SelectItem Value="@localI">@localI</SelectItem>
                             }
-                    </SelectEdit>
-                </FieldBody>
-            </Field>
-            <Field IsHorizontal="true">
-                <FieldLabel ColumnSize="ColumnSize.Is4">Til</FieldLabel>
-                <FieldBody ColumnSize="ColumnSize.Is8">
-                    <TextEdit IsPlaintext="true" Text="@GetCheckOutTime()" />
-                </FieldBody>
-            </Field>
-            <Field IsHorizontal="true">
-                <FieldLabel ColumnSize="ColumnSize.Is4">Leje</FieldLabel>
-                <FieldBody ColumnSize="ColumnSize.Is8">
-                    <TextEdit IsPlaintext="true" Text="@rent" />
-                </FieldBody>
-            </Field>
-            <Field IsHorizontal="true">
-                <FieldLabel ColumnSize="ColumnSize.Is4">Depositum</FieldLabel>
-                <FieldBody ColumnSize="ColumnSize.Is8">
-                    <TextEdit IsPlaintext="true" Text="@deposit" />
-                </FieldBody>
-            </Field>
-            <Field IsHorizontal="true">
-                <FieldLabel ColumnSize="ColumnSize.Is4">Til betaling</FieldLabel>
-                <FieldBody ColumnSize="ColumnSize.Is8">
-                    <TextEdit IsPlaintext="true" Text="@total" />
-                </FieldBody>
-            </Field>
-        </ModalBody>
-        <ModalFooter>
-            <Button Color="Color.Primary" Clicked="@OnConfirm">Reservér</Button>
-            <Button Color="Color.Secondary" Clicked="@OnCancel">Annullér</Button>
-        </ModalFooter>
-    </ModalContent>
+                        </SelectEdit>
+                    </FieldBody>
+                </Field>
+                <Field IsHorizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Til</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit IsPlaintext="true" Text="@GetCheckOutTime()" />
+                    </FieldBody>
+                </Field>
+                <Field IsHorizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Leje</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit IsPlaintext="true" Text="@rent" />
+                    </FieldBody>
+                </Field>
+                <Field IsHorizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Depositum</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit IsPlaintext="true" Text="@deposit" />
+                    </FieldBody>
+                </Field>
+                <Field IsHorizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Til betaling</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit IsPlaintext="true" Text="@total" />
+                    </FieldBody>
+                </Field>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Primary" Clicked="@OnConfirm">Reservér</Button>
+                <Button Color="Color.Secondary" Clicked="@OnCancel">Annullér</Button>
+            </ModalFooter>
+        </ModalContent>
     }
 </Modal>
 
 @code {
 
     private Modal modal = null!;
-    private LocalDateTimePattern pattern = null!;
     private IReservationPolicy? policy;
     private string rent = string.Empty;
     private string deposit = string.Empty;
@@ -97,11 +96,6 @@
         modal.Hide();
     }
 
-    protected override void OnInitialized()
-    {
-        pattern = LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH:mm", CultureInfo);
-    }
-
     protected override async Task OnParametersSetAsync()
     {
         if (Reservation?.Resource != null)
@@ -121,21 +115,17 @@
         if (Reservation == null || policy == null)
             return;
         Reservation.Price = await policy.GetPrice(Reservation);
-        rent = $"{FormatPrice(Reservation.Price.Rent)} (inklusiv rengøring {FormatPrice(Reservation.Price.CleaningFee)})";
-        deposit = FormatPrice(Reservation.Price.Deposit);
-        total = FormatPrice(Reservation.Price.Rent + Reservation.Price.CleaningFee + Reservation.Price.Deposit);
-
-        string FormatPrice(decimal value) => value.ToString("C0", CultureInfo);
+        rent = $"{FormattingService.FormatMoneyLong(Reservation.Price.Rent)} (inklusiv rengøring {FormattingService.FormatMoneyLong(Reservation.Price.CleaningFee)})";
+        deposit = FormattingService.FormatMoneyLong(Reservation.Price.Deposit);
+        total = FormattingService.FormatMoneyLong(Reservation.Price.Rent + Reservation.Price.CleaningFee + Reservation.Price.Deposit);
     }
 
-    private string GetCheckInTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date + ReservationsOptions.CheckInTime);
+    private string GetCheckInTime() => Reservation != null
+        ? FormattingService.FormatCheckInTimeLong(Reservation.Date)
+        : string.Empty;
 
-    private string GetCheckOutTime() => Reservation == null ? string.Empty : FormatTime(Reservation.Date.PlusDays(Reservation.DurationInDays) + ReservationsOptions.CheckOutTime);
-
-    private string FormatTime(LocalDateTime time)
-    {
-        var formatted = pattern.Format(time);
-        return CultureInfo.TextInfo.ToUpper(formatted[0]) + formatted.Substring(1);
-    }
+    private string GetCheckOutTime() => Reservation != null
+        ? FormattingService.FormatCheckOutTimeLong(Reservation.Date.PlusDays(Reservation.DurationInDays))
+        : string.Empty;
 
 }

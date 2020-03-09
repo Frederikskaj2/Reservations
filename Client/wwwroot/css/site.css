@@ -21,6 +21,10 @@
     outline: none;
 }
 
+button {
+    min-width: 7.5rem;
+}
+
 html, body, .contents {
     height: 100%;
 }
@@ -166,10 +170,6 @@ nav {
         font-weight: bold;
     }
 
-    .not-authorized button {
-        min-width: 7.5rem;
-    }
-
 .text {
     font-family: 'Roboto Slab';
     margin: 2rem;
@@ -185,9 +185,22 @@ nav {
         font-weight: bold;
     }
 
+.container {
+    margin: 2rem;
+}
+
 .form-container {
     margin: 2rem;
     max-width: 40rem;
+}
+
+.table-container {
+    margin: 2rem;
+    max-width: 60rem;
+}
+
+.table-container > * {
+    margin-bottom: 2rem;
 }
 
 .order {
@@ -198,6 +211,7 @@ nav {
     .order .order-get-started {
         font-size: 2rem;
         text-align: center;
+        color: #888;
     }
 
     .order h1 {
@@ -223,6 +237,7 @@ nav {
             .order .card .card-title .close {
                 margin: -2rem 0 0 auto;
                 text-shadow: none;
+                #color: #333;
             }
 
 .order-total {

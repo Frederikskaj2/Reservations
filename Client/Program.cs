@@ -61,6 +61,7 @@ namespace Frederikskaj2.Reservations.Client
 
             services
                 .AddSingleton(CultureInfo.GetCultureInfo("da-DK"))
+                .AddSingleton<FormattingService>()
                 .AddReservationsServices()
                 .AddScoped<ApplicationState>();
         }

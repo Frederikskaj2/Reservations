@@ -80,9 +80,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return stories.SelectMany(
                     kvp =>
                         Enumerable.Range(0, kvp.Value.Left + 1)
-                            .Select(story => new Apartment { Letter = kvp.Key, Story = story, Side = Side.Left })
+                            .Select(story => new Apartment { Letter = kvp.Key, Story = story, Side = ApartmentSide.Left })
                             .Concat(Enumerable.Range(0, kvp.Value.Right + 1)
-                                .Select(story => new Apartment { Letter = kvp.Key, Story = story, Side = Side.Right })))
+                                .Select(story => new Apartment { Letter = kvp.Key, Story = story, Side = ApartmentSide.Right })))
                 .OrderBy(apartment => apartment.Letter)
                 .ThenBy(apartment => apartment.Story)
                 .ThenBy(apartment => apartment.Side);

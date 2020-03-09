@@ -11,6 +11,7 @@ namespace Frederikskaj2.Reservations.Client
     public class ClientDataProvider : IDataProvider
     {
         private readonly ApiClient apiClient;
+        private IEnumerable<Apartment>? cachedApartments;
         private HashSet<LocalDate>? cachedHolidays;
         private IEnumerable<Reservation>? cachedReservations;
         private (LocalDate FromDate, LocalDate ToDate) reservationsCacheKey;
@@ -37,6 +38,9 @@ namespace Frederikskaj2.Reservations.Client
             => Task.FromResult(
                 GetAllReservations().Where(
                     rr => rr.ResourceId == resourceId && fromDate <= rr.Date && rr.Date <= toDate));
+
+        public async Task<IEnumerable<Apartment>> GetApartments()
+            => cachedApartments ??= (await apiClient.GetJsonAsync<IEnumerable<Apartment>>("apartments"));
 
         public void Refresh()
         {

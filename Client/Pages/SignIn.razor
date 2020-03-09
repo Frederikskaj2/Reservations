@@ -45,6 +45,10 @@
             <Button Color="Color.Primary" Clicked="@Submit">Log ind</Button>
         </Validations>
     </div>
+    <div class="form-container">
+        <p>Hvis du ikke har en bruger kan du oprette dig.</p>
+        <p><button class="btn btn-secondary" type="button" @onclick="SignUp">Opret bruger</button></p>
+    </div>
 </main>
 
 @code {
@@ -92,5 +96,7 @@
     private void DismissInvalidEmailOrPasswordAlert() => showInvalidEmailOrPasswordAlert = false;
 
     private void DismissErrorAlert() => showErrorAlert = false;
+
+    private void SignUp() => NavigationManager.NavigateTo("sign-up");
 
 }

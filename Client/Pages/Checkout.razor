@@ -1,0 +1,108 @@
+﻿@page "/checkout"
+@attribute [Authorize]
+@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+
+<main>
+    @if (ClientDataProvider.Order.Reservations!.Count == 0)
+    {
+        <div class="container">
+            <p>Gå til <a href="calendar">kalenderen</a> for at påbegynde reservation af et lokale.</p>
+        </div>
+    }
+    else if (!isInitialized)
+    {
+        <div class="container">
+            <p>Vent...</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-container">
+            <Field>
+                <FieldLabel>Din adresse</FieldLabel>
+                <SelectEdit TValue="int" @bind-SelectedValue="@selectedApartmentId">
+                    <SelectItem Value="0" disabled>Vælg lejlighed</SelectItem>
+                    @foreach (var apartment in apartments)
+                    {
+                        <SelectItem Value="@apartment.Id">@apartment</SelectItem>
+                    }
+                </SelectEdit>
+            </Field>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>Lokale</TableHeaderCell>
+                        <TableHeaderCell>Fra</TableHeaderCell>
+                        <TableHeaderCell>Dage</TableHeaderCell>
+                        <TableHeaderCell>Til</TableHeaderCell>
+                        <TableHeaderCell class="text-right">Leje</TableHeaderCell>
+                        <TableHeaderCell class="text-right">Rengøring</TableHeaderCell>
+                        <TableHeaderCell class="text-right">Depositum</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var reservation in ClientDataProvider.Order.Reservations)
+                    {
+                        <TableRow>
+                            <TableRowCell>@reservation.Resource!.Name</TableRowCell>
+                            <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
+                            <TableRowCell>@reservation.DurationInDays</TableRowCell>
+                            <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
+                            <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
+                            <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
+                            <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TableRowCell colspan="3" />
+                        <TableRowCell colspan="3">Leje (inkl. rengøring)</TableRowCell>
+                        <TableRowCell class="text-right">@FormattingService.FormatMoneyLong(GetTotalRentAndCleaningFee())</TableRowCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableRowCell colspan="3" class="border-top-0" />
+                        <TableRowCell colspan="3" class="border-top-0">Depositum</TableRowCell>
+                        <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(GetTotalDeposit())</TableRowCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableRowCell colspan="3" class="border-top-0" />
+                        <TableRowCell colspan="3" class="border-bottom"><strong>Til betaling</strong></TableRowCell>
+                        <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(GetGrandTotal())</strong></TableRowCell>
+                    </TableRow>
+                </TableFooter>
+            </Table>
+            <Button class="float-right" Color="Color.Danger" Clicked="@Submit">Bekræft reservation</Button>
+        </div>
+    }
+</main>
+
+@code
+{
+
+    private IEnumerable<Apartment> apartments = null!;
+    private bool isInitialized;
+    private int selectedApartmentId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apartments = await ClientDataProvider.GetApartments();
+        isInitialized = true;
+    }
+
+    private decimal GetTotalRentAndCleaningFee()
+        => ClientDataProvider.Order.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee);
+
+    private decimal GetTotalDeposit()
+        => ClientDataProvider.Order.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Deposit);
+
+    private decimal GetGrandTotal()
+        => ClientDataProvider.Order.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee + reservation.Price!.Deposit);
+
+    private void Submit()
+    {
+        var selectedApartment = apartments.First(apartment => apartment.Id == selectedApartmentId);
+    }
+
+}

@@ -8,5 +8,6 @@
         public string HashedPassword { get; set; } = string.Empty;
         public bool IsEmailConfirmed { get; set; }
         public bool IsAdministrator { get; set; }
+        public Apartment? Apartment { get; set; }
     }
 }

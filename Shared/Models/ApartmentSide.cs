@@ -1,6 +1,6 @@
 ﻿namespace Frederikskaj2.Reservations.Shared
 {
-    public enum Side
+    public enum ApartmentSide
     {
         Left,
         Right
