@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using Frederikskaj2.Reservations.Server.Domain;
+using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,25 +11,33 @@ using NodaTime.Text;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
-    [Route("reservations")]
+    [Route("reserved-days")]
     [ApiController]
-    public class ReservationsController : Controller
+    public class ReservedDaysController : Controller
     {
         private static readonly LocalDatePattern
             DatePattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM-dd");
 
         private readonly ReservationsContext db;
 
-        public ReservationsController(ReservationsContext db)
+        public ReservedDaysController(ReservationsContext db)
             => this.db = db ?? throw new ArgumentNullException(nameof(db));
 
         [HttpGet]
-        public async Task<IEnumerable<Reservation>> Get(int? resourceId, string? fromDate, string? toDate)
+        public async Task<IEnumerable<ReservedDay>> Get(string? fromDate, string? toDate)
         {
-            IQueryable<Reservation> query = db.Reservations;
-
-            if (resourceId != null)
-                query = query.Where(rr => rr.ResourceId == resourceId.Value);
+            var nameIdentifierClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var userId = nameIdentifierClaim != null ? int.Parse(nameIdentifierClaim.Value) : -1;
+            var query = db.ReservedDays
+                .Include(rd => rd.Reservation!)
+                .ThenInclude(r => r.Order)
+                .Select(rd => new ReservedDay
+                {
+                    Id = rd.Id,
+                    Date = rd.Date,
+                    ResourceId = rd.Reservation!.ResourceId,
+                    IsMyReservation = rd.Reservation!.Order!.UserId == userId
+                });
 
             if (!string.IsNullOrEmpty(fromDate))
             {

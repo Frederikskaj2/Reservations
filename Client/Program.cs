@@ -34,7 +34,7 @@ namespace Frederikskaj2.Reservations.Client
         private static void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddBlazorise(options => options.ChangeTextOnKeyPress = true)
+                .AddBlazorise()
                 .AddBootstrapProviders()
                 .AddFontAwesomeIcons();
 
@@ -55,14 +55,14 @@ namespace Frederikskaj2.Reservations.Client
                 .ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
             services
                 .AddSingleton(jsonSerializerOptions)
-                .AddSingleton<ApiClient>()
-                .AddSingleton<ClientDataProvider>()
-                .AddSingleton<IDataProvider>(sp => sp.GetRequiredService<ClientDataProvider>());
+                .AddSingleton<ApiClient>();
 
             services
                 .AddSingleton(CultureInfo.GetCultureInfo("da-DK"))
                 .AddSingleton<FormattingService>()
                 .AddReservationsServices()
+                .AddSingleton<ClientDataProvider>()
+                .AddSingleton<IDataProvider>(sp => sp.GetRequiredService<ClientDataProvider>())
                 .AddScoped<ApplicationState>();
         }
     }

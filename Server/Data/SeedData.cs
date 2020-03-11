@@ -4,7 +4,7 @@ using System.Linq;
 using Frederikskaj2.Reservations.Shared;
 using NodaTime;
 
-namespace Frederikskaj2.Reservations.Server.Domain
+namespace Frederikskaj2.Reservations.Server.Data
 {
     internal static class SeedData
     {
@@ -13,7 +13,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var resources = new[]
             {
                 new Resource { Sequence = 1, Type = ResourceType.BanquetFacilities, Name = "Fest-/aktivitetslokale" },
-                new Resource { Sequence = 2, Type = ResourceType.Bedroom, Name = "Frederikke (soveværelse)" },
+                new Resource { Sequence = 2, Type = ResourceType.Bedroom, Name = "Frederik (soveværelse)" },
                 new Resource { Sequence = 3, Type = ResourceType.Bedroom, Name = "Kaj (soveværelse)" }
             };
             db.Resources.AddRange(resources);
@@ -22,25 +22,60 @@ namespace Frederikskaj2.Reservations.Server.Domain
             db.Apartments.AddRange(apartments);
 
             var random = new Random();
+
+            var users = new[]
+            {
+                new User { Email = "a@liversage.com", FullName = "A Liversage", Apartment = apartments[random.Next(apartments.Count)] },
+                new User { Email = "b@liversage.com", FullName = "B Liversage", Apartment = apartments[random.Next(apartments.Count)] },
+                new User { Email = "c@liversage.com", FullName = "C Liversage", Apartment = apartments[random.Next(apartments.Count)] },
+            };
+            db.Users.AddRange(users);
+
             var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
-            var reservations = new Dictionary<(LocalDate, Resource), Reservation>();
-            while (reservations.Count < 50)
+            var now = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo);
+            var reservedDays = new Dictionary<(LocalDate, Resource), ReservedDay>();
+
+            Order CreateOrder()
+            {
+                const int secondsPerDay = 24*60*60;
+                var user = users[random.Next(users.Length)];
+                var timestamp = SystemClock.Instance.GetCurrentInstant()
+                    .Minus(Duration.FromSeconds(random.Next(6*secondsPerDay, 45*secondsPerDay)));
+                var order = new Order
+                {
+                    User = user,
+                    Apartment = user.Apartment,
+                    CreatedTimestamp = timestamp,
+                    UpdatedTimestamp = timestamp,
+                    Reservations = new List<Reservation>()
+                };
+                var reservationCount = 2 - (int) Math.Log2(random.Next(1, 4));
+                while (order.Reservations.Count < reservationCount)
+                {
+                    var reservation = CreateReservation();
+                    if (reservation.Days.Any(day => reservedDays.ContainsKey((day.Date, reservation.Resource!))))
+                        continue;
+                    order.Reservations.Add(reservation);
+                    foreach (var day in reservation.Days!)
+                        reservedDays.Add((day.Date, reservation.Resource!), day);
+                }
+                return order;
+            }
+
+            Reservation CreateReservation()
             {
                 var resource = resources[random.Next(resources.Length)];
                 var date = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo).Date.PlusDays(random.Next(90) - 10);
-                var key = (date, resource);
-                if (reservations.ContainsKey(key))
-                    continue;
-                var reservation = new Reservation
+                var durationInDays = 3 - (int) Math.Log2(random.Next(1, 8));
+                return new Reservation
                 {
-                    Date = date,
-                    DurationInDays = 1,
                     Resource = resource,
-                    Status = ReservationStatus.Reserved
+                    Status = ReservationStatus.Reserved,
+                    Days = Enumerable.Range(0, durationInDays).Select(i => new ReservedDay { Date = date.PlusDays(i), Resource = resource }).ToList()
                 };
-                reservations.Add(key, reservation);
             }
-            db.Reservations.AddRange(reservations.Values);
+
+            db.Orders.AddRange(Enumerable.Range(0, 20).Select(_ => CreateOrder()));
 
             var holidays = new[]
             {

@@ -1,6 +1,7 @@
 ﻿@page "/sign-in"
 @inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
+@inject ClientDataProvider ClientDataProvider
 @inject NavigationManager NavigationManager
 @inject ServerAuthenticationStateProvider AuthenticationStateProvider
 
@@ -42,21 +43,21 @@
             <Field>
                 <CheckEdit @bind-Checked="@request.IsPersistent">Husk mig</CheckEdit>
             </Field>
-            <Button Color="Color.Primary" Clicked="@Submit">Log ind</Button>
+            <Button Color="Color.Primary" Clicked="@Submit" class="btn-text">Log ind</Button>
         </Validations>
     </div>
     <div class="form-container">
         <p>Hvis du ikke har en bruger kan du oprette dig.</p>
-        <p><button class="btn btn-secondary" type="button" @onclick="SignUp">Opret bruger</button></p>
+        <Button Color="Color.Secondary" Clicked="@SignUp" class="btn-text">Opret bruger</Button>
     </div>
 </main>
 
 @code {
 
     private readonly SignInRequest request = new SignInRequest();
+    private Validations validations = null!;
     private bool showInvalidEmailOrPasswordAlert;
     private bool showErrorAlert;
-    Validations validations = null!;
 
     private async Task Submit()
     {
@@ -73,6 +74,8 @@
             if (response.Result == SignInResult.Success)
             {
                 AuthenticationStateProvider.UpdateUser(response.User!);
+                ApplicationState.ResetStateAfterSignIn();
+                ClientDataProvider.Refresh();
                 if (ApplicationState.RedirectUrl != null)
                 {
                     var redirectUrl = ApplicationState.RedirectUrl;

@@ -21,6 +21,7 @@ namespace Frederikskaj2.Reservations.Client
         private static async Task<AuthenticationState> GetAuthenticationState(Task<UserInfo> userTask)
         {
             var user = await userTask;
+            return new AuthenticationState(new ClaimsPrincipal(GetIdentity()));
 
             ClaimsIdentity GetIdentity()
             {
@@ -31,10 +32,6 @@ namespace Frederikskaj2.Reservations.Client
                     claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
                 return new ClaimsIdentity(claims, "serverauth");
             }
-
-            var identity = GetIdentity();
-
-            return new AuthenticationState(new ClaimsPrincipal(identity));
         }
     }
 }

@@ -13,15 +13,18 @@ namespace Frederikskaj2.Reservations.Client
         private readonly ApiClient apiClient;
         private IEnumerable<Apartment>? cachedApartments;
         private HashSet<LocalDate>? cachedHolidays;
-        private IEnumerable<Reservation>? cachedReservations;
-        private (LocalDate FromDate, LocalDate ToDate) reservationsCacheKey;
+        private IEnumerable<ReservedDay>? cachedReservedDays;
+        private (LocalDate FromDate, LocalDate ToDate) reservedDaysCacheKey;
 
         public ClientDataProvider(ApiClient apiClient)
             => this.apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
 
         public Reservation? DraftReservation { get; private set; }
 
-        public Order Order { get; } = new Order { Reservations = new List<Reservation>() };
+        public PlaceOrderRequest Order { get; } = new PlaceOrderRequest();
+
+        public async Task<IReadOnlyDictionary<int, Resource>> GetResources()
+            => (await apiClient.GetJsonAsync<IEnumerable<Resource>>("resources")).ToDictionary(r => r.Id);
 
         public Task<bool> IsHighPriceDay(LocalDate date)
             => HighPricePolicy.IsHighPriceDay(date, async () => await GetHolidays());
@@ -34,10 +37,9 @@ namespace Frederikskaj2.Reservations.Client
                 (count, i) => count + (HighPricePolicy.IsHighPriceDay(reservation.Date.PlusDays(i), holidays) ? 1 : 0));
         }
 
-        public Task<IEnumerable<Reservation>> GetReservations(int resourceId, LocalDate fromDate, LocalDate toDate)
-            => Task.FromResult(
-                GetAllReservations().Where(
-                    rr => rr.ResourceId == resourceId && fromDate <= rr.Date && rr.Date <= toDate));
+        public Task<IEnumerable<ReservedDay>> GetReservedDays(int resourceId, LocalDate fromDate, LocalDate toDate)
+            => Task.FromResult(GetAllReservedDays()
+                .Where(day => day.ResourceId == resourceId && fromDate <= day.Date && day.Date <= toDate));
 
         public async Task<IEnumerable<Apartment>> GetApartments()
             => cachedApartments ??= (await apiClient.GetJsonAsync<IEnumerable<Apartment>>("apartments"));
@@ -45,7 +47,8 @@ namespace Frederikskaj2.Reservations.Client
         public void Refresh()
         {
             cachedHolidays = null;
-            cachedReservations = null;
+            reservedDaysCacheKey = default;
+            cachedReservedDays = null;
         }
 
         public void CreateDraftReservation(LocalDate date, int durationInDays, Resource resource)
@@ -55,8 +58,7 @@ namespace Frederikskaj2.Reservations.Client
                 Resource = resource,
                 ResourceId = resource.Id,
                 Date = date,
-                DurationInDays = durationInDays,
-                IsMyReservation = true
+                DurationInDays = durationInDays
             };
         }
 
@@ -71,29 +73,38 @@ namespace Frederikskaj2.Reservations.Client
 
         public void RemoveReservationFromOrder(Reservation reservation) => Order.Reservations!.Remove(reservation);
 
-        public async Task<IReadOnlyDictionary<int, Resource>> GetResources()
-            => (await apiClient.GetJsonAsync<IEnumerable<Resource>>("resources")).ToDictionary(r => r.Id);
+        public void ClearOrder() => Order.Reservations!.Clear();
 
-        public async Task<IEnumerable<Reservation>> GetReservationsAndCacheResult(LocalDate fromDate, LocalDate toDate)
+        public async Task<IEnumerable<ReservedDay>> GetReservedDaysAndCacheResult(LocalDate fromDate, LocalDate toDate)
         {
             var cacheKey = (fromDate, toDate);
-            if (reservationsCacheKey != cacheKey)
+            if (reservedDaysCacheKey != cacheKey)
             {
-                var requestUri = Invariant($"reservations?fromDate={fromDate:yyyy-MM-dd}&toDate={toDate:yyyy-MM-dd}");
-                cachedReservations = await apiClient.GetJsonAsync<IEnumerable<Reservation>>(requestUri);
-                reservationsCacheKey = cacheKey;
+                var requestUri = Invariant($"reserved-days?fromDate={fromDate:yyyy-MM-dd}&toDate={toDate:yyyy-MM-dd}");
+                cachedReservedDays = await apiClient.GetJsonAsync<IEnumerable<ReservedDay>>(requestUri);
+                reservedDaysCacheKey = cacheKey;
             }
 
-            return GetAllReservations();
+            return GetAllReservedDays();
         }
 
-        private IEnumerable<Reservation> GetAllReservations()
+        private IEnumerable<ReservedDay> GetAllReservedDays()
         {
-            var reservations = cachedReservations!.Concat(Order.Reservations);
+            var reservations = cachedReservedDays!.Concat(GetOrderReservedDays());
             if (DraftReservation != null)
-                reservations = reservations.Concat(new[] { DraftReservation });
+                reservations = reservations.Concat(GetReservationReservedDays(DraftReservation));
             return reservations;
         }
+
+        private IEnumerable<ReservedDay> GetOrderReservedDays() => Order.Reservations.SelectMany(GetReservationReservedDays);
+
+        private static IEnumerable<ReservedDay> GetReservationReservedDays(Reservation reservation)
+            => Enumerable.Range(0, reservation.DurationInDays).Select(i => new ReservedDay
+            {
+                Date = reservation.Date.PlusDays(i),
+                ResourceId = reservation.ResourceId,
+                IsMyReservation = true
+            });
 
         private async Task<HashSet<LocalDate>> GetHolidays()
             => cachedHolidays ??= (await apiClient.GetJsonAsync<IEnumerable<LocalDate>>("holidays")).ToHashSet();

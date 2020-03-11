@@ -1,4 +1,4 @@
-using Frederikskaj2.Reservations.Server.Domain;
+using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -26,6 +26,7 @@ namespace Frederikskaj2.Reservations.Server
             services
                 .AddDbContext<ReservationsContext>(options => options.UseSqlite("Data Source=Reservations.db"))
                 .AddPasswordServices(Configuration)
+                .AddReservationsServices()
                 .AddScoped<IDataProvider, ServerDataProvider>();
 
             services

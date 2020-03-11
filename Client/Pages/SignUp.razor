@@ -2,81 +2,136 @@
 @inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
 @inject IAuthenticationStateProvider AuthenticationStateProvider
+@inject ClientDataProvider ClientDataProvider
 @inject NavigationManager NavigationManager
 
 <main>
-    <div class="form-container">
-        <Alert Color="Color.Danger" IsShow="@showDuplicateEmailAlert">
-            <CloseButton Clicked="@DismissDuplicateEmailAlert"/>
-            Der findes allerede en bruger med mail @request.Email. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
-        </Alert>
-        <Alert Color="Color.Danger" IsShow="@showErrorAlert">
-            <CloseButton Clicked="@DismissErrorAlert" />
-            Der er sket en fejl. Din bruger blev ikke oprettet.
-        </Alert>
-        <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
-            <Field>
-                <FieldLabel>Mail</FieldLabel>
-                <FieldBody>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <div class="form-container">
+            <Alert Color="Color.Danger" IsShow="@showDuplicateEmailAlert">
+                <CloseButton Clicked="@DismissDuplicateEmailAlert" />
+                Der findes allerede en bruger med mail @ApplicationState.SignUpRequest.Email. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
+            </Alert>
+            <Alert Color="Color.Danger" IsShow="@showErrorAlert">
+                <CloseButton Clicked="@DismissErrorAlert" />
+                Der er sket en fejl. Din bruger blev ikke oprettet.
+            </Alert>
+            <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ApplicationState.SignUpRequest">
+                <Field>
+                    <FieldLabel>Mail</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit Role="TextRole.Email" @bind-Text="@ApplicationState.SignUpRequest.Email">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Fulde navn</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit @bind-Text="@ApplicationState.SignUpRequest.FullName">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Telefonnummer</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@ApplicationState.SignUpRequest.Phone">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Din adresse</FieldLabel>
+                    <SelectEdit TValue="int" SelectedValue="@(ApplicationState.SignUpRequest.ApartmentId ?? 0)" SelectedValueChanged="@ApartmentChanged">
+                        <SelectItem Value="0">Vælg lejlighed</SelectItem>
+                        @foreach (var apartment in apartments)
+                        {
+                            <SelectItem Value="@apartment.Id">@apartment</SelectItem>
+                        }
+                    </SelectEdit>
+                </Field>
+                <Field>
+                    <FieldLabel>Adgangskode</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit Role="TextRole.Password" @bind-Text="@ApplicationState.SignUpRequest.Password">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Gentag adgangskode</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit Role="TextRole.Password" @bind-Text="@ApplicationState.SignUpRequest.ConfirmPassword">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
                     <Validation>
-                        <TextEdit Role="TextRole.Email" @bind-Text="@request.Email">
+                        <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.DidConsent">
+                            <ChildContent>
+                                Jeg <a href="consent">samtykker</a> til at ovenstående oplysninger samt betalingsoplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler
+                            </ChildContent>
                             <Feedback>
                                 <ValidationError />
                             </Feedback>
-                        </TextEdit>
+                        </CheckEdit>
                     </Validation>
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>Fulde navn</FieldLabel>
-                <FieldBody>
-                    <Validation>
-                        <TextEdit @bind-Text="@request.FullName">
-                            <Feedback>
-                                <ValidationError />
-                            </Feedback>
-                        </TextEdit>
-                    </Validation>
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>Adgangskode</FieldLabel>
-                <FieldBody>
-                    <Validation>
-                        <TextEdit Role="TextRole.Password" @bind-Text="@request.Password">
-                            <Feedback>
-                                <ValidationError />
-                            </Feedback>
-                        </TextEdit>
-                    </Validation>
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>Gentag dgangskode</FieldLabel>
-                <FieldBody>
-                    <Validation>
-                        <TextEdit Role="TextRole.Password" @bind-Text="@request.ConfirmPassword">
-                            <Feedback>
-                                <ValidationError />
-                            </Feedback>
-                        </TextEdit>
-                    </Validation>
-                </FieldBody>
-            </Field>
-            <Field>
-                <CheckEdit @bind-Checked="@request.IsPersistent">Husk mig</CheckEdit>
-            </Field>
-            <Button Color="Color.Primary" Clicked="@Submit">Opret bruger</Button>
-        </Validations>
-    </div>
+                </Field>
+                <Field>
+                </Field>
+                <Field>
+                    <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.IsPersistent">Husk mig</CheckEdit>
+                </Field>
+                <Button Color="Color.Primary" Clicked="@Submit" class="btn-text">Opret bruger</Button>
+            </Validations>
+        </div>
+    }
 </main>
 
 @code {
 
-    private readonly SignUpRequest request = new SignUpRequest();
+    private Validations validations = null!;
+    private IEnumerable<Apartment> apartments = null!;
+    private bool isInitialized;
     private bool showDuplicateEmailAlert;
     private bool showErrorAlert;
-    Validations validations = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApplicationState.ResetSignUpState();
+
+        apartments = await ClientDataProvider.GetApartments();
+        isInitialized = true;
+    }
+
+    private void ApartmentChanged(int apartmentId) => ApplicationState.SignUpRequest.ApartmentId = apartmentId > 0 ? (int?) apartmentId : null;
 
     private async Task Submit()
     {
@@ -87,12 +142,16 @@
         DismissDuplicateEmailAlert();
         DismissErrorAlert();
 
-        var maybe = await ApiClient.PostJsonAsync<SignUpResponse>("user/sign-up", request);
+        if (ApplicationState.SignUpRequest.ApartmentId == 0)
+            ApplicationState.SignUpRequest.ApartmentId = null;
+
+        var maybe = await ApiClient.PostJsonAsync<SignUpResponse>("user/sign-up", ApplicationState.SignUpRequest);
         if (maybe.TryGetValue(out var response))
         {
             if (response.Result == SignUpResult.Success)
             {
                 AuthenticationStateProvider.UpdateUser(response.User!);
+                ApplicationState.ResetStateAfterSignIn();
                 if (ApplicationState.RedirectUrl != null)
                 {
                     var redirectUrl = ApplicationState.RedirectUrl;

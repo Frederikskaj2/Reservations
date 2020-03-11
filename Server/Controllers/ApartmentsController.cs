@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Frederikskaj2.Reservations.Server.Domain;
+using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

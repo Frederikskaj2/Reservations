@@ -33,7 +33,7 @@ namespace Frederikskaj2.Reservations.Shared
         {
             var fromDate = date;
             var toDate = date.PlusDays(Options.MaximumAllowedReservationDays);
-            var reservations = await DataProvider.GetReservations(resourceId, fromDate, toDate);
+            var reservations = await DataProvider.GetReservedDays(resourceId, fromDate, toDate);
             var nextReservation = reservations.FirstOrDefault();
             var maximumDays = nextReservation == null
                 ? Options.MaximumAllowedReservationDays
@@ -51,19 +51,8 @@ namespace Frederikskaj2.Reservations.Shared
 
             var fromDate = date.PlusDays(-Options.MaximumAllowedReservationDays);
             var toDate = date.PlusDays(durationInDays);
-            var reservations = await DataProvider.GetReservations(resourceId, fromDate, toDate);
-            return !reservations.Any(
-                otherReservation => Overlaps(
-                    date, durationInDays, otherReservation.Date, otherReservation.DurationInDays));
-
-            static bool Overlaps(LocalDate date1, int days1, LocalDate date2, int days2)
-            {
-                if (date1 < date2 && date1.PlusDays(days1 - 1) < date2)
-                    return false;
-                if (date2 < date1 && date2.PlusDays(days2 - 1) < date1)
-                    return false;
-                return true;
-            }
+            var reservations = await DataProvider.GetReservedDays(resourceId, fromDate, toDate);
+            return reservations.All(reservation => reservation.Date != date);
         }
 
         public virtual async Task<Price> GetPrice(Reservation reservation)

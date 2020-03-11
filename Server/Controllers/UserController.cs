@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
-using Frederikskaj2.Reservations.Server.Domain;
+using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -32,14 +33,28 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpGet("")]
         public UserInfo GetUser() => GetUser(User.Identity);
 
+        [Authorize]
+        [HttpGet("apartment")]
+        public async Task<ApartmentResponse> GetApartment()
+        {
+            var nameIdentifierClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var userId = nameIdentifierClaim != null && int.TryParse(nameIdentifierClaim.Value, out var id) ? (int?) id : null;
+            if (!userId.HasValue)
+                return new ApartmentResponse();
+            var user = await db.Users.FindAsync(userId.Value);
+            return new ApartmentResponse { ApartmentId = user?.ApartmentId };
+        }
+
         [HttpPost("sign-up")]
         public async Task<SignUpResponse> SignUp([FromBody] SignUpRequest request)
         {
             var user = new User
             {
-                Email = request.Email.ToLowerInvariant(),
-                FullName = request.FullName,
-                HashedPassword = passwordHasher.HashPassword(request.Password)
+                Email = request.Email.Trim().ToLowerInvariant(),
+                FullName = request.FullName.Trim(),
+                Phone = request.Phone.Trim(),
+                HashedPassword = passwordHasher.HashPassword(request.Password),
+                ApartmentId = request.ApartmentId
             };
             await db.Users.AddAsync(user);
             try
@@ -55,7 +70,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var identity = await SignIn(user, request.IsPersistent);
 
-            return new SignUpResponse { User = GetUser(identity) };
+            return new SignUpResponse { User = GetUser(identity, user) };
         }
 
         [HttpPost("sign-in")]
@@ -84,7 +99,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var identity = await SignIn(user, request.IsPersistent);
 
-            return new SignInResponse { User = GetUser(identity) };
+            return new SignInResponse { User = GetUser(identity, user) };
         }
 
         [HttpPost("sign-out")]
@@ -94,20 +109,25 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return Ok();
         }
 
-        private UserInfo GetUser(IIdentity identity) => identity.IsAuthenticated
-            ? new UserInfo
+        private UserInfo GetUser(IIdentity identity, User? user = null)
+        {
+            if (!identity.IsAuthenticated)
+                return UnknownUser;
+            return new UserInfo
             {
                 Name = identity.Name, IsAuthenticated = true,
-                IsAdministrator = User.HasClaim(ClaimTypes.Role, "Administrator")
-            }
-            : UnknownUser;
+                IsAdministrator = User.HasClaim(ClaimTypes.Role, "Administrator"),
+                ApartmentId = user?.ApartmentId
+            };
+        }
 
         private async Task<ClaimsIdentity> SignIn(User user, bool isPersistent)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Email),
-                new Claim("FullName", user.FullName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim("FullName", user.FullName)
             };
             if (user.IsAdministrator)
                 claims.Add(new Claim(ClaimTypes.Role, "Administrator"));

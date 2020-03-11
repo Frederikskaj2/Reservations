@@ -6,7 +6,7 @@ using Frederikskaj2.Reservations.Shared;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
-namespace Frederikskaj2.Reservations.Server.Domain
+namespace Frederikskaj2.Reservations.Server.Data
 {
     internal class ServerDataProvider : IDataProvider
     {
@@ -14,6 +14,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         public ServerDataProvider(ReservationsContext db)
             => this.db = db ?? throw new ArgumentNullException(nameof(db));
+
+        public async Task<IReadOnlyDictionary<int, Resource>> GetResources()
+            => await db.Resources.ToDictionaryAsync(resource => resource.Id);
 
         public async Task<bool> IsHighPriceDay(LocalDate date)
             => await HighPricePolicy.IsHighPriceDay(
@@ -28,11 +31,11 @@ namespace Frederikskaj2.Reservations.Server.Domain
             bool IsHighPriceDay(LocalDate date) => IsHighPriceWeekDay(date) || holidays.Contains(date);
         }
 
-        public async Task<IEnumerable<Reservation>> GetReservations(
+        public async Task<IEnumerable<ReservedDay>> GetReservedDays(
             int resourceId, LocalDate fromDate, LocalDate toDate)
-            => await db.Reservations
-                .Where(rr => rr.ResourceId == resourceId && fromDate <= rr.Date && rr.Date <= toDate)
-                .OrderBy(rr => rr.Date)
+            => await db.ReservedDays
+                .Where(day => day.ResourceId == resourceId && fromDate <= day.Date && day.Date <= toDate)
+                .OrderBy(day => day.Date)
                 .ToListAsync();
 
         public void Refresh()
@@ -41,7 +44,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
         }
 
         private static bool IsHighPriceWeekDay(LocalDate date)
-            => date.DayOfWeek == IsoDayOfWeek.Friday || date.DayOfWeek == IsoDayOfWeek.Saturday ||
-               date.DayOfWeek == IsoDayOfWeek.Sunday;
+            => date.DayOfWeek == IsoDayOfWeek.Friday
+               || date.DayOfWeek == IsoDayOfWeek.Saturday
+               || date.DayOfWeek == IsoDayOfWeek.Sunday;
     }
 }

@@ -10,20 +10,26 @@
                         <div class="container not-authorized">
                             <h1>Du er ikke logget ind</h1>
                             <p>Log ind for at fortsætte.</p>
-                            <p><button class="btn btn-primary" type="button" @onclick="SignIn">Log ind</button></p>
+                            <p><button class="btn btn-primary btn-text" type="button" @onclick="SignIn">Log ind</button></p>
                             <p>Hvis du ikke har en bruger kan du oprette dig.</p>
-                            <p><button class="btn btn-secondary" type="button" @onclick="SignUp">Opret bruger</button></p>
+                            <p><button class="btn btn-secondary btn-text" type="button" @onclick="SignUp">Opret bruger</button></p>
                         </div>
                     </main>
                 </NotAuthorized>
                 <Authorizing>
-                    <p>Vent...</p>
+                    <main>
+                        <Spinner />
+                    </main>
                 </Authorizing>
             </AuthorizeRouteView>
         </Found>
         <NotFound>
             <LayoutView Layout="typeof(MainLayout)">
-                <p>Der er intet at vise på denne side.</p>
+                <main>
+                    <div class="container">
+                        <p>Der er intet at vise på denne side.</p>
+                    </div>
+                </main>
             </LayoutView>
         </NotFound>
     </Router>

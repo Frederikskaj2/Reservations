@@ -6,5 +6,7 @@
         public int Sequence { get; set; }
         public ResourceType Type { get; set; }
         public string Name { get; set; } = string.Empty;
+
+        public override string ToString() => Name;
     }
 }

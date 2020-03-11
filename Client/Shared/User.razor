@@ -1,5 +1,6 @@
 ﻿@inject HttpClient HttpClient
 @inject IAuthenticationStateProvider AuthenticationStateProvider
+@inject ClientDataProvider ClientDataProvider
 @inject NavigationManager NavigationManager
 
 <div class="user-info">
@@ -26,6 +27,7 @@
     {
         await HttpClient.PostAsync("user/sign-out", null);
         AuthenticationStateProvider.UpdateUser(new UserInfo());
+        ClientDataProvider.Refresh();
         NavigationManager.NavigateTo("/");
     }
 
