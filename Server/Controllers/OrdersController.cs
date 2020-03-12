@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
@@ -22,24 +20,73 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private readonly IClock clock;
         private readonly ReservationsContext db;
         private readonly IDataProvider dataProvider;
+        private readonly DateTimeZone dateTimeZone;
+        private readonly ReservationsOptions reservationsOptions;
         private readonly IReservationPolicyProvider reservationPolicyProvider;
 
-        public OrdersController(ReservationsContext db, IDataProvider dataProvider, IReservationPolicyProvider reservationPolicyProvider, IClock clock)
+        public OrdersController(
+            ReservationsContext db, IDataProvider dataProvider, ReservationsOptions reservationsOptions,
+            IReservationPolicyProvider reservationPolicyProvider, IClock clock, DateTimeZone dateTimeZone)
         {
             this.db = db ?? throw new ArgumentNullException(nameof(db));
             this.dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+            this.reservationsOptions = reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
             this.reservationPolicyProvider = reservationPolicyProvider ?? throw new ArgumentNullException(nameof(reservationPolicyProvider));
             this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
+            this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
         }
 
         [HttpGet]
-        public async Task<IEnumerable<Order>> Get() => await db.Orders.ToListAsync();
+        public async Task<IEnumerable<Order>> Get()
+        {
+            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return Enumerable.Empty<Order>();
+
+            var orders = await db.Orders
+                .Include(order => order.Reservations)
+                .ThenInclude(reservation => reservation.Resource)
+                .Include(order => order.Reservations)
+                .ThenInclude(reservation => reservation.Days)
+                .Where(order => order.UserId == userId.Value)
+                .OrderByDescending(order => order.CreatedTimestamp)
+                .ToListAsync();
+
+            // Fix object graph.
+            foreach (var order in orders)
+            {
+                order.Price = new Price();
+                foreach (var reservation in order.Reservations!)
+                {
+                    // Remove cycles in object graph.
+                    reservation.Order = null;
+
+                    // Simplify date and duration.
+                    reservation.Date = reservation.Days.Min(day => day.Date);
+                    reservation.DurationInDays = reservation.Days.Count();
+                    reservation.Days = null;
+                    reservation.CanBeCancelled =
+                        (reservation.Status == ReservationStatus.Reserved
+                         || reservation.Status == ReservationStatus.Confirmed)
+                        && today.PlusDays(reservationsOptions.MinimumCancellationNoticeInDays) <= reservation.Date;
+
+                    // Update total price.
+                    if (reservation.Status == ReservationStatus.Cancelled)
+                        continue;
+                    order.Price.Rent += reservation.Price!.Rent;
+                    order.Price.CleaningFee += reservation.Price!.CleaningFee;
+                    order.Price.Deposit += reservation.Price!.Deposit;
+                }
+            }
+
+            return orders;
+        }
 
         [HttpPost]
         public async Task<PlaceOrderResponse> Post(PlaceOrderRequest request)
         {
-            var nameIdentifierClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            var userId = nameIdentifierClaim != null && int.TryParse(nameIdentifierClaim.Value, out var id) ? (int?) id : null;
+            var userId = User.Id();
             if (!userId.HasValue)
                 return new PlaceOrderResponse { Result = PlaceOrderResult.GeneralError };
 
@@ -53,7 +100,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 ApartmentId = request.ApartmentId,
                 AccountNumber = request.AccountNumber.Trim().ToUpperInvariant(),
                 CreatedTimestamp = now,
-                UpdatedTimestamp = now,
                 Reservations = new List<Reservation>(),
                 Price = new Price()
             };
@@ -69,6 +115,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     return new PlaceOrderResponse { Result = PlaceOrderResult.GeneralError };
 
                 reservation.Status = ReservationStatus.Reserved;
+                reservation.UpdatedTimestamp = now;
 
                 reservation.Days = Enumerable.Range(0, reservation.DurationInDays)
                     .Select(i => new ReservedDay
@@ -77,13 +124,11 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         ResourceId = reservation.ResourceId
                     })
                     .ToList();
-                order.Reservations.Add(reservation);
 
                 var policy = reservationPolicyProvider.GetPolicy(resource.Type);
-                var price = await policy.GetPrice(reservation);
-                order.Price.Rent += price.Rent;
-                order.Price.CleaningFee += price.CleaningFee;
-                order.Price.Deposit += price.Deposit;
+                reservation.Price = await policy.GetPrice(reservation);
+
+                order.Reservations.Add(reservation);
             }
 
             db.Orders.Add(order);

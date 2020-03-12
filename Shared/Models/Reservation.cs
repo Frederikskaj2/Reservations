@@ -11,7 +11,9 @@ namespace Frederikskaj2.Reservations.Shared
         public int ResourceId { get; set; }
         public Resource? Resource { get; set; }
         public ReservationStatus Status { get; set; }
+        public Instant UpdatedTimestamp { get; set; }
         public List<ReservedDay>? Days { get; set; }
+        public Price? Price { get; set; }
 
         [NotMapped]
         public LocalDate Date { get; set; }
@@ -20,7 +22,7 @@ namespace Frederikskaj2.Reservations.Shared
         public int DurationInDays { get; set; }
 
         [NotMapped]
-        public Price? Price { get; set; }
+        public bool CanBeCancelled { get; set; }
 
         public override string ToString() => $"{Resource?.Name ?? ResourceId.ToString()} {Date}+{DurationInDays}";
     }

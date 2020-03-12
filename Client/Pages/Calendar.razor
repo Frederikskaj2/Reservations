@@ -89,39 +89,40 @@ else
     <section class="sidebar">
         @if (DataProvider.Order.Reservations!.Count > 0)
         {
-            <div class="order">
+            <div class="draft-order">
                 <h1>Din bestilling</h1>
                 @foreach (var reservation in DataProvider.Order.Reservations)
                 {
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="card-title">
-                                <h2 class="card-title">@reservation.Resource!.Name</h2>
+                    <Card>
+                        <CardBody>
+                            <CardTitle>
+                                <h2>@reservation.Resource!.Name</h2>
                                 <button type="button" class="close" @onclick="@(() => RemoveReservation(reservation))">
                                     <span>&times;</span>
                                 </button>
-                            </div>
-                            <p class="card-text">@reservation.Date.ToString(CultureInfo.DateTimeFormat.LongDatePattern, CultureInfo) / @reservation.DurationInDays dag@(reservation.DurationInDays > 1 ? "e" : string.Empty)</p>
-                            <Prices Price="@reservation.Price" />
-                        </div>
-                    </div>
+                            </CardTitle>
+                            <CardText>
+                                <p>@reservation.Date.ToString(CultureInfo.DateTimeFormat.LongDatePattern, CultureInfo) / @reservation.DurationInDays dag@(reservation.DurationInDays > 1 ? "e" : string.Empty)</p>
+                                <Prices Price="@reservation.Price" />
+                            </CardText>
+                        </CardBody>
+                    </Card>
                 }
             </div>
         }
         else
         {
-            <div class="order">
-                <p class="order-get-started">Vælg lokale og en ledig dato for at reservere</p>
+            <div class="draft-order">
+                <p class="draft-order-get-started">Vælg lokale og en ledig dato for at reservere</p>
             </div>
         }
-        <div class="order-total @(DataProvider.Order.Reservations!.Count > 0 ? "" : "hidden")">
+        <div class="draft-order-total @(DataProvider.Order.Reservations!.Count > 0 ? "" : "hidden")">
             <Prices Price="@totalPrice" />
             <button type="button" class="btn btn-success btn-block" @onclick="@Checkout">Reservér</button>
         </div>
     </section>
     <ReservationDialog @ref="@reservationDialog" Reservation="@DataProvider.DraftReservation" OnReservationChanged="ReservationChanged" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
 }
-
 
 @code {
 

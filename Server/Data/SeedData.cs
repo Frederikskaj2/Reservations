@@ -46,13 +46,12 @@ namespace Frederikskaj2.Reservations.Server.Data
                     User = user,
                     Apartment = user.Apartment,
                     CreatedTimestamp = timestamp,
-                    UpdatedTimestamp = timestamp,
                     Reservations = new List<Reservation>()
                 };
                 var reservationCount = 2 - (int) Math.Log2(random.Next(1, 4));
                 while (order.Reservations.Count < reservationCount)
                 {
-                    var reservation = CreateReservation();
+                    var reservation = CreateReservation(timestamp);
                     if (reservation.Days.Any(day => reservedDays.ContainsKey((day.Date, reservation.Resource!))))
                         continue;
                     order.Reservations.Add(reservation);
@@ -62,7 +61,7 @@ namespace Frederikskaj2.Reservations.Server.Data
                 return order;
             }
 
-            Reservation CreateReservation()
+            Reservation CreateReservation(Instant timestamp)
             {
                 var resource = resources[random.Next(resources.Length)];
                 var date = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo).Date.PlusDays(random.Next(90) - 10);
@@ -71,6 +70,7 @@ namespace Frederikskaj2.Reservations.Server.Data
                 {
                     Resource = resource,
                     Status = ReservationStatus.Reserved,
+                    UpdatedTimestamp = timestamp,
                     Days = Enumerable.Range(0, durationInDays).Select(i => new ReservedDay { Date = date.PlusDays(i), Resource = resource }).ToList()
                 };
             }

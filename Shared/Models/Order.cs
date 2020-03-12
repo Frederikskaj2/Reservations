@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
@@ -12,8 +13,9 @@ namespace Frederikskaj2.Reservations.Shared
         public Apartment? Apartment { get; set; }
         public string? AccountNumber { get; set; }
         public Instant CreatedTimestamp { get; set; }
-        public Instant UpdatedTimestamp { get; set; }
         public List<Reservation>? Reservations { get; set; }
+
+        [NotMapped]
         public Price? Price { get; set; }
     }
 }

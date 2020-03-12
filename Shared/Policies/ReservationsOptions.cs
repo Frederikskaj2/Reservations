@@ -34,5 +34,7 @@ namespace Frederikskaj2.Reservations.Shared
         public int MaximumAllowedReservationDays { get; set; } = 7;
         public LocalTime CheckInTime { get; set; } = new LocalTime(12, 0);
         public LocalTime CheckOutTime { get; set; } = new LocalTime(10, 0);
+        public decimal CancellationFee { get; set; } = 200M;
+        public int MinimumCancellationNoticeInDays { get; set; } = 14;
     }
 }

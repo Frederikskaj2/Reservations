@@ -9,16 +9,21 @@ namespace Frederikskaj2.Reservations.Client
     public class FormattingService
     {
         private readonly CultureInfo cultureInfo;
+        private readonly DateTimeZone dateTimeZone;
         private readonly ReservationsOptions options;
         private readonly LocalDateTimePattern longTimePattern;
         private readonly LocalDateTimePattern shortTimePattern;
+        private readonly LocalDatePattern datePattern;
 
-        public FormattingService(CultureInfo cultureInfo, ReservationsOptions options)
+        public FormattingService(CultureInfo cultureInfo, DateTimeZone dateTimeZone, ReservationsOptions options)
         {
             this.cultureInfo = cultureInfo ?? throw new ArgumentNullException(nameof(cultureInfo));
+            this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
             this.options = options ?? throw new ArgumentNullException(nameof(options));
+
             longTimePattern = LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH:mm", cultureInfo);
             shortTimePattern = LocalDateTimePattern.Create("d. MMMM yyyy 'kl.' HH:mm", cultureInfo);
+            datePattern = LocalDatePattern.Create("d. MMMM yyyy", cultureInfo);
         }
 
         public string FormatMoneyLong(decimal value) => value.ToString("C0", cultureInfo);
@@ -32,6 +37,10 @@ namespace Frederikskaj2.Reservations.Client
         public string FormatCheckInTimeShort(LocalDate date) => FormatTimeShort(date + options.CheckInTime);
 
         public string FormatCheckOutTimeShort(LocalDate date) => FormatTimeShort(date + options.CheckOutTime);
+
+        public string FormatDate(LocalDate date) => datePattern.Format(date);
+
+        public string FormatDate(Instant instant) => datePattern.Format(instant.InZone(dateTimeZone).Date);
 
         private string FormatTimeLong(LocalDateTime time)
         {

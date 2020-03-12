@@ -37,8 +37,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpGet("apartment")]
         public async Task<ApartmentResponse> GetApartment()
         {
-            var nameIdentifierClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            var userId = nameIdentifierClaim != null && int.TryParse(nameIdentifierClaim.Value, out var id) ? (int?) id : null;
+            var userId = User.Id();
             if (!userId.HasValue)
                 return new ApartmentResponse();
             var user = await db.Users.FindAsync(userId.Value);

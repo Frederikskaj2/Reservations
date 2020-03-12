@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
@@ -26,8 +25,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpGet]
         public async Task<IEnumerable<ReservedDay>> Get(string? fromDate, string? toDate)
         {
-            var nameIdentifierClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            var userId = nameIdentifierClaim != null ? int.Parse(nameIdentifierClaim.Value) : -1;
+            var userId = User.Id();
             var query = db.ReservedDays
                 .Include(rd => rd.Reservation!)
                 .ThenInclude(r => r.Order)

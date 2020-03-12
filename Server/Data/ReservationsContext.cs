@@ -27,10 +27,10 @@ namespace Frederikskaj2.Reservations.Server.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             var instantConverter =  new ValueConverter<Instant, DateTime>(
-                instant => instant.ToDateTimeUtc(), 
-                dateTime => Instant.FromDateTimeUtc(dateTime));
+                instant => instant.ToDateTimeUtc(),
+                dateTime => Instant.FromDateTimeUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)));
             var localDateConverter =  new ValueConverter<LocalDate, DateTime>(
-                localDate => localDate.ToDateTimeUnspecified(), 
+                localDate => localDate.ToDateTimeUnspecified(),
                 dateTime => LocalDate.FromDateTime(dateTime));
 
             modelBuilder.Entity<Holiday>()
@@ -38,13 +38,14 @@ namespace Frederikskaj2.Reservations.Server.Data
                 .HasConversion(localDateConverter);
 
             modelBuilder.Entity<Order>()
-                .Property(reservation => reservation.CreatedTimestamp)
+                .Property(order => order.CreatedTimestamp)
                 .HasConversion(instantConverter);
-            modelBuilder.Entity<Order>()
+
+            modelBuilder.Entity<Reservation>()
                 .Property(reservation => reservation.UpdatedTimestamp)
                 .HasConversion(instantConverter);
-            modelBuilder.Entity<Order>()
-                .OwnsOne(order => order.Price);
+            modelBuilder.Entity<Reservation>()
+                .OwnsOne(reservation => reservation.Price);
 
             modelBuilder.Entity<ReservedDay>()
                 .Property(reservedDay => reservedDay.Date)
