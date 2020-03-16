@@ -10,10 +10,10 @@ namespace Frederikskaj2.Reservations.Client
     {
         private readonly CultureInfo cultureInfo;
         private readonly DateTimeZone dateTimeZone;
-        private readonly ReservationsOptions options;
+        private readonly LocalDatePattern longDatePattern;
         private readonly LocalDateTimePattern longTimePattern;
+        private readonly ReservationsOptions options;
         private readonly LocalDateTimePattern shortTimePattern;
-        private readonly LocalDatePattern datePattern;
 
         public FormattingService(CultureInfo cultureInfo, DateTimeZone dateTimeZone, ReservationsOptions options)
         {
@@ -22,8 +22,8 @@ namespace Frederikskaj2.Reservations.Client
             this.options = options ?? throw new ArgumentNullException(nameof(options));
 
             longTimePattern = LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH:mm", cultureInfo);
-            shortTimePattern = LocalDateTimePattern.Create("d. MMMM yyyy 'kl.' HH:mm", cultureInfo);
-            datePattern = LocalDatePattern.Create("d. MMMM yyyy", cultureInfo);
+            shortTimePattern = LocalDateTimePattern.Create("d/M/yyyy HH:mm", cultureInfo);
+            longDatePattern = LocalDatePattern.Create("d. MMMM yyyy", cultureInfo);
         }
 
         public string FormatMoneyLong(decimal value) => value.ToString("C0", cultureInfo);
@@ -38,9 +38,9 @@ namespace Frederikskaj2.Reservations.Client
 
         public string FormatCheckOutTimeShort(LocalDate date) => FormatTimeShort(date + options.CheckOutTime);
 
-        public string FormatDate(LocalDate date) => datePattern.Format(date);
+        public string FormatDate(LocalDate date) => longDatePattern.Format(date);
 
-        public string FormatDate(Instant instant) => datePattern.Format(instant.InZone(dateTimeZone).Date);
+        public string FormatDate(Instant instant) => longDatePattern.Format(instant.InZone(dateTimeZone).Date);
 
         private string FormatTimeLong(LocalDateTime time)
         {

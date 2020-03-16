@@ -28,7 +28,7 @@
         await HttpClient.PostAsync("user/sign-out", null);
         AuthenticationStateProvider.UpdateUser(new UserInfo());
         ClientDataProvider.Refresh();
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo("");
     }
 
 }

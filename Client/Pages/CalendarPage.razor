@@ -1,4 +1,4 @@
-﻿@page "/calendar"
+﻿@page "/kalender"
 @inject CultureInfo CultureInfo
 @inject ClientDataProvider DataProvider
 @inject IDateProvider DateProvider
@@ -118,7 +118,7 @@ else
         }
         <div class="draft-order-total @(DataProvider.Order.Reservations!.Count > 0 ? "" : "hidden")">
             <Prices Price="@totalPrice" />
-            <button type="button" class="btn btn-success btn-block" @onclick="@Checkout">Reservér</button>
+            <button type="button" class="btn btn-success btn-block" @onclick="@Checkout">Bestil</button>
         </div>
     </section>
     <ReservationDialog @ref="@reservationDialog" Reservation="@DataProvider.DraftReservation" OnReservationChanged="ReservationChanged" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
@@ -317,6 +317,6 @@ else
             });
     }
 
-    private void Checkout() => NavigationManager.NavigateTo("checkout");
+    private void Checkout() => NavigationManager.NavigateTo(Urls.Checkout);
 
 }

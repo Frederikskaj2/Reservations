@@ -40,13 +40,13 @@
     private void SignIn()
     {
         ApplicationState.RedirectUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.NavigateTo("sign-in");
+        NavigationManager.NavigateTo(Urls.SignIn);
     }
 
     private void SignUp()
     {
         ApplicationState.RedirectUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.NavigateTo("sign-up");
+        NavigationManager.NavigateTo(Urls.SignUp);
     }
 
 }

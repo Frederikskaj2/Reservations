@@ -36,10 +36,25 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
         }
 
+        [HttpGet("{orderId:int}")]
+        public async Task<Order> Get(int orderId)
+        {
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return new Order();
+
+            var order = await GetOrder(orderId, userId.Value);
+            if (order == null)
+                return new Order();
+
+            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
+            PrepareOrderForApi(order, today);
+            return order;
+        }
+
         [HttpGet]
         public async Task<IEnumerable<Order>> Get()
         {
-            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
             var userId = User.Id();
             if (!userId.HasValue)
                 return Enumerable.Empty<Order>();
@@ -53,32 +68,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .OrderByDescending(order => order.CreatedTimestamp)
                 .ToListAsync();
 
-            // Fix object graph.
+            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
             foreach (var order in orders)
-            {
-                order.Price = new Price();
-                foreach (var reservation in order.Reservations!)
-                {
-                    // Remove cycles in object graph.
-                    reservation.Order = null;
-
-                    // Simplify date and duration.
-                    reservation.Date = reservation.Days.Min(day => day.Date);
-                    reservation.DurationInDays = reservation.Days.Count();
-                    reservation.Days = null;
-                    reservation.CanBeCancelled =
-                        (reservation.Status == ReservationStatus.Reserved
-                         || reservation.Status == ReservationStatus.Confirmed)
-                        && today.PlusDays(reservationsOptions.MinimumCancellationNoticeInDays) <= reservation.Date;
-
-                    // Update total price.
-                    if (reservation.Status == ReservationStatus.Cancelled)
-                        continue;
-                    order.Price.Rent += reservation.Price!.Rent;
-                    order.Price.CleaningFee += reservation.Price!.CleaningFee;
-                    order.Price.Deposit += reservation.Price!.Deposit;
-                }
-            }
+                PrepareOrderForApi(order, today);
 
             return orders;
         }
@@ -152,5 +144,78 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return minimumDays <= reservation.DurationInDays && reservation.DurationInDays <= maximumDays;
             }
         }
+
+        [Route("{orderId:int}")]
+        public async Task<UpdateOrderResponse> Patch(int orderId, UpdateOrderRequest request)
+        {
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return new UpdateOrderResponse { Result = UpdateOrderResult.GeneralError };
+
+            var order = await GetOrder(orderId, userId.Value);
+            if (order == null)
+                return new UpdateOrderResponse { Result = UpdateOrderResult.GeneralError };
+            if (order.UserId != userId.Value)
+                return new UpdateOrderResponse { Result = UpdateOrderResult.GeneralError };
+
+            var now = clock.GetCurrentInstant();
+            var today = now.InZone(dateTimeZone).Date;
+            order.AccountNumber = request.AccountNumber;
+            foreach (var reservationId in request.CancelledReservations)
+            {
+                var reservation = order.Reservations!.Find(r => r.Id == reservationId);
+                if (reservation == null || !CanReservationCanBeCancelled(reservation, today))
+                    continue;
+                reservation.Status = ReservationStatus.Cancelled;
+                reservation.UpdatedTimestamp = now;
+            }
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return new UpdateOrderResponse { Result = UpdateOrderResult.GeneralError };
+            }
+
+            return new UpdateOrderResponse { Result = UpdateOrderResult.Success };
+        }
+
+        private async Task<Order> GetOrder(int orderId, int userId)
+            => await db.Orders
+            .Include(order1 => order1.Reservations)
+            .ThenInclude(reservation => reservation.Resource)
+            .Include(order2 => order2.Reservations)
+            .ThenInclude(reservation => reservation.Days)
+            .FirstOrDefaultAsync(order3 => order3.UserId == userId && order3.Id == orderId);
+
+        private void PrepareOrderForApi(Order order, LocalDate today)
+        {
+            order.CanBeEdited = false;
+            order.Price = new Price();
+            foreach (var reservation in order.Reservations!)
+            {
+                // Remove cycles in object graph.
+                reservation.Order = null;
+
+                // Simplify date and duration.
+                reservation.Date = reservation.Days.Min(day => day.Date);
+                reservation.DurationInDays = reservation.Days!.Count;
+                reservation.Days = null;
+                reservation.CanBeCancelled = CanReservationCanBeCancelled(reservation, today);
+                order.CanBeEdited = order.CanBeEdited || reservation.CanBeCancelled;
+
+                // Update total price.
+                if (reservation.Status == ReservationStatus.Cancelled)
+                    continue;
+                order.Price.Accumulate(reservation.Price!);
+            }
+        }
+
+        private bool CanReservationCanBeCancelled(Reservation reservation, LocalDate today)
+            => reservation.Status == ReservationStatus.Reserved
+               || (reservation.Status == ReservationStatus.Confirmed
+                   && today.PlusDays(reservationsOptions.MinimumCancellationNoticeInDays) <= reservation.Date);
     }
 }

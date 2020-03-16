@@ -1,4 +1,4 @@
-﻿@page "/sign-in"
+﻿@page "/log-ind"
 @inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
@@ -6,7 +6,7 @@
 @inject ServerAuthenticationStateProvider AuthenticationStateProvider
 
 <main>
-    <div class="form-container">
+    <Container>
         <Alert Color="Color.Danger" IsShow="@showInvalidEmailOrPasswordAlert">
             <CloseButton Clicked="@DismissInvalidEmailOrPasswordAlert" />
             Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
@@ -45,11 +45,11 @@
             </Field>
             <Button Color="Color.Primary" Clicked="@Submit" class="btn-text">Log ind</Button>
         </Validations>
-    </div>
-    <div class="form-container">
+    </Container>
+    <Container>
         <p>Hvis du ikke har en bruger kan du oprette dig.</p>
         <Button Color="Color.Secondary" Clicked="@SignUp" class="btn-text">Opret bruger</Button>
-    </div>
+    </Container>
 </main>
 
 @code {
@@ -100,6 +100,6 @@
 
     private void DismissErrorAlert() => showErrorAlert = false;
 
-    private void SignUp() => NavigationManager.NavigateTo("sign-up");
+    private void SignUp() => NavigationManager.NavigateTo(Urls.SignUp);
 
 }

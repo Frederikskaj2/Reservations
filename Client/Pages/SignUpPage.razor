@@ -1,4 +1,4 @@
-﻿@page "/sign-up"
+﻿@page "/opret-bruger"
 @inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
 @inject IAuthenticationStateProvider AuthenticationStateProvider
@@ -12,7 +12,7 @@
     }
     else
     {
-        <div class="form-container">
+        <Container>
             <Alert Color="Color.Danger" IsShow="@showDuplicateEmailAlert">
                 <CloseButton Clicked="@DismissDuplicateEmailAlert" />
                 Der findes allerede en bruger med mail @ApplicationState.SignUpRequest.Email. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
@@ -96,7 +96,7 @@
                     <Validation>
                         <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.DidConsent">
                             <ChildContent>
-                                Jeg <a href="consent">samtykker</a> til at ovenstående oplysninger samt betalingsoplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler
+                                Jeg <a href="@Urls.Consent">samtykker</a> til at ovenstående oplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler.
                             </ChildContent>
                             <Feedback>
                                 <ValidationError />
@@ -111,7 +111,7 @@
                 </Field>
                 <Button Color="Color.Primary" Clicked="@Submit" class="btn-text">Opret bruger</Button>
             </Validations>
-        </div>
+        </Container>
     }
 </main>
 

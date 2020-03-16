@@ -23,11 +23,17 @@ namespace Frederikskaj2.Reservations.Client
             return JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
         }
 
-        public async Task<Maybe<T>> PostJsonAsync<T>(string requestUri, object content)
+        public Task<Maybe<T>> PostJsonAsync<T>(string requestUri, object content)
+            => SendJsonAsync<T>(HttpMethod.Post, requestUri, content);
+
+        public Task<Maybe<T>> PatchJsonAsync<T>(string requestUri, object content)
+            => SendJsonAsync<T>(HttpMethod.Patch, requestUri, content);
+
+        private async Task<Maybe<T>> SendJsonAsync<T>(HttpMethod method, string requestUri, object content)
         {
             var requestJson = JsonSerializer.Serialize(content, jsonSerializerOptions);
             using var requestContent = new StringContent(requestJson, Encoding.UTF8, "application/json");
-            var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, requestUri) { Content = requestContent });
+            var response = await httpClient.SendAsync(new HttpRequestMessage(method, requestUri) { Content = requestContent });
             if (!response.IsSuccessStatusCode)
                 return Maybe.None;
             var json = await response.Content.ReadAsStringAsync();

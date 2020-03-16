@@ -1,7 +1,8 @@
-﻿@page "/my-reservations"
+﻿@page "/bestillinger"
 @attribute [Authorize]
 @inject ApiClient ApiClient
 @inject FormattingService FormattingService
+@inject NavigationManager NavigationManager
 
 <main>
     @if (!isInitialized)
@@ -13,29 +14,31 @@
         <Container class="orders">
             @if (orders!.Any())
             {
-                <h1>Aktuelle reservationer</h1>
+                <h1>Aktuelle bestillinger</h1>
                 @foreach (var order in orders!)
                 {
                     <Row>
                         <Column>
                             <Card Background="Background.Light">
                                 <CardBody class="order">
-                                    <div class="order-header order-main">Ordre-nr.</div>
-                                    <div class="order-header order-main">Ordredato</div>
+                                    <div class="order-header order-main">Bestellings-nr.</div>
+                                    <div class="order-header order-main">Bestillingsdato</div>
                                     <div class="order-header order-main"></div>
                                     <div class="order-header order-main">Total leje</div>
                                     <div class="order-header order-main">Total rengøring</div>
                                     <div class="order-header order-main">Total depositum</div>
-                                    <div class="order-header order-main"></div>
-                                    <div class="order-header order-main"></div>
+                                    <div class="order-header order-main order-button">
+                                        @if (order.CanBeEdited)
+                                        {
+                                            <Button Color="Color.Info" Size="ButtonSize.Small" Clicked="@(() => EditOrder(order))">Redigér</Button>
+                                        }
+                                    </div>
                                     <div class="order-value order-main">@order.Id</div>
                                     <div class="order-value order-main">@FormattingService.FormatDate(order.CreatedTimestamp)</div>
                                     <div class="order-value order-main"></div>
                                     <div class="order-value order-main">@FormattingService.FormatMoneyShort(order.Price!.Rent)</div>
                                     <div class="order-value order-main">@FormattingService.FormatMoneyShort(order.Price!.CleaningFee)</div>
                                     <div class="order-value order-main">@FormattingService.FormatMoneyShort(order.Price!.Deposit)</div>
-                                    <div class="order-value order-main"></div>
-                                    <div class="order-value order-main"></div>
                                     @foreach (var reservation in order.Reservations!)
                                     {
                                         <div class="order-header order-reservation">Lokale</div>
@@ -45,12 +48,6 @@
                                         <div class="order-header order-reservation">Rengøring</div>
                                         <div class="order-header order-reservation">Depositum</div>
                                         <div class="order-header order-reservation">Status</div>
-                                        <div class="order-header order-reservation order-button">
-                                            @if (reservation.CanBeCancelled)
-                                            {
-                                                <Button Color="Color.Danger" Size="ButtonSize.Small" Clicked="@(() => CancelReservation(reservation))">Annullér</Button>
-                                            }
-                                        </div>
                                         <div class="order-value order-reservation">@reservation.Resource!.Name</div>
                                         <div class="order-value order-reservation">@FormattingService.FormatDate(reservation.Date)</div>
                                         <div class="order-value order-reservation">@reservation.DurationInDays</div>
@@ -64,11 +61,10 @@
                         </Column>
                     </Row>
                 }
-                <ConfirmCancellationDialog @ref="@confirmCancellationDialog" OnCancel="@CancelConfirmReservationCancellation" OnConfirm="@ConfirmConfirmReservationCancellation" />
             }
             @if (historyOrders!.Any())
             {
-                <h1>Tidligere reservationer</h1>
+                <h1>Tidligere bestillinger</h1>
             }
         </Container>
     }
@@ -76,7 +72,6 @@
 
 @code {
 
-    private ConfirmCancellationDialog confirmCancellationDialog = null!;
     private bool isInitialized;
     private IEnumerable<Order>? orders;
     private IEnumerable<HistoryOrder>? historyOrders;
@@ -88,22 +83,10 @@
         isInitialized = true;
     }
 
-    private void CancelReservation(Reservation reservation)
+    private void EditOrder(Order order)
     {
-        confirmCancellationDialog.Show(reservation);
-    }
-
-    private void CancelConfirmReservationCancellation()
-    {
-        confirmCancellationDialog.Hide();
-    }
-
-    private void ConfirmConfirmReservationCancellation(Reservation reservation)
-    {
-        confirmCancellationDialog.Hide();
-        // TODO: Do this for real.
-        reservation.Status = ReservationStatus.Cancelled;
-        reservation.CanBeCancelled = false;
+        var url = $"{Urls.Orders}/{order.Id}";
+        NavigationManager.NavigateTo(url);
     }
 
     private static string GetReservationStatus(Reservation reservation) => reservation.Status switch

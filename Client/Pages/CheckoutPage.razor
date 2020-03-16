@@ -1,4 +1,4 @@
-﻿@page "/checkout"
+﻿@page "/bestil"
 @attribute [Authorize]
 @inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
@@ -9,9 +9,9 @@
 <main>
     @if (ClientDataProvider.Order.Reservations!.Count == 0)
     {
-        <div class="container">
-            <p>Gå til <a href="calendar">kalenderen</a> for at påbegynde reservation af et lokale.</p>
-        </div>
+        <Container>
+            <p>Gå til <a href="@Urls.Calendar">kalenderen</a> for at påbegynde reservation af et lokale.</p>
+        </Container>
     }
     else if (!isInitialized)
     {
@@ -19,7 +19,7 @@
     }
     else
     {
-        <div class="table-container">
+        <Container class="container-min-md">
             <Alert Color="Color.Danger" IsShow="@showReservationConflictAlert">
                 <CloseButton Clicked="@DismissReservationConflictAlert" />
                 Din bestilling blev ikke gennemført da den overlapper med andre reservationer. Opdatér kalenderen og prøv igen.
@@ -36,7 +36,7 @@
                             <SelectEdit TValue="int" @bind-SelectedValue="@ClientDataProvider.Order.ApartmentId">
                                 <ChildContent>
                                     <SelectItem Value="0" disabled>Vælg lejlighed</SelectItem>
-                                    @foreach (var apartment in apartments)
+                                    @foreach (var apartment in apartments!)
                                     {
                                         <SelectItem Value="@apartment.Id">@apartment</SelectItem>
                                     }
@@ -104,9 +104,9 @@
                         </TableRow>
                     </TableFooter>
                 </Table>
-                <Button class="float-right" Color="Color.Danger" Clicked="@Submit">Bekræft reservation</Button>
+                <Button class="float-right" Color="Color.Success" Clicked="@Submit">Bekræft bestilling</Button>
             </Validations>
-        </div>
+        </Container>
     }
 </main>
 
@@ -114,7 +114,7 @@
 {
 
     private Validations validations = null!;
-    private IEnumerable<Apartment> apartments = null!;
+    private IEnumerable<Apartment>? apartments;
     private bool isInitialized;
     private bool showReservationConflictAlert;
     private bool showErrorAlert;
@@ -151,7 +151,7 @@
             {
                 ClientDataProvider.ClearOrder();
                 ClientDataProvider.Refresh();
-                NavigationManager.NavigateTo("my-reservations");
+                NavigationManager.NavigateTo(Urls.Orders);
             }
             if (response.Result == PlaceOrderResult.ReservationConflict)
             {
