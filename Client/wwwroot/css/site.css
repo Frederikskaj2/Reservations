@@ -516,46 +516,35 @@ a.sign-in {
         color: #AAA;
     }
 
-.orders {
-    min-width: 60rem;
-}
-
-    .orders .card {
-        margin-top: 1rem;
-    }
-
 table {
     margin-top: 2rem;
 }
 
-.order {
+.orders .card {
+    margin-top: 1rem;
+}
+
+.orders-order {
     display: grid;
-    grid-template-columns: 11rem 9rem 4rem 6rem 6rem 6rem 8rem;
+    grid-template-columns: 11rem 9rem 4rem 1fr;
     grid-template-rows: max-content;
     grid-gap: 0 1rem;
     gap: 0 1rem;
 }
 
-    .order .order-header {
+    .orders-order .order-header, .orders-order .reservation-header {
         text-transform: uppercase;
         font-size: 0.67rem;
         color: #AAA;
     }
 
-        .order .order-header.order-reservation {
-            margin-top: 1rem;
-        }
-
-    .order .order-value.order-main {
-        font-weight: bold;
-        margin-bottom: 1rem;
+    .orders-order .reservation-header {
+        margin-top: 1rem;
     }
 
-    .order .order-button {
-        grid-column-start: 7;
+    .orders-order .order-button {
         grid-row-end: span 2;
     }
-
 
 .reservation-cancelled {
     text-decoration: line-through;

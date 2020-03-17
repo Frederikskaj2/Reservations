@@ -11,7 +11,7 @@
     }
     else
     {
-        <Container class="orders">
+        <Container class="container-min-md orders">
             @if (orders!.Any())
             {
                 <h1>Aktuelle bestillinger</h1>
@@ -20,41 +20,29 @@
                     <Row>
                         <Column>
                             <Card Background="Background.Light">
-                                <CardBody class="order">
-                                    <div class="order-header order-main">Bestellings-nr.</div>
-                                    <div class="order-header order-main">Bestillingsdato</div>
-                                    <div class="order-header order-main"></div>
-                                    <div class="order-header order-main">Total leje</div>
-                                    <div class="order-header order-main">Total rengøring</div>
-                                    <div class="order-header order-main">Total depositum</div>
-                                    <div class="order-header order-main order-button">
+                                <CardBody class="orders-order">
+                                    <div class="order-header">Bestillings-nr.</div>
+                                    <div class="order-header">Bestillingsdato</div>
+                                    <div class="order-header"></div>
+                                    <div class="order-header order-button">
                                         @if (order.CanBeEdited)
                                         {
-                                            <Button Color="Color.Info" Size="ButtonSize.Small" Clicked="@(() => EditOrder(order))">Redigér</Button>
+                                            <Button Color="Color.Info" Size="ButtonSize.Small" class="float-right" Clicked="@(() => EditOrder(order))">Redigér</Button>
                                         }
                                     </div>
-                                    <div class="order-value order-main">@order.Id</div>
-                                    <div class="order-value order-main">@FormattingService.FormatDate(order.CreatedTimestamp)</div>
-                                    <div class="order-value order-main"></div>
-                                    <div class="order-value order-main">@FormattingService.FormatMoneyShort(order.Price!.Rent)</div>
-                                    <div class="order-value order-main">@FormattingService.FormatMoneyShort(order.Price!.CleaningFee)</div>
-                                    <div class="order-value order-main">@FormattingService.FormatMoneyShort(order.Price!.Deposit)</div>
+                                    <div>@order.Id</div>
+                                    <div>@FormattingService.FormatDate(order.CreatedTimestamp)</div>
+                                    <div></div>
+                                    <div class="reservation-header">Lokale</div>
+                                    <div class="reservation-header">Dato</div>
+                                    <div class="reservation-header">Antal dage</div>
+                                    <div class="reservation-header">Status</div>
                                     @foreach (var reservation in order.Reservations!)
                                     {
-                                        <div class="order-header order-reservation">Lokale</div>
-                                        <div class="order-header order-reservation">Dato</div>
-                                        <div class="order-header order-reservation">Antal dage</div>
-                                        <div class="order-header order-reservation">Leje</div>
-                                        <div class="order-header order-reservation">Rengøring</div>
-                                        <div class="order-header order-reservation">Depositum</div>
-                                        <div class="order-header order-reservation">Status</div>
-                                        <div class="order-value order-reservation">@reservation.Resource!.Name</div>
-                                        <div class="order-value order-reservation">@FormattingService.FormatDate(reservation.Date)</div>
-                                        <div class="order-value order-reservation">@reservation.DurationInDays</div>
-                                        <div class="order-value order-reservation">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</div>
-                                        <div class="order-value order-reservation">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</div>
-                                        <div class="order-value order-reservation">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</div>
-                                        <div class="order-value order-reservation">@GetReservationStatus(reservation)</div>
+                                        <div>@reservation.Resource!.Name</div>
+                                        <div>@FormattingService.FormatDate(reservation.Date)</div>
+                                        <div>@reservation.DurationInDays</div>
+                                        <div>@GetReservationStatus(reservation)</div>
                                     }
                                 </CardBody>
                             </Card>
