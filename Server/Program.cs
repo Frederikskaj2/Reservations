@@ -15,9 +15,8 @@ namespace Frederikskaj2.Reservations.Server
             var scopeFactory = host.Services.GetRequiredService<IServiceScopeFactory>();
             using (var scope = scopeFactory.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<ReservationsContext>();
-                if (db.Database.EnsureCreated())
-                    SeedData.Initialize(db);
+                var seedData = scope.ServiceProvider.GetRequiredService<SeedData>();
+                seedData.Initialize();
             }
 
             host.Run();

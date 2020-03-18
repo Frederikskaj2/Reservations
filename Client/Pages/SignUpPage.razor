@@ -12,7 +12,7 @@
     }
     else
     {
-        <Container>
+        <Container class="container-max-sm">
             <Alert Color="Color.Danger" IsShow="@showDuplicateEmailAlert">
                 <CloseButton Clicked="@DismissDuplicateEmailAlert" />
                 Der findes allerede en bruger med mail @ApplicationState.SignUpRequest.Email. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>

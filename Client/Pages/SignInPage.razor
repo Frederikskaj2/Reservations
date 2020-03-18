@@ -6,7 +6,7 @@
 @inject ServerAuthenticationStateProvider AuthenticationStateProvider
 
 <main>
-    <Container>
+    <Container class="container-max-sm">
         <Alert Color="Color.Danger" IsShow="@showInvalidEmailOrPasswordAlert">
             <CloseButton Clicked="@DismissInvalidEmailOrPasswordAlert" />
             Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>

@@ -1,9 +1,8 @@
 ﻿namespace Frederikskaj2.Reservations.Shared
 {
-    public enum SignUpResult
+    public enum OperationResult
     {
         Success,
-        GeneralError,
-        DuplicateEmail
+        GeneralError
     }
 }

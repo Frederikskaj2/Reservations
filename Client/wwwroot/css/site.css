@@ -69,6 +69,10 @@
     outline: none;
 }
 
+.dropdown-item {
+    cursor: pointer;
+}
+
 html, body, .contents {
     height: 100%;
 }
@@ -176,6 +180,10 @@ nav {
         z-index: 1;
     }
 
+    .nav-tab.nav-administrator {
+        color: hsl(48, 100%, 75%);
+    }
+
 .user-info {
     align-items: center;
     display: flex;
@@ -231,25 +239,24 @@ nav {
     margin: 2rem 15px;
 }
 
-    .container input {
-        max-width: 30rem;
-    }
-
-    .container select {
-        max-width: 30rem;
-        display: block;
-    }
-
-    .container .custom-checkbox {
-        max-width: 30rem;
-    }
-
 .container-min-md {
     min-width: 720px;
 }
 
 .container-min-lg {
     min-width: 960px;
+}
+
+.container-max-sm {
+    max-width: 540px;
+}
+
+.container-max-md {
+    max-width: 720px;
+}
+
+.container-max-lg {
+    max-width: 960px;
 }
 
 button.btn-text {

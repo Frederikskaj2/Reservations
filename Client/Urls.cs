@@ -8,5 +8,6 @@
         public const string Orders = "bestillinger";
         public const string SignIn = "log-ind";
         public const string SignUp = "opret-bruger";
+        public const string Users = "brugere";
     }
 }

@@ -14,7 +14,7 @@ namespace Frederikskaj2.Reservations.Client
 
         public ServerAuthenticationStateProvider(HttpClient httpClient) => this.httpClient = httpClient;
 
-        public override async Task<AuthenticationState> GetAuthenticationStateAsync() => await GetAuthenticationState(httpClient.GetJsonAsync<UserInfo>("user"));
+        public override Task<AuthenticationState> GetAuthenticationStateAsync() => GetAuthenticationState(httpClient.GetJsonAsync<UserInfo>("user"));
 
         public void UpdateUser(UserInfo user) => NotifyAuthenticationStateChanged(GetAuthenticationState(Task.FromResult(user)));
 
@@ -25,12 +25,17 @@ namespace Frederikskaj2.Reservations.Client
 
             ClaimsIdentity GetIdentity()
             {
-                if (!user.IsAuthenticated)
-                    return new ClaimsIdentity();
-                var claims = new List<Claim> {new Claim(ClaimTypes.Name, user.Name)};
-                if (user.IsAdministrator)
-                    claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
-                return new ClaimsIdentity(claims, "serverauth");
+                const string authenticationType = "serverauth";
+                return user.IsAuthenticated ? new ClaimsIdentity(GetClaims(), authenticationType) : new ClaimsIdentity();
+
+                IEnumerable<Claim> GetClaims()
+                {
+                    yield return new Claim(ClaimTypes.Name, user.Name);
+                    if (user.Id.HasValue)
+                        yield return new Claim(ClaimTypes.NameIdentifier, user.Id.Value.ToString());
+                    if (user.IsAdministrator)
+                        yield return new Claim(ClaimTypes.Role, Roles.Administrator);
+                }
             }
         }
     }

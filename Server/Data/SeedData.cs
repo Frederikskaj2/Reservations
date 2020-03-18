@@ -1,15 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Shared;
+using Microsoft.Extensions.Configuration;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
-    internal static class SeedData
+    internal class SeedData
     {
-        public static void Initialize(ReservationsContext db)
+        private readonly ReservationsContext db;
+        private readonly IPasswordHasher passwordHasher;
+        private readonly IConfiguration configuration;
+
+        public SeedData(ReservationsContext db, IPasswordHasher passwordHasher, IConfiguration configuration)
         {
+            this.db = db ?? throw new ArgumentNullException(nameof(db));
+            this.passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        }
+
+        public void Initialize()
+        {
+            if (!db.Database.EnsureCreated())
+                return;
+
             var resources = new[]
             {
                 new Resource { Sequence = 1, Type = ResourceType.BanquetFacilities, Name = "Fest-/aktivitetslokale" },
@@ -21,15 +37,27 @@ namespace Frederikskaj2.Reservations.Server.Data
             var apartments = GetApartments().ToList();
             db.Apartments.AddRange(apartments);
 
-            var random = new Random();
+            var password = configuration.GetValue<string>("ReservationsAdministratorPassword");
+            var user = new User
+            {
+                Email = "martin@liversage.com",
+                FullName = "Martin Liversage",
+                Phone = "31 18 97 93",
+                HashedPassword = passwordHasher.HashPassword(password),
+                IsAdministrator = true
+            };
+            db.Users.Add(user);
 
+            var random = new Random();
             var users = new[]
             {
-                new User { Email = "a@liversage.com", FullName = "A Liversage", Apartment = apartments[random.Next(apartments.Count)] },
-                new User { Email = "b@liversage.com", FullName = "B Liversage", Apartment = apartments[random.Next(apartments.Count)] },
-                new User { Email = "c@liversage.com", FullName = "C Liversage", Apartment = apartments[random.Next(apartments.Count)] },
+                new User { Email = "a@frederikskaj2.dk", FullName = "A F", Phone = CreatePhone(), Apartment = apartments[random.Next(apartments.Count)] },
+                new User { Email = "b@frederikskaj2.dk", FullName = "B F", Phone = CreatePhone(), Apartment = apartments[random.Next(apartments.Count)] },
+                new User { Email = "c@frederikskaj2.dk", FullName = "C F", Phone = CreatePhone(), Apartment = apartments[random.Next(apartments.Count)] },
             };
             db.Users.AddRange(users);
+
+            string CreatePhone() => random.Next(21000000, 70000000 - 21000000).ToString();
 
             var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
             var now = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo);

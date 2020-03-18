@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider;
 
 <nav>
     <div class="logo">Frederikskaj&nbsp;2</div>
@@ -11,8 +12,34 @@
     <NavLink href="@Urls.Orders" class="nav-tab">
         <div>Mine bestillinger</div>
     </NavLink>
-    <User />
+    @if (isAdministrator)
+    {
+        <NavLink href="@Urls.Users" class="nav-tab nav-administrator">
+            <div>Brugere</div>
+        </NavLink>
+    }
+    <CurrentUser />
 </nav>
 <div class="contents">
     @Body
 </div>
+
+@code {
+
+    private bool isAdministrator;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        var authenticationState = await task;
+        isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
+        StateHasChanged();
+    }
+
+}

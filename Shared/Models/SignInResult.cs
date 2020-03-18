@@ -3,7 +3,7 @@
     public enum SignInResult
     {
         Success,
-        InvalidEmailOrPassword,
-        GeneralError
+        GeneralError,
+        InvalidEmailOrPassword
     }
 }

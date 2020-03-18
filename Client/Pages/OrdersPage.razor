@@ -54,6 +54,10 @@
             {
                 <h1>Tidligere bestillinger</h1>
             }
+            @if (!orders!.Any() && !historyOrders!.Any())
+            {
+                <Text>Gå til <a href="@Urls.Calendar">kalenderen</a> for at påbegynde reservation af et lokale.</Text>
+            }
         </Container>
     }
 </main>

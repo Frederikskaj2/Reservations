@@ -1,8 +1,8 @@
 ﻿using System.Security.Claims;
 
-namespace Frederikskaj2.Reservations.Server.Controllers
+namespace Frederikskaj2.Reservations.Shared
 {
-    internal static class ClaimsPrincipalExtensions
+    public static class ClaimsPrincipalExtensions
     {
         public static int? Id(this ClaimsPrincipal principal)
         {

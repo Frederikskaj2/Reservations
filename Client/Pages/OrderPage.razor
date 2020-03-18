@@ -164,8 +164,8 @@
         validations.ClearAll();
 
         var url = $"orders/{order!.Id}";
-        var maybe = await ApiClient.PatchJsonAsync<UpdateOrderResponse>(url, request);
-        if (maybe.TryGetValue(out var response) && response.Result == UpdateOrderResult.Success)
+        var maybe = await ApiClient.PatchJsonAsync<OperationResponse>(url, request);
+        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
             NavigationManager.NavigateTo(Urls.Orders);
         showErrorAlert = true;
     }

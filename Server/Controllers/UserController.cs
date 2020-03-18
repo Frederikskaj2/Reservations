@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Claims;
-using System.Security.Principal;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Passwords;
@@ -31,7 +30,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpGet("")]
-        public UserInfo GetUser() => GetUser(User.Identity);
+        public UserInfo GetUser() => GetUser(User);
 
         [Authorize]
         [HttpGet("apartment")]
@@ -67,9 +66,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new SignUpResponse { Result = SignUpResult.GeneralError };
             }
 
-            var identity = await SignIn(user, request.IsPersistent);
+            var principal = await SignIn(user, request.IsPersistent);
 
-            return new SignUpResponse { User = GetUser(identity, user) };
+            return new SignUpResponse { User = GetUser(principal, user) };
         }
 
         [HttpPost("sign-in")]
@@ -85,7 +84,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
             }
 
-            var verificationResult = passwordHasher.VerifyHashedPassword(user.HashedPassword, request.Password!);
+            var verificationResult = passwordHasher.VerifyHashedPassword(user.HashedPassword ?? string.Empty, request.Password!);
 
             if (verificationResult == PasswordVerificationResult.Failed)
                 return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
@@ -96,9 +95,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 await db.SaveChangesAsync();
             }
 
-            var identity = await SignIn(user, request.IsPersistent);
+            var principal = await SignIn(user, request.IsPersistent);
 
-            return new SignInResponse { User = GetUser(identity, user) };
+            return new SignInResponse { User = GetUser(principal, user) };
         }
 
         [HttpPost("sign-out")]
@@ -108,19 +107,21 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return Ok();
         }
 
-        private UserInfo GetUser(IIdentity identity, User? user = null)
+        private static UserInfo GetUser(ClaimsPrincipal principal, User? user = null)
         {
-            if (!identity.IsAuthenticated)
+            if (!principal.Identity.IsAuthenticated)
                 return UnknownUser;
             return new UserInfo
             {
-                Name = identity.Name, IsAuthenticated = true,
-                IsAdministrator = User.HasClaim(ClaimTypes.Role, "Administrator"),
+                Id = principal.Id(),
+                Name = principal.Identity.Name,
+                IsAuthenticated = true,
+                IsAdministrator = principal.HasClaim(ClaimTypes.Role, Roles.Administrator),
                 ApartmentId = user?.ApartmentId
             };
         }
 
-        private async Task<ClaimsIdentity> SignIn(User user, bool isPersistent)
+        private async Task<ClaimsPrincipal> SignIn(User user, bool isPersistent)
         {
             var claims = new List<Claim>
             {
@@ -129,16 +130,14 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 new Claim("FullName", user.FullName)
             };
             if (user.IsAdministrator)
-                claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
+                claims.Add(new Claim(ClaimTypes.Role, Roles.Administrator));
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
+            var principal = new ClaimsPrincipal(claimsIdentity);
             var authenticationProperties = new AuthenticationProperties { IsPersistent = isPersistent };
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authenticationProperties);
 
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authenticationProperties);
-
-            return claimsIdentity;
+            return principal;
         }
     }
 }

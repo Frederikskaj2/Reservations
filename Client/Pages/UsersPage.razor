@@ -1,0 +1,154 @@
+﻿@page "/brugere"
+@attribute [Authorize(Roles = Roles.Administrator)]
+@inject ApiClient ApiClient
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container>
+            <Alert Color="Color.Danger" IsShow="@showGeneralErrorAlert">
+                <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
+                Der skete en fejl. Din ændring er ikke blevet gemt.
+            </Alert>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>Mail</TableHeaderCell>
+                        <TableHeaderCell>Navn</TableHeaderCell>
+                        <TableHeaderCell>Telefon</TableHeaderCell>
+                        <TableHeaderCell class="text-center">Administrator</TableHeaderCell>
+                        <TableHeaderCell class="text-center">Sletning ønsket</TableHeaderCell>
+                        <TableHeaderCell></TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var user in users)
+                    {
+                        <TableRow @key="user.Id">
+                            <TableRowCell>@user.Email</TableRowCell>
+                            <TableRowCell>@user.FullName</TableRowCell>
+                            <TableRowCell>@user.Phone</TableRowCell>
+                            <TableRowCell class="text-center">
+                                @if (@user.IsAdministrator)
+                                {
+                                    <Icon class="fa-check" />
+                                }
+                            </TableRowCell>
+                            <TableRowCell class="text-center">
+                                @if (@user.IsPendingDelete)
+                                {
+                                    <Icon class="fa-check" />
+                                }
+                            </TableRowCell>
+                            <TableRowCell>
+                                <Dropdown>
+                                    <DropdownToggle Color="Color.Light">
+                                        Handling
+                                    </DropdownToggle>
+                                    <DropdownMenu>
+                                        <DropdownItem Clicked="@(() => Edit(user))">Redigér</DropdownItem>
+                                        @if (!user.IsAdministrator)
+                                        {
+                                            <DropdownItem Clicked="@(() => MakeAdministrator(user))">Gør til administrator</DropdownItem>
+                                        }
+                                        else if (users.Count(u => u.IsAdministrator) > 1)
+                                        {
+                                            <DropdownItem Clicked="@(() => MakeNormalUser(user))">Gør til almindelig bruger</DropdownItem>
+                                        }
+                                        @if (!user.IsPendingDelete && user.Id != currentUserId)
+                                        {
+                                            <DropdownItem Clicked="@(() => Delete(user))">Slet</DropdownItem>
+                                        }
+                                    </DropdownMenu>
+                                </Dropdown>
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+            <ConfirmDeleteUserDialog @ref="confirmDeleteUserDialog" OnConfirm="OnConfirmDeleteUser" OnCancel="OnCancelDeleteUser" />
+        </Container>
+    }
+</main>
+
+@code {
+
+    private ConfirmDeleteUserDialog confirmDeleteUserDialog = null!;
+    private bool isInitialized;
+    private int? currentUserId;
+    private List<User> users = null!;
+    private bool showGeneralErrorAlert;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authenticationState.User.Id();
+        users = (await ApiClient.GetJsonAsync<IEnumerable<User>>("users")).ToList();
+        isInitialized = true;
+    }
+
+    private void Edit(User user)
+    {
+    }
+
+    private Task MakeAdministrator(User user) => PatchUser(user, true, null);
+
+    private Task MakeNormalUser(User user) => PatchUser(user, false, null);
+
+    private void Delete(User user) => confirmDeleteUserDialog.Show(user);
+
+    private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
+
+    private Task OnConfirmDeleteUser(User user)
+    {
+        confirmDeleteUserDialog.Hide();
+        return PatchUser(user, null, true);
+    }
+
+    private void OnCancelDeleteUser() => confirmDeleteUserDialog.Hide();
+
+    private async Task PatchUser(User user, bool? isAdministrator, bool? isPendingDelete)
+    {
+        var request = new UpdateUserRequest
+        {
+            FullName = user.FullName,
+            Phone = user.Phone,
+            IsAdministrator = isAdministrator ?? user.IsAdministrator,
+            IsPendingDelete = isPendingDelete ?? user.IsPendingDelete
+        };
+        var requestUri = $"users/{user.Id}";
+        var maybe = await ApiClient.PatchJsonAsync<UpdateUserResponse>(requestUri, request);
+        if (maybe.TryGetValue(out var response))
+        {
+            switch (response.Result)
+            {
+                case UpdateUserResult.Success:
+                    UpdateUser(response.User!);
+                    return;
+                case UpdateUserResult.UserWasDeleted:
+                    RemoveUser(user.Id);
+                    return;
+            }
+        }
+        showGeneralErrorAlert = true;
+    }
+
+    private void UpdateUser(User user)
+    {
+        var index = users.FindIndex(u => u.Id == user.Id);
+        users[index] = user;
+    }
+
+
+    private void RemoveUser(int userId)
+    {
+        var index = users.FindIndex(u => u.Id == userId);
+        users.RemoveAt(index);
+    }
+
+}

@@ -25,6 +25,7 @@ namespace Frederikskaj2.Reservations.Server
         {
             services
                 .AddDbContext<ReservationsContext>(options => options.UseSqlite("Data Source=Reservations.db"))
+                .AddScoped<SeedData>()
                 .AddPasswordServices(Configuration)
                 .AddReservationsServices()
                 .AddScoped<IDataProvider, ServerDataProvider>();

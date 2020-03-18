@@ -1,8 +1,9 @@
 ﻿namespace Frederikskaj2.Reservations.Shared
 {
-    public enum UpdateOrderResult
+    public enum UpdateUserResult
     {
         Success,
-        GeneralError
+        GeneralError,
+        UserWasDeleted
     }
 }

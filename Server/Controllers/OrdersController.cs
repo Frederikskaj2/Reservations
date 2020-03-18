@@ -36,22 +36,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
         }
 
-        [HttpGet("{orderId:int}")]
-        public async Task<Order> Get(int orderId)
-        {
-            var userId = User.Id();
-            if (!userId.HasValue)
-                return new Order();
-
-            var order = await GetOrder(orderId, userId.Value);
-            if (order == null)
-                return new Order();
-
-            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            PrepareOrderForApi(order, today);
-            return order;
-        }
-
         [HttpGet]
         public async Task<IEnumerable<Order>> Get()
         {
@@ -73,6 +57,22 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 PrepareOrderForApi(order, today);
 
             return orders;
+        }
+
+        [HttpGet("{orderId:int}")]
+        public async Task<Order> Get(int orderId)
+        {
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return new Order();
+
+            var order = await GetOrder(orderId, userId.Value);
+            if (order == null)
+                return new Order();
+
+            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
+            PrepareOrderForApi(order, today);
+            return order;
         }
 
         [HttpPost]
@@ -146,17 +146,17 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [Route("{orderId:int}")]
-        public async Task<UpdateOrderResponse> Patch(int orderId, UpdateOrderRequest request)
+        public async Task<OperationResponse> Patch(int orderId, UpdateOrderRequest request)
         {
             var userId = User.Id();
             if (!userId.HasValue)
-                return new UpdateOrderResponse { Result = UpdateOrderResult.GeneralError };
+                return new OperationResponse { Result = OperationResult.GeneralError };
 
             var order = await GetOrder(orderId, userId.Value);
             if (order == null)
-                return new UpdateOrderResponse { Result = UpdateOrderResult.GeneralError };
+                return new OperationResponse { Result = OperationResult.GeneralError };
             if (order.UserId != userId.Value)
-                return new UpdateOrderResponse { Result = UpdateOrderResult.GeneralError };
+                return new OperationResponse { Result = OperationResult.GeneralError };
 
             var now = clock.GetCurrentInstant();
             var today = now.InZone(dateTimeZone).Date;
@@ -176,10 +176,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             }
             catch (DbUpdateException)
             {
-                return new UpdateOrderResponse { Result = UpdateOrderResult.GeneralError };
+                return new OperationResponse { Result = OperationResult.GeneralError };
             }
 
-            return new UpdateOrderResponse { Result = UpdateOrderResult.Success };
+            return new OperationResponse { Result = OperationResult.Success };
         }
 
         private async Task<Order> GetOrder(int orderId, int userId)

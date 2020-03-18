@@ -1,0 +1,65 @@
+﻿<Modal @ref="@modal">
+    @if (user != null)
+    {
+        <ModalBackdrop />
+        <ModalContent>
+            <ModalHeader>
+                <ModalTitle>Bekræft sletning af bruger</ModalTitle>
+                <CloseButton Clicked="@OnCancel" />
+            </ModalHeader>
+            <ModalBody>
+                <Field IsHorizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Mail</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit IsPlaintext="true" Text="@user.Email" />
+                    </FieldBody>
+                </Field>
+                <Field IsHorizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Navn</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit IsPlaintext="true" Text="@user.FullName" />
+                    </FieldBody>
+                </Field>
+                <Row class="justify-content-end">
+                    <Column ColumnSize="ColumnSize.Is8">
+                        <Paragraph Color="TextColor.Muted">
+                            En bruger slettes ikke så længe brugeren har aktive bestillinger. Sletningen sker først når dette ikke længere er tilfældet.
+                        </Paragraph>
+                        <Paragraph Color="TextColor.Muted">
+                            En bruger som ikke har nogen aktive bestillinger slettes med det samme.
+                        </Paragraph>
+                    </Column>
+                </Row>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Danger" Clicked="@(() => OnConfirm.InvokeAsync(user))">Slet bruger</Button>
+                <Button Color="Color.Secondary" Clicked="@OnCancel">Fortryd</Button>
+            </ModalFooter>
+        </ModalContent>
+    }
+</Modal>
+
+@code
+{
+
+    private Modal modal = null!;
+    private User? user;
+
+    [Parameter]
+    public EventCallback<User> OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    public void Show(User user)
+    {
+        this.user = user;
+        modal.Show();
+    }
+
+    public void Hide()
+    {
+        modal.Hide();
+    }
+
+}
