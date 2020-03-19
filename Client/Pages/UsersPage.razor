@@ -56,7 +56,7 @@
                                         {
                                             <DropdownItem Clicked="@(() => MakeAdministrator(user))">Gør til administrator</DropdownItem>
                                         }
-                                        else if (users.Count(u => u.IsAdministrator) > 1)
+                                        else if (user.IsAdministrator && user.Id != currentUserId)
                                         {
                                             <DropdownItem Clicked="@(() => MakeNormalUser(user))">Gør til almindelig bruger</DropdownItem>
                                         }
@@ -71,13 +71,15 @@
                     }
                 </TableBody>
             </Table>
-            <ConfirmDeleteUserDialog @ref="confirmDeleteUserDialog" OnConfirm="OnConfirmDeleteUser" OnCancel="OnCancelDeleteUser" />
+            <EditUserDialog @ref="editUserDialog" OnConfirm="OnEditUser" />
+            <ConfirmDeleteUserDialog @ref="confirmDeleteUserDialog" OnConfirm="OnConfirmDeleteUser" />
         </Container>
     }
 </main>
 
 @code {
 
+    private EditUserDialog editUserDialog = null!;
     private ConfirmDeleteUserDialog confirmDeleteUserDialog = null!;
     private bool isInitialized;
     private int? currentUserId;
@@ -92,9 +94,7 @@
         isInitialized = true;
     }
 
-    private void Edit(User user)
-    {
-    }
+    private void Edit(User user) => editUserDialog.Show(user, user.Id != currentUserId);
 
     private Task MakeAdministrator(User user) => PatchUser(user, true, null);
 
@@ -104,13 +104,9 @@
 
     private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
 
-    private Task OnConfirmDeleteUser(User user)
-    {
-        confirmDeleteUserDialog.Hide();
-        return PatchUser(user, null, true);
-    }
+    private Task OnEditUser(User user) => PatchUser(user, null, null);
 
-    private void OnCancelDeleteUser() => confirmDeleteUserDialog.Hide();
+    private Task OnConfirmDeleteUser(User user) => PatchUser(user, null, true);
 
     private async Task PatchUser(User user, bool? isAdministrator, bool? isPendingDelete)
     {

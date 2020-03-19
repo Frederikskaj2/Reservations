@@ -2,14 +2,14 @@
 @inject ReservationsOptions ReservationsOptions
 @inject IReservationPolicyProvider ReservationPolicyProvider
 
-<Modal @ref="@modal">
+<Modal @ref="@modal" Closed="@OnModalClosed">
     @if (Reservation?.Resource != null)
     {
         <ModalBackdrop />
         <ModalContent>
             <ModalHeader>
                 <ModalTitle>Reservér @Reservation.Resource.Name</ModalTitle>
-                <CloseButton Clicked="@OnCancel" />
+                <CloseButton Clicked="@Cancel" />
             </ModalHeader>
             <ModalBody>
                 <Field IsHorizontal="true">
@@ -56,8 +56,8 @@
                 </Field>
             </ModalBody>
             <ModalFooter>
-                <Button Color="Color.Primary" Clicked="@OnConfirm">Reservér</Button>
-                <Button Color="Color.Secondary" Clicked="@OnCancel">Annullér</Button>
+                <Button Color="Color.Primary" Clicked="@Confirm">Reservér</Button>
+                <Button Color="Color.Secondary" Clicked="@Cancel">Annullér</Button>
             </ModalFooter>
         </ModalContent>
     }
@@ -70,6 +70,7 @@
     private string rent = string.Empty;
     private string deposit = string.Empty;
     private string total = string.Empty;
+    private bool isConfirming;
 
     [Parameter]
     public Reservation? Reservation { get; set; }
@@ -86,15 +87,7 @@
     public int MinimumDays { get; set; } = 1;
     public int MaximumDays { get; set; } = 7;
 
-    public void Show()
-    {
-        modal.Show();
-    }
-
-    public void Hide()
-    {
-        modal.Hide();
-    }
+    public void Show() => modal.Show();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -102,6 +95,16 @@
             policy = ReservationPolicyProvider.GetPolicy(Reservation!.Resource.Type);
         await UpdatePrice();
     }
+
+    private void Cancel() => modal.Hide();
+
+    private void Confirm()
+    {
+        isConfirming = true;
+        modal.Hide();
+    }
+
+    private Task OnModalClosed() => isConfirming ? OnConfirm.InvokeAsync(null) : OnCancel.InvokeAsync(null);
 
     private async Task DurationInDaysChanged(int value)
     {

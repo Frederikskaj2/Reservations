@@ -15,36 +15,38 @@
             <CloseButton Clicked="@DismissErrorAlert" />
             Der er sket en fejl. Du blev ikke logget ind.
         </Alert>
-        <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
-            <Field>
-                <FieldLabel>Mail</FieldLabel>
-                <FieldBody>
-                    <Validation>
-                        <TextEdit Role="TextRole.Email" @bind-Text="@request.Email">
-                            <Feedback>
-                                <ValidationError />
-                            </Feedback>
-                        </TextEdit>
-                    </Validation>
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>Adgangskode</FieldLabel>
-                <FieldBody>
-                    <Validation>
-                        <TextEdit Role="TextRole.Password" @bind-Text="@request.Password">
-                            <Feedback>
-                                <ValidationError />
-                            </Feedback>
-                        </TextEdit>
-                    </Validation>
-                </FieldBody>
-            </Field>
-            <Field>
-                <CheckEdit @bind-Checked="@request.IsPersistent">Husk mig</CheckEdit>
-            </Field>
-            <Button Color="Color.Primary" Clicked="@Submit" class="btn-text">Log ind</Button>
-        </Validations>
+        <Form onsubmit="return false;">
+            <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
+                <Field>
+                    <FieldLabel>Mail</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit Role="TextRole.Email" @bind-Text="@request.Email">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Adgangskode</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit Role="TextRole.Password" @bind-Text="@request.Password">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <CheckEdit @bind-Checked="@request.IsPersistent">Husk mig</CheckEdit>
+                </Field>
+                <Button Color="Color.Primary" Type="ButtonType.Submit" Clicked="@Submit" class="btn-text">Log ind</Button>
+            </Validations>
+        </Form>
     </Container>
     <Container>
         <p>Hvis du ikke har en bruger kan du oprette dig.</p>

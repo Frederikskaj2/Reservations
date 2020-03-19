@@ -1,0 +1,85 @@
+﻿<Modal @ref="@modal">
+    @if (user != null)
+    {
+        <ModalBackdrop />
+        <ModalContent>
+            <ModalHeader>
+                <ModalTitle>Redigér @user.Email</ModalTitle>
+                <CloseButton Clicked="@Cancel" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@user">
+                    <Validation>
+                        <Field>
+                            <FieldLabel>Navn</FieldLabel>
+                            <FieldBody>
+                                <TextEdit @bind-Text="@user.FullName">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </TextEdit>
+                            </FieldBody>
+                        </Field>
+                    </Validation>
+                    <Validation>
+                        <Field>
+                            <FieldLabel>Telefon</FieldLabel>
+                            <FieldBody>
+                                <TextEdit @bind-Text="@user.Phone">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </TextEdit>
+                            </FieldBody>
+                        </Field>
+                    </Validation>
+                    <CheckEdit @bind-Checked="@user.IsAdministrator" IsDisabled="@(!canEditIsAdministrator)">
+                        <ChildContent>
+                            Administrator
+                        </ChildContent>
+                    </CheckEdit>
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Primary" Clicked="@Confirm">Opdatér bruger</Button>
+                <Button Color="Color.Secondary" Clicked="@Cancel">Annullér</Button>
+            </ModalFooter>
+        </ModalContent>
+    }
+</Modal>
+
+@code
+{
+
+    private Modal modal = null!;
+    private Validations validations = null!;
+    private User? user;
+    private bool canEditIsAdministrator;
+
+    [Parameter]
+    public EventCallback<User> OnConfirm { get; set; }
+
+    public void Show(User user, bool canEditIsAdministrator)
+    {
+        this.user = new User
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            Phone = user.Phone,
+            IsAdministrator = user.IsAdministrator,
+            IsPendingDelete = user.IsPendingDelete
+        };
+        this.canEditIsAdministrator = canEditIsAdministrator;
+        modal.Show();
+    }
+
+    private Task Confirm()
+    {
+        modal.Hide();
+        return OnConfirm.InvokeAsync(user!);
+    }
+
+    private void Cancel() => modal.Hide();
+
+}

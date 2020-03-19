@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blazorise.Bootstrap" Version="0.8.8.3" />
+    <PackageReference Include="Blazorise.Bootstrap" Version="0.8.8.4" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.8.8.3" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="$(BlazorVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="$(BlazorVersion)" PrivateAssets="all" />

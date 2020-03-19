@@ -5,7 +5,7 @@
         <ModalContent>
             <ModalHeader>
                 <ModalTitle>Bekræft sletning af bruger</ModalTitle>
-                <CloseButton Clicked="@OnCancel" />
+                <CloseButton Clicked="@Cancel" />
             </ModalHeader>
             <ModalBody>
                 <Field IsHorizontal="true">
@@ -32,8 +32,8 @@
                 </Row>
             </ModalBody>
             <ModalFooter>
-                <Button Color="Color.Danger" Clicked="@(() => OnConfirm.InvokeAsync(user))">Slet bruger</Button>
-                <Button Color="Color.Secondary" Clicked="@OnCancel">Fortryd</Button>
+                <Button Color="Color.Danger" Clicked="@Confirm">Slet bruger</Button>
+                <Button Color="Color.Secondary" Clicked="@Cancel">Fortryd</Button>
             </ModalFooter>
         </ModalContent>
     }
@@ -48,18 +48,18 @@
     [Parameter]
     public EventCallback<User> OnConfirm { get; set; }
 
-    [Parameter]
-    public EventCallback OnCancel { get; set; }
-
     public void Show(User user)
     {
         this.user = user;
         modal.Show();
     }
 
-    public void Hide()
+    private Task Confirm()
     {
         modal.Hide();
+        return OnConfirm.InvokeAsync(user!);
     }
+
+    private void Cancel() => modal.Hide();
 
 }

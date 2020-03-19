@@ -285,9 +285,9 @@ else
 
     private async Task CancelReservation()
     {
+        Console.WriteLine("CancelReservation");
         DataProvider.ClearDraftReservation();
         await UpdateCalendar(currentMonth, currentResourceId);
-        reservationDialog.Hide();
     }
 
     private async Task ConfirmReservation()
@@ -295,7 +295,6 @@ else
         DataProvider.AddDraftReservationToOrder();
         UpdateTotalPrice();
         await UpdateCalendar(currentMonth, currentResourceId);
-        reservationDialog.Hide();
     }
 
     private async Task RemoveReservation(Reservation reservation)

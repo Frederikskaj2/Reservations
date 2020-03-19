@@ -21,96 +21,98 @@
                 <CloseButton Clicked="@DismissErrorAlert" />
                 Der er sket en fejl. Din bruger blev ikke oprettet.
             </Alert>
-            <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ApplicationState.SignUpRequest">
-                <Field>
-                    <FieldLabel>Mail</FieldLabel>
-                    <FieldBody>
+            <Form onsubmit="return false;">
+                <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ApplicationState.SignUpRequest">
+                    <Field>
+                        <FieldLabel>Mail</FieldLabel>
+                        <FieldBody>
+                            <Validation>
+                                <TextEdit Role="TextRole.Email" @bind-Text="@ApplicationState.SignUpRequest.Email">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </TextEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Fulde navn</FieldLabel>
+                        <FieldBody>
+                            <Validation>
+                                <TextEdit @bind-Text="@ApplicationState.SignUpRequest.FullName">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </TextEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Telefonnummer</FieldLabel>
+                        <FieldBody>
+                            <Validation>
+                                <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@ApplicationState.SignUpRequest.Phone">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </TextEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Din adresse</FieldLabel>
+                        <SelectEdit TValue="int" SelectedValue="@(ApplicationState.SignUpRequest.ApartmentId ?? 0)" SelectedValueChanged="@ApartmentChanged">
+                            <SelectItem Value="0">Vælg lejlighed</SelectItem>
+                            @foreach (var apartment in apartments)
+                            {
+                                <SelectItem Value="@apartment.Id">@apartment</SelectItem>
+                            }
+                        </SelectEdit>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Adgangskode</FieldLabel>
+                        <FieldBody>
+                            <Validation>
+                                <TextEdit Role="TextRole.Password" @bind-Text="@ApplicationState.SignUpRequest.Password">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </TextEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Gentag adgangskode</FieldLabel>
+                        <FieldBody>
+                            <Validation>
+                                <TextEdit Role="TextRole.Password" @bind-Text="@ApplicationState.SignUpRequest.ConfirmPassword">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </TextEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
+                    <Field>
                         <Validation>
-                            <TextEdit Role="TextRole.Email" @bind-Text="@ApplicationState.SignUpRequest.Email">
+                            <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.DidConsent">
+                                <ChildContent>
+                                    Jeg <a href="@Urls.Consent">samtykker</a> til at ovenstående oplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler.
+                                </ChildContent>
                                 <Feedback>
                                     <ValidationError />
                                 </Feedback>
-                            </TextEdit>
+                            </CheckEdit>
                         </Validation>
-                    </FieldBody>
-                </Field>
-                <Field>
-                    <FieldLabel>Fulde navn</FieldLabel>
-                    <FieldBody>
-                        <Validation>
-                            <TextEdit @bind-Text="@ApplicationState.SignUpRequest.FullName">
-                                <Feedback>
-                                    <ValidationError />
-                                </Feedback>
-                            </TextEdit>
-                        </Validation>
-                    </FieldBody>
-                </Field>
-                <Field>
-                    <FieldLabel>Telefonnummer</FieldLabel>
-                    <FieldBody>
-                        <Validation>
-                            <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@ApplicationState.SignUpRequest.Phone">
-                                <Feedback>
-                                    <ValidationError />
-                                </Feedback>
-                            </TextEdit>
-                        </Validation>
-                    </FieldBody>
-                </Field>
-                <Field>
-                    <FieldLabel>Din adresse</FieldLabel>
-                    <SelectEdit TValue="int" SelectedValue="@(ApplicationState.SignUpRequest.ApartmentId ?? 0)" SelectedValueChanged="@ApartmentChanged">
-                        <SelectItem Value="0">Vælg lejlighed</SelectItem>
-                        @foreach (var apartment in apartments)
-                        {
-                            <SelectItem Value="@apartment.Id">@apartment</SelectItem>
-                        }
-                    </SelectEdit>
-                </Field>
-                <Field>
-                    <FieldLabel>Adgangskode</FieldLabel>
-                    <FieldBody>
-                        <Validation>
-                            <TextEdit Role="TextRole.Password" @bind-Text="@ApplicationState.SignUpRequest.Password">
-                                <Feedback>
-                                    <ValidationError />
-                                </Feedback>
-                            </TextEdit>
-                        </Validation>
-                    </FieldBody>
-                </Field>
-                <Field>
-                    <FieldLabel>Gentag adgangskode</FieldLabel>
-                    <FieldBody>
-                        <Validation>
-                            <TextEdit Role="TextRole.Password" @bind-Text="@ApplicationState.SignUpRequest.ConfirmPassword">
-                                <Feedback>
-                                    <ValidationError />
-                                </Feedback>
-                            </TextEdit>
-                        </Validation>
-                    </FieldBody>
-                </Field>
-                <Field>
-                    <Validation>
-                        <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.DidConsent">
-                            <ChildContent>
-                                Jeg <a href="@Urls.Consent">samtykker</a> til at ovenstående oplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler.
-                            </ChildContent>
-                            <Feedback>
-                                <ValidationError />
-                            </Feedback>
-                        </CheckEdit>
-                    </Validation>
-                </Field>
-                <Field>
-                </Field>
-                <Field>
-                    <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.IsPersistent">Husk mig</CheckEdit>
-                </Field>
-                <Button Color="Color.Primary" Clicked="@Submit" class="btn-text">Opret bruger</Button>
-            </Validations>
+                    </Field>
+                    <Field>
+                    </Field>
+                    <Field>
+                        <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.IsPersistent">Husk mig</CheckEdit>
+                    </Field>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit" Clicked="@Submit" class="btn-text">Opret bruger</Button>
+                </Validations>
+            </Form>
         </Container>
     }
 </main>
