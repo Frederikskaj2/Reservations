@@ -2,3 +2,4 @@
 bin/
 obj/
 Reservations.db
+appSettings.local.json

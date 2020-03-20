@@ -1,0 +1,45 @@
+﻿@page "/bekraeft-mail/{email}/{token}"
+@inject ApiClient ApiClient
+
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container>
+            <Alert Color="Color.Danger" IsShow="@showErrorAlert">
+                Der er sket en fejl. Din mail blev ikke bekræftet.
+            </Alert>
+            <Paragraph>Din mail er nu bekræftet.</Paragraph>
+            <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
+        </Container>
+    }
+</main>
+
+@code {
+
+    private bool isInitialized;
+    private bool showErrorAlert;
+
+    [Parameter]
+    public string Email { get; set; } = null!;
+
+    [Parameter]
+    public string Token { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var request = new ConfirmEmailRequest
+        {
+            Email = Email,
+            Token = Token
+        };
+        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/confirm-email", request);
+        if (!maybe.TryGetValue(out var response) || response.Result == OperationResult.GeneralError)
+            showErrorAlert = true;
+        isInitialized = true;
+    }
+
+}

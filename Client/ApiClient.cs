@@ -23,13 +23,13 @@ namespace Frederikskaj2.Reservations.Client
             return JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
         }
 
-        public Task<Maybe<T>> PostJsonAsync<T>(string requestUri, object content)
+        public Task<Maybe<T>> PostJsonAsync<T>(string requestUri, object? content)
             => SendJsonAsync<T>(HttpMethod.Post, requestUri, content);
 
-        public Task<Maybe<T>> PatchJsonAsync<T>(string requestUri, object content)
+        public Task<Maybe<T>> PatchJsonAsync<T>(string requestUri, object? content)
             => SendJsonAsync<T>(HttpMethod.Patch, requestUri, content);
 
-        private async Task<Maybe<T>> SendJsonAsync<T>(HttpMethod method, string requestUri, object content)
+        private async Task<Maybe<T>> SendJsonAsync<T>(HttpMethod method, string requestUri, object? content)
         {
             var requestJson = JsonSerializer.Serialize(content, jsonSerializerOptions);
             using var requestContent = new StringContent(requestJson, Encoding.UTF8, "application/json");

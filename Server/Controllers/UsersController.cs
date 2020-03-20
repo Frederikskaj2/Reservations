@@ -66,9 +66,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return response;
         }
 
-        private static void PrepareUserForApi(User user)
-        {
-            user.HashedPassword = null;
-        }
+        private static void PrepareUserForApi(User user) => user.HashedPassword = null;
     }
 }

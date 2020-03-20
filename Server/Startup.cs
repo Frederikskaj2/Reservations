@@ -1,9 +1,12 @@
+using System.Linq;
 using Frederikskaj2.Reservations.Server.Data;
+using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +31,9 @@ namespace Frederikskaj2.Reservations.Server
                 .AddScoped<SeedData>()
                 .AddPasswordServices(Configuration)
                 .AddReservationsServices()
-                .AddScoped<IDataProvider, ServerDataProvider>();
+                .AddScoped<IDataProvider, ServerDataProvider>()
+                .AddEmail(Configuration)
+                .AddResponseCompression(options => options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" }));
 
             services
                 .AddControllers()
@@ -47,6 +52,8 @@ namespace Frederikskaj2.Reservations.Server
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseResponseCompression();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -56,13 +63,12 @@ namespace Frederikskaj2.Reservations.Server
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();
+            app.UseClientSideBlazorFiles<Client.Program>();
 
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
-
-            app.UseClientSideBlazorFiles<Client.Program>();
 
             app.UseEndpoints(
                 endpoints =>

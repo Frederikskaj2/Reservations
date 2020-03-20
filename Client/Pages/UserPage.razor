@@ -1,0 +1,61 @@
+﻿@page "/bruger"
+@attribute [Authorize]
+@inject ApiClient ApiClient
+
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container>
+            <Alert Color="Color.Danger" IsShow="@showErrorAlert">
+                <CloseButton Clicked="@DismissErrorAlert" />
+                Der er sket en fejl.
+            </Alert>
+            <Alert Color="Color.Danger" IsShow="@showResendConfirmEmailEmailError">
+                <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
+                Der er sket en fejl. Der blev ikke sendt en ny bekræftelses-mail.
+            </Alert>
+            @if (user != null)
+            {
+                <Paragraph>@user.Email</Paragraph>
+                @if (!user.IsEmailConfirmed)
+                {
+                    <Paragraph>Du mangler at bekræfte din mail.</Paragraph>
+                    <Button Color="Color.Primary" Clicked="@SendConfirmEmailEmail">Send ny bekræftelses-mail</Button>
+                }
+            }
+        </Container>
+    }
+</main>
+
+@code {
+
+    private bool isInitialized;
+    private User? user;
+    private bool showErrorAlert;
+    private bool showResendConfirmEmailEmailError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await ApiClient.GetJsonAsync<UserDetailsResponse>("user/details");
+        if (response.User != null)
+            user = response.User;
+        else
+            showErrorAlert = true;
+        isInitialized = true;
+    }
+
+    private async Task SendConfirmEmailEmail()
+    {
+        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/resend-confirm-email-email", null);
+        if (!maybe.TryGetValue(out var response) || response.Result == OperationResult.GeneralError)
+            this.showResendConfirmEmailEmailError = true;
+    }
+
+    private void DismissErrorAlert() => showErrorAlert = false;
+    private void DismissResendConfirmEmailEmailErrorAlert() => showResendConfirmEmailEmailError = false;
+
+}

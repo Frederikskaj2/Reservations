@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
+using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Authentication;
@@ -20,17 +21,35 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     public class UserController : Controller
     {
         private static readonly UserInfo UnknownUser = new UserInfo { IsAuthenticated = false };
+        private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
         private readonly ReservationsContext db;
+        private readonly EmailService emailService;
         private readonly IPasswordHasher passwordHasher;
 
-        public UserController(ReservationsContext db, IPasswordHasher passwordHasher)
+        public UserController(
+            ReservationsContext db, IPasswordHasher passwordHasher,
+            IBackgroundWorkQueue<EmailService> backgroundWorkQueue, EmailService emailService)
         {
             this.db = db ?? throw new ArgumentNullException(nameof(db));
             this.passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
+            this.backgroundWorkQueue =
+                backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
+            this.emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
         [HttpGet("")]
         public UserInfo GetUser() => GetUser(User);
+
+        [HttpGet("details")]
+        public async Task<UserDetailsResponse> GetUserDetails()
+        {
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return new UserDetailsResponse();
+            var user = await db.Users.FindAsync(userId.Value);
+            PrepareUserForApi(user);
+            return new UserDetailsResponse { User = user };
+        }
 
         [Authorize]
         [HttpGet("apartment")]
@@ -44,11 +63,11 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("sign-up")]
-        public async Task<SignUpResponse> SignUp([FromBody] SignUpRequest request)
+        public async Task<SignUpResponse> SignUp(SignUpRequest request)
         {
             var user = new User
             {
-                Email = request.Email.Trim().ToLowerInvariant(),
+                Email = GetNormalizedEmail(request.Email),
                 FullName = request.FullName.Trim(),
                 Phone = request.Phone.Trim(),
                 HashedPassword = passwordHasher.HashPassword(request.Password),
@@ -61,10 +80,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             }
             catch (DbUpdateException exception)
             {
-                if (exception.InnerException is SqliteException sqliteException && sqliteException.SqliteErrorCode == 19)
+                if (exception.InnerException is SqliteException sqliteException
+                    && sqliteException.SqliteErrorCode == 19)
                     return new SignUpResponse { Result = SignUpResult.DuplicateEmail };
                 return new SignUpResponse { Result = SignUpResult.GeneralError };
             }
+
+            backgroundWorkQueue.Enqueue((service, _) => service.SendConfirmEmail(user));
 
             var principal = await SignIn(user, request.IsPersistent);
 
@@ -72,7 +94,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("sign-in")]
-        public async Task<SignInResponse> SignIn([FromBody] SignInRequest request)
+        public async Task<SignInResponse> SignIn(SignInRequest request)
         {
             var email = request.Email!.ToLowerInvariant();
 
@@ -84,7 +106,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
             }
 
-            var verificationResult = passwordHasher.VerifyHashedPassword(user.HashedPassword ?? string.Empty, request.Password!);
+            var verificationResult = passwordHasher.VerifyHashedPassword(
+                user.HashedPassword ?? string.Empty, request.Password!);
 
             if (verificationResult == PasswordVerificationResult.Failed)
                 return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
@@ -101,10 +124,53 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("sign-out")]
-        public async Task<IActionResult> SignOut()
+        public Task SignOut() => HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        [HttpPost("confirm-email")]
+        public async Task<TokenValidationResponse> ConfirmEmail(ConfirmEmailRequest request)
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return Ok();
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token))
+                return new TokenValidationResponse { Result = TokenValidationResult.Failure };
+
+            var email = GetNormalizedEmail(request.Email);
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return new TokenValidationResponse { Result = TokenValidationResult.Failure };
+
+            if (user.IsEmailConfirmed)
+                return new TokenValidationResponse { Result = TokenValidationResult.Failure };
+
+            var result = emailService.ValidateConfirmEmail(user, request.Token);
+            if (result != TokenValidationResult.Success)
+                return new TokenValidationResponse { Result = result  };
+
+            user.IsEmailConfirmed = true;
+            try
+            {
+                await db.SaveChangesAsync();
+                return new TokenValidationResponse { Result = TokenValidationResult.Success  };
+            }
+            catch (Exception)
+            {
+                return new TokenValidationResponse { Result = TokenValidationResult.Failure  };
+            }
+        }
+
+        [HttpPost("resend-confirm-email-email")]
+        [Authorize]
+        public async Task<OperationResponse> ResendConfirmEmailEmail()
+        {
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            var user = await db.Users.FindAsync(userId.Value);
+            if (user == null)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            backgroundWorkQueue.Enqueue((service, _) => service.SendConfirmEmail(user));
+
+            return new OperationResponse { Result = OperationResult.Success };
         }
 
         private static UserInfo GetUser(ClaimsPrincipal principal, User? user = null)
@@ -135,9 +201,14 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(claimsIdentity);
             var authenticationProperties = new AuthenticationProperties { IsPersistent = isPersistent };
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authenticationProperties);
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme, principal, authenticationProperties);
 
             return principal;
         }
+
+        private static string GetNormalizedEmail(string email) => email.Trim().ToLowerInvariant();
+
+        private static void PrepareUserForApi(User user) => user.HashedPassword = null;
     }
 }

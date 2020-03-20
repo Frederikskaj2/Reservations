@@ -9,7 +9,9 @@
             <text>Vent...</text>
         </Authorizing>
         <Authorized>
-            <img src="img/user.svg" />
+            <a href="@Urls.User">
+                <img src="img/user.svg" />
+            </a>
             <div>
                 <span class="username">@context.User.Identity.Name</span>
                 <a class="sign-out" @onclick="SignOut" href="#">Log ud</a>

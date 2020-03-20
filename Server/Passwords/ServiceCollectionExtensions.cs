@@ -1,4 +1,5 @@
 ﻿using System;
+using Frederikskaj2.Reservations.Server.Email;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,7 @@ namespace Frederikskaj2.Reservations.Server.Passwords
             return services
                 .AddSingleton<IRandomNumberGenerator, CryptographicRandomNumberGenerator>()
                 .AddSingleton<IPasswordHasher, PasswordHasher>()
+                .AddSingleton<IEncryptedTokenProvider, EncryptedTokenProvider>()
                 .Configure<PasswordOptions>(configuration.GetSection("Password"));
         }
     }

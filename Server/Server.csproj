@@ -7,8 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MailKit" Version="2.5.2" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Server" Version="$(BlazorVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(AspNetCoreVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="$(AspNetCoreVersion)" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(AspNetCoreVersion)" />
     <PackageReference Include="NodaTime.Serialization.JsonNet" Version="2.2.0" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
