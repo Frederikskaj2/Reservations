@@ -3,7 +3,7 @@
 @inject IReservationPolicyProvider ReservationPolicyProvider
 
 <Modal @ref="@modal" Closed="@OnModalClosed">
-    @if (Reservation?.Resource != null)
+    @if (Reservation != null)
     {
         <ModalBackdrop />
         <ModalContent>
@@ -73,7 +73,7 @@
     private bool isConfirming;
 
     [Parameter]
-    public Reservation? Reservation { get; set; }
+    public DraftReservation? Reservation { get; set; }
 
     [Parameter]
     public EventCallback OnReservationChanged { get; set; }
@@ -91,7 +91,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Reservation?.Resource != null)
+        if (Reservation != null)
             policy = ReservationPolicyProvider.GetPolicy(Reservation!.Resource.Type);
         await UpdatePrice();
     }
@@ -117,7 +117,7 @@
     {
         if (Reservation == null || policy == null)
             return;
-        Reservation.Price = await policy.GetPrice(Reservation);
+        Reservation.Price = await policy.GetPrice(Reservation.Date, Reservation.DurationInDays);
         rent = $"{FormattingService.FormatMoneyLong(Reservation.Price.Rent)} (inklusiv rengøring {FormattingService.FormatMoneyLong(Reservation.Price.CleaningFee)})";
         deposit = FormattingService.FormatMoneyLong(Reservation.Price.Deposit);
         total = FormattingService.FormatMoneyLong(Reservation.Price.Rent + Reservation.Price.CleaningFee + Reservation.Price.Deposit);

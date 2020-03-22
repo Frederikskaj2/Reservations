@@ -4,6 +4,6 @@ namespace Frederikskaj2.Reservations.Client
 {
     public interface IAuthenticationStateProvider
     {
-        void UpdateUser(UserInfo user);
+        void UpdateUser(AuthenticatedUser user);
     }
 }

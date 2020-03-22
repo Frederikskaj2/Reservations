@@ -6,6 +6,7 @@ using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Shared;
+using Mapster;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using SignInResult = Frederikskaj2.Reservations.Shared.SignInResult;
+using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
@@ -20,7 +22,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     [ApiController]
     public class UserController : Controller
     {
-        private static readonly UserInfo UnknownUser = new UserInfo { IsAuthenticated = false };
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
         private readonly ReservationsContext db;
         private readonly EmailService emailService;
@@ -38,18 +39,17 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpGet("")]
-        public UserInfo GetUser() => GetUser(User);
-
-        [HttpGet("details")]
         public async Task<UserDetailsResponse> GetUserDetails()
         {
             var userId = User.Id();
             if (!userId.HasValue)
                 return new UserDetailsResponse();
             var user = await db.Users.FindAsync(userId.Value);
-            PrepareUserForApi(user);
-            return new UserDetailsResponse { User = user };
+            return new UserDetailsResponse { User = user.Adapt<Shared.User>() };
         }
+
+        [HttpGet("authenticated")]
+        public AuthenticatedUser GetUser() => GetUser(User);
 
         [Authorize]
         [HttpGet("apartment")]
@@ -142,17 +142,17 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var result = emailService.ValidateConfirmEmail(user, request.Token);
             if (result != TokenValidationResult.Success)
-                return new TokenValidationResponse { Result = result  };
+                return new TokenValidationResponse { Result = result };
 
             user.IsEmailConfirmed = true;
             try
             {
                 await db.SaveChangesAsync();
-                return new TokenValidationResponse { Result = TokenValidationResult.Success  };
+                return new TokenValidationResponse { Result = TokenValidationResult.Success };
             }
             catch (Exception)
             {
-                return new TokenValidationResponse { Result = TokenValidationResult.Failure  };
+                return new TokenValidationResponse { Result = TokenValidationResult.Failure };
             }
         }
 
@@ -173,18 +173,16 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return new OperationResponse { Result = OperationResult.Success };
         }
 
-        private static UserInfo GetUser(ClaimsPrincipal principal, User? user = null)
+        private static AuthenticatedUser GetUser(ClaimsPrincipal principal, User? user = null)
         {
             if (!principal.Identity.IsAuthenticated)
-                return UnknownUser;
-            return new UserInfo
-            {
-                Id = principal.Id(),
-                Name = principal.Identity.Name,
-                IsAuthenticated = true,
-                IsAdministrator = principal.HasClaim(ClaimTypes.Role, Roles.Administrator),
-                ApartmentId = user?.ApartmentId
-            };
+                return AuthenticatedUser.UnknownUser;
+            return new AuthenticatedUser(
+                principal.Id(),
+                principal.Identity.Name,
+                true,
+                principal.HasClaim(ClaimTypes.Role, Roles.Administrator),
+                user?.ApartmentId);
         }
 
         private async Task<ClaimsPrincipal> SignIn(User user, bool isPersistent)
@@ -208,7 +206,5 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         private static string GetNormalizedEmail(string email) => email.Trim().ToLowerInvariant();
-
-        private static void PrepareUserForApi(User user) => user.HashedPassword = null;
     }
 }

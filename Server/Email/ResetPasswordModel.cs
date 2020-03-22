@@ -1,5 +1,6 @@
 ﻿using System;
 using Frederikskaj2.Reservations.Shared;
+using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {

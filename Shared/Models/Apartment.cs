@@ -2,10 +2,18 @@
 {
     public class Apartment
     {
-        public int Id { get; set; }
-        public char Letter { get; set; }
-        public int Story { get; set; }
-        public ApartmentSide Side { get; set; }
+        public Apartment(int id, char letter, int story, ApartmentSide side)
+        {
+            Id = id;
+            Letter = letter;
+            Story = story;
+            Side = side;
+        }
+
+        public int Id { get; }
+        public char Letter { get; }
+        public int Story { get; }
+        public ApartmentSide Side { get; }
 
         public override string ToString() => $"2{Letter} {GetStory(Story)}. {GetSide(Side)}.";
 

@@ -1,6 +1,6 @@
 ﻿using NodaTime;
 
-namespace Frederikskaj2.Reservations.Shared
+namespace Frederikskaj2.Reservations.Server.Data
 {
     public class HistoryReservationDay
     {

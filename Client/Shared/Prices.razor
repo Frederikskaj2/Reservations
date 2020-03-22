@@ -1,4 +1,4 @@
-﻿@inject CultureInfo CultureInfo
+﻿@inject FormattingService FormattingService
 
 <div class="prices">
     <div class="prices-header">Leje</div>
@@ -13,14 +13,12 @@
 {
 
     [Parameter]
-    public Price? Price { get; set; }
+    public DraftPrice? Price { get; set; }
 
-    private string GetRentAndCleaningFee() => Price != null ? FormatPrice(Price.Rent + Price.CleaningFee) : string.Empty;
+    private string GetRentAndCleaningFee() => Price != null ? FormattingService.FormatMoneyShort(Price.Rent + Price.CleaningFee) : string.Empty;
 
-    private string GetDeposit() => Price != null ? FormatPrice(Price.Deposit) : string.Empty;
+    private string GetDeposit() => Price != null ? FormattingService.FormatMoneyShort(Price.Deposit) : string.Empty;
 
-    private string GetTotal() => Price != null ? FormatPrice(Price.Rent + Price.CleaningFee + Price.Deposit) : string.Empty;
-
-    private string FormatPrice(decimal value) => value.ToString("N0", CultureInfo);
+    private string GetTotal() => Price != null ? FormattingService.FormatMoneyShort(Price.Rent + Price.CleaningFee + Price.Deposit) : string.Empty;
 
 }

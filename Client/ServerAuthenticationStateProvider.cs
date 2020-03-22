@@ -14,11 +14,11 @@ namespace Frederikskaj2.Reservations.Client
 
         public ServerAuthenticationStateProvider(HttpClient httpClient) => this.httpClient = httpClient;
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync() => GetAuthenticationState(httpClient.GetJsonAsync<UserInfo>("user"));
+        public override Task<AuthenticationState> GetAuthenticationStateAsync() => GetAuthenticationState(httpClient.GetJsonAsync<AuthenticatedUser>("user/authenticated"));
 
-        public void UpdateUser(UserInfo user) => NotifyAuthenticationStateChanged(GetAuthenticationState(Task.FromResult(user)));
+        public void UpdateUser(AuthenticatedUser user) => NotifyAuthenticationStateChanged(GetAuthenticationState(Task.FromResult(user)));
 
-        private static async Task<AuthenticationState> GetAuthenticationState(Task<UserInfo> userTask)
+        private static async Task<AuthenticationState> GetAuthenticationState(Task<AuthenticatedUser> userTask)
         {
             var user = await userTask;
             return new AuthenticationState(new ClaimsPrincipal(GetIdentity()));

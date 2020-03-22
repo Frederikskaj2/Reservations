@@ -15,6 +15,6 @@ namespace Frederikskaj2.Reservations.Shared
             ErrorMessage = "Angiv et kontonummer (inklusiv registreringsnummer) eller et IBAN-nummer")]
         public string AccountNumber { get; set; } = string.Empty;
 
-        public List<Reservation> Reservations { get; } = new List<Reservation>();
+        public List<ReservationRequest> Reservations { get; } = new List<ReservationRequest>();
     }
 }

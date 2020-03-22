@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,12 +23,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         [HttpGet("")]
         public async Task<IEnumerable<User>> Get()
-        {
-            var users = await db.Users.OrderBy(user => user.Email).ToListAsync();
-            foreach (var user in users)
-                PrepareUserForApi(user);
-            return users;
-        }
+            => await db.Users.OrderBy(user => user.Email).ProjectToType<User>().ToListAsync();
 
         [HttpPatch("{userId:int}")]
         public async Task<UpdateUserResponse> Patch(int userId, UpdateUserRequest request)
@@ -50,7 +46,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             }
             else
             {
-                response.User = user;
+                response.User = user.Adapt<User>();
             }
 
             try
@@ -62,10 +58,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new UpdateUserResponse { Result = UpdateUserResult.GeneralError };
             }
 
-            PrepareUserForApi(user);
             return response;
         }
-
-        private static void PrepareUserForApi(User user) => user.HashedPassword = null;
     }
 }

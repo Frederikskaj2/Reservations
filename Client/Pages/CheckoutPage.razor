@@ -7,7 +7,7 @@
 @inject NavigationManager NavigationManager
 
 <main>
-    @if (ClientDataProvider.Order.Reservations!.Count == 0)
+    @if (ClientDataProvider.DraftOrder.Reservations!.Count == 0)
     {
         <Container>
             <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
@@ -28,12 +28,12 @@
                 <CloseButton Clicked="@DismissErrorAlert" />
                 Der er sket en fejl. Din bestilling blev ikke gennemført.
             </Alert>
-            <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ClientDataProvider.Order">
+            <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ClientDataProvider.DraftOrder">
                 <Field>
                     <FieldLabel>Din adresse</FieldLabel>
                     <FieldBody>
                         <Validation>
-                            <SelectEdit TValue="int" @bind-SelectedValue="@ClientDataProvider.Order.ApartmentId">
+                            <SelectEdit TValue="int" @bind-SelectedValue="@ClientDataProvider.DraftOrder.Request.ApartmentId">
                                 <ChildContent>
                                     <SelectItem Value="0" disabled>Vælg lejlighed</SelectItem>
                                     @foreach (var apartment in apartments!)
@@ -52,7 +52,7 @@
                     <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
                     <FieldBody>
                         <Validation>
-                            <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@ClientDataProvider.Order.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456">
+                            <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@ClientDataProvider.DraftOrder.Request.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456">
                                 <Feedback>
                                     <ValidationError />
                                 </Feedback>
@@ -73,7 +73,7 @@
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        @foreach (var reservation in ClientDataProvider.Order.Reservations)
+                        @foreach (var reservation in ClientDataProvider.DraftOrder.Reservations)
                         {
                             <TableRow>
                                 <TableRowCell>@reservation.Resource!.Name</TableRowCell>
@@ -124,18 +124,18 @@
         apartments = await ClientDataProvider.GetApartments();
         var response = await ApiClient.GetJsonAsync<ApartmentResponse>("user/apartment");
         if (response.ApartmentId.HasValue)
-            ClientDataProvider.Order.ApartmentId = response.ApartmentId.Value;
+            ClientDataProvider.DraftOrder.Request.ApartmentId = response.ApartmentId.Value;
         isInitialized = true;
     }
 
     private decimal GetTotalRentAndCleaningFee()
-        => ClientDataProvider.Order.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee);
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee);
 
     private decimal GetTotalDeposit()
-        => ClientDataProvider.Order.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Deposit);
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Deposit);
 
     private decimal GetGrandTotal()
-        => ClientDataProvider.Order.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee + reservation.Price!.Deposit);
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee + reservation.Price!.Deposit);
 
     private async Task Submit()
     {
@@ -144,12 +144,13 @@
 
         validations.ClearAll();
 
-        var maybe = await ApiClient.PostJsonAsync<PlaceOrderResponse>("orders", ClientDataProvider.Order);
+        ClientDataProvider.DraftOrder.PrepareRequest();
+        var maybe = await ApiClient.PostJsonAsync<PlaceOrderResponse>("orders", ClientDataProvider.DraftOrder.Request);
         if (maybe.TryGetValue(out var response))
         {
             if (response.Result == PlaceOrderResult.Success)
             {
-                ClientDataProvider.ClearOrder();
+                ClientDataProvider.DraftOrder.Clear();
                 ClientDataProvider.Refresh();
                 NavigationManager.NavigateTo(Urls.Orders);
             }

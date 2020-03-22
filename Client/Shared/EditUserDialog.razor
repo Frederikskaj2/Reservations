@@ -8,12 +8,12 @@
                 <CloseButton Clicked="@Cancel" />
             </ModalHeader>
             <ModalBody>
-                <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@user">
+                <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
                     <Validation>
                         <Field>
                             <FieldLabel>Navn</FieldLabel>
                             <FieldBody>
-                                <TextEdit @bind-Text="@user.FullName">
+                                <TextEdit @bind-Text="@request.FullName">
                                     <Feedback>
                                         <ValidationError />
                                     </Feedback>
@@ -25,7 +25,7 @@
                         <Field>
                             <FieldLabel>Telefon</FieldLabel>
                             <FieldBody>
-                                <TextEdit @bind-Text="@user.Phone">
+                                <TextEdit @bind-Text="@request.Phone">
                                     <Feedback>
                                         <ValidationError />
                                     </Feedback>
@@ -33,7 +33,7 @@
                             </FieldBody>
                         </Field>
                     </Validation>
-                    <CheckEdit @bind-Checked="@user.IsAdministrator" IsDisabled="@(!canEditIsAdministrator)">
+                    <CheckEdit @bind-Checked="@request.IsAdministrator" IsDisabled="@(!canEditIsAdministrator)">
                         <ChildContent>
                             Administrator
                         </ChildContent>
@@ -51,25 +51,22 @@
 @code
 {
 
+    private readonly UpdateUserRequest request = new UpdateUserRequest();
     private Modal modal = null!;
     private Validations validations = null!;
     private User? user;
     private bool canEditIsAdministrator;
 
     [Parameter]
-    public EventCallback<User> OnConfirm { get; set; }
+    public EventCallback<(int UserId, UpdateUserRequest Request)> OnConfirm { get; set; }
 
     public void Show(User user, bool canEditIsAdministrator)
     {
-        this.user = new User
-        {
-            Id = user.Id,
-            Email = user.Email,
-            FullName = user.FullName,
-            Phone = user.Phone,
-            IsAdministrator = user.IsAdministrator,
-            IsPendingDelete = user.IsPendingDelete
-        };
+        this.user = user;
+        request.FullName = user.FullName;
+        request.Phone = user.Phone;
+        request.IsAdministrator = user.IsAdministrator;
+        request.IsPendingDelete = user.IsPendingDelete;
         this.canEditIsAdministrator = canEditIsAdministrator;
         modal.Show();
     }
@@ -77,9 +74,15 @@
     private Task Confirm()
     {
         modal.Hide();
-        return OnConfirm.InvokeAsync(user!);
+        var userId = user!.Id;
+        user = null;
+        return OnConfirm.InvokeAsync((userId, request));
     }
 
-    private void Cancel() => modal.Hide();
+    private void Cancel()
+    {
+        modal.Hide();
+        user = null;
+    }
 
 }

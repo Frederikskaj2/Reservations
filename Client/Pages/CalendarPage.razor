@@ -2,6 +2,7 @@
 @inject CultureInfo CultureInfo
 @inject ClientDataProvider DataProvider
 @inject IDateProvider DateProvider
+@inject FormattingService FormattingService
 @inject NavigationManager NavigationManager
 @inject ReservationsOptions ReservationsOptions;
 @inject IReservationPolicyProvider ReservationPolicyProvider
@@ -87,23 +88,23 @@ else
         </div>
     </main>
     <section class="sidebar">
-        @if (DataProvider.Order.Reservations!.Count > 0)
+        @if (DataProvider.DraftOrder.Reservations!.Count > 0)
         {
             <div class="draft-order">
                 <h1>Din bestilling</h1>
-                @foreach (var reservation in DataProvider.Order.Reservations)
+                @foreach (var reservation in DataProvider.DraftOrder.Reservations)
                 {
                     <Card>
                         <CardBody>
                             <CardTitle>
-                                <h2>@reservation.Resource!.Name</h2>
+                                <h2>@reservation.Resource.Name</h2>
                                 <button type="button" class="close" @onclick="@(() => RemoveReservation(reservation))">
                                     <span>&times;</span>
                                 </button>
                             </CardTitle>
                             <CardText>
-                                <p>@reservation.Date.ToString(CultureInfo.DateTimeFormat.LongDatePattern, CultureInfo) / @reservation.DurationInDays dag@(reservation.DurationInDays > 1 ? "e" : string.Empty)</p>
-                                <Prices Price="@reservation.Price" />
+                                <p>@FormattingService.FormatDate(reservation.Date) / @reservation.DurationInDays dag@(reservation.DurationInDays > 1 ? "e" : string.Empty)</p>
+                                <Prices Price="@DraftPrice.FromPrice(reservation.Price!)" />
                             </CardText>
                         </CardBody>
                     </Card>
@@ -116,12 +117,12 @@ else
                 <p class="draft-order-get-started">Vælg lokale og en ledig dato for at reservere</p>
             </div>
         }
-        <div class="draft-order-total @(DataProvider.Order.Reservations!.Count > 0 ? "" : "hidden")">
+        <div class="draft-order-total @(DataProvider.DraftOrder.Reservations!.Count > 0 ? "" : "hidden")">
             <Prices Price="@totalPrice" />
             <button type="button" class="btn btn-success btn-block" @onclick="@Checkout">Bestil</button>
         </div>
     </section>
-    <ReservationDialog @ref="@reservationDialog" Reservation="@DataProvider.DraftReservation" OnReservationChanged="ReservationChanged" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
+    <ReservationDialog @ref="@reservationDialog" Reservation="@DataProvider.DraftOrder.DraftReservation" OnReservationChanged="ReservationChanged" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
 }
 
 @code {
@@ -137,7 +138,7 @@ else
     private Dictionary<LocalDate, Day>? calendar;
     private LocalDate firstCalendarDate;
     private LocalDate lastCalendarDate;
-    private Price totalPrice = new Price();
+    private DraftPrice totalPrice = new DraftPrice();
 
     private async Task MonthChanged(ChangeEventArgs e) => await UpdateCalendar(ParseMonth(e.Value.ToString()), currentResourceId);
 
@@ -276,7 +277,7 @@ else
         var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(resource.Id, date);
         reservationDialog.MinimumDays = minimumDays;
         reservationDialog.MaximumDays = maximumDays;
-        DataProvider.CreateDraftReservation(date, minimumDays, resource);
+        DataProvider.DraftOrder.AddReservation(resource, date, minimumDays);
         await UpdateCalendar(currentMonth, currentResourceId);
         reservationDialog.Show();
     }
@@ -285,35 +286,29 @@ else
 
     private async Task CancelReservation()
     {
-        Console.WriteLine("CancelReservation");
-        DataProvider.ClearDraftReservation();
+        DataProvider.DraftOrder.ClearDraftReservation();
         await UpdateCalendar(currentMonth, currentResourceId);
     }
 
     private async Task ConfirmReservation()
     {
-        DataProvider.AddDraftReservationToOrder();
+        DataProvider.DraftOrder.AddDraftReservationToOrder();
         UpdateTotalPrice();
         await UpdateCalendar(currentMonth, currentResourceId);
     }
 
-    private async Task RemoveReservation(Reservation reservation)
+    private async Task RemoveReservation(DraftReservation reservation)
     {
-        DataProvider.RemoveReservationFromOrder(reservation);
+        DataProvider.DraftOrder.RemoveReservation(reservation);
         UpdateTotalPrice();
         await UpdateCalendar(currentMonth, currentResourceId);
     }
 
     private void UpdateTotalPrice()
     {
-        totalPrice = DataProvider.Order.Reservations!.Aggregate(
-            new Price(),
-            (sum, reservation) => new Price
-            {
-                Rent = sum.Rent + reservation.Price!.Rent,
-                CleaningFee = sum.CleaningFee + reservation.Price!.CleaningFee,
-                Deposit = sum.Deposit + reservation.Price!.Deposit
-            });
+        totalPrice = DataProvider.DraftOrder.Reservations.Aggregate(
+            new DraftPrice(),
+            (sum, reservation) => sum.Accumulate(reservation.Price!));
     }
 
     private void Checkout() => NavigationManager.NavigateTo(Urls.Checkout);

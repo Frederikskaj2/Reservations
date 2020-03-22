@@ -1,5 +1,4 @@
 ﻿using System;
-using Frederikskaj2.Reservations.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
@@ -26,10 +25,10 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            var instantConverter =  new ValueConverter<Instant, DateTime>(
+            var instantConverter = new ValueConverter<Instant, DateTime>(
                 instant => instant.ToDateTimeUtc(),
                 dateTime => Instant.FromDateTimeUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)));
-            var localDateConverter =  new ValueConverter<LocalDate, DateTime>(
+            var localDateConverter = new ValueConverter<LocalDate, DateTime>(
                 localDate => localDate.ToDateTimeUnspecified(),
                 dateTime => LocalDate.FromDateTime(dateTime));
 

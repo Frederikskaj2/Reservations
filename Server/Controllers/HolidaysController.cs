@@ -19,6 +19,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             => this.db = db ?? throw new ArgumentNullException(nameof(db));
 
         [HttpGet]
-        public async Task<IEnumerable<LocalDate>> Get() => await db.Holidays.Select(h => h.Date).OrderBy(date => date).ToListAsync();
+        public async Task<IEnumerable<LocalDate>> Get()
+            => await db.Holidays.Select(h => h.Date).OrderBy(date => date).ToListAsync();
     }
 }

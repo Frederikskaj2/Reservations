@@ -1,23 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Frederikskaj2.Reservations.Shared
+﻿namespace Frederikskaj2.Reservations.Shared
 {
     public class Price
     {
-        public decimal Rent { get; set; }
-        public decimal CleaningFee { get; set; }
-        public decimal Deposit { get; set; }
-        public decimal CancellationFee { get; set; }
-
-        [NotMapped]
-        public decimal Total => Rent + CleaningFee + Deposit + CleaningFee;
-
-        public void Accumulate(Price other)
+        public Price(decimal rent, decimal cleaningFee, decimal deposit, decimal cancellationFee)
         {
-            Rent = other.Rent;
-            CleaningFee = other.CleaningFee;
-            Deposit = other.Deposit;
-            CleaningFee = other.CleaningFee;
+            Rent = rent;
+            CleaningFee = cleaningFee;
+            Deposit = deposit;
+            CancellationFee = cancellationFee;
         }
+
+        public decimal Rent { get; }
+        public decimal CleaningFee { get; }
+        public decimal Deposit { get; }
+        public decimal CancellationFee { get; }
+        public decimal Total => Rent + CleaningFee + Deposit + CleaningFee;
     }
 }

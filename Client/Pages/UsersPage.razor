@@ -104,7 +104,7 @@
 
     private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
 
-    private Task OnEditUser(User user) => PatchUser(user, null, null);
+    private Task OnEditUser((int UserId, UpdateUserRequest Request) tuple) => PatchUser(tuple.UserId, tuple.Request);
 
     private Task OnConfirmDeleteUser(User user) => PatchUser(user, null, true);
 
@@ -117,7 +117,12 @@
             IsAdministrator = isAdministrator ?? user.IsAdministrator,
             IsPendingDelete = isPendingDelete ?? user.IsPendingDelete
         };
-        var requestUri = $"users/{user.Id}";
+        await PatchUser(user.Id, request);
+    }
+
+    private async Task PatchUser(int userId, UpdateUserRequest request)
+    {
+        var requestUri = $"users/{userId}";
         var maybe = await ApiClient.PatchJsonAsync<UpdateUserResponse>(requestUri, request);
         if (maybe.TryGetValue(out var response))
         {
@@ -127,10 +132,11 @@
                     UpdateUser(response.User!);
                     return;
                 case UpdateUserResult.UserWasDeleted:
-                    RemoveUser(user.Id);
+                    RemoveUser(userId);
                     return;
             }
         }
+
         showGeneralErrorAlert = true;
     }
 

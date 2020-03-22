@@ -40,7 +40,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await ApiClient.GetJsonAsync<UserDetailsResponse>("user/details");
+        var response = await ApiClient.GetJsonAsync<UserDetailsResponse>("user");
         if (response.User != null)
             user = response.User;
         else

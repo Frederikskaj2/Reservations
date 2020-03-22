@@ -7,6 +7,7 @@ using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime.Text;
+using ReservedDay = Frederikskaj2.Reservations.Shared.ReservedDay;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
@@ -27,15 +28,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             var userId = User.Id();
             var query = db.ReservedDays
-                .Include(rd => rd.Reservation!)
-                .ThenInclude(r => r.Order)
-                .Select(rd => new ReservedDay
-                {
-                    Id = rd.Id,
-                    Date = rd.Date,
-                    ResourceId = rd.Reservation!.ResourceId,
-                    IsMyReservation = rd.Reservation!.Order!.UserId == userId
-                });
+                .Include(reservedDay => reservedDay.Reservation!)
+                .ThenInclude(reservation => reservation.Order)
+                .Select(
+                    reservedDay => new ReservedDay(
+                        reservedDay.Date,
+                        reservedDay.Reservation!.ResourceId,
+                        reservedDay.Reservation.Order!.UserId == userId));
 
             if (!string.IsNullOrEmpty(fromDate))
             {

@@ -38,7 +38,7 @@ namespace Frederikskaj2.Reservations.Server.Data
             db.Apartments.AddRange(apartments);
 
             var password = configuration.GetValue<string>("ReservationsAdministratorPassword");
-            var user = new User
+            var administrator = new User
             {
                 Email = "martin@liversage.com",
                 FullName = "Martin Liversage",
@@ -46,7 +46,7 @@ namespace Frederikskaj2.Reservations.Server.Data
                 HashedPassword = passwordHasher.HashPassword(password),
                 IsAdministrator = true
             };
-            db.Users.Add(user);
+            db.Users.Add(administrator);
 
             var random = new Random();
             var users = new[]
@@ -60,7 +60,6 @@ namespace Frederikskaj2.Reservations.Server.Data
             string CreatePhone() => random.Next(21000000, 70000000 - 21000000).ToString();
 
             var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
-            var now = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo);
             var reservedDays = new Dictionary<(LocalDate, Resource), ReservedDay>();
 
             Order CreateOrder()
@@ -92,6 +91,7 @@ namespace Frederikskaj2.Reservations.Server.Data
             Reservation CreateReservation(Instant timestamp)
             {
                 var resource = resources[random.Next(resources.Length)];
+                // ReSharper disable once AssignNullToNotNullAttribute
                 var date = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo).Date.PlusDays(random.Next(90) - 10);
                 var durationInDays = 3 - (int) Math.Log2(random.Next(1, 8));
                 return new Reservation

@@ -1,25 +1,29 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
 {
     public class Order
     {
-        public int Id { get; set; }
-        public int UserId { get; set; }
-        public User? User { get; set; }
-        public int ApartmentId { get; set; }
-        public Apartment? Apartment { get; set; }
-        public string? AccountNumber { get; set; }
-        public Instant CreatedTimestamp { get; set; }
-        public List<Reservation>? Reservations { get; set; }
+        public Order(
+            int id, string accountNumber, Instant createdTimestamp, IEnumerable<Reservation> reservations,
+            bool canBeEdited)
+        {
+            if (string.IsNullOrEmpty(accountNumber))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(accountNumber));
 
-        [NotMapped]
-        public bool CanBeEdited { get; set; }
+            Id = id;
+            AccountNumber = accountNumber;
+            CreatedTimestamp = createdTimestamp;
+            Reservations = reservations ?? throw new ArgumentNullException(nameof(reservations));
+            CanBeEdited = canBeEdited;
+        }
 
-        [NotMapped]
-        public Price? Price { get; set; }
+        public int Id { get; }
+        public string AccountNumber { get; }
+        public Instant CreatedTimestamp { get; }
+        public IEnumerable<Reservation> Reservations { get; }
+        public bool CanBeEdited { get; }
     }
 }

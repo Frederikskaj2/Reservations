@@ -1,19 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using NodaTime;
+﻿using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
 {
     public class ReservedDay
     {
-        public int Id { get; set; }
-        public Reservation? Reservation { get; set; }
-        public LocalDate Date { get; set; }
-        public int ResourceId { get; set; }
-        public Resource? Resource { get; set; }
+        public ReservedDay(LocalDate date, int resourceId, bool isMyReservation)
+        {
+            Date = date;
+            ResourceId = resourceId;
+            IsMyReservation = isMyReservation;
+        }
 
-        [NotMapped]
-        public bool IsMyReservation { get; set; }
-
-        public override string ToString() => Date.ToString();
+        public LocalDate Date { get; }
+        public int ResourceId { get; }
+        public bool IsMyReservation { get; }
     }
 }

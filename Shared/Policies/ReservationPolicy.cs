@@ -10,7 +10,9 @@ namespace Frederikskaj2.Reservations.Shared
         private readonly LocalDate reservationsAreNotAllowedAfter;
         private readonly LocalDate reservationsAreNotAllowedBefore;
 
-        protected ReservationPolicy(IDataProvider dataProvider, ReservationsOptions options, PriceOptions priceOptions, IDateProvider dateProvider)
+        protected ReservationPolicy(
+            IDataProvider dataProvider, ReservationsOptions options, PriceOptions priceOptions,
+            IDateProvider dateProvider)
         {
             if (dateProvider is null)
                 throw new ArgumentNullException(nameof(dateProvider));
@@ -55,18 +57,13 @@ namespace Frederikskaj2.Reservations.Shared
             return reservations.All(reservation => reservation.Date != date);
         }
 
-        public virtual async Task<Price> GetPrice(Reservation reservation)
+        public virtual async Task<Price> GetPrice(LocalDate date, int durationInDays)
         {
-            var numberOfHighPriceDays = await DataProvider.GetNumberOfHighPriceDays(reservation);
-            var rent = numberOfHighPriceDays*PriceOptions.HighRentPerDay +
-                       (reservation.DurationInDays - numberOfHighPriceDays)*PriceOptions.LowRentPerDay;
+            var numberOfHighPriceDays = await DataProvider.GetNumberOfHighPriceDays(date, durationInDays);
+            var rent = numberOfHighPriceDays*PriceOptions.HighRentPerDay
+                       + (durationInDays - numberOfHighPriceDays)*PriceOptions.LowRentPerDay;
             var deposit = numberOfHighPriceDays > 0 ? PriceOptions.HighDeposit : PriceOptions.LowDeposit;
-            return new Price
-            {
-                Rent = rent,
-                CleaningFee = PriceOptions.CleaningFee,
-                Deposit = deposit
-            };
+            return new Price(rent, PriceOptions.CleaningFee, deposit, decimal.Zero);
         }
     }
 }

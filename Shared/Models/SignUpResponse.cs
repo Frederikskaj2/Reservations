@@ -3,6 +3,6 @@
     public class SignUpResponse
     {
         public SignUpResult Result { get; set; }
-        public UserInfo? User { get; set; }
+        public AuthenticatedUser? User { get; set; }
     }
 }
