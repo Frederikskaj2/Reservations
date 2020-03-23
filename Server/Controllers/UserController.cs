@@ -177,12 +177,14 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             if (!principal.Identity.IsAuthenticated)
                 return AuthenticatedUser.UnknownUser;
-            return new AuthenticatedUser(
-                principal.Id(),
-                principal.Identity.Name,
-                true,
-                principal.HasClaim(ClaimTypes.Role, Roles.Administrator),
-                user?.ApartmentId);
+            return new AuthenticatedUser
+            {
+                Id = principal.Id(),
+                Name = principal.Identity.Name,
+                IsAuthenticated = true,
+                IsAdministrator = principal.HasClaim(ClaimTypes.Role, Roles.Administrator),
+                ApartmentId = user?.ApartmentId
+            };
         }
 
         private async Task<ClaimsPrincipal> SignIn(User user, bool isPersistent)

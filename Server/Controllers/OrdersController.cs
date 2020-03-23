@@ -22,9 +22,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     [ApiController]
     public class OrdersController : Controller
     {
-        private static readonly Order EmptyOrder = new Order(
-            default, string.Empty, default, Enumerable.Empty<Reservation>(), default);
-
         private readonly IClock clock;
         private readonly IDataProvider dataProvider;
         private readonly DateTimeZone dateTimeZone;
@@ -71,11 +68,11 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             var userId = User.Id();
             if (!userId.HasValue)
-                return EmptyOrder;
+                return Order.EmptyOrder;
 
             var order = await GetOrder(orderId, userId.Value);
             if (order == null)
-                return EmptyOrder;
+                return Order.EmptyOrder;
 
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
             return CreateOrder(order, today);
@@ -141,7 +138,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                             ResourceId = reservation.ResourceId
                         })
                     .ToList();
-                var price = policy.GetPrice(reservation.Date, reservation.DurationInDays).Adapt<Price>();
+                var price = (await policy.GetPrice(reservation.Date, reservation.DurationInDays)).Adapt<Price>();
                 return new Data.Reservation
                 {
                     Order = order,
@@ -182,8 +179,16 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 var reservation = order.Reservations!.Find(r => r.Id == reservationId);
                 if (reservation == null || !CanReservationCanBeCancelled(reservation, today))
                     continue;
+                var previousStatus = reservation.Status;
                 reservation.Status = ReservationStatus.Cancelled;
                 reservation.UpdatedTimestamp = now;
+                reservation.Price = previousStatus == ReservationStatus.Confirmed
+                    ? new Price
+                    {
+                        Deposit = reservation.Price!.Deposit,
+                        CancellationFee = reservationsOptions.CancellationFee
+                    }
+                    : new Price();
             }
 
             try
@@ -210,22 +215,26 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             var reservations = order.Reservations.Select(CreateReservation).ToList();
             var canBeEdited = reservations.Any(r => r.CanBeCancelled);
-            return new Order(
-                order.Id,
-                order.AccountNumber!,
-                order.CreatedTimestamp,
-                reservations,
-                canBeEdited);
+            return new Order
+            {
+                Id = order.Id,
+                AccountNumber = order.AccountNumber!,
+                CreatedTimestamp = order.CreatedTimestamp,
+                Reservations = reservations,
+                CanBeEdited = canBeEdited
+            };
 
-            Reservation CreateReservation(Data.Reservation reservation) => new Reservation(
-                reservation.Id,
-                reservation.ResourceId,
-                reservation.Status,
-                reservation.UpdatedTimestamp,
-                reservation.Price!.Adapt<Shared.Price>(),
-                reservation.Days![0].Date,
-                reservation.Days.Count,
-                CanReservationCanBeCancelled(reservation, today));
+            Reservation CreateReservation(Data.Reservation reservation) => new Reservation
+            {
+                Id = reservation.Id,
+                ResourceId = reservation.ResourceId,
+                Status = reservation.Status,
+                UpdatedTimestamp = reservation.UpdatedTimestamp,
+                Price = reservation.Price!.Adapt<Shared.Price>(),
+                Date = reservation.Days![0].Date,
+                DurationInDays = reservation.Days.Count,
+                CanBeCancelled = CanReservationCanBeCancelled(reservation, today)
+            };
         }
 
         private bool CanReservationCanBeCancelled(Data.Reservation reservation, LocalDate today)

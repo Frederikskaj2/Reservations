@@ -12,46 +12,46 @@
                 <CloseButton Clicked="@Cancel" />
             </ModalHeader>
             <ModalBody>
-                <Field IsHorizontal="true">
+                <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Fra</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit IsPlaintext="true" Text="@GetCheckInTime()" />
+                        <TextEdit Plaintext="true" Text="@GetCheckInTime()" />
                     </FieldBody>
                 </Field>
-                <Field IsHorizontal="true">
+                <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Antal dage</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <SelectEdit TValue="int" Value="@Reservation.DurationInDays" SelectedValueChanged="@DurationInDaysChanged">
+                        <Select TValue="int" Value="@Reservation.DurationInDays" SelectedValueChanged="@DurationInDaysChanged">
                             @for (var i = MinimumDays; i <= MaximumDays; i += 1)
                             {
                                 var localI = i;
                                 <SelectItem Value="@localI">@localI</SelectItem>
                             }
-                        </SelectEdit>
+                        </Select>
                     </FieldBody>
                 </Field>
-                <Field IsHorizontal="true">
+                <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Til</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit IsPlaintext="true" Text="@GetCheckOutTime()" />
+                        <TextEdit Plaintext="true" Text="@GetCheckOutTime()" />
                     </FieldBody>
                 </Field>
-                <Field IsHorizontal="true">
+                <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Leje</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit IsPlaintext="true" Text="@rent" />
+                        <TextEdit Plaintext="true" Text="@rent" />
                     </FieldBody>
                 </Field>
-                <Field IsHorizontal="true">
+                <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Depositum</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit IsPlaintext="true" Text="@deposit" />
+                        <TextEdit Plaintext="true" Text="@deposit" />
                     </FieldBody>
                 </Field>
-                <Field IsHorizontal="true">
+                <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Til betaling</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit IsPlaintext="true" Text="@total" />
+                        <TextEdit Plaintext="true" Text="@total" />
                     </FieldBody>
                 </Field>
             </ModalBody>

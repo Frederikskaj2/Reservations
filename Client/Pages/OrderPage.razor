@@ -13,24 +13,28 @@
     else if (order != null)
     {
         <Container class="container-min-md">
-            <Alert Color="Color.Danger" IsShow="@showErrorAlert">
-                <CloseButton Clicked="@DismissErrorAlert" />
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl. Din bestilling blev ikke opdateret.
+                <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <h1>Bestilling @order!.Id</h1>
             <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
-                <Field>
-                    <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
-                    <FieldBody>
-                        <Validation>
-                            <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456">
-                                <Feedback>
-                                    <ValidationError />
-                                </Feedback>
-                            </TextEdit>
-                        </Validation>
-                    </FieldBody>
-                </Field>
+                <Row>
+                    <Column ColumnSize="ColumnSize.Is9.OnTablet.IsHalf.OnWidescreen">
+                        <Field>
+                            <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
+                            <FieldBody>
+                                <Validation>
+                                    <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456">
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </TextEdit>
+                                </Validation>
+                            </FieldBody>
+                        </Field>
+                    </Column>
+                </Row>
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -95,7 +99,7 @@
                         <TableRow>
                             <TableRowCell colspan="3" class="border-top-0" />
                             <TableRowCell colspan="3" class="border-bottom"><strong>Til betaling</strong></TableRowCell>
-                            <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.Total)</strong></TableRowCell>
+                            <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
                         </TableRow>
                         <TableRow>
                             <TableRowCell colspan="7" class="border-top-0">
@@ -121,7 +125,7 @@
     private Validations validations = null!;
     IReadOnlyDictionary<int, Resource>? resources;
     private Order? order;
-    private DraftPrice? price;
+    private Price? price;
     private bool isInitialized;
     private bool showErrorAlert;
 
@@ -157,11 +161,17 @@
     private void UpdatePrice()
     {
         price = order!.Reservations.Aggregate(
-            new DraftPrice(),
-            (accumulator, reservation) => accumulator.Accumulate(
-                !request.CancelledReservations.Contains(reservation.Id)
-                    ? reservation.Price
-                    : new Price(decimal.Zero, decimal.Zero, reservation.Price.Deposit, ReservationsOptions.CancellationFee)));
+            new Price(),
+            (accumulator, reservation) => accumulator.Accumulate(GetPrice(reservation)));
+
+        Price GetPrice(Reservation reservation)
+        {
+            if (!request.CancelledReservations.Contains(reservation.Id))
+                return reservation.Price!;
+            return reservation.Status == ReservationStatus.Confirmed
+                ? new Price { Deposit = reservation.Price!.Deposit, CancellationFee = ReservationsOptions.CancellationFee }
+                : new Price();
+        }
     }
 
     private async Task Submit()

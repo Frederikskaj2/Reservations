@@ -63,8 +63,8 @@
     public void Show(User user, bool canEditIsAdministrator)
     {
         this.user = user;
-        request.FullName = user.FullName;
-        request.Phone = user.Phone;
+        request.FullName = user.FullName!;
+        request.Phone = user.Phone!;
         request.IsAdministrator = user.IsAdministrator;
         request.IsPendingDelete = user.IsPendingDelete;
         this.canEditIsAdministrator = canEditIsAdministrator;

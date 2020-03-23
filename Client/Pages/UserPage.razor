@@ -10,13 +10,13 @@
     else
     {
         <Container>
-            <Alert Color="Color.Danger" IsShow="@showErrorAlert">
-                <CloseButton Clicked="@DismissErrorAlert" />
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl.
+                <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
-            <Alert Color="Color.Danger" IsShow="@showResendConfirmEmailEmailError">
-                <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
+            <Alert Color="Color.Danger" Visible="@showResendConfirmEmailEmailError" Dismisable="true">
                 Der er sket en fejl. Der blev ikke sendt en ny bekræftelses-mail.
+                <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
             </Alert>
             @if (user != null)
             {

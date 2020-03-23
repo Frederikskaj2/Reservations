@@ -4,27 +4,13 @@ namespace Frederikskaj2.Reservations.Shared
 {
     public class Reservation
     {
-        public Reservation(
-            int id, int resourceId, ReservationStatus status, Instant updatedTimestamp, Price price, LocalDate date,
-            int durationInDays, bool canBeCancelled)
-        {
-            Id = id;
-            ResourceId = resourceId;
-            Status = status;
-            UpdatedTimestamp = updatedTimestamp;
-            Price = price;
-            Date = date;
-            DurationInDays = durationInDays;
-            CanBeCancelled = canBeCancelled;
-        }
-
-        public int Id { get; }
-        public int ResourceId { get; }
-        public ReservationStatus Status { get; }
-        public Instant UpdatedTimestamp { get; }
-        public Price Price { get; }
-        public LocalDate Date { get; }
-        public int DurationInDays { get; }
-        public bool CanBeCancelled { get; }
+        public int Id { get; set; }
+        public int ResourceId { get; set; }
+        public ReservationStatus Status { get; set; }
+        public Instant UpdatedTimestamp { get; set; }
+        public Price? Price { get; set; }
+        public LocalDate Date { get; set; }
+        public int DurationInDays { get; set; }
+        public bool CanBeCancelled { get; set; }
     }
 }

@@ -63,7 +63,13 @@ namespace Frederikskaj2.Reservations.Shared
             var rent = numberOfHighPriceDays*PriceOptions.HighRentPerDay
                        + (durationInDays - numberOfHighPriceDays)*PriceOptions.LowRentPerDay;
             var deposit = numberOfHighPriceDays > 0 ? PriceOptions.HighDeposit : PriceOptions.LowDeposit;
-            return new Price(rent, PriceOptions.CleaningFee, deposit, decimal.Zero);
+            return new Price
+            {
+                Rent = rent,
+                CleaningFee = PriceOptions.CleaningFee,
+                Deposit = deposit,
+                CancellationFee = decimal.Zero
+            };
         }
     }
 }

@@ -20,20 +20,20 @@
     else
     {
         <Container class="container-min-md">
-            <Alert Color="Color.Danger" IsShow="@showReservationConflictAlert">
-                <CloseButton Clicked="@DismissReservationConflictAlert" />
+            <Alert Color="Color.Danger" Visible="@showReservationConflictAlert" Dismisable="true">
                 Din bestilling blev ikke gennemført da den overlapper med andre reservationer. Opdatér kalenderen og prøv igen.
+                <CloseButton Clicked="@DismissReservationConflictAlert" />
             </Alert>
-            <Alert Color="Color.Danger" IsShow="@showErrorAlert">
-                <CloseButton Clicked="@DismissErrorAlert" />
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl. Din bestilling blev ikke gennemført.
+                <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ClientDataProvider.DraftOrder">
                 <Field>
                     <FieldLabel>Din adresse</FieldLabel>
                     <FieldBody>
                         <Validation>
-                            <SelectEdit TValue="int" @bind-SelectedValue="@ClientDataProvider.DraftOrder.Request.ApartmentId">
+                            <Select TValue="int" @bind-SelectedValue="@ClientDataProvider.DraftOrder.Request.ApartmentId">
                                 <ChildContent>
                                     <SelectItem Value="0" disabled>Vælg lejlighed</SelectItem>
                                     @foreach (var apartment in apartments!)
@@ -44,7 +44,7 @@
                                 <Feedback>
                                     <ValidationError />
                                 </Feedback>
-                            </SelectEdit>
+                            </Select>
                         </Validation>
                     </FieldBody>
                 </Field>

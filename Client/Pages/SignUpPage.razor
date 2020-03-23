@@ -13,13 +13,13 @@
     else
     {
         <Container class="container-max-sm">
-            <Alert Color="Color.Danger" IsShow="@showDuplicateEmailAlert">
-                <CloseButton Clicked="@DismissDuplicateEmailAlert" />
+            <Alert Color="Color.Danger" Visible="@showDuplicateEmailAlert" Dismisable="true">
                 Der findes allerede en bruger med mail @ApplicationState.SignUpRequest.Email. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
+                <CloseButton Clicked="@DismissDuplicateEmailAlert" />
             </Alert>
-            <Alert Color="Color.Danger" IsShow="@showErrorAlert">
-                <CloseButton Clicked="@DismissErrorAlert" />
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl. Din bruger blev ikke oprettet.
+                <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <Form onsubmit="return false;">
                 <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ApplicationState.SignUpRequest">
@@ -61,13 +61,13 @@
                     </Field>
                     <Field>
                         <FieldLabel>Din adresse</FieldLabel>
-                        <SelectEdit TValue="int" SelectedValue="@(ApplicationState.SignUpRequest.ApartmentId ?? 0)" SelectedValueChanged="@ApartmentChanged">
+                        <Select TValue="int" SelectedValue="@(ApplicationState.SignUpRequest.ApartmentId ?? 0)" SelectedValueChanged="@ApartmentChanged">
                             <SelectItem Value="0">Vælg lejlighed</SelectItem>
                             @foreach (var apartment in apartments)
                             {
                                 <SelectItem Value="@apartment.Id">@apartment</SelectItem>
                             }
-                        </SelectEdit>
+                        </Select>
                     </Field>
                     <Field>
                         <FieldLabel>Adgangskode</FieldLabel>

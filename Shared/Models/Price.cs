@@ -2,18 +2,20 @@
 {
     public class Price
     {
-        public Price(decimal rent, decimal cleaningFee, decimal deposit, decimal cancellationFee)
-        {
-            Rent = rent;
-            CleaningFee = cleaningFee;
-            Deposit = deposit;
-            CancellationFee = cancellationFee;
-        }
+        public decimal Rent { get; set; }
+        public decimal CleaningFee { get; set; }
+        public decimal Deposit { get; set; }
+        public decimal CancellationFee { get; set; }
 
-        public decimal Rent { get; }
-        public decimal CleaningFee { get; }
-        public decimal Deposit { get; }
-        public decimal CancellationFee { get; }
-        public decimal Total => Rent + CleaningFee + Deposit + CleaningFee;
+        public decimal GetTotal() => Rent + CleaningFee + Deposit + CancellationFee;
+
+        public Price Accumulate(Price price)
+        {
+            Rent += price.Rent;
+            CleaningFee += price.CleaningFee;
+            Deposit += price.Deposit;
+            CancellationFee += price.CancellationFee;
+            return this;
+        }
     }
 }

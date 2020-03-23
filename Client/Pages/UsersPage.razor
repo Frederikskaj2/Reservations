@@ -11,9 +11,9 @@
     else
     {
         <Container>
-            <Alert Color="Color.Danger" IsShow="@showGeneralErrorAlert">
-                <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
+            <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
                 Der skete en fejl. Din ændring er ikke blevet gemt.
+                <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
             </Alert>
             <Table>
                 <TableHeader>
@@ -112,8 +112,8 @@
     {
         var request = new UpdateUserRequest
         {
-            FullName = user.FullName,
-            Phone = user.Phone,
+            FullName = user.FullName!,
+            Phone = user.Phone!,
             IsAdministrator = isAdministrator ?? user.IsAdministrator,
             IsPendingDelete = isPendingDelete ?? user.IsPendingDelete
         };

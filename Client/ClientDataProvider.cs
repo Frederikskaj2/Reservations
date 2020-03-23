@@ -76,7 +76,7 @@ namespace Frederikskaj2.Reservations.Client
 
         private static IEnumerable<ReservedDay> GetReservationReservedDays(DraftReservation reservation)
             => Enumerable.Range(0, reservation.DurationInDays).Select(
-                i => new ReservedDay(reservation.Date.PlusDays(i), reservation.Resource.Id, true));
+                i => new ReservedDay { Date = reservation.Date.PlusDays(i), ResourceId = reservation.Resource.Id, IsMyReservation = true });
 
         private async Task<HashSet<LocalDate>> GetHolidays()
             => cachedHolidays ??= (await apiClient.GetJsonAsync<IEnumerable<LocalDate>>("holidays")).ToHashSet();

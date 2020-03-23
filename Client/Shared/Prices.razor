@@ -13,12 +13,12 @@
 {
 
     [Parameter]
-    public DraftPrice? Price { get; set; }
+    public Price? Price { get; set; }
 
     private string GetRentAndCleaningFee() => Price != null ? FormattingService.FormatMoneyShort(Price.Rent + Price.CleaningFee) : string.Empty;
 
     private string GetDeposit() => Price != null ? FormattingService.FormatMoneyShort(Price.Deposit) : string.Empty;
 
-    private string GetTotal() => Price != null ? FormattingService.FormatMoneyShort(Price.Rent + Price.CleaningFee + Price.Deposit) : string.Empty;
+    private string GetTotal() => Price != null ? FormattingService.FormatMoneyShort(Price.GetTotal()) : string.Empty;
 
 }

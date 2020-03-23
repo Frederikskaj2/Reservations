@@ -30,11 +30,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var query = db.ReservedDays
                 .Include(reservedDay => reservedDay.Reservation!)
                 .ThenInclude(reservation => reservation.Order)
-                .Select(
-                    reservedDay => new ReservedDay(
-                        reservedDay.Date,
-                        reservedDay.Reservation!.ResourceId,
-                        reservedDay.Reservation.Order!.UserId == userId));
+                .Select(reservedDay => new ReservedDay
+                {
+                    Date = reservedDay.Date,
+                    ResourceId = reservedDay.Reservation!.ResourceId,
+                    IsMyReservation = reservedDay.Reservation.Order!.UserId == userId
+                });
 
             if (!string.IsNullOrEmpty(fromDate))
             {

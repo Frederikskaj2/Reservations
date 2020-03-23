@@ -7,13 +7,13 @@
 
 <main>
     <Container class="container-max-sm">
-        <Alert Color="Color.Danger" IsShow="@showInvalidEmailOrPasswordAlert">
-            <CloseButton Clicked="@DismissInvalidEmailOrPasswordAlert" />
+        <Alert Color="Color.Danger" Visible="@showInvalidEmailOrPasswordAlert" Dismisable="true">
             Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
+            <CloseButton Clicked="@DismissInvalidEmailOrPasswordAlert" />
         </Alert>
-        <Alert Color="Color.Danger" IsShow="@showErrorAlert">
-            <CloseButton Clicked="@DismissErrorAlert" />
+        <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
             Der er sket en fejl. Du blev ikke logget ind.
+            <CloseButton Clicked="@DismissErrorAlert" />
         </Alert>
         <Form onsubmit="return false;">
             <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
