@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Frederikskaj2.Reservations.Server.Passwords;
+using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
@@ -11,56 +12,78 @@ namespace Frederikskaj2.Reservations.Server.Data
     internal class SeedData
     {
         private readonly ReservationsContext db;
-        private readonly IPasswordHasher passwordHasher;
-        private readonly IConfiguration configuration;
+        private readonly SeedDataOptions options;
+        private readonly Random random = new Random();
+        private readonly RoleManager<IdentityRole<int>> roleManager;
+        private readonly UserManager<User> userManager;
 
-        public SeedData(ReservationsContext db, IPasswordHasher passwordHasher, IConfiguration configuration)
+        public SeedData(IOptions<SeedDataOptions> options, ReservationsContext db, UserManager<User> userManager, RoleManager<IdentityRole<int>> roleManager)
         {
+            if (options is null)
+                throw new ArgumentNullException(nameof(options));
+
             this.db = db ?? throw new ArgumentNullException(nameof(db));
-            this.passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
-            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            this.roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+
+            this.options = options.Value;
+
+            if (!(this.options.Users?.Any() ?? false))
+                throw new ConfigurationException("Missing seed data users.");
+            foreach (var user in this.options.Users)
+            {
+                if (string.IsNullOrEmpty(user.Email))
+                    throw new ConfigurationException("Missing seed data user email.");
+                if (string.IsNullOrEmpty(user.FullName))
+                    throw new ConfigurationException("Missing seed data user full name.");
+                if (string.IsNullOrEmpty(user.Phone))
+                    throw new ConfigurationException("Missing seed data user phone.");
+                if (string.IsNullOrEmpty(user.Password))
+                    throw new ConfigurationException("Missing seed data user password.");
+            }
+            if (!(this.options.Resources?.Any() ?? false))
+                throw new ConfigurationException("Missing seed data resources.");
+            foreach (var resource in this.options.Resources)
+                if (string.IsNullOrEmpty(resource.Name))
+                    throw new ConfigurationException("Missing seed data resource name.");
         }
 
-        public void Initialize()
+        public async Task Initialize()
         {
             if (!db.Database.EnsureCreated())
                 return;
 
-            var resources = new[]
-            {
-                new Resource { Sequence = 1, Type = ResourceType.BanquetFacilities, Name = "Fest-/aktivitetslokale" },
-                new Resource { Sequence = 2, Type = ResourceType.Bedroom, Name = "Frederik (soveværelse)" },
-                new Resource { Sequence = 3, Type = ResourceType.Bedroom, Name = "Kaj (soveværelse)" }
-            };
-            db.Resources.AddRange(resources);
+            var apartments = CreateApartments();
+            var resources = CreateResources();
+            CreateHolidays();
+            await db.SaveChangesAsync();
 
-            var apartments = GetApartments().ToList();
-            db.Apartments.AddRange(apartments);
+            await CreateUsers();
 
-            var password = configuration.GetValue<string>("ReservationsAdministratorPassword");
-            var administrator = new User
-            {
-                Email = "martin@liversage.com",
-                FullName = "Martin Liversage",
-                Phone = "31 18 97 93",
-                HashedPassword = passwordHasher.HashPassword(password),
-                IsAdministrator = true
-            };
-            db.Users.Add(administrator);
-
-            var random = new Random();
             var users = new[]
             {
-                new User { Email = "a@frederikskaj2.dk", FullName = "A F", Phone = CreatePhone(), Apartment = apartments[random.Next(apartments.Count)] },
-                new User { Email = "b@frederikskaj2.dk", FullName = "B F", Phone = CreatePhone(), Apartment = apartments[random.Next(apartments.Count)] },
-                new User { Email = "c@frederikskaj2.dk", FullName = "C F", Phone = CreatePhone(), Apartment = apartments[random.Next(apartments.Count)] },
+                CreateRandomUser("a@frederikskaj2.dk", "A F"),
+                CreateRandomUser("b@frederikskaj2.dk", "B F"),
+                CreateRandomUser("c@frederikskaj2.dk", "C F")
             };
-            db.Users.AddRange(users);
-
-            string CreatePhone() => random.Next(21000000, 70000000 - 21000000).ToString();
+            foreach (var user in users)
+                await userManager.CreateAsync(user);
 
             var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
             var reservedDays = new Dictionary<(LocalDate, Resource), ReservedDay>();
+
+            db.Orders.AddRange(Enumerable.Range(0, 20).Select(_ => CreateOrder()));
+
+            await db.SaveChangesAsync();
+
+            User CreateRandomUser(string email, string fullName) => new User
+            {
+                UserName = email,
+                Email = email,
+                FullName = fullName,
+                PhoneNumber = random.Next(21000000, 70000000 - 21000000).ToString(),
+                Apartment = apartments[random.Next(apartments.Length)]
+            };
 
             Order CreateOrder()
             {
@@ -102,9 +125,40 @@ namespace Frederikskaj2.Reservations.Server.Data
                     Days = Enumerable.Range(0, durationInDays).Select(i => new ReservedDay { Date = date.PlusDays(i), Resource = resource }).ToList()
                 };
             }
+        }
 
-            db.Orders.AddRange(Enumerable.Range(0, 20).Select(_ => CreateOrder()));
+        private async Task CreateUsers()
+        {
+            var administratorRole = new IdentityRole<int> { Name = Roles.Administrator };
+            await roleManager.CreateAsync(administratorRole);
 
+            foreach (var user in options.Users!)
+            {
+                var u = new User
+                {
+                    UserName = user!.Email,
+                    Email = user.Email,
+                    EmailConfirmed = true,
+                    FullName = user.FullName!,
+                    PhoneNumber = user.Phone
+                };
+                await userManager.CreateAsync(u, user.Password);
+                if (user.IsAdministrator)
+                    await userManager.AddToRoleAsync(u, Roles.Administrator);
+            }
+        }
+
+        private Resource[] CreateResources()
+        {
+            var resources = options.Resources
+                .Select((resource, i) => new Resource { Sequence = i + 1, Type = resource.Type, Name = resource.Name! })
+                .ToArray();
+            db.Resources.AddRange(resources);
+            return resources;
+        }
+
+        private Holiday[] CreateHolidays()
+        {
             var holidays = new[]
             {
                 new Holiday { Date = new LocalDate(2020, 4, 9) },
@@ -118,8 +172,14 @@ namespace Frederikskaj2.Reservations.Server.Data
                 new Holiday { Date = new LocalDate(2020, 12, 31) },
             };
             db.Holidays.AddRange(holidays);
+            return holidays;
+        }
 
-            db.SaveChanges();
+        private Apartment[] CreateApartments()
+        {
+            var apartments = GetApartments().ToArray();
+            db.Apartments.AddRange(apartments);
+            return apartments;
         }
 
         private static IEnumerable<Apartment> GetApartments()

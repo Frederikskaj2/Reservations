@@ -209,6 +209,28 @@ nav {
         font-size: 0.8rem;
     }
 
+.card {
+    margin-bottom: 1rem;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.card-footer > :not(:first-child) {
+    margin-left: .25rem;
+}
+
+.card-footer > :not(:last-child) {
+    margin-right: 0.25rem;
+}
+
+.card-footer > .text-left {
+    margin-right: auto;
+}
+
 .sidebar {
     background-color: #333;
     color: white;
@@ -279,6 +301,7 @@ button.btn-text {
     }
 
     .draft-order .card {
+        margin-top: 0;
         background-color: #444;
     }
 
@@ -525,10 +548,6 @@ a.sign-in {
 
 table {
     margin-top: 2rem;
-}
-
-.orders .card {
-    margin-top: 1rem;
 }
 
 .orders-order {

@@ -1,11 +1,12 @@
+using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
-using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Shared;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using NodaTime;
 using NodaTime.Serialization.JsonNet;
+using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server
 {
@@ -28,12 +30,49 @@ namespace Frederikskaj2.Reservations.Server
         {
             services
                 .AddDbContext<ReservationsContext>(options => options.UseSqlite("Data Source=Reservations.db"))
-                .AddScoped<SeedData>()
-                .AddPasswordServices(Configuration)
+                .Configure<SeedDataOptions>(Configuration.GetSection("SeedData"))
+                .AddScoped<SeedData>();
+
+            services
+                .Configure<IdentityOptions>(
+                    options =>
+                    {
+                        options.Lockout.MaxFailedAccessAttempts = 10;
+
+                        options.Password.RequireDigit = false;
+                        options.Password.RequireLowercase = false;
+                        options.Password.RequireNonAlphanumeric = false;
+                        options.Password.RequireUppercase = false;
+                        options.Password.RequiredLength = 2;
+
+                        options.User.RequireUniqueEmail = true;
+                    })
+                .Configure<SecurityStampValidatorOptions>(
+                    options => options.ValidationInterval = TimeSpan.FromMinutes(10))
+                .Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromDays(1))
+                .AddIdentity<User, IdentityRole<int>>()
+                .AddEntityFrameworkStores<ReservationsContext>()
+                .AddDefaultTokenProviders();
+
+            services.ConfigureApplicationCookie(
+                options =>
+                {
+                    options.Cookie.HttpOnly = false;
+                    options.Events.OnRedirectToLogin = context =>
+                    {
+                        context.Response.StatusCode = 401;
+                        return Task.CompletedTask;
+                    };
+                });
+
+            services
                 .AddReservationsServices()
                 .AddScoped<IDataProvider, ServerDataProvider>()
                 .AddEmail(Configuration)
-                .AddResponseCompression(options => options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" }));
+                .AddResponseCompression(
+                    options
+                        => options.MimeTypes =
+                            ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" }));
 
             services
                 .AddControllers()
@@ -44,10 +83,6 @@ namespace Frederikskaj2.Reservations.Server
                         options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                         options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
                     });
-
-            services
-                .AddAuthentication(options => options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

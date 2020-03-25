@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
 using Microsoft.AspNetCore.Hosting;
@@ -9,7 +10,7 @@ namespace Frederikskaj2.Reservations.Server
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
 
@@ -18,10 +19,10 @@ namespace Frederikskaj2.Reservations.Server
             using (var scope = scopeFactory.CreateScope())
             {
                 var seedData = scope.ServiceProvider.GetRequiredService<SeedData>();
-                seedData.Initialize();
+                await seedData.Initialize();
             }
 
-            host.Run();
+            await host.RunAsync();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

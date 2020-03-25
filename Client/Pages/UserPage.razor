@@ -14,18 +14,10 @@
                 Der er sket en fejl.
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
-            <Alert Color="Color.Danger" Visible="@showResendConfirmEmailEmailError" Dismisable="true">
-                Der er sket en fejl. Der blev ikke sendt en ny bekræftelses-mail.
-                <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
-            </Alert>
             @if (user != null)
             {
-                <Paragraph>@user.Email</Paragraph>
-                @if (!user.IsEmailConfirmed)
-                {
-                    <Paragraph>Du mangler at bekræfte din mail.</Paragraph>
-                    <Button Color="Color.Primary" Clicked="@SendConfirmEmailEmail">Send ny bekræftelses-mail</Button>
-                }
+                <UserEmail User="user" />
+                <UserUpdatePassword />
             }
         </Container>
     }
@@ -36,26 +28,16 @@
     private bool isInitialized;
     private User? user;
     private bool showErrorAlert;
-    private bool showResendConfirmEmailEmailError;
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await ApiClient.GetJsonAsync<UserDetailsResponse>("user");
-        if (response.User != null)
+        var maybe = await ApiClient.GetJsonAsync<UserResponse>("user");
+        if (maybe.TryGetValue(out var response) && response.User != null)
             user = response.User;
         else
             showErrorAlert = true;
         isInitialized = true;
     }
 
-    private async Task SendConfirmEmailEmail()
-    {
-        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/resend-confirm-email-email", null);
-        if (!maybe.TryGetValue(out var response) || response.Result == OperationResult.GeneralError)
-            this.showResendConfirmEmailEmailError = true;
-    }
-
     private void DismissErrorAlert() => showErrorAlert = false;
-    private void DismissResendConfirmEmailEmailErrorAlert() => showResendConfirmEmailEmailError = false;
-
 }

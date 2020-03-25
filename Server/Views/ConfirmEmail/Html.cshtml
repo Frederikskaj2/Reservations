@@ -1,4 +1,8 @@
 ﻿@model ConfirmEmailModel
+@inject IOptions<DataProtectionTokenProviderOptions> DataProtectionTokenProviderOptions
+@{
+    var validDays = (int) DataProtectionTokenProviderOptions.Value.TokenLifespan.TotalDays;
+}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="https://www.w3.org/1999/xhtml">
 <head>
@@ -13,6 +17,6 @@
     <p>Hej @Model.User.FullName</p>
     <p>Åbn linket for at bekræfte din mail.</p>
     <p><a href="@Model.ConfirmEmailUrl">@Model.ConfirmEmailUrl</a></p>
-    <p>Dette link er gyldigt i en uge.</p>
+    <p>Dette link er gyldigt i @validDays dag@(validDays == 1 ? string.Empty : "e").</p>
     <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
 </body>

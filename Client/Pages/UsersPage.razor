@@ -90,7 +90,9 @@
     {
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         currentUserId = authenticationState.User.Id();
-        users = (await ApiClient.GetJsonAsync<IEnumerable<User>>("users")).ToList();
+        var maybe = await ApiClient.GetJsonAsync<IEnumerable<User>>("users");
+        if (maybe.TryGetValue(out var value))
+            users = value.ToList();
         isInitialized = true;
     }
 

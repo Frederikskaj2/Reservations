@@ -1,0 +1,56 @@
+﻿@inject ApiClient ApiClient
+
+<Alert Color="Color.Success" Visible="@showResendConfirmEmailEmailAlert" Dismisable="true">
+    Du har fået tilsendt en ny bekræftelses-mail.
+    <CloseButton Clicked="@DismissResendConfirmEmailEmailAlert" />
+</Alert>
+<Alert Color="Color.Danger" Visible="@showResendConfirmEmailEmailErrorAlert" Dismisable="true">
+    Der er sket en fejl. Der blev ikke sendt en ny bekræftelses-mail.
+    <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
+</Alert>
+<Card Background="Background.Light">
+    <CardBody>
+        <Field Horizontal="true">
+            <FieldLabel ColumnSize="ColumnSize.Is4">Mail</FieldLabel>
+            <FieldBody ColumnSize="ColumnSize.Is8">
+                <TextEdit Plaintext="true" Text="@User.Email" />
+            </FieldBody>
+        </Field>
+    </CardBody>
+    @if (!User.IsEmailConfirmed)
+    {
+        <CardFooter>
+            <Text>Du mangler at bekræfte din mail.</Text>
+            <Button Color="Color.Primary" Clicked="@SendConfirmEmailEmail">Send ny bekræftelses-mail</Button>
+        </CardFooter>
+    }
+</Card>
+
+@code {
+
+    private bool showResendConfirmEmailEmailAlert;
+    private bool showResendConfirmEmailEmailErrorAlert;
+
+    [Parameter]
+    public User User { get; set; } = null!;
+
+    private async Task SendConfirmEmailEmail()
+    {
+        DismissAllAlerts();
+        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/resend-confirm-email-email", null);
+        if (!maybe.TryGetValue(out var response) || response.Result != OperationResult.Success)
+            showResendConfirmEmailEmailErrorAlert = true;
+        else
+            showResendConfirmEmailEmailAlert = true;
+    }
+
+    private void DismissResendConfirmEmailEmailAlert() => showResendConfirmEmailEmailAlert = false;
+    private void DismissResendConfirmEmailEmailErrorAlert() => showResendConfirmEmailEmailErrorAlert = false;
+
+    private void DismissAllAlerts()
+    {
+        showResendConfirmEmailEmailAlert = false;
+        showResendConfirmEmailEmailErrorAlert = false;
+    }
+
+}

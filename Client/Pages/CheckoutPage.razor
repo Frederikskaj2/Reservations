@@ -122,8 +122,8 @@
     protected override async Task OnInitializedAsync()
     {
         apartments = await ClientDataProvider.GetApartments();
-        var response = await ApiClient.GetJsonAsync<ApartmentResponse>("user/apartment");
-        if (response.ApartmentId.HasValue)
+        var maybe = await ApiClient.GetJsonAsync<ApartmentResponse>("user/apartment");
+        if (maybe.TryGetValue(out var response) && response.ApartmentId.HasValue)
             ClientDataProvider.DraftOrder.Request.ApartmentId = response.ApartmentId.Value;
         isInitialized = true;
     }

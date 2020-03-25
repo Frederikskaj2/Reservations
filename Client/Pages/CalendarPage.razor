@@ -292,7 +292,6 @@ else
 
     private async Task ConfirmReservation()
     {
-        Console.WriteLine("ConfirmReservation");
         DataProvider.DraftOrder.AddDraftReservationToOrder();
         UpdateTotalPrice();
         await UpdateCalendar(currentMonth, currentResourceId);

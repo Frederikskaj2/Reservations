@@ -1,11 +1,13 @@
 ﻿using System;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
-    public class ReservationsContext : DbContext
+    public class ReservationsContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public ReservationsContext()
         {
@@ -21,10 +23,11 @@ namespace Frederikskaj2.Reservations.Server.Data
         public DbSet<Reservation> Reservations { get; set; } = null!;
         public DbSet<ReservedDay> ReservedDays { get; set; } = null!;
         public DbSet<Resource> Resources { get; set; } = null!;
-        public DbSet<User> Users { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             var instantConverter = new ValueConverter<Instant, DateTime>(
                 instant => instant.ToDateTimeUtc(),
                 dateTime => Instant.FromDateTimeUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)));
@@ -51,10 +54,6 @@ namespace Frederikskaj2.Reservations.Server.Data
                 .HasConversion(localDateConverter);
             modelBuilder.Entity<ReservedDay>()
                 .HasIndex(reservedDay => new { reservedDay.Date, reservedDay.ResourceId })
-                .IsUnique();
-
-            modelBuilder.Entity<User>()
-                .HasIndex(user => user.Email)
                 .IsUnique();
         }
     }

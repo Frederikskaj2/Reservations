@@ -1,11 +1,15 @@
 ﻿@model ConfirmEmailModel
+@inject IOptions<DataProtectionTokenProviderOptions> DataProtectionTokenProviderOptions
+@{
+    var validDays = (int) DataProtectionTokenProviderOptions.Value.TokenLifespan.TotalDays;
+}
 Hej @Model.User.FullName
 
 Åbn linket for at bekræfte din mail.
 
 @Model.ConfirmEmailUrl
 
-Dette link er gyldigt i en uge.
+Dette link er gyldigt i @validDays dag@(validDays == 1 ? string.Empty : "e").
 
 Med venlig hilsen
 @Model.From

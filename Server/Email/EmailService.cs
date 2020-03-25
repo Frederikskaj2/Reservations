@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Frederikskaj2.Reservations.Server.Passwords;
-using Frederikskaj2.Reservations.Shared;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -12,16 +10,14 @@ namespace Frederikskaj2.Reservations.Server.Email
 {
     public class EmailService
     {
-        private const string ConfirmEmailPurpose = "ConfirmEmail";
         private readonly IClock clock;
-        private readonly IEncryptedTokenProvider encryptedTokenProvider;
         private readonly EmailOptions options;
         private readonly UrlService urlService;
         private readonly RazorViewToStringRenderer viewToStringRenderer;
 
         public EmailService(
             IOptions<EmailOptions> options, IClock clock, RazorViewToStringRenderer viewToStringRenderer,
-            UrlService urlService, IEncryptedTokenProvider encryptedTokenProvider)
+            UrlService urlService)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
@@ -29,8 +25,7 @@ namespace Frederikskaj2.Reservations.Server.Email
             this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
             this.viewToStringRenderer = viewToStringRenderer ?? throw new ArgumentNullException(nameof(viewToStringRenderer));
             this.urlService = urlService ?? throw new ArgumentNullException(nameof(urlService));
-            this.encryptedTokenProvider = encryptedTokenProvider ?? throw new ArgumentNullException(nameof(encryptedTokenProvider));
-
+            
             this.options = options.Value;
             if (string.IsNullOrEmpty(this.options.SmtpHostName))
                 throw new ConfigurationException("Missing SMTP host name.");
@@ -48,7 +43,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 throw new ConfigurationException("Invalid confirm email url lifetime.");
         }
 
-        public async Task SendConfirmEmail(User user)
+        public async Task SendConfirmEmail(User user, string token)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
@@ -60,10 +55,6 @@ namespace Frederikskaj2.Reservations.Server.Email
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(options.FromName, options.FromEmail));
             message.To.Add(new MailboxAddress(user.FullName, user.Email));
-            var token = encryptedTokenProvider.CreateToken(
-                ConfirmEmailPurpose,
-                clock.GetCurrentInstant(),
-                GetConfirmEmailData(user.Id));
             var model = new ConfirmEmailModel(user, urlService.GetConfirmEmailUrl(user.Email, token), options.FromName!, urlService.GetFromUrl());
             message.Subject = await viewToStringRenderer.RenderViewToStringAsync(@"ConfirmEmail\Subject", model);
             var bodyBuilder = new BodyBuilder
@@ -74,24 +65,6 @@ namespace Frederikskaj2.Reservations.Server.Email
             message.Body = bodyBuilder.ToMessageBody();
 
             await client.SendAsync(message);
-        }
-
-        public TokenValidationResult ValidateConfirmEmail(User user, string token)
-        {
-            if (user is null)
-                throw new ArgumentNullException(nameof(user));
-            if (token is null)
-                throw new ArgumentNullException(nameof(token));
-
-            var earliestAcceptableTokenCreationTimestamp = clock.GetCurrentInstant().Minus(options.ConfirmEmailUrlLifetime);
-            return encryptedTokenProvider.ValidateToken(ConfirmEmailPurpose, earliestAcceptableTokenCreationTimestamp, GetConfirmEmailData(user.Id), token);
-        }
-
-        private static byte[] GetConfirmEmailData(int userId)
-        {
-            var data = new byte[4];
-            BitConverter.TryWriteBytes(data.AsSpan(), userId);
-            return data;
         }
     }
 }

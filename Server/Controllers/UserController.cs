@@ -1,18 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
-using Frederikskaj2.Reservations.Server.Passwords;
 using Frederikskaj2.Reservations.Shared;
 using Mapster;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using SignInResult = Frederikskaj2.Reservations.Shared.SignInResult;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
@@ -23,33 +17,43 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     public class UserController : Controller
     {
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
-        private readonly ReservationsContext db;
-        private readonly EmailService emailService;
-        private readonly IPasswordHasher passwordHasher;
+        private readonly SignInManager<User> signInManager;
+        private readonly UserManager<User> userManager;
 
         public UserController(
-            ReservationsContext db, IPasswordHasher passwordHasher,
-            IBackgroundWorkQueue<EmailService> backgroundWorkQueue, EmailService emailService)
+            UserManager<User> userManager, SignInManager<User> signInManager,
+            IBackgroundWorkQueue<EmailService> backgroundWorkQueue)
         {
-            this.db = db ?? throw new ArgumentNullException(nameof(db));
-            this.passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
             this.backgroundWorkQueue =
                 backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
-            this.emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
         }
 
         [HttpGet("")]
-        public async Task<UserDetailsResponse> GetUserDetails()
+        public async Task<UserResponse> GetUser()
         {
             var userId = User.Id();
             if (!userId.HasValue)
-                return new UserDetailsResponse();
-            var user = await db.Users.FindAsync(userId.Value);
-            return new UserDetailsResponse { User = user.Adapt<Shared.User>() };
+                return new UserResponse();
+            var user = await userManager.FindByIdAsync(userId.Value.ToString());
+            var apiUser = user.Adapt<Shared.User>();
+            apiUser.IsEmailConfirmed = user.EmailConfirmed;
+            apiUser.IsAdministrator = await userManager.IsInRoleAsync(user, Roles.Administrator);
+            return new UserResponse { User = apiUser };
         }
 
         [HttpGet("authenticated")]
-        public AuthenticatedUser GetUser() => GetUser(User);
+        public async Task<AuthenticatedUser> GetAuthenticatedUser()
+        {
+            if (!User.Identity.IsAuthenticated)
+                return AuthenticatedUser.UnknownUser;
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return AuthenticatedUser.UnknownUser;
+            var user = await userManager.FindByIdAsync(userId.Value.ToString());
+            return await GetAuthenticatedUser(user);
+        }
 
         [Authorize]
         [HttpGet("apartment")]
@@ -58,73 +62,91 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var userId = User.Id();
             if (!userId.HasValue)
                 return new ApartmentResponse();
-            var user = await db.Users.FindAsync(userId.Value);
+            var user = await userManager.FindByIdAsync(userId.Value.ToString());
             return new ApartmentResponse { ApartmentId = user?.ApartmentId };
         }
 
         [HttpPost("sign-up")]
         public async Task<SignUpResponse> SignUp(SignUpRequest request)
         {
+            var trimmedEmail = request.Email.Trim();
             var user = new User
             {
-                Email = GetNormalizedEmail(request.Email),
+                UserName = trimmedEmail,
+                Email = trimmedEmail,
                 FullName = request.FullName.Trim(),
-                Phone = request.Phone.Trim(),
-                HashedPassword = passwordHasher.HashPassword(request.Password),
+                PhoneNumber = request.Phone.Trim(),
                 ApartmentId = request.ApartmentId
             };
-            await db.Users.AddAsync(user);
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateException exception)
-            {
-                if (exception.InnerException is SqliteException sqliteException
-                    && sqliteException.SqliteErrorCode == 19)
-                    return new SignUpResponse { Result = SignUpResult.DuplicateEmail };
+            var result = await userManager.CreateAsync(user, request.Password);
+            // TODO: Handle duplicate email error.
+            if (!result.Succeeded)
                 return new SignUpResponse { Result = SignUpResult.GeneralError };
-            }
 
-            backgroundWorkQueue.Enqueue((service, _) => service.SendConfirmEmail(user));
+            await SendConfirmEmailEmail(user);
 
-            var principal = await SignIn(user, request.IsPersistent);
+            var authenticationProperties = new AuthenticationProperties { IsPersistent = request.IsPersistent };
+            await signInManager.SignInAsync(user, authenticationProperties);
 
-            return new SignUpResponse { User = GetUser(principal, user) };
+            var u1 = User;
+            var u2 = HttpContext.User;
+            return new SignUpResponse { User = await GetAuthenticatedUser(user) };
         }
 
         [HttpPost("sign-in")]
         public async Task<SignInResponse> SignIn(SignInRequest request)
         {
-            var email = request.Email!.ToLowerInvariant();
-
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
-
+            var user = await FindUser(request.Email!);
             if (user == null)
-            {
-                passwordHasher.DelayAsIfAPasswordIsBeingChecked(request.Password!);
-                return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
-            }
-
-            var verificationResult = passwordHasher.VerifyHashedPassword(
-                user.HashedPassword ?? string.Empty, request.Password!);
-
-            if (verificationResult == PasswordVerificationResult.Failed)
+                // TODO: Consider adding security delay here.
                 return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
 
-            if (verificationResult == PasswordVerificationResult.SuccessRehashNeeded)
-            {
-                user.HashedPassword = passwordHasher.HashPassword(request.Password!);
-                await db.SaveChangesAsync();
-            }
+            var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+            if (!result.Succeeded)
+                return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
 
-            var principal = await SignIn(user, request.IsPersistent);
+            var authenticationProperties = new AuthenticationProperties { IsPersistent = request.IsPersistent };
+            await signInManager.SignInAsync(user, authenticationProperties);
 
-            return new SignInResponse { User = GetUser(principal, user) };
+            return new SignInResponse { User = await GetAuthenticatedUser(user) };
         }
 
         [HttpPost("sign-out")]
-        public Task SignOut() => HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        public Task SignOut() => signInManager.SignOutAsync();
+
+        [HttpPost("sign-out-everywhere-else")]
+        [Authorize]
+        public async Task<OperationResponse> SignOutEverywhereElse()
+        {
+            var user = await FindUser();
+            if (user == null)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            var result = await userManager.UpdateSecurityStampAsync(user);
+            if (!result.Succeeded)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            await signInManager.RefreshSignInAsync(user);
+
+            return new OperationResponse { Result = OperationResult.Success };
+        }
+
+        [HttpPost("update-password")]
+        [Authorize]
+        public async Task<OperationResponse> UpdatePassword(UpdatePasswordRequest request)
+        {
+            var user = await FindUser();
+            if (user == null)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            if (!result.Succeeded)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            await signInManager.RefreshSignInAsync(user);
+
+            return new OperationResponse { Result = OperationResult.Success };
+        }
 
         [HttpPost("confirm-email")]
         public async Task<TokenValidationResponse> ConfirmEmail(ConfirmEmailRequest request)
@@ -132,81 +154,59 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token))
                 return new TokenValidationResponse { Result = TokenValidationResult.Failure };
 
-            var email = GetNormalizedEmail(request.Email);
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var user = await FindUser(request.Email);
             if (user == null)
                 return new TokenValidationResponse { Result = TokenValidationResult.Failure };
 
-            if (user.IsEmailConfirmed)
-                return new TokenValidationResponse { Result = TokenValidationResult.Failure };
-
-            var result = emailService.ValidateConfirmEmail(user, request.Token);
-            if (result != TokenValidationResult.Success)
-                return new TokenValidationResponse { Result = result };
-
-            user.IsEmailConfirmed = true;
-            try
-            {
-                await db.SaveChangesAsync();
+            if (user.EmailConfirmed)
                 return new TokenValidationResponse { Result = TokenValidationResult.Success };
-            }
-            catch (Exception)
-            {
+
+            var result = await userManager.ConfirmEmailAsync(user, request.Token);
+            // TODO: Handle token expiration or simply error reporting.
+            if (!result.Succeeded)
                 return new TokenValidationResponse { Result = TokenValidationResult.Failure };
-            }
+
+            return new TokenValidationResponse { Result = TokenValidationResult.Success };
         }
 
         [HttpPost("resend-confirm-email-email")]
         [Authorize]
         public async Task<OperationResponse> ResendConfirmEmailEmail()
         {
-            var userId = User.Id();
-            if (!userId.HasValue)
-                return new OperationResponse { Result = OperationResult.GeneralError };
-
-            var user = await db.Users.FindAsync(userId.Value);
+            var user = await FindUser();
             if (user == null)
                 return new OperationResponse { Result = OperationResult.GeneralError };
 
-            backgroundWorkQueue.Enqueue((service, _) => service.SendConfirmEmail(user));
+            await SendConfirmEmailEmail(user);
 
             return new OperationResponse { Result = OperationResult.Success };
         }
 
-        private static AuthenticatedUser GetUser(ClaimsPrincipal principal, User? user = null)
+        private async Task SendConfirmEmailEmail(User user)
         {
-            if (!principal.Identity.IsAuthenticated)
-                return AuthenticatedUser.UnknownUser;
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            backgroundWorkQueue.Enqueue((service, _) => service.SendConfirmEmail(user, token));
+        }
+
+        private async Task<AuthenticatedUser> GetAuthenticatedUser(User user)
+        {
+            var isAdministrator = await userManager.IsInRoleAsync(user, Roles.Administrator);
             return new AuthenticatedUser
             {
-                Id = principal.Id(),
-                Name = principal.Identity.Name,
+                Id = user.Id,
+                Name = user.Email,
                 IsAuthenticated = true,
-                IsAdministrator = principal.HasClaim(ClaimTypes.Role, Roles.Administrator),
-                ApartmentId = user?.ApartmentId
+                IsAdministrator = isAdministrator,
+                ApartmentId = user.ApartmentId
             };
         }
 
-        private async Task<ClaimsPrincipal> SignIn(User user, bool isPersistent)
+        private Task<User> FindUser(string email) => userManager.FindByNameAsync(email);
+
+        private async Task<User?> FindUser()
         {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Email),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim("FullName", user.FullName)
-            };
-            if (user.IsAdministrator)
-                claims.Add(new Claim(ClaimTypes.Role, Roles.Administrator));
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(claimsIdentity);
-            var authenticationProperties = new AuthenticationProperties { IsPersistent = isPersistent };
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme, principal, authenticationProperties);
-
-            return principal;
+            var userId = User.Id();
+            return userId.HasValue ? await userManager.FindByIdAsync(userId.Value.ToString()) : null;
         }
-
-        private static string GetNormalizedEmail(string email) => email.Trim().ToLowerInvariant();
     }
 }

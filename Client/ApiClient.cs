@@ -17,9 +17,12 @@ namespace Frederikskaj2.Reservations.Client
             this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
-        public async Task<T> GetJsonAsync<T>(string requestUri)
+        public async Task<Maybe<T>> GetJsonAsync<T>(string requestUri)
         {
-            var json = await httpClient.GetStringAsync(requestUri);
+            var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUri));
+            if (!response.IsSuccessStatusCode)
+                return Maybe.None;
+            var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
         }
 

@@ -33,8 +33,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new UpdateUserResponse { Result = UpdateUserResult.GeneralError };
 
             user.FullName = request.FullName;
-            user.Phone = request.Phone;
-            user.IsAdministrator = request.IsAdministrator;
+            user.PhoneNumber = request.Phone;
+            // TODO: Update administrator role.
             user.IsPendingDelete = request.IsPendingDelete;
 
             var response = new UpdateUserResponse();

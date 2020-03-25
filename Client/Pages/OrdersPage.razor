@@ -73,7 +73,8 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        orders = await ApiClient.GetJsonAsync<IEnumerable<Order>>("orders");
+        var maybe = await ApiClient.GetJsonAsync<IEnumerable<Order>>("orders");
+        maybe.TryGetValue(out orders);
         historyOrders = Enumerable.Empty<HistoryOrder>();
         isInitialized = true;
     }

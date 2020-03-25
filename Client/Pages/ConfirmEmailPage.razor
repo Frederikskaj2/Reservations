@@ -9,11 +9,17 @@
     else
     {
         <Container>
-            <Alert Color="Color.Danger" Visible="@showErrorAlert">
-                Der er sket en fejl. Din mail blev ikke bekræftet.
-            </Alert>
-            <Paragraph>Din mail er nu bekræftet.</Paragraph>
-            <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
+            @if (showErrorAlert)
+            {
+                <Alert Color="Color.Danger" Visible="true">
+                    Der er sket en fejl. Din mail blev ikke bekræftet.
+                </Alert>
+            }
+            else
+            {
+                <Paragraph>Din mail er nu bekræftet.</Paragraph>
+                <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
+            }
         </Container>
     }
 </main>
