@@ -51,7 +51,7 @@ namespace Frederikskaj2.Reservations.Server
                 .Configure<SecurityStampValidatorOptions>(
                     options => options.ValidationInterval = TimeSpan.FromMinutes(10))
                 .Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromDays(1))
-                .AddIdentity<User, IdentityRole<int>>()
+                .AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<ReservationsContext>()
                 .AddDefaultTokenProviders();
 

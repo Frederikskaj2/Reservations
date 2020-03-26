@@ -1,5 +1,5 @@
 .vs/
 bin/
 obj/
-Reservations.db
+Reservations.db*
 appSettings.local.json

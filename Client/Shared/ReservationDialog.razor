@@ -3,12 +3,11 @@
 @inject IReservationPolicyProvider ReservationPolicyProvider
 
 <Modal @ref="@modal" Closed="@OnModalClosed">
-    @if (Reservation != null)
-    {
-        <ModalBackdrop />
+    <ModalBackdrop />
+    <Form>
         <ModalContent>
             <ModalHeader>
-                <ModalTitle>Reservér @Reservation.Resource.Name</ModalTitle>
+                <ModalTitle>Reservér @Reservation?.Resource.Name</ModalTitle>
                 <CloseButton Clicked="@Cancel" />
             </ModalHeader>
             <ModalBody>
@@ -21,7 +20,7 @@
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Antal dage</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <Select TValue="int" Value="@Reservation.DurationInDays" SelectedValueChanged="@DurationInDaysChanged">
+                        <Select @ref="@select" TValue="int" Value="@Reservation?.DurationInDays" SelectedValueChanged="@DurationInDaysChanged">
                             @for (var i = MinimumDays; i <= MaximumDays; i += 1)
                             {
                                 var localI = i;
@@ -56,16 +55,17 @@
                 </Field>
             </ModalBody>
             <ModalFooter>
-                <Button Color="Color.Primary" Clicked="@Confirm">Reservér</Button>
+                <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">Reservér</Button>
                 <Button Color="Color.Secondary" Clicked="@Cancel">Annullér</Button>
             </ModalFooter>
         </ModalContent>
-    }
+    </Form>
 </Modal>
 
 @code {
 
     private Modal modal = null!;
+    private Select<int> select = null!;
     private IReservationPolicy? policy;
     private string rent = string.Empty;
     private string deposit = string.Empty;
@@ -87,7 +87,11 @@
     public int MinimumDays { get; set; } = 1;
     public int MaximumDays { get; set; } = 7;
 
-    public void Show() => modal.Show();
+    public void Show()
+    {
+        modal.Show();
+        Task.Run(() => select.Focus());
+    }
 
     protected override async Task OnParametersSetAsync()
     {

@@ -1,10 +1,9 @@
 ﻿<Modal @ref="@modal">
-    @if (user != null)
-    {
-        <ModalBackdrop />
+    <ModalBackdrop />
+    <Form>
         <ModalContent>
             <ModalHeader>
-                <ModalTitle>Redigér @user.Email</ModalTitle>
+                <ModalTitle>Redigér @user?.Email</ModalTitle>
                 <CloseButton Clicked="@Cancel" />
             </ModalHeader>
             <ModalBody>
@@ -13,7 +12,7 @@
                         <Field>
                             <FieldLabel>Navn</FieldLabel>
                             <FieldBody>
-                                <TextEdit @bind-Text="@request.FullName">
+                                <TextEdit @ref="nameTextEdit" @bind-Text="@request.FullName">
                                     <Feedback>
                                         <ValidationError />
                                     </Feedback>
@@ -33,7 +32,7 @@
                             </FieldBody>
                         </Field>
                     </Validation>
-                    <CheckEdit @bind-Checked="@request.IsAdministrator" IsDisabled="@(!canEditIsAdministrator)">
+                    <CheckEdit @bind-Checked="@request.IsAdministrator" Disabled="@(!canEditIsAdministrator)">
                         <ChildContent>
                             Administrator
                         </ChildContent>
@@ -41,11 +40,11 @@
                 </Validations>
             </ModalBody>
             <ModalFooter>
-                <Button Color="Color.Primary" Clicked="@Confirm">Opdatér bruger</Button>
+                <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">Opdatér bruger</Button>
                 <Button Color="Color.Secondary" Clicked="@Cancel">Annullér</Button>
             </ModalFooter>
         </ModalContent>
-    }
+    </Form>
 </Modal>
 
 @code
@@ -53,6 +52,7 @@
 
     private readonly UpdateUserRequest request = new UpdateUserRequest();
     private Modal modal = null!;
+    private TextEdit nameTextEdit = null!;
     private Validations validations = null!;
     private User? user;
     private bool canEditIsAdministrator;
@@ -69,10 +69,15 @@
         request.IsPendingDelete = user.IsPendingDelete;
         this.canEditIsAdministrator = canEditIsAdministrator;
         modal.Show();
+        Task.Run(() => nameTextEdit.Focus());
     }
 
     private Task Confirm()
     {
+        if (!validations.ValidateAll())
+            return Task.CompletedTask;
+
+        validations.ClearAll();
         modal.Hide();
         var userId = user!.Id;
         user = null;

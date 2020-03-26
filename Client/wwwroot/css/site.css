@@ -73,6 +73,10 @@
     cursor: pointer;
 }
 
+.dropdown-toggle::after {
+    margin-left: 0;
+}
+
 html, body, .contents {
     height: 100%;
 }
@@ -219,17 +223,17 @@ nav {
     align-items: center;
 }
 
-.card-footer > :not(:first-child) {
-    margin-left: .25rem;
-}
+    .card-footer > :not(:first-child) {
+        margin-left: .25rem;
+    }
 
-.card-footer > :not(:last-child) {
-    margin-right: 0.25rem;
-}
+    .card-footer > :not(:last-child) {
+        margin-right: 0.25rem;
+    }
 
-.card-footer > .text-left {
-    margin-right: auto;
-}
+    .card-footer > .text-left {
+        margin-right: auto;
+    }
 
 .sidebar {
     background-color: #333;

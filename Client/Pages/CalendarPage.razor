@@ -119,7 +119,7 @@ else
         }
         <div class="draft-order-total @(DataProvider.DraftOrder.Reservations.Count > 0 ? "" : "hidden")">
             <Prices Price="@totalPrice" />
-            <button type="button" class="btn btn-success btn-block" @onclick="@Checkout">Bestil</button>
+            <Button Color="Color.Success" Block="true" Clicked="@Checkout" tabindex="@(DataProvider.DraftOrder.Reservations.Count > 0 ? 0 : -1)">Bestil</Button>
         </div>
     </section>
     <ReservationDialog @ref="@reservationDialog" Reservation="@DataProvider.DraftOrder.DraftReservation" OnReservationChanged="ReservationChanged" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />

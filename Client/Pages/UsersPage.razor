@@ -21,6 +21,8 @@
                         <TableHeaderCell>Mail</TableHeaderCell>
                         <TableHeaderCell>Navn</TableHeaderCell>
                         <TableHeaderCell>Telefon</TableHeaderCell>
+                        <TableHeaderCell class="text-center">Bestillinger</TableHeaderCell>
+                        <TableHeaderCell class="text-center">Email bekræftet</TableHeaderCell>
                         <TableHeaderCell class="text-center">Administrator</TableHeaderCell>
                         <TableHeaderCell class="text-center">Sletning ønsket</TableHeaderCell>
                         <TableHeaderCell></TableHeaderCell>
@@ -29,10 +31,17 @@
                 <TableBody>
                     @foreach (var user in users)
                     {
-                        <TableRow @key="user.Id">
+                        <TableRow @key="@user.Id">
                             <TableRowCell>@user.Email</TableRowCell>
                             <TableRowCell>@user.FullName</TableRowCell>
                             <TableRowCell>@user.Phone</TableRowCell>
+                            <TableRowCell class="text-center">@(user.OrderCount > 0 ? user.OrderCount.ToString() : string.Empty)</TableRowCell>
+                            <TableRowCell class="text-center">
+                                @if (@user.IsEmailConfirmed)
+                                {
+                                    <Icon class="fa-check" />
+                                }
+                            </TableRowCell>
                             <TableRowCell class="text-center">
                                 @if (@user.IsAdministrator)
                                 {
@@ -47,9 +56,7 @@
                             </TableRowCell>
                             <TableRowCell>
                                 <Dropdown>
-                                    <DropdownToggle Color="Color.Light">
-                                        Handling
-                                    </DropdownToggle>
+                                    <DropdownToggle Color="Color.Light" />
                                     <DropdownMenu>
                                         <DropdownItem Clicked="@(() => Edit(user))">Redigér</DropdownItem>
                                         @if (!user.IsAdministrator)

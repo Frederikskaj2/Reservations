@@ -14,10 +14,10 @@ namespace Frederikskaj2.Reservations.Server.Data
         private readonly ReservationsContext db;
         private readonly SeedDataOptions options;
         private readonly Random random = new Random();
-        private readonly RoleManager<IdentityRole<int>> roleManager;
+        private readonly RoleManager<Role> roleManager;
         private readonly UserManager<User> userManager;
 
-        public SeedData(IOptions<SeedDataOptions> options, ReservationsContext db, UserManager<User> userManager, RoleManager<IdentityRole<int>> roleManager)
+        public SeedData(IOptions<SeedDataOptions> options, ReservationsContext db, UserManager<User> userManager, RoleManager<Role> roleManager)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
@@ -80,6 +80,7 @@ namespace Frederikskaj2.Reservations.Server.Data
             {
                 UserName = email,
                 Email = email,
+                EmailConfirmed = true,
                 FullName = fullName,
                 PhoneNumber = random.Next(21000000, 70000000 - 21000000).ToString(),
                 Apartment = apartments[random.Next(apartments.Length)]
@@ -129,7 +130,7 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         private async Task CreateUsers()
         {
-            var administratorRole = new IdentityRole<int> { Name = Roles.Administrator };
+            var administratorRole = new Role { Name = Roles.Administrator };
             await roleManager.CreateAsync(administratorRole);
 
             foreach (var user in options.Users!)

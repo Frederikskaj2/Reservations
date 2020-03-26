@@ -37,10 +37,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var user = await FindUser();
             if (user == null)
                 return new UserResponse();
-            var apiUser = user.Adapt<Shared.User>();
-            apiUser.IsEmailConfirmed = user.EmailConfirmed;
-            apiUser.IsAdministrator = await userManager.IsInRoleAsync(user, Roles.Administrator);
-            return new UserResponse { User = apiUser };
+            var myUser = user.Adapt<MyUser>();
+            myUser.IsEmailConfirmed = user.EmailConfirmed;
+            return new UserResponse { User = myUser };
         }
 
         [HttpGet("authenticated")]

@@ -30,7 +30,7 @@
                 }
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
-            <Form onsubmit="return false;">
+            <Form>
                 <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ApplicationState.SignUpRequest">
                     <Field>
                         <FieldLabel>Mail</FieldLabel>
@@ -117,7 +117,7 @@
                     <Field>
                         <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.IsPersistent">Husk mig</CheckEdit>
                     </Field>
-                    <Button Color="Color.Primary" Type="ButtonType.Submit" Clicked="@Submit" class="btn-text">Opret bruger</Button>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Submit" class="btn-text">Opret bruger</Button>
                 </Validations>
             </Form>
         </Container>
