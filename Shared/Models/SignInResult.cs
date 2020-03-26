@@ -4,6 +4,7 @@
     {
         Success,
         GeneralError,
-        InvalidEmailOrPassword
+        InvalidEmailOrPassword,
+        LockedOut
     }
 }

@@ -43,7 +43,8 @@ namespace Frederikskaj2.Reservations.Server
                         options.Password.RequireLowercase = false;
                         options.Password.RequireNonAlphanumeric = false;
                         options.Password.RequireUppercase = false;
-                        options.Password.RequiredLength = 2;
+                        options.Password.RequiredLength = 4;
+                        options.Password.RequiredUniqueChars = 3;
 
                         options.User.RequireUniqueEmail = true;
                     })

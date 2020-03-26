@@ -12,6 +12,7 @@
     "Server": {
       "commandName": "Project",
       "launchBrowser": true,
+      "launchUrl": "https://localhost:5001/opret-bruger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

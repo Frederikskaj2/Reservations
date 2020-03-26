@@ -17,6 +17,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     public class UserController : Controller
     {
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
+        private readonly Random random = new Random();
         private readonly SignInManager<User> signInManager;
         private readonly UserManager<User> userManager;
 
@@ -33,10 +34,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpGet("")]
         public async Task<UserResponse> GetUser()
         {
-            var userId = User.Id();
-            if (!userId.HasValue)
+            var user = await FindUser();
+            if (user == null)
                 return new UserResponse();
-            var user = await userManager.FindByIdAsync(userId.Value.ToString());
             var apiUser = user.Adapt<Shared.User>();
             apiUser.IsEmailConfirmed = user.EmailConfirmed;
             apiUser.IsAdministrator = await userManager.IsInRoleAsync(user, Roles.Administrator);
@@ -48,10 +48,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             if (!User.Identity.IsAuthenticated)
                 return AuthenticatedUser.UnknownUser;
-            var userId = User.Id();
-            if (!userId.HasValue)
+            var user = await FindUser();
+            if (user == null)
                 return AuthenticatedUser.UnknownUser;
-            var user = await userManager.FindByIdAsync(userId.Value.ToString());
             return await GetAuthenticatedUser(user);
         }
 
@@ -59,11 +58,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpGet("apartment")]
         public async Task<ApartmentResponse> GetApartment()
         {
-            var userId = User.Id();
-            if (!userId.HasValue)
+            var user = await FindUser();
+            if (user == null)
                 return new ApartmentResponse();
-            var user = await userManager.FindByIdAsync(userId.Value.ToString());
-            return new ApartmentResponse { ApartmentId = user?.ApartmentId };
+            return new ApartmentResponse { ApartmentId = user.ApartmentId };
         }
 
         [HttpPost("sign-up")]
@@ -79,31 +77,30 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 ApartmentId = request.ApartmentId
             };
             var result = await userManager.CreateAsync(user, request.Password);
-            // TODO: Handle duplicate email error.
             if (!result.Succeeded)
-                return new SignUpResponse { Result = SignUpResult.GeneralError };
+                return new SignUpResponse { Errors = result.ToSignUpErrors() };
 
             await SendConfirmEmailEmail(user);
 
             var authenticationProperties = new AuthenticationProperties { IsPersistent = request.IsPersistent };
             await signInManager.SignInAsync(user, authenticationProperties);
 
-            var u1 = User;
-            var u2 = HttpContext.User;
             return new SignUpResponse { User = await GetAuthenticatedUser(user) };
         }
 
         [HttpPost("sign-in")]
         public async Task<SignInResponse> SignIn(SignInRequest request)
         {
-            var user = await FindUser(request.Email!);
+            var user = await FindUser(request.Email);
             if (user == null)
-                // TODO: Consider adding security delay here.
+            {
+                await WaitRandomDelay();
                 return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
+            }
 
-            var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+            var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, true);
             if (!result.Succeeded)
-                return new SignInResponse { Result = SignInResult.InvalidEmailOrPassword };
+                return new SignInResponse { Result = result.IsLockedOut ? SignInResult.LockedOut : SignInResult.InvalidEmailOrPassword };
 
             var authenticationProperties = new AuthenticationProperties { IsPersistent = request.IsPersistent };
             await signInManager.SignInAsync(user, authenticationProperties);
@@ -133,40 +130,56 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         [HttpPost("update-password")]
         [Authorize]
-        public async Task<OperationResponse> UpdatePassword(UpdatePasswordRequest request)
+        public async Task<UpdatePasswordResponse> UpdatePassword(UpdatePasswordRequest request)
         {
             var user = await FindUser();
             if (user == null)
-                return new OperationResponse { Result = OperationResult.GeneralError };
+                return new UpdatePasswordResponse { Errors = UpdatePasswordErrorCodes.GeneralError };
 
             var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
             if (!result.Succeeded)
-                return new OperationResponse { Result = OperationResult.GeneralError };
+                return new UpdatePasswordResponse { Errors = result.ToUpdatePasswordErrors() };
 
             await signInManager.RefreshSignInAsync(user);
+
+            return new UpdatePasswordResponse();
+        }
+
+        [HttpPost("confirm-email")]
+        public async Task<OperationResponse> ConfirmEmail(ConfirmEmailRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token))
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            var user = await FindUser(request.Email);
+            if (user == null)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            if (user.EmailConfirmed)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            var result = await userManager.ConfirmEmailAsync(user, request.Token);
+            if (!result.Succeeded)
+                return new OperationResponse { Result = OperationResult.GeneralError };
 
             return new OperationResponse { Result = OperationResult.Success };
         }
 
-        [HttpPost("confirm-email")]
-        public async Task<TokenValidationResponse> ConfirmEmail(ConfirmEmailRequest request)
+        [HttpPost("new-password")]
+        public async Task<NewPasswordResponse> NewPassword(NewPasswordRequest request)
         {
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token))
-                return new TokenValidationResponse { Result = TokenValidationResult.Failure };
+                return new NewPasswordResponse { Errors = NewPasswordErrorCodes.GeneralError };
 
             var user = await FindUser(request.Email);
             if (user == null)
-                return new TokenValidationResponse { Result = TokenValidationResult.Failure };
+                return new NewPasswordResponse { Errors = NewPasswordErrorCodes.GeneralError };
 
-            if (user.EmailConfirmed)
-                return new TokenValidationResponse { Result = TokenValidationResult.Success };
-
-            var result = await userManager.ConfirmEmailAsync(user, request.Token);
-            // TODO: Handle token expiration or simply error reporting.
+            var result = await userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
             if (!result.Succeeded)
-                return new TokenValidationResponse { Result = TokenValidationResult.Failure };
+                return new NewPasswordResponse { Errors = result.ToNewPasswordErrors() };
 
-            return new TokenValidationResponse { Result = TokenValidationResult.Success };
+            return new NewPasswordResponse();
         }
 
         [HttpPost("resend-confirm-email-email")]
@@ -182,10 +195,26 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return new OperationResponse { Result = OperationResult.Success };
         }
 
+        [HttpPost("send-reset-password-email")]
+        public async Task<OperationResponse> SendResetPasswordEmail(SendResetPasswordEmailRequest request)
+        {
+            var user = await FindUser(request.Email);
+            if (user != null)
+                await SendPasswordResetEmail(user);
+
+            return new OperationResponse { Result = OperationResult.Success };
+        }
+
         private async Task SendConfirmEmailEmail(User user)
         {
             var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
             backgroundWorkQueue.Enqueue((service, _) => service.SendConfirmEmail(user, token));
+        }
+
+        private async Task SendPasswordResetEmail(User user)
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            backgroundWorkQueue.Enqueue((service, _) => service.SendResetPasswordEmail(user, token));
         }
 
         private async Task<AuthenticatedUser> GetAuthenticatedUser(User user)
@@ -207,6 +236,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             var userId = User.Id();
             return userId.HasValue ? await userManager.FindByIdAsync(userId.Value.ToString()) : null;
+        }
+
+        private Task WaitRandomDelay()
+        {
+            var delayInMs = random.Next(200, 400);
+            return Task.Delay(delayInMs);
         }
     }
 }

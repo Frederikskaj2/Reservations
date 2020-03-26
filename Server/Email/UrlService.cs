@@ -26,5 +26,14 @@ namespace Frederikskaj2.Reservations.Server.Email
             };
             return uriBuilder.Uri;
         }
+
+        public Uri GetResetPasswordUrl(string email, string token)
+        {
+            var uriBuilder = new UriBuilder(options.BaseUrl!)
+            {
+                Path = $"{Urls.NewPassword}/{Uri.EscapeDataString(email)}/{Uri.EscapeDataString(token)}"
+            };
+            return uriBuilder.Uri;
+        }
     }
 }

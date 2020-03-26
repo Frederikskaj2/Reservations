@@ -132,7 +132,7 @@
     [Parameter]
     public int OrderId { get; set; }
 
-    private bool IsUpdated => order?.AccountNumber != request.AccountNumber?.Trim() || request.CancelledReservations.Count > 0;
+    private bool IsUpdated => order?.AccountNumber != request.AccountNumber.Trim() || request.CancelledReservations.Count > 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -142,7 +142,7 @@
         if (maybe.TryGetValue(out var value) || value.Id != 0)
         {
             order = value;
-            request.AccountNumber = order.AccountNumber;
+            request.AccountNumber = order.AccountNumber!;
             UpdatePrice();
         }
         isInitialized = true;

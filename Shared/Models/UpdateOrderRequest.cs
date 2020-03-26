@@ -12,7 +12,7 @@ namespace Frederikskaj2.Reservations.Shared
         [RegularExpression(
             @"^\s*(?:[0-9]{4}(?:[- 0-9]+)*|[a-zA-Z]{2}[0-9]{2}(?: ?[0-9a-zA-Z]{4})*(?: ?[0-9a-zA-Z]{1,4}))\s*$",
             ErrorMessage = "Angiv et kontonummer (inklusiv registreringsnummer) eller et IBAN-nummer")]
-        public string? AccountNumber { get; set; }
+        public string AccountNumber { get; set; } = string.Empty;
 
         public HashSet<int> CancelledReservations { get; set; } = new HashSet<int>();
     }

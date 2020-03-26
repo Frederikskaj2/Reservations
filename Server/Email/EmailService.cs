@@ -48,14 +48,8 @@ namespace Frederikskaj2.Reservations.Server.Email
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
 
-            using var client = new SmtpClient();
-            await client.ConnectAsync(options.SmtpHostName, options.SmtpPort, options.SocketOptions);
-            await client.AuthenticateAsync(options.UserName, options.Password);
-
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(options.FromName, options.FromEmail));
-            message.To.Add(new MailboxAddress(user.FullName, user.Email));
-            var model = new ConfirmEmailModel(user, urlService.GetConfirmEmailUrl(user.Email, token), options.FromName!, urlService.GetFromUrl());
+            var message = CreateEmptyMessage(user);
+            var model = new EmailWithTokenModel(user, urlService.GetConfirmEmailUrl(user.Email, token), options.FromName!, urlService.GetFromUrl());
             message.Subject = await viewToStringRenderer.RenderViewToStringAsync(@"ConfirmEmail\Subject", model);
             var bodyBuilder = new BodyBuilder
             {
@@ -64,6 +58,40 @@ namespace Frederikskaj2.Reservations.Server.Email
             };
             message.Body = bodyBuilder.ToMessageBody();
 
+            await SendMessage(message);
+        }
+
+        public async Task SendResetPasswordEmail(User user, string token)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+
+            var message = CreateEmptyMessage(user);
+            var model = new EmailWithTokenModel(user, urlService.GetResetPasswordUrl(user.Email, token), options.FromName!, urlService.GetFromUrl());
+            message.Subject = await viewToStringRenderer.RenderViewToStringAsync(@"ResetPassword\Subject", model);
+            var bodyBuilder = new BodyBuilder
+            {
+                TextBody = await viewToStringRenderer.RenderViewToStringAsync(@"ResetPassword\Text", model),
+                HtmlBody = await viewToStringRenderer.RenderViewToStringAsync(@"ResetPassword\Html", model)
+            };
+            message.Body = bodyBuilder.ToMessageBody();
+
+            await SendMessage(message);
+        }
+
+        private MimeMessage CreateEmptyMessage(User user)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(options.FromName, options.FromEmail));
+            message.To.Add(new MailboxAddress(user.FullName, user.Email));
+            return message;
+        }
+
+        private async Task SendMessage(MimeMessage message)
+        {
+            using var client = new SmtpClient();
+            await client.ConnectAsync(options.SmtpHostName, options.SmtpPort, options.SocketOptions);
+            await client.AuthenticateAsync(options.UserName, options.Password);
             await client.SendAsync(message);
         }
     }

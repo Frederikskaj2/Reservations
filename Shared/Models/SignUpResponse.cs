@@ -2,7 +2,7 @@
 {
     public class SignUpResponse
     {
-        public SignUpResult Result { get; set; }
         public AuthenticatedUser? User { get; set; }
+        public SignUpErrorCodes? Errors { get; set; }
     }
 }

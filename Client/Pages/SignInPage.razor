@@ -7,12 +7,16 @@
 
 <main>
     <Container class="container-max-sm">
-        <Alert Color="Color.Danger" Visible="@showInvalidEmailOrPasswordAlert" Dismisable="true">
-            Forkert mail eller adgangskode. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
-            <CloseButton Clicked="@DismissInvalidEmailOrPasswordAlert" />
-        </Alert>
         <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-            Der er sket en fejl. Du blev ikke logget ind.
+            Der er sket en fejl, og du blev ikke logget ind.
+            @if (signInResult == SignInResult.InvalidEmailOrPassword)
+            {
+                <text>Du har brugt en forkert mail eller adgangskode. <a href="@Urls.ResetPassword">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a></text>
+            }
+            else if (signInResult == SignInResult.LockedOut)
+            {
+                <text>Din konto er blevet midlertidig låst i fem minutter fordi der har været for mange mislykkede forsøg på at logge ind.</text>
+            }
             <CloseButton Clicked="@DismissErrorAlert" />
         </Alert>
         <Form onsubmit="return false;">
@@ -58,8 +62,8 @@
 
     private readonly SignInRequest request = new SignInRequest();
     private Validations validations = null!;
-    private bool showInvalidEmailOrPasswordAlert;
     private bool showErrorAlert;
+    private SignInResult signInResult;
 
     private async Task Submit()
     {
@@ -67,7 +71,6 @@
             return;
 
         validations.ClearAll();
-        DismissInvalidEmailOrPasswordAlert();
         DismissErrorAlert();
 
         var maybe = await ApiClient.PostJsonAsync<SignInResponse>("user/sign-in", request);
@@ -89,16 +92,10 @@
                     NavigationManager.NavigateTo("");
                 }
             }
-            else if (response.Result == SignInResult.InvalidEmailOrPassword)
-            {
-                showInvalidEmailOrPasswordAlert = true;
-                return;
-            }
+            signInResult = response.Result;
         }
         showErrorAlert = true;
     }
-
-    private void DismissInvalidEmailOrPasswordAlert() => showInvalidEmailOrPasswordAlert = false;
 
     private void DismissErrorAlert() => showErrorAlert = false;
 

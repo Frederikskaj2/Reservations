@@ -13,12 +13,21 @@
     else
     {
         <Container class="container-max-sm">
-            <Alert Color="Color.Danger" Visible="@showDuplicateEmailAlert" Dismisable="true">
-                Der findes allerede en bruger med mail @ApplicationState.SignUpRequest.Email. <a href="/user/send-password-reset-email">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
-                <CloseButton Clicked="@DismissDuplicateEmailAlert" />
-            </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl. Din bruger blev ikke oprettet.
+                Der er sket en fejl, og din bruger blev ikke oprettet.
+                @if (errors.HasFlag(SignUpErrorCodes.DuplicateEmail))
+                {
+                    <text>Der findes allerede en bruger med mail @ApplicationState.SignUpRequest.Email. <a href="@Urls.ResetPassword">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a></text>
+                }
+                else
+                {
+                    <PasswordErrors PasswordTooShort="errors.HasFlag(SignUpErrorCodes.PasswordTooShort)"
+                                    PasswordRequiresLower="errors.HasFlag(SignUpErrorCodes.PasswordRequiresLower)"
+                                    PasswordRequiresUpper="errors.HasFlag(SignUpErrorCodes.PasswordRequiresUpper)"
+                                    PasswordRequiresDigit="errors.HasFlag(SignUpErrorCodes.PasswordRequiresDigit)"
+                                    PasswordRequiresNonAlphanumeric="errors.HasFlag(SignUpErrorCodes.PasswordRequiresNonAlphanumeric)"
+                                    PasswordRequiresUniqueChars="errors.HasFlag(SignUpErrorCodes.PasswordRequiresUniqueChars)" />
+                }
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <Form onsubmit="return false;">
@@ -106,8 +115,6 @@
                         </Validation>
                     </Field>
                     <Field>
-                    </Field>
-                    <Field>
                         <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.IsPersistent">Husk mig</CheckEdit>
                     </Field>
                     <Button Color="Color.Primary" Type="ButtonType.Submit" Clicked="@Submit" class="btn-text">Opret bruger</Button>
@@ -122,8 +129,8 @@
     private Validations validations = null!;
     private IEnumerable<Apartment> apartments = null!;
     private bool isInitialized;
-    private bool showDuplicateEmailAlert;
     private bool showErrorAlert;
+    private SignUpErrorCodes errors;
 
     protected override async Task OnInitializedAsync()
     {
@@ -141,7 +148,6 @@
             return;
 
         validations.ClearAll();
-        DismissDuplicateEmailAlert();
         DismissErrorAlert();
 
         if (ApplicationState.SignUpRequest.ApartmentId == 0)
@@ -150,7 +156,7 @@
         var maybe = await ApiClient.PostJsonAsync<SignUpResponse>("user/sign-up", ApplicationState.SignUpRequest);
         if (maybe.TryGetValue(out var response))
         {
-            if (response.Result == SignUpResult.Success)
+            if (response.User != null)
             {
                 AuthenticationStateProvider.UpdateUser(response.User!);
                 ApplicationState.ResetStateAfterSignIn();
@@ -165,16 +171,10 @@
                     NavigationManager.NavigateTo("");
                 }
             }
-            else if (response.Result == SignUpResult.DuplicateEmail)
-            {
-                showDuplicateEmailAlert = true;
-                return;
-            }
+            errors = response.Errors!.Value;
         }
         showErrorAlert = true;
     }
-
-    private void DismissDuplicateEmailAlert() => showDuplicateEmailAlert = false;
 
     private void DismissErrorAlert() => showErrorAlert = false;
 
