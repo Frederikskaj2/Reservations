@@ -16,8 +16,9 @@
             </Alert>
             @if (user != null)
             {
-                <UserEmail User="user" />
+                <UserInformation User="@user" />
                 <UserUpdatePassword />
+                <UserDelete User="@user"/>
             }
         </Container>
     }
@@ -31,9 +32,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var maybe = await ApiClient.GetJsonAsync<UserResponse>("user");
-        if (maybe.TryGetValue(out var response) && response.User != null)
-            user = response.User;
+        var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
+        if (maybe.TryGetValue(out var myUser) && !string.IsNullOrEmpty(myUser.Email))
+            user = myUser;
         else
             showErrorAlert = true;
         isInitialized = true;

@@ -70,7 +70,7 @@ else
                     {
                         var day = calendar![date];
                         var localDate = date;
-                        <div class="@GetCalendarDayClasses(day, dayOfWeek)" @onclick="@(() => MakeReservation(localDate))">
+                        <div class="@GetCalendarDayClasses(day, dayOfWeek)" @onclick="@(() => MakeReservation(localDate))" tabindex="0" date="@localDate">
                             <div class="calendar-day">@day.Date.Day</div>
                             @{
                                 resourceCounter = 1;

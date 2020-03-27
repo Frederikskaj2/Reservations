@@ -15,8 +15,7 @@
 </head>
 <body>
     <p>Hej @Model.User.FullName</p>
-    <p>Åbn linket for at bekræfte din mail.</p>
-    <p><a href="@Model.Url">@Model.Url</a></p>
+    <p><a href="@Model.Url">Åbn linket for at bekræfte din mail.</a></p>
     <p>Dette link er gyldigt i @validDays dag@(validDays == 1 ? string.Empty : "e").</p>
     <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
 </body>

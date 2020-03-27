@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
-using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -29,28 +28,24 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         [HttpGet("")]
         public async Task<IEnumerable<Shared.User>> Get()
-        {
-            var includableQueryable = db.Users
+            => await db.Users
                 .Include(user => user.Orders)
                 .Include(user => user.UserRoles)
-                .ThenInclude(role => role.Role);
-            var query = includableQueryable
-                .Select(user => new Shared.User
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    FullName = user.FullName,
-                    Phone = user.PhoneNumber,
-                    IsEmailConfirmed = user.EmailConfirmed,
-                    IsAdministrator = user.UserRoles.Any(role => role.Role!.Name == Roles.Administrator),
-                    IsPendingDelete = user.IsPendingDelete,
-                    OrderCount = user.Orders!.Count
-                })
-                .OrderBy(user => user.Email);
-            var users = await query
+                .ThenInclude(role => role.Role)
+                .Select(
+                    user => new Shared.User
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        FullName = user.FullName,
+                        Phone = user.PhoneNumber,
+                        IsEmailConfirmed = user.EmailConfirmed,
+                        IsAdministrator = user.UserRoles.Any(role => role.Role!.Name == Roles.Administrator),
+                        IsPendingDelete = user.IsPendingDelete,
+                        OrderCount = user.Orders!.Count
+                    })
+                .OrderBy(user => user.Email)
                 .ToListAsync();
-            return users;
-        }
 
         [HttpPatch("{userId:int}")]
         public async Task<UpdateUserResponse> Patch(int userId, UpdateUserRequest request)

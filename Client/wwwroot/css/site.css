@@ -217,24 +217,6 @@ nav {
     margin-bottom: 1rem;
 }
 
-.card-footer {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-    .card-footer > :not(:first-child) {
-        margin-left: .25rem;
-    }
-
-    .card-footer > :not(:last-child) {
-        margin-right: 0.25rem;
-    }
-
-    .card-footer > .text-left {
-        margin-right: auto;
-    }
-
 .sidebar {
     background-color: #333;
     color: white;
@@ -285,7 +267,21 @@ nav {
     max-width: 960px;
 }
 
-button.btn-text {
+.button-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+    .button-row > :not(:first-child) {
+        margin-left: .25rem;
+    }
+
+    .button-row > :not(:last-child) {
+        margin-right: 0.25rem;
+    }
+
+button.btn-fixed {
     min-width: 7.5rem;
 }
 

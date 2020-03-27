@@ -1,0 +1,87 @@
+﻿@inject ApiClient ApiClient
+@inject IAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+    Der er sket en fejl, og din bruger blev ikke slettet.
+    <CloseButton Clicked="@DismissErrorAlert" />
+</Alert>
+<Alert Color="Color.Warning" Visible="@showPendingDeleteAlert" Dismisable="true">
+    Din bruger kan ikke slettes i øjeblikket, men vil blive slettet så snart du ikke har flere aktive bestillinger.
+    <CloseButton Clicked="@DismissPendingDeleteAlert" />
+</Alert>
+<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Sletning</CardTitle>
+    </CardHeader>
+    <CardBody>
+        @if (!User.IsPendingDelete && !User.IsAdministrator)
+        {
+            <Paragraph>
+                Hvis du sletter din bruger kan du ikke længere reservere lokaler på Frederikskaj 2. Når din bruger bliver slettet fjerner vi alle oplysninger om dig fra vores system. Hvis du tidligere har foretaget bestillinger vil disse fortsat findes i systemet af hensyn til statistik, men de er ikke længere knyttet til din person.
+            </Paragraph>
+            <Paragraph>
+                Hvis du har aktive bestillinger vil din bruger først blive endelig slettet når disse bestillinger er afsluttet.
+            </Paragraph>
+            <div class="button-row">
+                <Button Color="Color.Danger" class="btn-fixed" Clicked="ConfirmDeleteUser">Slet bruger</Button>
+            </div>
+        }
+        else if (User.IsPendingDelete)
+        {
+            <Paragraph>
+                Vi har registeret at du ønsker at din bruger bliver slettet. Sletningen vil blive gennemført når du ikke længere har aktive bestillinger i vores system.
+            </Paragraph>
+        }
+        else
+        {
+            <Paragraph>
+                Du kan ikke slette din bruger så længe du er adminstrator af systemet. For at slette din bruger skal du bede en anden administrator om at gøre dig til almindelig bruger. Når dette er sket kan du selv slette din bruger.
+            </Paragraph>
+        }
+    </CardBody>
+</Card>
+<ConfirmDeleteMyUser @ref="confirmModal" OnConfirm="@DeleteUser" />
+
+@code {
+
+    private ConfirmDeleteMyUser confirmModal = null!;
+    private bool showErrorAlert;
+    private bool showPendingDeleteAlert;
+
+    [Parameter]
+    public MyUser User { get; set; } = null!;
+
+    private void ConfirmDeleteUser()
+    {
+        DismissAllAlerts();
+        confirmModal.Show();
+    }
+
+    private async Task DeleteUser()
+    {
+        var maybe = await ApiClient.PostJsonAsync<DeleteUserResponse>("user/delete", null);
+        if (!maybe.TryGetValue(out var response) || response.Result == DeleteUserResult.GeneralError)
+        {
+            showErrorAlert = true;
+            return;
+        }
+        if (response.Result == DeleteUserResult.IsPendingDelete)
+        {
+            showPendingDeleteAlert = true;
+            User.IsPendingDelete = true;
+            return;
+        }
+        AuthenticationStateProvider.UpdateUser(AuthenticatedUser.UnknownUser);
+        NavigationManager.NavigateTo(string.Empty);
+    }
+
+    void DismissErrorAlert() => showErrorAlert = false;
+    void DismissPendingDeleteAlert() => showPendingDeleteAlert = false;
+
+    void DismissAllAlerts()
+    {
+        showErrorAlert = false;
+        showPendingDeleteAlert = false;
+    }
+}

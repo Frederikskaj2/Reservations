@@ -53,8 +53,8 @@ namespace Frederikskaj2.Reservations.Shared
 
             var fromDate = date.PlusDays(-Options.MaximumAllowedReservationDays);
             var toDate = date.PlusDays(durationInDays);
-            var reservations = await DataProvider.GetReservedDays(resourceId, fromDate, toDate);
-            return reservations.All(reservation => reservation.Date != date);
+            var reservations = (await DataProvider.GetReservedDays(resourceId, fromDate, toDate)).ToDictionary(reservation => reservation.Date);
+            return Enumerable.Range(0, durationInDays).All(i => !reservations.ContainsKey(date.PlusDays(i)));
         }
 
         public virtual async Task<Price> GetPrice(LocalDate date, int durationInDays)

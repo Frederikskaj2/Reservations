@@ -1,0 +1,129 @@
+﻿@inject ApiClient ApiClient
+
+<Alert Color="Color.Success" Visible="@showUserUpdatedAlert" Dismisable="true">
+    Dine oplysninger er blevet gemt.
+    <CloseButton Clicked="@DismissUserUpdatedAlert" />
+</Alert>
+<Alert Color="Color.Danger" Visible="@showUserUpdatedErrorAlert" Dismisable="true">
+    Der er sket en fejl, og dine oplysninger blev ikke gemt.
+    <CloseButton Clicked="@DismissUserUpdatedErrorAlert" />
+</Alert>
+<Alert Color="Color.Success" Visible="@showResendConfirmEmailEmailAlert" Dismisable="true">
+    Du har fået tilsendt en ny bekræftelses-mail.
+    <CloseButton Clicked="@DismissResendConfirmEmailEmailAlert" />
+</Alert>
+<Alert Color="Color.Danger" Visible="@showResendConfirmEmailEmailErrorAlert" Dismisable="true">
+    Der er sket en fejl, og der blev ikke sendt en ny bekræftelses-mail.
+    <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
+</Alert>
+<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Oplysninger</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Form>
+            <Validations @ref="validations" Model="@request">
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Mail</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <TextEdit Plaintext="true" Text="@User.Email" />
+                    </FieldBody>
+                    @if (!User.IsEmailConfirmed)
+                    {
+                        <Column ColumnSize="ColumnSize.Is2">
+                            <Button Color="Color.Secondary" class="btn-fixed float-right" Clicked="@SendConfirmEmailEmail">Bekræft mail</Button>
+                        </Column>
+                    }
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Fulde navn</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <Validation>
+                            <TextEdit @bind-Text="@request.FullName">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Telefonnummer</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <Validation>
+                            <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@request.Phone">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" class="btn-fixed float-right" Clicked="@UpdateMyUser">Opdatér</Button>
+            </Validations>
+        </Form>
+    </CardBody>
+</Card>
+
+@code {
+
+    private readonly UpdateMyUserRequest request = new UpdateMyUserRequest();
+    private Validations validations = null!;
+    private bool showUserUpdatedAlert;
+    private bool showUserUpdatedErrorAlert;
+    private bool showResendConfirmEmailEmailAlert;
+    private bool showResendConfirmEmailEmailErrorAlert;
+
+    [Parameter]
+    public MyUser User { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        request.FullName = User.FullName!;
+        request.Phone = User.Phone!;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            validations.ClearAll();
+    }
+
+    private async Task UpdateMyUser()
+    {
+        if (!validations.ValidateAll())
+            return;
+
+        validations.ClearAll();
+        DismissAllAlerts();
+
+        var maybe = await ApiClient.PatchJsonAsync<OperationResponse>("user", request);
+        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
+            showUserUpdatedAlert = true;
+        else
+            showUserUpdatedErrorAlert = true;
+    }
+
+    private async Task SendConfirmEmailEmail()
+    {
+        DismissAllAlerts();
+        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/resend-confirm-email-email", null);
+        if (!maybe.TryGetValue(out var response) || response.Result != OperationResult.Success)
+            showResendConfirmEmailEmailErrorAlert = true;
+        else
+            showResendConfirmEmailEmailAlert = true;
+    }
+
+    private void DismissUserUpdatedAlert() => showUserUpdatedAlert = false;
+    private void DismissUserUpdatedErrorAlert() => showUserUpdatedErrorAlert = false;
+    private void DismissResendConfirmEmailEmailAlert() => showResendConfirmEmailEmailAlert = false;
+    private void DismissResendConfirmEmailEmailErrorAlert() => showResendConfirmEmailEmailErrorAlert = false;
+
+    private void DismissAllAlerts()
+    {
+        showUserUpdatedAlert = false;
+        showUserUpdatedErrorAlert = false;
+        showResendConfirmEmailEmailAlert = false;
+        showResendConfirmEmailEmailErrorAlert = false;
+    }
+}
