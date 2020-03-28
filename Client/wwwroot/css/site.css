@@ -107,6 +107,11 @@ h1 {
     font-weight: bold;
 }
 
+h2 {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
 nav {
     align-items: stretch;
     background-color: hsl(210, 100%, 35%);
@@ -231,16 +236,11 @@ nav {
 }
 
 .text {
-    font-family: 'Roboto Slab';
     margin: 2rem;
 }
 
     .text * {
         line-height: 2;
-    }
-
-    .text h1 {
-        font-family: 'Roboto';
     }
 
 .container {
@@ -548,6 +548,24 @@ a.sign-in {
 
 table {
     margin-top: 2rem;
+}
+
+.order-table-resource-column {
+    min-width: 11rem;
+}
+
+.order-table-date-column {
+    min-width: 7rem;
+}
+
+@media (min-width: 768px) {
+    .order-table-resource-column {
+        min-width: 12rem;
+    }
+
+    .order-table-date-column {
+        min-width: 10rem;
+    }
 }
 
 .orders-order {

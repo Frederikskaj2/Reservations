@@ -12,7 +12,7 @@
     "Server": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "https://localhost:5001/brugere",
+      "launchUrl": "https://localhost:5001/kalender",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

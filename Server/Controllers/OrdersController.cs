@@ -86,6 +86,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new PlaceOrderResponse { Result = PlaceOrderResult.GeneralError };
 
             var user = await db.Users.FindAsync(userId.Value);
+            user.FullName = request.FullName;
+            user.PhoneNumber = request.Phone;
             user.ApartmentId = request.ApartmentId;
 
             var resources = await dataProvider.GetResources();

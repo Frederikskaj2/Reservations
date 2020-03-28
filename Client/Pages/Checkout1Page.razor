@@ -1,0 +1,157 @@
+﻿@page "/bestil/1"
+@attribute [Authorize]
+@inject ApiClient ApiClient
+@inject ApplicationState ApplicationState
+@inject ClientDataProvider ClientDataProvider
+@inject NavigationManager NavigationManager
+
+<main>
+    @if (ClientDataProvider.DraftOrder.Reservations!.Count == 0)
+    {
+        <Container>
+            <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
+        </Container>
+    }
+    else if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else if (!hasConfirmedEmail)
+    {
+        <Container>
+            <Alert Color="Color.Success" Visible="@showResendConfirmEmailEmailAlert">
+                <Text>Du har fået tilsendt en ny bekræftelses-mail. Når du har bekæftet din mail kan du fortsætte med at bestille.</Text>
+                <Button Color="Color.Success" class="btn-fixed" Clicked="@UpdateEmailConfirmationStatus">Bestil</Button>
+            </Alert>
+            <Alert Color="Color.Danger" Visible="@showResendConfirmEmailEmailErrorAlert" Dismisable="true">
+                Der er sket en fejl, og der blev ikke sendt en ny bekræftelses-mail.
+                <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
+            </Alert>
+            <Paragraph>Du mangler at bekræfte din mail.</Paragraph>
+            <Button Color="Color.Primary" class="btn-fixed" Clicked="@ResendConfirmEmailAlert">Bekræft mail</Button>
+        </Container>
+    }
+    else
+    {
+        <Container class="container-min-md">
+            <h1>Dine oplysninger</h1>
+            <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ClientDataProvider.DraftOrder">
+                <Field>
+                    <FieldLabel>Fulde Navn</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit @bind-Text="@ClientDataProvider.DraftOrder.Request.FullName">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Telefonnummer</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@ClientDataProvider.DraftOrder.Request.Phone">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Din adresse</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <Select TValue="int" @bind-SelectedValue="@ClientDataProvider.DraftOrder.Request.ApartmentId">
+                                <ChildContent>
+                                    <SelectItem Value="0" disabled>Vælg lejlighed</SelectItem>
+                                    @foreach (var apartment in apartments!)
+                                    {
+                                        <SelectItem Value="@apartment.Id">@apartment</SelectItem>
+                                    }
+                                </ChildContent>
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </Select>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
+                    <FieldBody>
+                        <Validation>
+                            <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@ClientDataProvider.DraftOrder.Request.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Button class="float-right" Color="Color.Success" Clicked="@Submit">Gennemse bestilling</Button>
+            </Validations>
+        </Container>
+    }
+</main>
+
+@code {
+
+    private Validations validations = null!;
+    private IEnumerable<Apartment>? apartments;
+    private bool hasConfirmedEmail;
+    private bool isInitialized;
+    private bool showResendConfirmEmailEmailAlert;
+    private bool showResendConfirmEmailEmailErrorAlert;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apartments = await ClientDataProvider.GetApartments();
+        var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
+        if (maybe.TryGetValue(out var myUser))
+        {
+            hasConfirmedEmail = myUser.IsEmailConfirmed;
+            ClientDataProvider.DraftOrder.Request.FullName = myUser.FullName!;
+            ClientDataProvider.DraftOrder.Request.Phone = myUser.Phone!;
+            ClientDataProvider.DraftOrder.Request.ApartmentId = myUser.ApartmentId.GetValueOrDefault();
+        }
+        isInitialized = true;
+    }
+
+    private async Task ResendConfirmEmailAlert()
+    {
+        DismissAllAlerts();
+        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/resend-confirm-email-email", null);
+        if (!maybe.TryGetValue(out var response) || response.Result != OperationResult.Success)
+            showResendConfirmEmailEmailErrorAlert = true;
+        else
+            showResendConfirmEmailEmailAlert = true;
+    }
+
+    private async Task UpdateEmailConfirmationStatus()
+    {
+        var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
+        if (maybe.TryGetValue(out var myUser))
+            hasConfirmedEmail = myUser.IsEmailConfirmed;
+        showResendConfirmEmailEmailAlert = false;
+    }
+
+    private void Submit()
+    {
+        if (!validations.ValidateAll())
+            return;
+
+        NavigationManager.NavigateTo(Urls.Checkout2);
+    }
+
+    private void DismissResendConfirmEmailEmailErrorAlert() => showResendConfirmEmailEmailErrorAlert = false;
+
+    private void DismissAllAlerts()
+    {
+        showResendConfirmEmailEmailAlert = false;
+        showResendConfirmEmailEmailErrorAlert = false;
+    }
+
+}

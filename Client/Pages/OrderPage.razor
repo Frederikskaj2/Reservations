@@ -79,26 +79,22 @@
                     </TableBody>
                     <TableFooter>
                         <TableRow>
-                            <TableRowCell colspan="3" />
-                            <TableRowCell colspan="3">Leje (inkl. rengøring)</TableRowCell>
+                            <TableRowCell colspan="6">Leje (inkl. rengøring)</TableRowCell>
                             <TableRowCell class="text-right">@FormattingService.FormatMoneyLong(price!.Rent + price!.CleaningFee)</TableRowCell>
                         </TableRow>
                         <TableRow>
-                            <TableRowCell colspan="3" class="border-top-0" />
-                            <TableRowCell colspan="3" class="border-top-0">Depositum</TableRowCell>
+                            <TableRowCell colspan="6" class="border-top-0">Depositum</TableRowCell>
                             <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.Deposit)</TableRowCell>
                         </TableRow>
                         @if (price!.CancellationFee > decimal.Zero)
                         {
                             <TableRow>
-                                <TableRowCell colspan="3" class="border-top-0" />
-                                <TableRowCell colspan="3" class="border-top-0">Afbestillingsgebyr</TableRowCell>
+                                <TableRowCell colspan="6" class="border-top-0">Afbestillingsgebyr</TableRowCell>
                                 <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.CancellationFee)</TableRowCell>
                             </TableRow>
                         }
                         <TableRow>
-                            <TableRowCell colspan="3" class="border-top-0" />
-                            <TableRowCell colspan="3" class="border-bottom"><strong>Til betaling</strong></TableRowCell>
+                            <TableRowCell colspan="6" class="border-bottom"><strong>Til betaling</strong></TableRowCell>
                             <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
                         </TableRow>
                         <TableRow>

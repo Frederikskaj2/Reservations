@@ -29,7 +29,7 @@
     {
         await HttpClient.PostAsync("user/sign-out", null);
         AuthenticationStateProvider.UpdateUser(AuthenticatedUser.UnknownUser);
-        ClientDataProvider.Refresh();
+        ClientDataProvider.ResetState();
         NavigationManager.NavigateTo("");
     }
 

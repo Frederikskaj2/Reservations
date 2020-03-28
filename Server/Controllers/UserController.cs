@@ -59,16 +59,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return await GetAuthenticatedUser(user);
         }
 
-        [Authorize]
-        [HttpGet("apartment")]
-        public async Task<ApartmentResponse> GetApartment()
-        {
-            var user = await FindUser();
-            if (user == null)
-                return new ApartmentResponse();
-            return new ApartmentResponse { ApartmentId = user.ApartmentId };
-        }
-
         [HttpPost("sign-up")]
         public async Task<SignUpResponse> SignUp(SignUpRequest request)
         {

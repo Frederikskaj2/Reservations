@@ -1,0 +1,184 @@
+﻿@page "/bestil/2"
+@attribute [Authorize]
+@inject ApiClient ApiClient
+@inject ApplicationState ApplicationState
+@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+@inject NavigationManager NavigationManager
+
+<main>
+    @if (ClientDataProvider.DraftOrder.Reservations!.Count == 0)
+    {
+        <Container>
+            <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
+        </Container>
+    }
+    else if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container class="container-min-md">
+            <Alert Color="Color.Danger" Visible="@showReservationConflictAlert" Dismisable="true">
+                Din bestilling blev ikke gennemført da den overlapper med andre reservationer. Opdatér kalenderen og prøv igen.
+                <CloseButton Clicked="@DismissReservationConflictAlert" />
+            </Alert>
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+                Der er sket en fejl. Din bestilling blev ikke gennemført.
+                <CloseButton Clicked="@DismissErrorAlert" />
+            </Alert>
+            <h1>Din bestilling</h1>
+            <Form>
+                <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ClientDataProvider.DraftOrder">
+                    <Text>@ClientDataProvider.DraftOrder.Request.FullName</Text>
+                    <Text>Frederikskaj @apartments.First(a => a.Id == ClientDataProvider.DraftOrder.Request.ApartmentId)</Text>
+                    <Text>Telefon: @ClientDataProvider.DraftOrder.Request.Phone</Text>
+                    <Text>Kontonummer: @ClientDataProvider.DraftOrder.Request.AccountNumber</Text>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell class="order-table-resource-column">Lokale</TableHeaderCell>
+                                <TableHeaderCell class="order-table-date-column">Fra</TableHeaderCell>
+                                <TableHeaderCell>Dage</TableHeaderCell>
+                                <TableHeaderCell class="order-table-date-column">Til</TableHeaderCell>
+                                <TableHeaderCell class="text-right">Leje</TableHeaderCell>
+                                <TableHeaderCell class="text-right">Rengøring</TableHeaderCell>
+                                <TableHeaderCell class="text-right">Depositum</TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @foreach (var reservation in ClientDataProvider.DraftOrder.Reservations)
+                            {
+                                <TableRow>
+                                    <TableRowCell>@reservation.Resource!.Name</TableRowCell>
+                                    <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
+                                    <TableRowCell>@reservation.DurationInDays</TableRowCell>
+                                    <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
+                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
+                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
+                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TableRowCell colspan="6">Leje (inkl. rengøring)</TableRowCell>
+                                <TableRowCell class="text-right">@FormattingService.FormatMoneyLong(GetTotalRentAndCleaningFee())</TableRowCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableRowCell colspan="6" class="border-top-0">Depositum</TableRowCell>
+                                <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(GetTotalDeposit())</TableRowCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableRowCell colspan="6" class="border-bottom"><strong>Til betaling</strong></TableRowCell>
+                                <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(GetGrandTotal())</strong></TableRowCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableRowCell colspan="7" Class="border-top-0">
+                                    <Field>
+                                        <Validation>
+                                            <CheckEdit @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidAcceptTerms">
+                                                <ChildContent>
+                                                    @if (linkBanquetFacilitiesTerms && linkBedroomTerms)
+                                                    {
+                                                        <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBanquetFacilities">aktivitets-/festlokalet</a> og <a href="@Urls.RulesBedrooms">soveværelserne</a>.</text>
+                                                    }
+                                                    else if (linkBanquetFacilitiesTerms)
+                                                    {
+                                                        <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBanquetFacilities">aktivitets-/festlokalet</a>.</text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBedrooms">soveværelserne</a>.</text>
+                                                    }
+                                                </ChildContent>
+                                                <Feedback>
+                                                    <ValidationError />
+                                                </Feedback>
+                                            </CheckEdit>
+                                        </Validation>
+                                    </Field>
+                                    <Field>
+                                        <Validation>
+                                            <CheckEdit @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidConsent">
+                                                <ChildContent>
+                                                    Jeg <a href="@Urls.Consent">samtykker</a> til at ovenstående oplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler.
+                                                </ChildContent>
+                                                <Feedback>
+                                                    <ValidationError />
+                                                </Feedback>
+                                            </CheckEdit>
+                                        </Validation>
+                                    </Field>
+                                    <a class="btn btn-secondary" href="javascript:history.back()">Tilbage</a>
+                                    <Button class="float-right" Color="Color.Success" Clicked="@Submit">Bekræft bestilling</Button>
+                                </TableRowCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </Validations>
+            </Form>
+        </Container>
+    }
+</main>
+
+@code
+{
+
+    private Validations validations = null!;
+    private IEnumerable<Apartment>? apartments;
+    private bool isInitialized;
+    private bool linkBanquetFacilitiesTerms;
+    private bool linkBedroomTerms;
+    private bool showReservationConflictAlert;
+    private bool showErrorAlert;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apartments = await ClientDataProvider.GetApartments();
+        linkBanquetFacilitiesTerms = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.BanquetFacilities);
+        linkBedroomTerms = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.Bedroom);
+        isInitialized = true;
+    }
+
+    private decimal GetTotalRentAndCleaningFee()
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee);
+
+    private decimal GetTotalDeposit()
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Deposit);
+
+    private decimal GetGrandTotal()
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee + reservation.Price!.Deposit);
+
+    private async Task Submit()
+    {
+        if (!validations.ValidateAll())
+            return;
+
+        validations.ClearAll();
+
+        ClientDataProvider.DraftOrder.PrepareRequest();
+        var maybe = await ApiClient.PostJsonAsync<PlaceOrderResponse>("orders", ClientDataProvider.DraftOrder.Request);
+        if (maybe.TryGetValue(out var response))
+        {
+            if (response.Result == PlaceOrderResult.Success)
+            {
+                ClientDataProvider.DraftOrder.Clear();
+                ClientDataProvider.Refresh();
+                NavigationManager.NavigateTo(Urls.Orders);
+            }
+            if (response.Result == PlaceOrderResult.ReservationConflict)
+            {
+                showReservationConflictAlert = true;
+                return;
+            }
+        }
+        showErrorAlert = true;
+    }
+
+    private void DismissReservationConflictAlert() => showReservationConflictAlert = false;
+
+    private void DismissErrorAlert() => showErrorAlert = false;
+
+}

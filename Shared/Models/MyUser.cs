@@ -8,6 +8,6 @@
         public bool IsEmailConfirmed { get; set; }
         public bool IsAdministrator { get; set; }
         public bool IsPendingDelete { get; set; }
-        public Apartment? Apartment { get; set; }
+        public int? ApartmentId { get; set; }
     }
 }

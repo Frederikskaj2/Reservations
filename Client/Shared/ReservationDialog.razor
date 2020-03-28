@@ -20,7 +20,7 @@
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Antal dage</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <Select @ref="@select" TValue="int" Value="@Reservation?.DurationInDays" SelectedValueChanged="@DurationInDaysChanged">
+                        <Select @ref="@select" TValue="int" SelectedValue="@(Reservation?.DurationInDays ?? 0)" SelectedValueChanged="@DurationInDaysChanged">
                             @for (var i = MinimumDays; i <= MaximumDays; i += 1)
                             {
                                 var localI = i;
@@ -89,6 +89,7 @@
 
     public void Show()
     {
+        isConfirming = false;
         modal.Show();
         Task.Run(() => select.Focus());
     }

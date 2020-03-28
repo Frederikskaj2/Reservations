@@ -52,6 +52,12 @@ namespace Frederikskaj2.Reservations.Client
             cachedReservedDays = null;
         }
 
+        public void ResetState()
+        {
+            Refresh();
+            DraftOrder = new DraftOrder();
+        }
+
         public async Task<IEnumerable<Apartment>> GetApartments()
         {
             if (cachedApartments is null)
