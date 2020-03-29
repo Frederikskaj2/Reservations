@@ -19,16 +19,22 @@
     else if (!hasConfirmedEmail)
     {
         <Container>
+            <Alert Color="Color.Danger" Visible="@showEmailNotConfirmedAlert">
+                Du mangler at bekræfte din mail.
+            </Alert>
             <Alert Color="Color.Success" Visible="@showResendConfirmEmailEmailAlert">
-                <Text>Du har fået tilsendt en ny bekræftelses-mail. Når du har bekæftet din mail kan du fortsætte med at bestille.</Text>
-                <Button Color="Color.Success" class="btn-fixed" Clicked="@UpdateEmailConfirmationStatus">Bestil</Button>
+                Du har fået tilsendt en ny bekræftelses-mail. Når du har bekæftet din mail kan du fortsætte med at bestille.
             </Alert>
             <Alert Color="Color.Danger" Visible="@showResendConfirmEmailEmailErrorAlert" Dismisable="true">
                 Der er sket en fejl, og der blev ikke sendt en ny bekræftelses-mail.
                 <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
             </Alert>
-            <Paragraph>Du mangler at bekræfte din mail.</Paragraph>
+            <Paragraph>Vi kan sende dig en ny bekræftelses-mail som du kan bruge til at bekræfte din mail.</Paragraph>
             <Button Color="Color.Primary" class="btn-fixed" Clicked="@ResendConfirmEmailAlert">Bekræft mail</Button>
+        </Container>
+        <Container>
+            <Paragraph>Når du har bekræftet din mail kan du fortsætte med at bestille.</Paragraph>
+            <Button Color="Color.Secondary" class="btn-fixed" Clicked="@UpdateEmailConfirmationStatus">Bestil</Button>
         </Container>
     }
     else
@@ -103,6 +109,7 @@
     private IEnumerable<Apartment>? apartments;
     private bool hasConfirmedEmail;
     private bool isInitialized;
+    private bool showEmailNotConfirmedAlert;
     private bool showResendConfirmEmailEmailAlert;
     private bool showResendConfirmEmailEmailErrorAlert;
 
@@ -113,6 +120,7 @@
         if (maybe.TryGetValue(out var myUser))
         {
             hasConfirmedEmail = myUser.IsEmailConfirmed;
+            showEmailNotConfirmedAlert = !hasConfirmedEmail;
             ClientDataProvider.DraftOrder.Request.FullName = myUser.FullName!;
             ClientDataProvider.DraftOrder.Request.Phone = myUser.Phone!;
             ClientDataProvider.DraftOrder.Request.ApartmentId = myUser.ApartmentId.GetValueOrDefault();
@@ -132,10 +140,10 @@
 
     private async Task UpdateEmailConfirmationStatus()
     {
+        DismissAllAlerts();
         var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
-        if (maybe.TryGetValue(out var myUser))
-            hasConfirmedEmail = myUser.IsEmailConfirmed;
-        showResendConfirmEmailEmailAlert = false;
+        hasConfirmedEmail = maybe.TryGetValue(out var myUser) && myUser.IsEmailConfirmed;
+        showEmailNotConfirmedAlert = !hasConfirmedEmail;
     }
 
     private void Submit()
@@ -150,6 +158,7 @@
 
     private void DismissAllAlerts()
     {
+        showEmailNotConfirmedAlert = false;
         showResendConfirmEmailEmailAlert = false;
         showResendConfirmEmailEmailErrorAlert = false;
     }

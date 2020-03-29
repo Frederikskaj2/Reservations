@@ -10,6 +10,8 @@ namespace Frederikskaj2.Reservations.Shared
         public const string ConfirmEmail = "bekraeft-mail";
         public const string Consent = "samtykke";
         public const string InventoryBanquetFacilities = "inventar/aktivitets-festlokalet";
+        public const string MyOrders = "bruger/bestillinger";
+        public const string MyTransactions = "bruger/kontoudtog";
         public const string NewPassword = "ny-adgangskode";
         public const string Orders = "bestillinger";
         public const string ResetPassword = "anmod-om-ny-adgangskode";

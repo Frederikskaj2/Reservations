@@ -22,6 +22,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         public DbSet<Reservation> Reservations { get; set; } = null!;
         public DbSet<ReservedDay> ReservedDays { get; set; } = null!;
         public DbSet<Resource> Resources { get; set; } = null!;
+        public DbSet<Transaction> Transactions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,6 +48,11 @@ namespace Frederikskaj2.Reservations.Server.Data
                 builder.HasMany(user => user.UserRoles)
                     .WithOne(userRole => userRole.User!)
                     .HasForeignKey(userRole => userRole.UserId)
+                    .IsRequired();
+
+                builder.HasMany(user => user.Transactions)
+                    .WithOne(transaction => transaction.User!)
+                    .HasForeignKey(user => user.UserId)
                     .IsRequired();
             });
 
@@ -77,6 +83,12 @@ namespace Frederikskaj2.Reservations.Server.Data
             modelBuilder.Entity<Order>()
                 .Property(order => order.CreatedTimestamp)
                 .HasConversion(instantConverter);
+            modelBuilder.Entity<Order>(builder =>
+            {
+                builder.HasMany(order => order.Transactions)
+                    .WithOne(transaction => transaction.Order!)
+                    .HasForeignKey(transaction => transaction.OrderId);
+            });
 
             modelBuilder.Entity<Reservation>()
                 .Property(reservation => reservation.UpdatedTimestamp)
@@ -90,6 +102,13 @@ namespace Frederikskaj2.Reservations.Server.Data
             modelBuilder.Entity<ReservedDay>()
                 .HasIndex(reservedDay => new { reservedDay.Date, reservedDay.ResourceId })
                 .IsUnique();
+
+            modelBuilder.Entity<Transaction>()
+                .Property(transaction => transaction.Timestamp)
+                .HasConversion(instantConverter);
+            modelBuilder.Entity<Transaction>()
+                .Property(transaction => transaction.ReservationDate)
+                .HasConversion(localDateConverter);
         }
     }
 }

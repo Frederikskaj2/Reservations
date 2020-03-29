@@ -1,0 +1,94 @@
+﻿@page  "/bruger/kontoudtog"
+@attribute [Authorize]
+@inject ApiClient ApiClient
+@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+                Der er sket en fejl.
+                <CloseButton Clicked="@DismissErrorAlert" />
+            </Alert>
+            <h1>Kontoudtog</h1>
+            @if (!transactions!.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Dato</TableHeaderCell>
+                            <TableHeaderCell>Bestilling</TableHeaderCell>
+                            <TableHeaderCell>Tekst</TableHeaderCell>
+                            <TableHeaderCell class="text-right">Beløb</TableHeaderCell>
+                            <TableHeaderCell class="text-right">Saldo</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @{
+                            var balance = decimal.Zero;
+                            foreach (var transaction in transactions!)
+                            {
+                                balance += transaction.Amount;
+                                var localBalance = balance;
+                                <TableRow>
+                                    <TableRowCell>@FormattingService.FormatDate(transaction.Timestamp)</TableRowCell>
+                                    <TableRowCell>@transaction.OrderId</TableRowCell>
+                                    <TableRowCell>@GetTransactionText(transaction)</TableRowCell>
+                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(transaction.Amount)</TableRowCell>
+                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(localBalance)</TableRowCell>
+                                </TableRow>
+                            }
+                        }
+                    </TableBody>
+                </Table>
+                <Paragraph>Alle beløb er i kr.</Paragraph>
+            }
+        </Container>
+    }
+</main>
+
+@code {
+
+    private bool isInitialized;
+    private IReadOnlyDictionary<int, Resource>? resources;
+    private IEnumerable<MyTransaction>? transactions;
+    private bool showErrorAlert;
+
+    protected override async Task OnInitializedAsync()
+    {
+        resources = await ClientDataProvider.GetResources();
+        var maybe = await ApiClient.GetJsonAsync<IEnumerable<MyTransaction>>("user/transactions");
+        if (!maybe.TryGetValue(out transactions))
+            showErrorAlert = true;
+        isInitialized = true;
+    }
+
+    private void DismissErrorAlert() => showErrorAlert = false;
+
+    private string GetTransactionText(MyTransaction transaction) => transaction.Type switch
+    {
+        TransactionType.Order => $"Bestilling leje",
+        TransactionType.Deposit => $"Bestilling depositum",
+        TransactionType.OrderCancellation => $"Afbestilling {GetReservationText(transaction)} leje",
+        TransactionType.DepositCancellation => $"Afbestilling {GetReservationText(transaction)} depositum",
+        TransactionType.CancellationFee => $"Afbestillingsgebyr {GetReservationText(transaction)}",
+        TransactionType.SettlementDeposit => $"Opgørelse {GetReservationText(transaction)} depositum",
+        TransactionType.SettlementDamages => $"Opgørelse {GetReservationText(transaction)} skader",
+        TransactionType.PayIn => "Indbetaling",
+        TransactionType.PayOut => "Udbetaling",
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    private string GetReservationText(MyTransaction transaction)
+        => $"{resources![transaction.ResourceId!.Value].Name} {FormattingService.FormatDate(transaction.ReservationDate!.Value)}";
+}

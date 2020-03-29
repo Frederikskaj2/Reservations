@@ -9,11 +9,14 @@
     <NavLink href="@Urls.Calendar" class="nav-tab">
         <div>Kalender</div>
     </NavLink>
-    <NavLink href="@Urls.Orders" class="nav-tab">
+    <NavLink href="@Urls.MyOrders" class="nav-tab">
         <div>Mine bestillinger</div>
     </NavLink>
     @if (isAdministrator)
     {
+        <NavLink href="@Urls.Orders" class="nav-tab nav-administrator">
+            <div>Bestillinger</div>
+        </NavLink>
         <NavLink href="@Urls.Users" class="nav-tab nav-administrator">
             <div>Brugere</div>
         </NavLink>
@@ -41,5 +44,4 @@
         isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
         StateHasChanged();
     }
-
 }

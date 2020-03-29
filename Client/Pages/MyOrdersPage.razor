@@ -1,0 +1,97 @@
+﻿@page "/bruger/bestillinger"
+@attribute [Authorize]
+@inject ApiClient ApiClient
+@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+@inject NavigationManager NavigationManager
+
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container class="container-min-md orders">
+            @if (orders!.Any())
+            {
+                <h1>Aktuelle bestillinger</h1>
+                @foreach (var order in orders!)
+                {
+                    <Row>
+                        <Column>
+                            <Card Background="Background.Light">
+                                <CardBody class="orders-order">
+                                    <div class="order-header">Bestillings-nr.</div>
+                                    <div class="order-header">Bestillingsdato</div>
+                                    <div class="order-header"></div>
+                                    <div class="order-header order-button">
+                                        @if (order.CanBeEdited)
+                                        {
+                                            <Button Color="Color.Info" Size="ButtonSize.Small" class="float-right" Clicked="@(() => EditOrder(order))">Redigér</Button>
+                                        }
+                                    </div>
+                                    <div>@order.Id</div>
+                                    <div>@FormattingService.FormatDate(order.CreatedTimestamp)</div>
+                                    <div></div>
+                                    <div class="reservation-header">Lokale</div>
+                                    <div class="reservation-header">Dato</div>
+                                    <div class="reservation-header">Antal dage</div>
+                                    <div class="reservation-header">Status</div>
+                                    @foreach (var reservation in order.Reservations!)
+                                    {
+                                        <div>@resources![reservation.ResourceId].Name</div>
+                                        <div>@FormattingService.FormatDate(reservation.Date)</div>
+                                        <div>@reservation.DurationInDays</div>
+                                        <div>@GetReservationStatus(reservation)</div>
+                                    }
+                                </CardBody>
+                            </Card>
+                        </Column>
+                    </Row>
+                }
+            }
+            @if (historyOrders!.Any())
+            {
+                <h1>Tidligere bestillinger</h1>
+            }
+            @if (!orders!.Any() && !historyOrders!.Any())
+            {
+                <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere af et lokale.</Paragraph>
+            }
+        </Container>
+    }
+</main>
+
+@code {
+
+    private bool isInitialized;
+    private IReadOnlyDictionary<int, Resource>? resources;
+    private IEnumerable<MyOrder>? orders;
+    private IEnumerable<HistoryOrder>? historyOrders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        resources = await ClientDataProvider.GetResources();
+        var maybe = await ApiClient.GetJsonAsync<IEnumerable<MyOrder>>("my-orders");
+        maybe.TryGetValue(out orders);
+        historyOrders = Enumerable.Empty<HistoryOrder>();
+        isInitialized = true;
+    }
+
+    private void EditOrder(MyOrder order)
+    {
+        var url = $"{Urls.MyOrders}/{order.Id}";
+        NavigationManager.NavigateTo(url);
+    }
+
+    private static string GetReservationStatus(Reservation reservation) => reservation.Status switch
+    {
+        ReservationStatus.Reserved => "Afventer betaling",
+        ReservationStatus.Confirmed => "Betalt",
+        ReservationStatus.Cancelled => "Annulleret",
+        ReservationStatus.Settled => "Afregnet",
+        _ => "Ukendt"
+    };
+
+}

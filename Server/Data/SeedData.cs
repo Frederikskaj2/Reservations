@@ -82,9 +82,15 @@ namespace Frederikskaj2.Reservations.Server.Data
                 Email = email,
                 EmailConfirmed = true,
                 FullName = fullName,
-                PhoneNumber = random.Next(21000000, 70000000 - 21000000).ToString(),
+                PhoneNumber = CreateRandomPhoneNumber(),
                 Apartment = apartments[random.Next(apartments.Length)]
             };
+
+            string CreateRandomPhoneNumber()
+            {
+                var number = random.Next(21000000, 70000000 - 21000000).ToString();
+                return string.Join(' ', Enumerable.Range(0, 4).Select(i => number.Substring(2*i, 2)));
+            }
 
             Order CreateOrder()
             {

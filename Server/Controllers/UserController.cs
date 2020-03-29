@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
@@ -235,6 +237,21 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 await SendPasswordResetEmail(user);
 
             return new OperationResponse { Result = OperationResult.Success };
+        }
+
+        [HttpGet("transactions")]
+        [Authorize]
+        public async Task<IEnumerable<MyTransaction>> GetTransactions()
+        {
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return Enumerable.Empty<MyTransaction>();
+
+            return await db.Transactions
+                .Where(transaction => transaction.UserId == userId.Value)
+                .OrderBy(transaction => transaction.Id)
+                .ProjectToType<MyTransaction>()
+                .ToListAsync();
         }
 
         private async Task SendConfirmEmailEmail(User user)

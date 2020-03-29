@@ -3,14 +3,14 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
 {
-    public class Order
+    public class MyOrder
     {
+        public static readonly MyOrder EmptyOrder = new MyOrder();
+
         public int Id { get; set; }
-        public Instant CreatedTimestamp { get; set; }
-        public string Mail { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
         public string AccountNumber { get; set; } = string.Empty;
+        public Instant CreatedTimestamp { get; set; }
         public IEnumerable<Reservation>? Reservations { get; set; }
+        public bool CanBeEdited { get; set; }
     }
 }

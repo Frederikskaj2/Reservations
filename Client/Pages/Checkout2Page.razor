@@ -159,14 +159,14 @@
         validations.ClearAll();
 
         ClientDataProvider.DraftOrder.PrepareRequest();
-        var maybe = await ApiClient.PostJsonAsync<PlaceOrderResponse>("orders", ClientDataProvider.DraftOrder.Request);
+        var maybe = await ApiClient.PostJsonAsync<PlaceOrderResponse>("my-orders", ClientDataProvider.DraftOrder.Request);
         if (maybe.TryGetValue(out var response))
         {
             if (response.Result == PlaceOrderResult.Success)
             {
                 ClientDataProvider.DraftOrder.Clear();
                 ClientDataProvider.Refresh();
-                NavigationManager.NavigateTo(Urls.Orders);
+                NavigationManager.NavigateTo(Urls.MyOrders);
             }
             if (response.Result == PlaceOrderResult.ReservationConflict)
             {

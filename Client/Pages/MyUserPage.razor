@@ -18,7 +18,17 @@
             {
                 <UserInformation User="@user" />
                 <UserUpdatePassword />
-                <UserDelete User="@user"/>
+                <Card Background="Background.Light">
+                    <CardHeader>
+                        <CardTitle Size="1">Kontoudtog</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        <div class="button-row">
+                            <a class="btn btn-secondary btn-fixed" href="@Urls.MyTransactions">Kontoudtog</a>
+                        </div>
+                    </CardBody>
+                </Card>
+                <UserDelete User="@user" />
             }
         </Container>
     }

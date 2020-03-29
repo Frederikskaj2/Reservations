@@ -1,4 +1,4 @@
-﻿@page "/bestillinger/{orderId:int}"
+﻿@page "/bruger/bestillinger/{orderId:int}"
 @inject ApiClient ApiClient
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -120,7 +120,7 @@
     private readonly UpdateOrderRequest request = new UpdateOrderRequest();
     private Validations validations = null!;
     IReadOnlyDictionary<int, Resource>? resources;
-    private Order? order;
+    private MyOrder? order;
     private Price? price;
     private bool isInitialized;
     private bool showErrorAlert;
@@ -133,8 +133,8 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        var url = $"orders/{OrderId}";
-        var maybe = await ApiClient.GetJsonAsync<Order>(url);
+        var url = $"my-orders/{OrderId}";
+        var maybe = await ApiClient.GetJsonAsync<MyOrder>(url);
         if (maybe.TryGetValue(out var value) || value.Id != 0)
         {
             order = value;
@@ -176,10 +176,10 @@
 
         validations.ClearAll();
 
-        var url = $"orders/{order!.Id}";
+        var url = $"my-orders/{order!.Id}";
         var maybe = await ApiClient.PatchJsonAsync<OperationResponse>(url, request);
         if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
-            NavigationManager.NavigateTo(Urls.Orders);
+            NavigationManager.NavigateTo(Urls.MyOrders);
         showErrorAlert = true;
     }
 

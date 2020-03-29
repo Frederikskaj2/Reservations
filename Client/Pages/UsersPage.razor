@@ -12,7 +12,7 @@
     {
         <Container>
             <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
-                Der skete en fejl. Din ændring er ikke blevet gemt.
+                Der er sket en fejl, og din ændring blev ikke gemt.
                 <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
             </Alert>
             <Table>
@@ -29,7 +29,7 @@
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    @foreach (var user in users)
+                    @foreach (var user in users!)
                     {
                         <TableRow @key="@user.Id">
                             <TableRowCell>@user.Email</TableRowCell>
@@ -90,7 +90,7 @@
     private ConfirmDeleteUserDialog confirmDeleteUserDialog = null!;
     private bool isInitialized;
     private int? currentUserId;
-    private List<User> users = null!;
+    private List<User>? users;
     private bool showGeneralErrorAlert;
 
     protected override async Task OnInitializedAsync()
@@ -98,8 +98,7 @@
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         currentUserId = authenticationState.User.Id();
         var maybe = await ApiClient.GetJsonAsync<IEnumerable<User>>("users");
-        if (maybe.TryGetValue(out var value))
-            users = value.ToList();
+        users = maybe.TryGetValue(out var response) ? response.ToList() : new List<User>();
         isInitialized = true;
     }
 
@@ -151,15 +150,13 @@
 
     private void UpdateUser(User user)
     {
-        var index = users.FindIndex(u => u.Id == user.Id);
+        var index = users!.FindIndex(u => u.Id == user.Id);
         users[index] = user;
     }
 
-
     private void RemoveUser(int userId)
     {
-        var index = users.FindIndex(u => u.Id == userId);
+        var index = users!.FindIndex(u => u.Id == userId);
         users.RemoveAt(index);
     }
-
 }
