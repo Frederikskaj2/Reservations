@@ -87,7 +87,8 @@ namespace Frederikskaj2.Reservations.Server.Data
             {
                 builder.HasMany(order => order.Transactions)
                     .WithOne(transaction => transaction.Order!)
-                    .HasForeignKey(transaction => transaction.OrderId);
+                    .HasForeignKey(transaction => transaction.OrderId)
+                    .IsRequired();
             });
 
             modelBuilder.Entity<Reservation>()

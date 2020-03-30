@@ -7,9 +7,10 @@ namespace Frederikskaj2.Reservations.Server.Data
     public class Reservation
     {
         public int Id { get; set; }
-        public Order? Order { get; set; }
+        public int OrderId { get; set; }
+        public virtual Order? Order { get; set; }
         public int ResourceId { get; set; }
-        public Resource? Resource { get; set; }
+        public virtual Resource? Resource { get; set; }
         public ReservationStatus Status { get; set; }
         public Instant UpdatedTimestamp { get; set; }
         public virtual ICollection<ReservedDay>? Days { get; set; }

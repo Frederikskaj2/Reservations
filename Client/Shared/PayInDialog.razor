@@ -1,0 +1,77 @@
+﻿@inject FormattingService FormattingService
+@inject ReservationsOptions ReservationsOptions
+@inject IReservationPolicyProvider ReservationPolicyProvider
+
+<Modal @ref="@modal" Closed="@OnModalClosed">
+    <ModalBackdrop />
+    <Form>
+        <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
+            <ModalContent>
+                <ModalHeader>
+                    <ModalTitle>Indbetaling vedr. bestilling @orderId</ModalTitle>
+                    <CloseButton Clicked="@Cancel" />
+                </ModalHeader>
+                <ModalBody>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is4">Beløb</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is8">
+                            <Validation>
+                                <NumericEdit @ref="amountNumericEdit" @bind-Value="request.Amount">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </NumericEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
+                </ModalBody>
+                <ModalFooter>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">Registrér indbetaling</Button>
+                    <Button Color="Color.Secondary" Clicked="@Cancel">Annullér</Button>
+                </ModalFooter>
+            </ModalContent>
+        </Validations>
+    </Form>
+</Modal>
+
+@code {
+
+    private readonly PaymentRequest request = new PaymentRequest();
+    private Modal modal = null!;
+    private Validations validations = null!;
+    private NumericEdit<int> amountNumericEdit = null!;
+    private int orderId;
+    private bool isConfirming;
+
+    [Parameter]
+    public EventCallback<(int OrderId, PaymentRequest Request)> OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    public void Show(Order order)
+    {
+        orderId = order.Id;
+        request.Amount = order.Reservations
+            .Where(reservation => reservation.Status == ReservationStatus.Reserved)
+            .Sum(reservation => reservation.Price!.GetTotal());
+        isConfirming = false;
+        modal.Show();
+        Task.Run(() => amountNumericEdit.Focus());
+    }
+
+    private void Cancel() => modal.Hide();
+
+    private void Confirm()
+    {
+        if (!validations.ValidateAll())
+            return;
+
+        validations.ClearAll();
+        isConfirming = true;
+        modal.Hide();
+    }
+
+    private Task OnModalClosed() => isConfirming ? OnConfirm.InvokeAsync((orderId, request)) : OnCancel.InvokeAsync(null);
+
+}

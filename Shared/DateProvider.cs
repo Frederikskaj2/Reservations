@@ -15,5 +15,7 @@ namespace Frederikskaj2.Reservations.Shared
         }
 
         public LocalDate Today => clock.GetCurrentInstant().InZone(dateTimeZone).Date;
+
+        public int GetDaysFromToday(Instant instant) => (instant.InZone(dateTimeZone).Date - Today).Days;
     }
 }

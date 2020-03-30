@@ -7,9 +7,9 @@ namespace Frederikskaj2.Reservations.Server.Data
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public User? User { get; set; }
+        public virtual User? User { get; set; }
         public int ApartmentId { get; set; }
-        public Apartment? Apartment { get; set; }
+        public virtual Apartment? Apartment { get; set; }
         public string? AccountNumber { get; set; }
         public Instant CreatedTimestamp { get; set; }
         public virtual ICollection<Reservation>? Reservations { get; set; }

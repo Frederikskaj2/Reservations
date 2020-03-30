@@ -59,7 +59,6 @@ namespace Frederikskaj2.Reservations.Client
 
             services
                 .AddSingleton(CultureInfo.GetCultureInfo("da-DK"))
-                .AddSingleton(DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen"))
                 .AddSingleton<FormattingService>()
                 .AddReservationsServices()
                 .AddSingleton<ClientDataProvider>()

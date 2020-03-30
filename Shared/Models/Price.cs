@@ -2,12 +2,12 @@
 {
     public class Price
     {
-        public decimal Rent { get; set; }
-        public decimal CleaningFee { get; set; }
-        public decimal Deposit { get; set; }
-        public decimal CancellationFee { get; set; }
+        public int Rent { get; set; }
+        public int CleaningFee { get; set; }
+        public int Deposit { get; set; }
+        public int CancellationFee { get; set; }
 
-        public decimal GetTotal() => Rent + CleaningFee + Deposit + CancellationFee;
+        public int GetTotal() => Rent + CleaningFee + Deposit + CancellationFee;
 
         public Price Accumulate(Price price)
         {

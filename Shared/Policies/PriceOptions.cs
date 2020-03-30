@@ -2,10 +2,10 @@
 {
     public class PriceOptions
     {
-        public decimal LowRentPerDay { get; set; }
-        public decimal HighRentPerDay { get; set; }
-        public decimal CleaningFee { get; set; }
-        public decimal LowDeposit { get; set; }
-        public decimal HighDeposit { get; set; }
+        public int LowRentPerDay { get; set; }
+        public int HighRentPerDay { get; set; }
+        public int CleaningFee { get; set; }
+        public int LowDeposit { get; set; }
+        public int HighDeposit { get; set; }
     }
 }

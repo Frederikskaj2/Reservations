@@ -11,6 +11,6 @@ namespace Frederikskaj2.Reservations.Shared
         public int? ResourceId { get; set; }
         public LocalDate? ReservationDate { get; set; }
         public string? Comment { get; set; }
-        public decimal Amount { get; set; }
+        public int Amount { get; set; }
     }
 }

@@ -35,7 +35,7 @@
                     </TableHeader>
                     <TableBody>
                         @{
-                            var balance = decimal.Zero;
+                            var balance = 0;
                             foreach (var transaction in transactions!)
                             {
                                 balance += transaction.Amount;

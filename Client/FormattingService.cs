@@ -26,9 +26,9 @@ namespace Frederikskaj2.Reservations.Client
             longDatePattern = LocalDatePattern.Create("d. MMMM yyyy", cultureInfo);
         }
 
-        public string FormatMoneyLong(decimal value) => value.ToString("C0", cultureInfo);
+        public string FormatMoneyLong(int value) => value.ToString("C0", cultureInfo);
 
-        public string FormatMoneyShort(decimal value) => value.ToString("N0", cultureInfo);
+        public string FormatMoneyShort(int value) => value.ToString("N0", cultureInfo);
 
         public string FormatCheckInTimeLong(LocalDate date) => FormatTimeLong(date + options.CheckInTime);
 

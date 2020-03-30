@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Order = Frederikskaj2.Reservations.Shared.Order;
+using Price = Frederikskaj2.Reservations.Server.Data.Price;
 using Reservation = Frederikskaj2.Reservations.Shared.Reservation;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
@@ -46,6 +47,68 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
             return orders.Select(order => CreateOrder(order, today)).ToList();
+        }
+
+        [HttpPost("{orderId:int}/pay-in")]
+        public async Task<OperationResponse> PayIn(int orderId, PaymentRequest request)
+        {
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            var order = await db.Orders
+                .Include(order => order.Reservations)
+                .FirstOrDefaultAsync(order => order.Id == orderId);
+            if (order == null)
+                return new OperationResponse { Result = OperationResult.GeneralError };
+
+            var existingPayInsForOrder = await db.Transactions
+                .Where(transaction => transaction.OrderId == order.Id && transaction.Type == TransactionType.PayIn)
+                .SumAsync(transaction => transaction.Amount);
+
+            var reservedReservations = order.Reservations
+                .Where(reservation => reservation.Status == ReservationStatus.Reserved);
+            var totalPrice = reservedReservations.Sum(reservation => reservation.Price!.GetTotal());
+            var amountToPay = totalPrice - existingPayInsForOrder;
+
+            if (request.Amount >= amountToPay)
+            {
+                foreach (var reservation in reservedReservations)
+                    reservation.Status = ReservationStatus.Confirmed;
+                // TODO: Send email about reservation status change.
+            }
+
+            if (request.Amount >= amountToPay)
+            {
+                // TODO: Register payout of excess pay-in.
+            }
+            else if (request.Amount < amountToPay)
+            {
+                // TODO: Send mail about missing payment.
+            }
+
+            var now = clock.GetCurrentInstant();
+            var transaction = new Transaction
+            {
+                Timestamp = now,
+                Type = TransactionType.PayIn,
+                CreatedByUserId = userId.Value,
+                UserId = order.UserId,
+                OrderId = orderId,
+                Amount = request.Amount
+            };
+            await db.Transactions.AddAsync(transaction);
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return new OperationResponse { Result = OperationResult.GeneralError };
+            }
+
+            return new OperationResponse { Result = OperationResult.Success };
         }
 
         private Order CreateOrder(Data.Order order, LocalDate today)

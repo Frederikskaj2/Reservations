@@ -86,7 +86,7 @@
                             <TableRowCell colspan="6" class="border-top-0">Depositum</TableRowCell>
                             <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.Deposit)</TableRowCell>
                         </TableRow>
-                        @if (price!.CancellationFee > decimal.Zero)
+                        @if (price!.CancellationFee > 0)
                         {
                             <TableRow>
                                 <TableRowCell colspan="6" class="border-top-0">Afbestillingsgebyr</TableRowCell>

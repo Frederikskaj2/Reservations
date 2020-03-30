@@ -258,6 +258,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 }
             }
 
+            // TODO: If all reservations are cancelled then convert order to history order.
+            // TODO: Handle this conversion gracefully in the client.
+
             try
             {
                 await db.SaveChangesAsync();

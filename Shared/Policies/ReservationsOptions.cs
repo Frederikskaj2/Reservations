@@ -10,21 +10,21 @@ namespace Frederikskaj2.Reservations.Shared
             {
                 ResourceType.BanquetFacilities, new PriceOptions
                 {
-                    LowRentPerDay = 500M,
-                    HighRentPerDay = 1000M,
-                    CleaningFee = 500M,
-                    LowDeposit = 1000M,
-                    HighDeposit = 3000M
+                    LowRentPerDay = 500,
+                    HighRentPerDay = 1000,
+                    CleaningFee = 500,
+                    LowDeposit = 1000,
+                    HighDeposit = 3000
                 }
             },
             {
                 ResourceType.Bedroom, new PriceOptions
                 {
-                    LowRentPerDay = 200M,
-                    HighRentPerDay = 250M,
-                    CleaningFee = 200M,
-                    LowDeposit = 500M,
-                    HighDeposit = 500M
+                    LowRentPerDay = 200,
+                    HighRentPerDay = 250,
+                    CleaningFee = 200,
+                    LowDeposit = 500,
+                    HighDeposit = 500
                 }
             }
         };
@@ -34,7 +34,8 @@ namespace Frederikskaj2.Reservations.Shared
         public int MaximumAllowedReservationDays { get; set; } = 7;
         public LocalTime CheckInTime { get; set; } = new LocalTime(12, 0);
         public LocalTime CheckOutTime { get; set; } = new LocalTime(10, 0);
-        public decimal CancellationFee { get; set; } = 200M;
+        public int CancellationFee { get; set; } = 200;
         public int MinimumCancellationNoticeInDays { get; set; } = 14;
+        public int HighlightUnpaidOrdersAfterDays { get; set; } = 7;
     }
 }

@@ -142,14 +142,14 @@
         isInitialized = true;
     }
 
-    private decimal GetTotalRentAndCleaningFee()
-        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee);
+    private int GetTotalRentAndCleaningFee()
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee);
 
-    private decimal GetTotalDeposit()
-        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Deposit);
+    private int GetTotalDeposit()
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Deposit);
 
-    private decimal GetGrandTotal()
-        => ClientDataProvider.DraftOrder.Reservations.Aggregate(decimal.Zero, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee + reservation.Price!.Deposit);
+    private int GetGrandTotal()
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee + reservation.Price!.Deposit);
 
     private async Task Submit()
     {

@@ -11,6 +11,6 @@ namespace Frederikskaj2.Reservations.Server.Data
         public Instant CreatedTimestamp { get; set; }
         public Instant CompletedTimestamp { get; set; }
         public List<Resource>? Resources { get; set; }
-        public decimal Price { get; set; }
+        public int Price { get; set; }
     }
 }
