@@ -1,0 +1,129 @@
+﻿@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+
+<Modal @ref="@modal" Closed="@OnModalClosed">
+    <ModalBackdrop />
+    <Form>
+        <Validations @ref="validations" Mode="ValidationMode.Manual">
+            <ModalContent>
+                <ModalHeader>
+                    <ModalTitle>Opgørelse af bestilling @orderId</ModalTitle>
+                    <CloseButton Clicked="@Cancel" />
+                </ModalHeader>
+                <ModalBody>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is4">Lokale</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is8">
+                            <TextEdit Plaintext="true" Text="@resourceName" />
+                        </FieldBody>
+                    </Field>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is4">Dato</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is8">
+                            <TextEdit Plaintext="true" Text="@reservationDate" />
+                        </FieldBody>
+                    </Field>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is4">Antal dage</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is8">
+                            <TextEdit Plaintext="true" Text="@reservationDurationInDays" />
+                        </FieldBody>
+                    </Field>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is4">Depositum</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is8">
+                            <TextEdit Plaintext="true" Text="@deposit" />
+                        </FieldBody>
+                    </Field>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is4">Erstatning for skader</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is8">
+                            <Validation Validator="@ValidateCompensation">
+                                <NumericEdit @ref="compensationNumericEdit" @bind-Value="request.Damages">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </NumericEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
+                </ModalBody>
+                <ModalFooter>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">Lav opgørelse</Button>
+                    <Button Color="Color.Secondary" Clicked="@Cancel">Annullér</Button>
+                </ModalFooter>
+            </ModalContent>
+        </Validations>
+    </Form>
+</Modal>
+
+@code {
+
+    private readonly SettleReservationRequest request = new SettleReservationRequest();
+    private Modal modal = null!;
+    private Validations validations = null!;
+    private NumericEdit<int> compensationNumericEdit = null!;
+    private IReadOnlyDictionary<int, Resource>? resources;
+    private int orderId;
+    private string? resourceName;
+    private string? reservationDate;
+    private string? reservationDurationInDays;
+    private string? deposit;
+    private int maximumCompensation;
+    private bool isConfirming;
+
+    [Parameter]
+    public EventCallback<(int OrderId, SettleReservationRequest Request)> OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        resources = await ClientDataProvider.GetResources();
+    }
+
+    public void Show(Order order, Reservation reservation)
+    {
+        orderId = order.Id;
+        resourceName = resources![reservation.ResourceId].Name;
+        reservationDate = FormattingService.FormatDate(reservation.Date);
+        reservationDurationInDays = reservation.DurationInDays.ToString();
+        deposit = FormattingService.FormatMoneyLong(reservation.Price!.Deposit);
+        request.ReservationId = reservation.Id;
+        request.Damages = 0;
+        maximumCompensation = reservation.Price!.Deposit;
+        isConfirming = false;
+        modal.Show();
+        Task.Run(() => compensationNumericEdit.Focus());
+    }
+
+    void ValidateCompensation(ValidatorEventArgs e)
+    {
+        var compensation = (int) e.Value;
+        if (0 <= compensation && compensation < maximumCompensation)
+        {
+            e.Status = ValidationStatus.Success;
+        }
+        else
+        {
+            e.Status = ValidationStatus.Error;
+            e.ErrorText = $"Angiv et beløb mellem 0 og {maximumCompensation}.";
+        }
+    }
+
+    private void Cancel() => modal.Hide();
+
+    private void Confirm()
+    {
+        if (!validations.ValidateAll())
+            return;
+
+        validations.ClearAll();
+        isConfirming = true;
+        modal.Hide();
+    }
+
+    private Task OnModalClosed() => isConfirming ? OnConfirm.InvokeAsync((orderId, request)) : OnCancel.InvokeAsync(null);
+
+}

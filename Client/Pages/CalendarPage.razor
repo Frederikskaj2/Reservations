@@ -70,7 +70,7 @@ else
                     {
                         var day = calendar![date];
                         var localDate = date;
-                        <div class="@GetCalendarDayClasses(day, dayOfWeek)" @onclick="@(() => MakeReservation(localDate))" tabindex="0" date="@localDate">
+                        <div class="@GetCalendarDayClasses(day, dayOfWeek)" @onclick="@(() => MakeReservation(localDate))" tabindex="@(day.IsResourceAvailable ? "0" : string.Empty)" @onkeyup="@(e => KeyUp(e, localDate))" date="@localDate">
                             <div class="calendar-day">@day.Date.Day</div>
                             @{
                                 resourceCounter = 1;
@@ -280,6 +280,12 @@ else
         DataProvider.DraftOrder.AddReservation(resource, date, minimumDays);
         await UpdateCalendar(currentMonth, currentResourceId);
         reservationDialog.Show();
+    }
+
+    private async Task KeyUp(KeyboardEventArgs e, LocalDate date)
+    {
+        if (e.Key == "Enter")
+            await MakeReservation(date);
     }
 
     private Task ReservationChanged() => UpdateCalendar(currentMonth, currentResourceId);

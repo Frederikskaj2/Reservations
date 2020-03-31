@@ -1,4 +1,28 @@
-﻿.spinner {
+﻿@font-face {
+    font-family: 'Akrobat';
+    src: url('../fonts/Akrobat-Regular.eot');
+    src: url('../fonts/Akrobat-Regular.woff2') format('woff2'), url('../fonts/Akrobat-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Akrobat';
+    src: url('../fonts/Akrobat-ExtraBold.eot');
+    src: url('../fonts/Akrobat-ExtraBold.woff2') format('woff2'), url('../fonts/Akrobat-ExtraBold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+html {
+    font-size: 18px;
+}
+
+.fas {
+    min-width: 15.75px;
+}
+
+.spinner {
     margin: 100px auto 0;
     width: 70px;
     text-align: center;
@@ -82,7 +106,7 @@ html, body, .contents {
 }
 
 body {
-    font-family: 'Roboto';
+    font-family: 'Akrobat', sans-serif;
     padding-top: 5rem;
     overflow: hidden;
 }

@@ -74,7 +74,28 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return MyOrder.EmptyOrder;
 
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            return CreateOrder(order, today);
+            var myOrder = CreateOrder(order, today);
+
+            var transactions = await db.Transactions.Where(
+                transaction => transaction.OrderId == orderId
+                   && (transaction.Type == TransactionType.PayIn
+                       || transaction.Type == TransactionType.CancellationFee
+                       || transaction.Type == TransactionType.SettlementDamages
+                       || transaction.Type == TransactionType.PayOut))
+                .ToListAsync();
+            myOrder.Totals = new OrderTotals
+            {
+                PayIn = transactions.Where(transaction => transaction.Type == TransactionType.PayIn)
+                    .Sum(transaction => transaction.Amount),
+                CancellationFee = transactions.Where(transaction => transaction.Type == TransactionType.CancellationFee)
+                    .Sum(transaction => transaction.Amount),
+                Damages = transactions.Where(transaction => transaction.Type == TransactionType.SettlementDamages)
+                    .Sum(transaction => transaction.Amount),
+                PayOut = transactions.Where(transaction => transaction.Type == TransactionType.PayOut)
+                    .Sum(transaction => transaction.Amount)
+            };
+
+            return myOrder;
         }
 
         [HttpPost]
@@ -203,7 +224,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             foreach (var reservationId in request.CancelledReservations)
             {
                 var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
-                if (reservation == null || !CanReservationCanBeCancelled(reservation, today))
+                if (reservation == null || !reservation.CanBeCancelled(today, reservationsOptions))
                     continue;
                 var previousStatus = reservation.Status;
                 reservation.Status = ReservationStatus.Cancelled;
@@ -234,11 +255,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     });
                 if (previousStatus == ReservationStatus.Confirmed)
                 {
-                    reservation.Price = new Price
-                    {
-                        Deposit = reservation.Price!.Deposit,
-                        CancellationFee = reservationsOptions.CancellationFee
-                    };
                     order.Transactions.Add(
                         new Transaction
                         {
@@ -303,14 +319,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Price = reservation.Price!.Adapt<Shared.Price>(),
                 Date = reservation.Days!.First().Date,
                 DurationInDays = reservation.Days!.Count,
-                CanBeCancelled = CanReservationCanBeCancelled(reservation, today)
+                CanBeCancelled = reservation.CanBeCancelled(today, reservationsOptions)
             };
         }
-
-        private bool CanReservationCanBeCancelled(Data.Reservation reservation, LocalDate today)
-            => reservation.Status == ReservationStatus.Reserved
-               || reservation.Status == ReservationStatus.Confirmed
-               && today.PlusDays(reservationsOptions.MinimumCancellationNoticeInDays)
-               <= reservation.Days.Min(day => day.Date);
     }
 }

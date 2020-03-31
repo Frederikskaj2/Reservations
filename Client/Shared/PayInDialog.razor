@@ -1,8 +1,4 @@
-﻿@inject FormattingService FormattingService
-@inject ReservationsOptions ReservationsOptions
-@inject IReservationPolicyProvider ReservationPolicyProvider
-
-<Modal @ref="@modal" Closed="@OnModalClosed">
+﻿<Modal @ref="@modal" Closed="@OnModalClosed">
     <ModalBackdrop />
     <Form>
         <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
@@ -52,9 +48,7 @@
     public void Show(Order order)
     {
         orderId = order.Id;
-        request.Amount = order.Reservations
-            .Where(reservation => reservation.Status == ReservationStatus.Reserved)
-            .Sum(reservation => reservation.Price!.GetTotal());
+        request.Amount = order.Reservations.Sum(reservation => reservation.Price!.GetTotal()) - order.Totals!.PayIn;
         isConfirming = false;
         modal.Show();
         Task.Run(() => amountNumericEdit.Focus());
@@ -73,5 +67,4 @@
     }
 
     private Task OnModalClosed() => isConfirming ? OnConfirm.InvokeAsync((orderId, request)) : OnCancel.InvokeAsync(null);
-
 }

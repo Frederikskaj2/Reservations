@@ -1,4 +1,4 @@
-﻿@page "/bruger/bestillinger/{orderId:int}"
+﻿@page "/bestillinger/{orderId:int}"
 @inject ApiClient ApiClient
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -65,7 +65,7 @@
                                         <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ToggleCancelReservation(reservation))">
                                             @if (!isCancelled)
                                             {
-                                                <Icon class="fa-trash text-danger" />
+                                                <Icon Name="IconName.Delete" class="text-danger" />
                                             }
                                             else
                                             {
@@ -77,83 +77,6 @@
                             </TableRow>
                         }
                     </TableBody>
-                    <TableFooter>
-                        <TableRow>
-                            <TableRowCell colspan="5">Leje (inkl. rengøring)</TableRowCell>
-                            <TableRowCell class="text-right">−</TableRowCell>
-                            <TableRowCell class="text-right">@FormattingService.FormatMoneyLong(price!.Rent + price!.CleaningFee)</TableRowCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-top-0">Depositum</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">−</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.Deposit)</TableRowCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-bottom"><strong>Til betaling</strong></TableRowCell>
-                            <TableRowCell class="text-right border-bottom"><strong>=</strong></TableRowCell>
-                            <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
-                        </TableRow>
-                        @if (order.Totals!.PayIn > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell colspan="5" class="border-top-0">Indbetalt</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">+</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(order.Totals.PayIn)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (cancellationFee > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell colspan="5" class="border-top-0">Aflysningsgebyr</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">−</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(cancellationFee)</TableRowCell>
-                            </TableRow>
-                        }
-                        @{
-                            var settledDeposits = order.Reservations.Where(reservation => reservation.Status == ReservationStatus.Settled).Sum(reservation => reservation.Price!.Deposit);
-                            if (settledDeposits > 0)
-                            {
-                                <TableRow>
-                                    <TableRowCell colspan="5" class="border-top-0">Depositum refundering</TableRowCell>
-                                    <TableRowCell class="text-right border-top-0">+</TableRowCell>
-                                    <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(settledDeposits)</TableRowCell>
-                                </TableRow>
-                            }
-                        }
-                        @if (order.Totals.Damages > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell colspan="5" class="border-top-0">Skader</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">−</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(order.Totals.Damages)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (order.Totals.PayOut > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell colspan="5" class="border-top-0">Udbetalt</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">+</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(order.Totals.PayOut)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (order.Totals.PayIn > 0)
-                        {
-                            var balance = -price!.GetTotal() + order.Totals.PayIn - order.Totals.CancellationFee - order.Totals.Damages - order.Totals.PayOut;
-                            <TableRow>
-                                <TableRowCell colspan="5" class="border-bottom"><strong>Saldo</strong></TableRowCell>
-                                <TableRowCell class="text-right border-bottom"><strong>=</strong></TableRowCell>
-                                <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(balance)</strong></TableRowCell>
-                            </TableRow>
-                        }
-                        @if (order.Reservations.Any(reservation => reservation.CanBeCancelled))
-                        {
-                            <TableRow>
-                                <TableRowCell colspan="7" class="border-top-0">
-                                    <Button class="float-right" Color="@(request.CancelledReservations.Count > 0 ? Color.Danger : Color.Primary)" Disabled="@(!IsUpdated)" Clicked="@Submit">Opdatér bestilling</Button>
-                                </TableRowCell>
-                            </TableRow>
-                        }
-                    </TableFooter>
                 </Table>
             </Validations>
         </Container>
@@ -171,9 +94,8 @@
     private readonly UpdateOrderRequest request = new UpdateOrderRequest();
     private Validations validations = null!;
     IReadOnlyDictionary<int, Resource>? resources;
-    private MyOrder? order;
+    private Order? order;
     private Price? price;
-    private int cancellationFee;
     private bool isInitialized;
     private bool showErrorAlert;
 
@@ -185,8 +107,8 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        var url = $"my-orders/{OrderId}";
-        var maybe = await ApiClient.GetJsonAsync<MyOrder>(url);
+        var url = $"orders/{OrderId}";
+        var maybe = await ApiClient.GetJsonAsync<Order>(url);
         if (maybe.TryGetValue(out var value) || value.Id != 0)
         {
             order = value;
@@ -210,11 +132,10 @@
         price = order!.Reservations.Aggregate(
             new Price(),
             (accumulator, reservation) => accumulator.Accumulate(GetPrice(reservation)));
-        cancellationFee =
-            order.Totals!.CancellationFee
-            + ReservationsOptions.CancellationFee*order.Reservations.Count(reservation => request.CancelledReservations.Contains(reservation.Id));
 
-        Price GetPrice(Reservation reservation) => !request.CancelledReservations.Contains(reservation.Id) ? reservation.Price! : new Price();
+        Price GetPrice(Reservation reservation)
+            => !request.CancelledReservations.Contains(reservation.Id) || reservation.Status == ReservationStatus.Confirmed
+                ? reservation.Price! : new Price();
     }
 
     private async Task Submit()
@@ -224,15 +145,12 @@
 
         validations.ClearAll();
 
-        var url = $"my-orders/{order!.Id}";
-        var maybe = await ApiClient.PatchJsonAsync<OperationResponse>
-    (url, request);
+        var url = $"orders/{order!.Id}";
+        var maybe = await ApiClient.PatchJsonAsync<OperationResponse>(url, request);
         if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
             NavigationManager.NavigateTo(Urls.MyOrders);
         showErrorAlert = true;
     }
 
     private void DismissErrorAlert() => showErrorAlert = false;
-
-}
 }

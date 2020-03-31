@@ -34,7 +34,7 @@ namespace Frederikskaj2.Reservations.Client
         private static void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddBlazorise(options => options.ChangeTextOnKeyPress = false)
+                .AddBlazorise(options => options.ChangeTextOnKeyPress = true)
                 .AddBootstrapProviders()
                 .AddFontAwesomeIcons();
 

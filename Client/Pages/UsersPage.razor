@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = Roles.Administrator)]
 @inject ApiClient ApiClient
 @inject AuthenticationStateProvider AuthenticationStateProvider;
+@inject FormattingService FormattingService
 
 <main>
     @if (!isInitialized)
@@ -32,9 +33,9 @@
                     @foreach (var user in users!)
                     {
                         <TableRow @key="@user.Id">
-                            <TableRowCell>@user.Email</TableRowCell>
+                            <TableRowCell><a href="mailto:@user.Email?subject=Frederikskaj 2">@FormattingService.FormatEmail(user.Email)</a></TableRowCell>
                             <TableRowCell>@user.FullName</TableRowCell>
-                            <TableRowCell>@user.Phone</TableRowCell>
+                            <TableRowCell>@FormattingService.FormatPhone(user.Phone)</TableRowCell>
                             <TableRowCell class="text-center">@(user.OrderCount > 0 ? user.OrderCount.ToString() : string.Empty)</TableRowCell>
                             <TableRowCell class="text-center">
                                 @if (@user.IsEmailConfirmed)

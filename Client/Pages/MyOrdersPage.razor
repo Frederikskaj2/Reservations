@@ -26,10 +26,16 @@
                                     <div class="order-header">Bestillingsdato</div>
                                     <div class="order-header"></div>
                                     <div class="order-header order-button">
-                                        @if (order.CanBeEdited)
-                                        {
-                                            <Button Color="Color.Info" Size="ButtonSize.Small" class="float-right" Clicked="@(() => EditOrder(order))">Redigér</Button>
-                                        }
+                                        <Button Color="Color.Info" Size="ButtonSize.Small" class="btn-fixed float-right" Clicked="@(() => EditOrder(order))">
+                                            @if (order.CanBeEdited)
+                                            {
+                                                <text>Redigér</text>
+                                            }
+                                            else
+                                            {
+                                                <text>Vis</text>
+                                            }
+                                        </Button>
                                     </div>
                                     <div>@order.Id</div>
                                     <div>@FormattingService.FormatDate(order.CreatedTimestamp)</div>

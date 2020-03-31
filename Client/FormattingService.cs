@@ -42,6 +42,10 @@ namespace Frederikskaj2.Reservations.Client
 
         public string FormatDate(Instant instant) => longDatePattern.Format(instant.InZone(dateTimeZone).Date);
 
+        public string? FormatEmail(string? email) => email?.Replace("@", "\x00AD@", StringComparison.Ordinal);
+
+        public string? FormatPhone(string? phone) => phone?.Replace(' ', '\x00A0');
+
         private string FormatTimeLong(LocalDateTime time)
         {
             var formatted = longTimePattern.Format(time);

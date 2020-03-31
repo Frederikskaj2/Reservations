@@ -6,6 +6,7 @@ namespace Frederikskaj2.Reservations.Shared
     {
         LocalDate Today { get; }
 
+        int GetDaysFromToday(LocalDate date);
         int GetDaysFromToday(Instant instant);
     }
 }

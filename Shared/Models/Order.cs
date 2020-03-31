@@ -12,5 +12,6 @@ namespace Frederikskaj2.Reservations.Shared
         public string Phone { get; set; } = string.Empty;
         public string AccountNumber { get; set; } = string.Empty;
         public IEnumerable<Reservation>? Reservations { get; set; }
+        public OrderTotals? Totals { get; set; }
     }
 }

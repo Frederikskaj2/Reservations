@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
+using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -14,10 +15,11 @@ namespace Frederikskaj2.Reservations.Server.Data
         private readonly ReservationsContext db;
         private readonly SeedDataOptions options;
         private readonly Random random = new Random();
+        private readonly IReservationPolicyProvider reservationPolicyProvider;
         private readonly RoleManager<Role> roleManager;
         private readonly UserManager<User> userManager;
 
-        public SeedData(IOptions<SeedDataOptions> options, ReservationsContext db, UserManager<User> userManager, RoleManager<Role> roleManager)
+        public SeedData(IOptions<SeedDataOptions> options, ReservationsContext db, UserManager<User> userManager, RoleManager<Role> roleManager, IReservationPolicyProvider reservationPolicyProvider)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
@@ -25,6 +27,7 @@ namespace Frederikskaj2.Reservations.Server.Data
             this.db = db ?? throw new ArgumentNullException(nameof(db));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             this.roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+            this.reservationPolicyProvider = reservationPolicyProvider ?? throw new ArgumentNullException(nameof(reservationPolicyProvider));
 
             this.options = options.Value;
 
@@ -62,9 +65,9 @@ namespace Frederikskaj2.Reservations.Server.Data
 
             var users = new[]
             {
-                CreateRandomUser("a@frederikskaj2.dk", "A F"),
-                CreateRandomUser("b@frederikskaj2.dk", "B F"),
-                CreateRandomUser("c@frederikskaj2.dk", "C F")
+                CreateRandomUser("andersandersen@frederikskaj2.dk", "Anders Andersen"),
+                CreateRandomUser("bettina.bettinasdatter@frederikskaj2.dk", "Bettina B. Bettinasdatter"),
+                CreateRandomUser("carl@frederikskaj2.dk", "Carl Carlsen")
             };
             foreach (var user in users)
                 await userManager.CreateAsync(user);
@@ -72,7 +75,9 @@ namespace Frederikskaj2.Reservations.Server.Data
             var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
             var reservedDays = new Dictionary<(LocalDate, Resource), ReservedDay>();
 
-            db.Orders.AddRange(Enumerable.Range(0, 20).Select(_ => CreateOrder()));
+            var now = SystemClock.Instance.GetCurrentInstant();
+            for (var i = 0; i < 10; i += 1)
+                db.Orders.Add(await CreateOrder());
 
             await db.SaveChangesAsync();
 
@@ -92,23 +97,23 @@ namespace Frederikskaj2.Reservations.Server.Data
                 return string.Join(' ', Enumerable.Range(0, 4).Select(i => number.Substring(2*i, 2)));
             }
 
-            Order CreateOrder()
+            async Task<Order> CreateOrder()
             {
                 const int secondsPerDay = 24*60*60;
                 var user = users[random.Next(users.Length)];
-                var timestamp = SystemClock.Instance.GetCurrentInstant()
-                    .Minus(Duration.FromSeconds(random.Next(6*secondsPerDay, 45*secondsPerDay)));
+                var timestamp = now.Minus(Duration.FromSeconds(random.Next(6*secondsPerDay, 45*secondsPerDay)));
                 var order = new Order
                 {
                     User = user,
                     Apartment = user.Apartment,
                     CreatedTimestamp = timestamp,
+                    AccountNumber = $"{random.Next(1000, 6000)}-{random.Next(100000000, 1000000000)}",
                     Reservations = new List<Reservation>()
                 };
                 var reservationCount = 2 - (int) Math.Log2(random.Next(1, 4));
                 while (order.Reservations.Count < reservationCount)
                 {
-                    var reservation = CreateReservation(timestamp);
+                    var reservation = await CreateReservation(timestamp);
                     if (reservation.Days.Any(day => reservedDays.ContainsKey((day.Date, reservation.Resource!))))
                         continue;
                     order.Reservations.Add(reservation);
@@ -118,18 +123,25 @@ namespace Frederikskaj2.Reservations.Server.Data
                 return order;
             }
 
-            Reservation CreateReservation(Instant timestamp)
+            async Task<Reservation> CreateReservation(Instant timestamp)
             {
                 var resource = resources[random.Next(resources.Length)];
-                // ReSharper disable once AssignNullToNotNullAttribute
-                var date = SystemClock.Instance.GetCurrentInstant().InZone(timeZoneInfo).Date.PlusDays(random.Next(90) - 10);
+                var date = timestamp.InZone(timeZoneInfo).Date.PlusDays(random.Next(6, 90));
                 var durationInDays = 3 - (int) Math.Log2(random.Next(1, 8));
+                var policy = reservationPolicyProvider.GetPolicy(resource.Type);
+                var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(resource.Id, date);
+                if (durationInDays < minimumDays)
+                    durationInDays = minimumDays;
+                else if (durationInDays > maximumDays)
+                    durationInDays = maximumDays;
+                var price = await policy.GetPrice(date, durationInDays);
                 return new Reservation
                 {
                     Resource = resource,
                     Status = ReservationStatus.Reserved,
                     UpdatedTimestamp = timestamp,
-                    Days = Enumerable.Range(0, durationInDays).Select(i => new ReservedDay { Date = date.PlusDays(i), Resource = resource }).ToList()
+                    Days = Enumerable.Range(0, durationInDays).Select(i => new ReservedDay { Date = date.PlusDays(i), Resource = resource }).ToList(),
+                    Price = price.Adapt<Price>()
                 };
             }
         }

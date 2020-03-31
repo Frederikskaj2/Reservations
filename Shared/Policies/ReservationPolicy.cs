@@ -67,8 +67,7 @@ namespace Frederikskaj2.Reservations.Shared
             {
                 Rent = rent,
                 CleaningFee = PriceOptions.CleaningFee,
-                Deposit = deposit,
-                CancellationFee = 0
+                Deposit = deposit
             };
         }
     }
