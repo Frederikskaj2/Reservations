@@ -1,7 +1,7 @@
 ﻿namespace Frederikskaj2.Reservations.Shared
 {
-    public class OrderResponse
+    public class OrderResponse<TOrder> where TOrder : class
     {
-        public Order? Order { get; set; }
+        public TOrder? Order { get; set; }
     }
 }

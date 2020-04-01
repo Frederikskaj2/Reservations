@@ -14,6 +14,7 @@ namespace Frederikskaj2.Reservations.Client
         private IEnumerable<Apartment>? cachedApartments;
         private HashSet<LocalDate>? cachedHolidays;
         private IEnumerable<ReservedDay>? cachedReservedDays;
+        private IReadOnlyDictionary<int, Resource>? cachedResources;
         private (LocalDate FromDate, LocalDate ToDate) reservedDaysCacheKey;
 
         public ClientDataProvider(ApiClient apiClient)
@@ -23,10 +24,14 @@ namespace Frederikskaj2.Reservations.Client
 
         public async Task<IReadOnlyDictionary<int, Resource>> GetResources()
         {
-            var maybe = await apiClient.GetJsonAsync<IEnumerable<Resource>>("resources");
-            if (maybe.TryGetValue(out var resources))
-                return resources.ToDictionary(resource => resource.Id);
-            return new Dictionary<int, Resource>();
+            if (cachedResources == null)
+            {
+                var maybe = await apiClient.GetJsonAsync<IEnumerable<Resource>>("resources");
+                cachedResources = maybe.TryGetValue(out var resources)
+                    ? resources.ToDictionary(resource => resource.Id)
+                    : new Dictionary<int, Resource>();
+            }
+            return cachedResources;
         }
 
         public Task<bool> IsHighPriceDay(LocalDate date)
@@ -48,6 +53,7 @@ namespace Frederikskaj2.Reservations.Client
         public void Refresh()
         {
             cachedHolidays = null;
+            cachedResources = null;
             reservedDaysCacheKey = default;
             cachedReservedDays = null;
         }

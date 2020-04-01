@@ -1,9 +1,7 @@
 ﻿@page "/bestillinger/{orderId:int}"
 @inject ApiClient ApiClient
-@inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
 @inject NavigationManager NavigationManager
-@inject ReservationsOptions ReservationsOptions
 
 <main>
     @if (!isInitialized)
@@ -14,71 +12,15 @@
     {
         <Container class="container-min-md">
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl. Din bestilling blev ikke opdateret.
+                Der er sket en fejl, og bestillingen blev ikke opdateret.
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <h1>Bestilling @order!.Id</h1>
-            <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
-                <Row>
-                    <Column ColumnSize="ColumnSize.Is9.OnTablet.IsHalf.OnWidescreen">
-                        <Field>
-                            <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
-                            <FieldBody>
-                                <Validation>
-                                    <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456">
-                                        <Feedback>
-                                            <ValidationError />
-                                        </Feedback>
-                                    </TextEdit>
-                                </Validation>
-                            </FieldBody>
-                        </Field>
-                    </Column>
-                </Row>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHeaderCell>Lokale</TableHeaderCell>
-                            <TableHeaderCell>Fra</TableHeaderCell>
-                            <TableHeaderCell>Dage</TableHeaderCell>
-                            <TableHeaderCell>Til</TableHeaderCell>
-                            <TableHeaderCell class="text-right">Leje</TableHeaderCell>
-                            <TableHeaderCell class="text-right">Rengøring</TableHeaderCell>
-                            <TableHeaderCell class="text-right">Depositum</TableHeaderCell>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        @foreach (var reservation in order.Reservations!)
-                        {
-                            var isCancelled = request.CancelledReservations.Contains(reservation.Id);
-                            <TableRow class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty)">
-                                <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
-                                <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
-                                <TableRowCell>@reservation.DurationInDays</TableRowCell>
-                                <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
-                                <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
-                                <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
-                                <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
-                                <TableRowCell class="border-0">
-                                    @if (reservation.CanBeCancelled)
-                                    {
-                                        <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ToggleCancelReservation(reservation))">
-                                            @if (!isCancelled)
-                                            {
-                                                <Icon Name="IconName.Delete" class="text-danger" />
-                                            }
-                                            else
-                                            {
-                                                <Icon class="fa-undo text-success" />
-                                            }
-                                        </Button>
-                                    }
-                                </TableRowCell>
-                            </TableRow>
-                        }
-                    </TableBody>
-                </Table>
-            </Validations>
+            <Text>Oprettet @FormattingService.FormatDate(@order.CreatedTimestamp)</Text>
+            <Text><a href="mailto:@order.Mail?subject=Bestilling @order.Id">@order.Mail</a></Text>
+            <Text>@order.FullName</Text>
+            <Text>@order.Phone</Text>
+            <OrderStatement @ref="orderStatement" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" OnSubmit="@Submit" />
         </Container>
     }
     else
@@ -91,65 +33,31 @@
 
 @code {
 
-    private readonly UpdateOrderRequest request = new UpdateOrderRequest();
-    private Validations validations = null!;
-    IReadOnlyDictionary<int, Resource>? resources;
+    private OrderStatement orderStatement = null!;
     private Order? order;
-    private Price? price;
     private bool isInitialized;
     private bool showErrorAlert;
 
     [Parameter]
     public int OrderId { get; set; }
 
-    private bool IsUpdated => order?.AccountNumber != request.AccountNumber.Trim() || request.CancelledReservations.Count > 0;
-
     protected override async Task OnInitializedAsync()
     {
-        resources = await ClientDataProvider.GetResources();
         var url = $"orders/{OrderId}";
-        var maybe = await ApiClient.GetJsonAsync<Order>(url);
-        if (maybe.TryGetValue(out var value) || value.Id != 0)
-        {
-            order = value;
-            request.AccountNumber = order.AccountNumber!;
-            UpdatePrice();
-        }
+        var maybe = await ApiClient.GetJsonAsync<OrderResponse<Order>>(url);
+        if (maybe.TryGetValue(out var response) && response.Order != null)
+            order = response.Order;
         isInitialized = true;
     }
 
-    private void ToggleCancelReservation(Reservation reservation)
+    private async Task Submit(UpdateOrderRequest request)
     {
-        if (!request.CancelledReservations.Contains(reservation.Id))
-            request.CancelledReservations.Add(reservation.Id);
-        else
-            request.CancelledReservations.Remove(reservation.Id);
-        UpdatePrice();
-    }
-
-    private void UpdatePrice()
-    {
-        price = order!.Reservations.Aggregate(
-            new Price(),
-            (accumulator, reservation) => accumulator.Accumulate(GetPrice(reservation)));
-
-        Price GetPrice(Reservation reservation)
-            => !request.CancelledReservations.Contains(reservation.Id) || reservation.Status == ReservationStatus.Confirmed
-                ? reservation.Price! : new Price();
-    }
-
-    private async Task Submit()
-    {
-        if (!validations.ValidateAll())
-            return;
-
-        validations.ClearAll();
-
         var url = $"orders/{order!.Id}";
-        var maybe = await ApiClient.PatchJsonAsync<OperationResponse>(url, request);
-        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
-            NavigationManager.NavigateTo(Urls.MyOrders);
-        showErrorAlert = true;
+        var maybe = await ApiClient.PatchJsonAsync<OrderResponse<Order>>(url, request);
+        if (maybe.TryGetValue(out var response) && response.Order != null)
+            order = response.Order;
+        else
+            showErrorAlert = true;
     }
 
     private void DismissErrorAlert() => showErrorAlert = false;

@@ -34,7 +34,6 @@
                     <TableBody>
                         @foreach (var order in orders!)
                         {
-                            var isUnpaid = order.Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved);
                             var reservationsToSettle = order.Reservations.Where(reservation => reservation.Status == ReservationStatus.Confirmed && DateProvider.GetDaysFromToday(reservation.Date) < 0).ToList();
                             <TableRow @key="@order.Id">
                                 <TableRowCell>@order.Id</TableRowCell>
@@ -42,7 +41,7 @@
                                 <TableRowCell><a href="mailto:@order.Mail?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
                                 <TableRowCell>@order.Phone</TableRowCell>
                                 <TableRowCell class="text-center">
-                                    @if (isUnpaid)
+                                    @if (order.Totals!.Balance < 0)
                                     {
                                         if (GetIsUnpaidOrderOld(order))
                                         {
@@ -65,7 +64,7 @@
                                         <DropdownToggle Color="Color.Light" />
                                         <DropdownMenu>
                                             <DropdownItem Clicked="@(() => ShowOrder(order))">Vis</DropdownItem>
-                                            @if (isUnpaid)
+                                            @if (order.Totals!.Balance < 0)
                                             {
                                                 <DropdownItem Clicked="@(() => RecordPayIn(order))">Registrér indbetaling</DropdownItem>
                                             }
@@ -112,7 +111,7 @@
     private async Task OnPayInConfirm((int OrderId, PaymentRequest Request) tuple)
     {
         var requestUri = $"orders/{tuple.OrderId}/pay-in";
-        var maybe = await ApiClient.PostJsonAsync<OrderResponse>(requestUri, tuple.Request);
+        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
             UpdateOrder(response.Order);
         else
@@ -122,7 +121,7 @@
     private async Task OnSettlementConfirm((int OrderId, SettleReservationRequest Request) tuple)
     {
         var requestUri = $"orders/{tuple.OrderId}/settle";
-        var maybe = await ApiClient.PostJsonAsync<OrderResponse>(requestUri, tuple.Request);
+        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
             UpdateOrder(response.Order);
         else

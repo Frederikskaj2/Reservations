@@ -95,6 +95,9 @@ namespace Frederikskaj2.Reservations.Server.Data
                 .Property(reservation => reservation.UpdatedTimestamp)
                 .HasConversion(instantConverter);
             modelBuilder.Entity<Reservation>()
+                .Property(reservation => reservation.Date)
+                .HasConversion(localDateConverter);
+            modelBuilder.Entity<Reservation>()
                 .OwnsOne(reservation => reservation.Price);
 
             modelBuilder.Entity<ReservedDay>()

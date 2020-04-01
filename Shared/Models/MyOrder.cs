@@ -5,8 +5,6 @@ namespace Frederikskaj2.Reservations.Shared
 {
     public class MyOrder
     {
-        public static readonly MyOrder EmptyOrder = new MyOrder();
-
         public int Id { get; set; }
         public string AccountNumber { get; set; } = string.Empty;
         public Instant CreatedTimestamp { get; set; }

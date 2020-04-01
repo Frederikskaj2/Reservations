@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Frederikskaj2.Reservations.Server.Controllers;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Shared;
@@ -69,6 +70,7 @@ namespace Frederikskaj2.Reservations.Server
             services
                 .AddReservationsServices()
                 .AddScoped<IDataProvider, ServerDataProvider>()
+                .AddScoped<OrderService>()
                 .AddEmail(Configuration)
                 .AddResponseCompression(
                     options

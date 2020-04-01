@@ -14,6 +14,8 @@ namespace Frederikskaj2.Reservations.Server.Data
         public virtual Resource? Resource { get; set; }
         public ReservationStatus Status { get; set; }
         public Instant UpdatedTimestamp { get; set; }
+        public LocalDate Date { get; set; }
+        public int DurationInDays { get; set; }
         public virtual ICollection<ReservedDay>? Days { get; set; }
         public Price? Price { get; set; }
 
