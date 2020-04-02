@@ -47,6 +47,18 @@
                             </Validation>
                         </FieldBody>
                     </Field>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is4">Beskrivelse</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is8">
+                            <Validation Validator="@ValidateDescription">
+                                <TextEdit @ref="descriptionTextEdit" @bind-Text="request.Description" MaxLength="100">
+                                    <Feedback>
+                                        <ValidationError />
+                                    </Feedback>
+                                </TextEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
                 </ModalBody>
                 <ModalFooter>
                     <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">Lav opgørelse</Button>
@@ -63,6 +75,7 @@
     private Modal modal = null!;
     private Validations validations = null!;
     private NumericEdit<int> compensationNumericEdit = null!;
+    private TextEdit descriptionTextEdit = null!;
     private IReadOnlyDictionary<int, Resource>? resources;
     private int orderId;
     private string? resourceName;
@@ -78,14 +91,11 @@
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        resources = await ClientDataProvider.GetResources();
-    }
+    protected override async Task OnInitializedAsync() => resources = await ClientDataProvider.GetResources();
 
-    public void Show(Order order, Reservation reservation)
+    public void Show(int orderId, Reservation reservation)
     {
-        orderId = order.Id;
+        this.orderId = orderId;
         resourceName = resources![reservation.ResourceId].Name;
         reservationDate = FormattingService.FormatDate(reservation.Date);
         reservationDurationInDays = reservation.DurationInDays.ToString();
@@ -109,6 +119,16 @@
         {
             e.Status = ValidationStatus.Error;
             e.ErrorText = $"Angiv et beløb mellem 0 og {maximumCompensation}.";
+        }
+    }
+
+    void ValidateDescription(ValidatorEventArgs e)
+    {
+        var description = (string) e.Value;
+        if (request.Damages > 0 && string.IsNullOrWhiteSpace(description))
+        {
+            e.Status = ValidationStatus.Error;
+            e.ErrorText = $"Angiv en beskrivelse af skaderne.";
         }
     }
 

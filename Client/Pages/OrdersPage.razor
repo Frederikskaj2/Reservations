@@ -34,14 +34,16 @@
                     <TableBody>
                         @foreach (var order in orders!)
                         {
-                            var reservationsToSettle = order.Reservations.Where(reservation => reservation.Status == ReservationStatus.Confirmed && DateProvider.GetDaysFromToday(reservation.Date) < 0).ToList();
+                            var reservationsToSettle = order.Reservations
+                                .Where(reservation => reservation.Status == ReservationStatus.Confirmed/* && DateProvider.GetDaysFromToday(reservation.Date) < 0*/)
+                                .ToList();
                             <TableRow @key="@order.Id">
                                 <TableRowCell>@order.Id</TableRowCell>
                                 <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
                                 <TableRowCell><a href="mailto:@order.Mail?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
                                 <TableRowCell>@order.Phone</TableRowCell>
                                 <TableRowCell class="text-center">
-                                    @if (order.Totals!.Balance < 0)
+                                    @if (order.Totals!.GetBalance() < 0)
                                     {
                                         if (GetIsUnpaidOrderOld(order))
                                         {
@@ -64,13 +66,17 @@
                                         <DropdownToggle Color="Color.Light" />
                                         <DropdownMenu>
                                             <DropdownItem Clicked="@(() => ShowOrder(order))">Vis</DropdownItem>
-                                            @if (order.Totals!.Balance < 0)
+                                            @if (order.Totals!.GetBalance() < 0)
                                             {
                                                 <DropdownItem Clicked="@(() => RecordPayIn(order))">Registrér indbetaling</DropdownItem>
                                             }
                                             @foreach (var reservation in reservationsToSettle)
                                             {
                                                 <DropdownItem Clicked="@(() => RecordSettlement(order, reservation))">Lav opgørelse @resources![reservation.ResourceId].Name @FormattingService.FormatDate(reservation.Date)</DropdownItem>
+                                            }
+                                            @if (order.Totals!.GetBalance() > 0)
+                                            {
+                                                <DropdownItem Clicked="@(() => RecordPayOut(order))">Registrér udbetaling</DropdownItem>
                                             }
                                         </DropdownMenu>
                                     </Dropdown>
@@ -80,14 +86,14 @@
                     </TableBody>
                 </Table>
             </Container>
-            <PayInDialog @ref="payInDialog" OnConfirm="@OnPayInConfirm" />
+            <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
             <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
         }
     </main>
 
 @code {
 
-    private PayInDialog payInDialog = null!;
+    private PaymentDialog paymentDialog = null!;
     private SettlementDialog settlementDialog = null!;
     private IReadOnlyDictionary<int, Resource>? resources;
     private bool isInitialized;
@@ -104,41 +110,56 @@
 
     private void ShowOrder(Order order) => NavigationManager.NavigateTo($"bestillinger/{order.Id}");
 
-    private void RecordPayIn(Order order) => payInDialog.Show(order);
-
-    private void RecordSettlement(Order order, Reservation reservation) => settlementDialog.Show(order, reservation);
-
-    private async Task OnPayInConfirm((int OrderId, PaymentRequest Request) tuple)
+    private void RecordPayIn(Order order)
     {
-        var requestUri = $"orders/{tuple.OrderId}/pay-in";
-        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
-            UpdateOrder(response.Order);
-        else
-            showGeneralErrorAlert = true;
+        DismissShowGeneralErrorAlert();
+        paymentDialog.Show(new Payment(order.Id, -order.Totals!.GetBalance(), true));
     }
 
-    private async Task OnSettlementConfirm((int OrderId, SettleReservationRequest Request) tuple)
+    private void RecordPayOut(Order order)
     {
-        var requestUri = $"orders/{tuple.OrderId}/settle";
-        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
-            UpdateOrder(response.Order);
-        else
-            showGeneralErrorAlert = true;
+        DismissShowGeneralErrorAlert();
+        paymentDialog.Show(new Payment(order.Id, order.Totals!.GetBalance(), false));
     }
 
-    private void UpdateOrder(Order order)
+    private void RecordSettlement(Order order, Reservation reservation)
     {
-        var index = orders!.FindIndex(o => o.Id == order.Id);
-        orders[index] = order;
+        DismissShowGeneralErrorAlert();
+        settlementDialog.Show(order.Id, reservation);
     }
 
-    private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
+    private async Task OnPaymentConfirm(Payment payment)
+        {
+            var request = new PaymentRequest { Amount = payment.Amount };
+            var requestUri = $"orders/{payment.OrderId}/{(payment.IsPayIn ? "pay-in" : "pay-out")}";
+            var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
+            if (maybe.TryGetValue(out var response) && response.Order != null)
+                UpdateOrder(response.Order);
+            else
+                showGeneralErrorAlert = true;
+        }
 
-    private bool GetIsUnpaidOrderOld(Order order)
-    {
-        var daysSinceOrderWasPlaced = -DateProvider.GetDaysFromToday(order.CreatedTimestamp);
-        return daysSinceOrderWasPlaced > ReservationsOptions.HighlightUnpaidOrdersAfterDays;
-    }
+        private async Task OnSettlementConfirm((int OrderId, SettleReservationRequest Request) tuple)
+        {
+            var requestUri = $"orders/{tuple.OrderId}/settle";
+            var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
+            if (maybe.TryGetValue(out var response) && response.Order != null)
+                UpdateOrder(response.Order);
+            else
+                showGeneralErrorAlert = true;
+        }
+
+        private void UpdateOrder(Order order)
+        {
+            var index = orders!.FindIndex(o => o.Id == order.Id);
+            orders[index] = order;
+        }
+
+        private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
+
+        private bool GetIsUnpaidOrderOld(Order order)
+        {
+            var daysSinceOrderWasPlaced = -DateProvider.GetDaysFromToday(order.CreatedTimestamp);
+            return daysSinceOrderWasPlaced > ReservationsOptions.HighlightUnpaidOrdersAfterDays;
+        }
 }

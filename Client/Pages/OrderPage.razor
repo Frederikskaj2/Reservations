@@ -17,10 +17,10 @@
             </Alert>
             <h1>Bestilling @order!.Id</h1>
             <Text>Oprettet @FormattingService.FormatDate(@order.CreatedTimestamp)</Text>
-            <Text><a href="mailto:@order.Mail?subject=Bestilling @order.Id">@order.Mail</a></Text>
+            <Text><a href="mailto:@order.Mail?subject=Frederikskaj 2 bestilling @order.Id">@order.Mail</a></Text>
             <Text>@order.FullName</Text>
-            <Text>@order.Phone</Text>
-            <OrderStatement @ref="orderStatement" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" OnSubmit="@Submit" />
+            <Text>order.Phone</Text>
+            <OrderStatement @ref="orderStatement" OrderId="@order.Id" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" OnSubmit="@Submit" />
         </Container>
     }
     else

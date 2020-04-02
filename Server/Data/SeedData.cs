@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
-using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -14,12 +13,12 @@ namespace Frederikskaj2.Reservations.Server.Data
     {
         private readonly ReservationsContext db;
         private readonly SeedDataOptions options;
-        private readonly Random random = new Random();
-        private readonly IReservationPolicyProvider reservationPolicyProvider;
         private readonly RoleManager<Role> roleManager;
         private readonly UserManager<User> userManager;
 
-        public SeedData(IOptions<SeedDataOptions> options, ReservationsContext db, UserManager<User> userManager, RoleManager<Role> roleManager, IReservationPolicyProvider reservationPolicyProvider)
+        public SeedData(
+            IOptions<SeedDataOptions> options, ReservationsContext db, UserManager<User> userManager,
+            RoleManager<Role> roleManager)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
@@ -27,7 +26,6 @@ namespace Frederikskaj2.Reservations.Server.Data
             this.db = db ?? throw new ArgumentNullException(nameof(db));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             this.roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
-            this.reservationPolicyProvider = reservationPolicyProvider ?? throw new ArgumentNullException(nameof(reservationPolicyProvider));
 
             this.options = options.Value;
 
@@ -44,6 +42,7 @@ namespace Frederikskaj2.Reservations.Server.Data
                 if (string.IsNullOrEmpty(user.Password))
                     throw new ConfigurationException("Missing seed data user password.");
             }
+
             if (!(this.options.Resources?.Any() ?? false))
                 throw new ConfigurationException("Missing seed data resources.");
             foreach (var resource in this.options.Resources)
@@ -62,88 +61,6 @@ namespace Frederikskaj2.Reservations.Server.Data
             await db.SaveChangesAsync();
 
             await CreateUsers();
-
-            var users = new[]
-            {
-                CreateRandomUser("andersandersen@frederikskaj2.dk", "Anders Andersen"),
-                CreateRandomUser("bettina.bettinasdatter@frederikskaj2.dk", "Bettina B. Bettinasdatter"),
-                CreateRandomUser("carl@frederikskaj2.dk", "Carl Carlsen")
-            };
-            foreach (var user in users)
-                await userManager.CreateAsync(user);
-
-            var timeZoneInfo = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
-            var reservedDays = new Dictionary<(LocalDate, Resource), ReservedDay>();
-
-            var now = SystemClock.Instance.GetCurrentInstant();
-            for (var i = 0; i < 10; i += 1)
-                db.Orders.Add(await CreateOrder());
-
-            await db.SaveChangesAsync();
-
-            User CreateRandomUser(string email, string fullName) => new User
-            {
-                UserName = email,
-                Email = email,
-                EmailConfirmed = true,
-                FullName = fullName,
-                PhoneNumber = CreateRandomPhoneNumber(),
-                Apartment = apartments[random.Next(apartments.Length)]
-            };
-
-            string CreateRandomPhoneNumber()
-            {
-                var number = random.Next(21000000, 70000000 - 21000000).ToString();
-                return string.Join(' ', Enumerable.Range(0, 4).Select(i => number.Substring(2*i, 2)));
-            }
-
-            async Task<Order> CreateOrder()
-            {
-                const int secondsPerDay = 24*60*60;
-                var user = users[random.Next(users.Length)];
-                var timestamp = now.Minus(Duration.FromSeconds(random.Next(6*secondsPerDay, 45*secondsPerDay)));
-                var order = new Order
-                {
-                    User = user,
-                    Apartment = user.Apartment,
-                    CreatedTimestamp = timestamp,
-                    AccountNumber = $"{random.Next(1000, 6000)}-{random.Next(100000000, 1000000000)}",
-                    Reservations = new List<Reservation>()
-                };
-                var reservationCount = 2 - (int) Math.Log2(random.Next(1, 4));
-                while (order.Reservations.Count < reservationCount)
-                {
-                    var reservation = await CreateReservation(timestamp);
-                    if (reservation.Days.Any(day => reservedDays.ContainsKey((day.Date, reservation.Resource!))))
-                        continue;
-                    order.Reservations.Add(reservation);
-                    foreach (var day in reservation.Days!)
-                        reservedDays.Add((day.Date, reservation.Resource!), day);
-                }
-                return order;
-            }
-
-            async Task<Reservation> CreateReservation(Instant timestamp)
-            {
-                var resource = resources[random.Next(resources.Length)];
-                var date = timestamp.InZone(timeZoneInfo).Date.PlusDays(random.Next(6, 90));
-                var durationInDays = 3 - (int) Math.Log2(random.Next(1, 8));
-                var policy = reservationPolicyProvider.GetPolicy(resource.Type);
-                var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(resource.Id, date);
-                if (durationInDays < minimumDays)
-                    durationInDays = minimumDays;
-                else if (durationInDays > maximumDays)
-                    durationInDays = maximumDays;
-                var price = await policy.GetPrice(date, durationInDays);
-                return new Reservation
-                {
-                    Resource = resource,
-                    Status = ReservationStatus.Reserved,
-                    UpdatedTimestamp = timestamp,
-                    Days = Enumerable.Range(0, durationInDays).Select(i => new ReservedDay { Date = date.PlusDays(i), Resource = resource }).ToList(),
-                    Price = price.Adapt<Price>()
-                };
-            }
         }
 
         private async Task CreateUsers()
@@ -188,7 +105,7 @@ namespace Frederikskaj2.Reservations.Server.Data
                 new Holiday { Date = new LocalDate(2020, 6, 1) },
                 new Holiday { Date = new LocalDate(2020, 12, 24) },
                 new Holiday { Date = new LocalDate(2020, 12, 25) },
-                new Holiday { Date = new LocalDate(2020, 12, 31) },
+                new Holiday { Date = new LocalDate(2020, 12, 31) }
             };
             db.Holidays.AddRange(holidays);
             return holidays;
@@ -217,14 +134,18 @@ namespace Frederikskaj2.Reservations.Server.Data
                 { 'L', new Stories { Left = 6, Right = 7 } },
                 { 'M', new Stories { Left = 5, Right = 5 } },
                 { 'P', new Stories { Left = 4, Right = 4 } },
-                { 'R', new Stories { Left = 6, Right = 7 } },
+                { 'R', new Stories { Left = 6, Right = 7 } }
             };
             return stories.SelectMany(
                     kvp =>
                         Enumerable.Range(0, kvp.Value.Left + 1)
-                            .Select(story => new Apartment { Letter = kvp.Key, Story = story, Side = ApartmentSide.Left })
-                            .Concat(Enumerable.Range(0, kvp.Value.Right + 1)
-                                .Select(story => new Apartment { Letter = kvp.Key, Story = story, Side = ApartmentSide.Right })))
+                            .Select(
+                                story => new Apartment { Letter = kvp.Key, Story = story, Side = ApartmentSide.Left })
+                            .Concat(
+                                Enumerable.Range(0, kvp.Value.Right + 1)
+                                    .Select(
+                                        story => new Apartment
+                                            { Letter = kvp.Key, Story = story, Side = ApartmentSide.Right })))
                 .OrderBy(apartment => apartment.Letter)
                 .ThenBy(apartment => apartment.Story)
                 .ThenBy(apartment => apartment.Side);

@@ -89,8 +89,28 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (!userId.HasValue)
                 return new OrderResponse<Order>();
 
+            var description = request.Description?.Trim();
+            if (description?.Length > 100)
+                return new OrderResponse<Order>();
+
             var now = clock.GetCurrentInstant();
-            var order = await orderService.Settle(now, orderId, userId.Value, request.ReservationId, request.Damages);
+            var order = await orderService.Settle(now, orderId, userId.Value, request.ReservationId, request.Damages, description);
+            if (order == null)
+                return new OrderResponse<Order>();
+
+            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
+            return new OrderResponse<Order> { Order = CreateOrder(order, today) };
+        }
+
+        [HttpPost("{orderId:int}/pay-out")]
+        public async Task<OrderResponse<Order>> PayOut(int orderId, PaymentRequest request)
+        {
+            var userId = User.Id();
+            if (!userId.HasValue)
+                return new OrderResponse<Order>();
+
+            var now = clock.GetCurrentInstant();
+            var order = await orderService.PayOut(now, orderId, userId.Value, request.Amount);
             if (order == null)
                 return new OrderResponse<Order>();
 

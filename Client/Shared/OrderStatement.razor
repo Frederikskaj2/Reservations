@@ -1,10 +1,17 @@
-﻿@inject ClientDataProvider ClientDataProvider
+﻿@inject ApiClient ApiClient
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+@inject ClientDataProvider ClientDataProvider
+@inject IDateProvider DateProvider
 @inject FormattingService FormattingService
 @inject ReservationsOptions ReservationsOptions
 
 @if (price != null)
 {
-    var accountNumberCanBeChanged = Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
+    var accountNumberCanBeChanged = Totals!.GetBalance() > 0 || Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
+    <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
+        Der er sket en fejl, og din ændring blev ikke gemt.
+        <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
+    </Alert>
     <Form>
         <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
             <Row>
@@ -39,7 +46,10 @@
                     @foreach (var reservation in Reservations!)
                     {
                         var isCancelled = request.CancelledReservations.Contains(reservation.Id);
-                        <TableRow class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty)">
+                        var canBeSettled = isAdministrator && reservation.Status == ReservationStatus.Confirmed /*&& reservation.Date.PlusDays(reservation.DurationInDays) <= today*/;
+                        var canBeCancelled = reservation.CanBeCancelled || isAdministrator && reservation.Status == ReservationStatus.Confirmed && !canBeSettled;
+                        var color = reservation.Status == ReservationStatus.Settled ? string.Empty : "text-primary";
+                        <TableRow class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : color)">
                             <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
                             <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
                             <TableRowCell>@reservation.DurationInDays</TableRowCell>
@@ -48,7 +58,13 @@
                             <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
                             <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
                             <TableRowCell class="border-0">
-                                @if (reservation.CanBeCancelled)
+                                @if (canBeSettled)
+                                {
+                                    <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => RecordSettlement(reservation))">
+                                        <Icon class="fa-handshake" />
+                                    </Button>
+                                }
+                                else if (canBeCancelled)
                                 {
                                     <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ToggleCancelReservation(reservation))">
                                         @if (!isCancelled)
@@ -67,13 +83,13 @@
                 </TableBody>
                 <TableFooter>
                     <TableRow>
-                        <TableRowCell colspan="5">Leje (inkl. rengøring)</TableRowCell>
-                        <TableRowCell class="text-right">−</TableRowCell>
+                        <TableRowCell colspan="5">Leje (inklusiv rengøring)</TableRowCell>
+                        <TableRowCell class="text-right">+</TableRowCell>
                         <TableRowCell class="text-right">@FormattingService.FormatMoneyLong(price!.Rent + price!.CleaningFee)</TableRowCell>
                     </TableRow>
                     <TableRow>
                         <TableRowCell colspan="5" class="border-top-0">Depositum</TableRowCell>
-                        <TableRowCell class="text-right border-top-0">−</TableRowCell>
+                        <TableRowCell class="text-right border-top-0">+</TableRowCell>
                         <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.Deposit)</TableRowCell>
                     </TableRow>
                     <TableRow>
@@ -83,6 +99,11 @@
                     </TableRow>
                     @if (Totals!.PayIn > 0)
                     {
+                        <TableRow>
+                            <TableRowCell colspan="5" class="border-top-0">Pris (inklusiv depositum)</TableRowCell>
+                            <TableRowCell class="text-right border-top-0">−</TableRowCell>
+                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.GetTotal())</TableRowCell>
+                        </TableRow>
                         <TableRow>
                             <TableRowCell colspan="5" class="border-top-0">Indbetalt</TableRowCell>
                             <TableRowCell class="text-right border-top-0">+</TableRowCell>
@@ -97,16 +118,13 @@
                             <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(cancellationFee)</TableRowCell>
                         </TableRow>
                     }
-                    @{
-                        var settledDeposits = Reservations.Where(reservation => reservation.Status == ReservationStatus.Settled).Sum(reservation => reservation.Price!.Deposit);
-                        if (settledDeposits > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell colspan="5" class="border-top-0">Depositum refundering</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">+</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(settledDeposits)</TableRowCell>
-                            </TableRow>
-                        }
+                    @if (Totals.SettledDeposits > 0)
+                    {
+                        <TableRow>
+                            <TableRowCell colspan="5" class="border-top-0">Depositum refundering</TableRowCell>
+                            <TableRowCell class="text-right border-top-0">+</TableRowCell>
+                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.SettledDeposits)</TableRowCell>
+                        </TableRow>
                     }
                     @if (Totals.Damages > 0)
                     {
@@ -120,7 +138,7 @@
                     {
                         <TableRow>
                             <TableRowCell colspan="5" class="border-top-0">Udbetalt</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">+</TableRowCell>
+                            <TableRowCell class="text-right border-top-0">−</TableRowCell>
                             <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayOut)</TableRowCell>
                         </TableRow>
                     }
@@ -135,7 +153,20 @@
                     @if (accountNumberCanBeChanged || Reservations.Any(reservation => reservation.CanBeCancelled))
                     {
                         <TableRow>
-                            <TableRowCell colspan="7" class="border-top-0">
+                            <TableRowCell colspan="6" class="border-top-0">
+                                @if (isAdministrator)
+                                {
+                                    if (Totals!.GetBalance() < 0)
+                                    {
+                                        <Button Color="Color.Secondary" Clicked="@RecordPayIn">Registrér indbetaling</Button>
+                                    }
+                                    else if (Totals!.GetBalance() > 0)
+                                    {
+                                        <Button Color="Color.Secondary" Clicked="@RecordPayOut">Registrér udbetaling</Button>
+                                    }
+                                }
+                            </TableRowCell>
+                            <TableRowCell class="border-top-0">
                                 <Button class="float-right" Color="@(request.CancelledReservations.Count > 0 ? Color.Danger : Color.Primary)" Disabled="@(!IsUpdated)" Clicked="@Submit">Opdatér bestilling</Button>
                             </TableRowCell>
                         </TableRow>
@@ -144,16 +175,29 @@
             </Table>
         </Validations>
     </Form>
+    @if (isAdministrator)
+    {
+        <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+        <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
+    }
 }
 
 @code {
 
     private readonly UpdateOrderRequest request = new UpdateOrderRequest();
     private Validations validations = null!;
+    private PaymentDialog paymentDialog = null!;
+    private SettlementDialog settlementDialog = null!;
+    bool isAdministrator;
     private IReadOnlyDictionary<int, Resource>? resources;
+    private LocalDate today;
+    private bool showGeneralErrorAlert;
     private Price? price;
     private int cancellationFee;
     private int balance;
+
+    [Parameter]
+    public int OrderId { get; set; }
 
     [Parameter]
     public string? AccountNumber { get; set; }
@@ -171,7 +215,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
         resources = await ClientDataProvider.GetResources();
+        today = DateProvider.Today;
     }
 
     protected override void OnParametersSet()
@@ -197,7 +244,7 @@
             (accumulator, reservation) => accumulator.Accumulate(GetPrice(reservation)));
 
         cancellationFee = Totals!.CancellationFee;
-        balance = Totals!.Balance;
+        balance = Totals!.GetBalance();
         foreach (var reservation in Reservations.Where(r => request.CancelledReservations.Contains(r.Id)))
         {
             balance += reservation.Price!.GetTotal();
@@ -221,4 +268,59 @@
         validations.ClearAll();
         return OnSubmit.InvokeAsync(request);
     }
+
+    private void RecordPayIn()
+    {
+        DismissShowGeneralErrorAlert();
+        paymentDialog.Show(new Payment(OrderId, -Totals!.GetBalance(), true));
+    }
+
+    private void RecordPayOut()
+    {
+        DismissShowGeneralErrorAlert();
+        paymentDialog.Show(new Payment(OrderId, Totals!.GetBalance(), false));
+    }
+
+    private void RecordSettlement(Reservation reservation)
+    {
+        DismissShowGeneralErrorAlert();
+        settlementDialog.Show(OrderId, reservation);
+    }
+
+    private async Task OnPaymentConfirm(Payment payment)
+    {
+        var request = new PaymentRequest { Amount = payment.Amount };
+        var requestUri = $"orders/{payment.OrderId}/{(payment.IsPayIn ? "pay-in" : "pay-out")}";
+        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
+        if (maybe.TryGetValue(out var response) && response.Order != null)
+        {
+            AccountNumber = response.Order.AccountNumber;
+            Reservations = response.Order.Reservations;
+            Totals = response.Order.Totals;
+            UpdatePrice();
+        }
+        else
+        {
+            showGeneralErrorAlert = true;
+        }
+    }
+
+    private async Task OnSettlementConfirm((int OrderId, SettleReservationRequest Request) tuple)
+    {
+        var requestUri = $"orders/{tuple.OrderId}/settle";
+        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
+        if (maybe.TryGetValue(out var response) && response.Order != null)
+        {
+            AccountNumber = response.Order.AccountNumber;
+            Reservations = response.Order.Reservations;
+            Totals = response.Order.Totals;
+            UpdatePrice();
+        }
+        else
+        {
+            showGeneralErrorAlert = true;
+        }
+    }
+
+    private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
 }

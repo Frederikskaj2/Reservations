@@ -83,7 +83,7 @@
         TransactionType.DepositCancellation => $"Afbestilling {GetReservationText(transaction)} depositum",
         TransactionType.CancellationFee => $"Afbestillingsgebyr {GetReservationText(transaction)}",
         TransactionType.SettlementDeposit => $"Opgørelse {GetReservationText(transaction)} depositum",
-        TransactionType.SettlementDamages => $"Opgørelse {GetReservationText(transaction)} skader",
+        TransactionType.SettlementDamages => $"Opgørelse {GetReservationText(transaction)} skader: {transaction.Comment}",
         TransactionType.PayIn => "Indbetaling",
         TransactionType.PayOut => "Udbetaling",
         _ => throw new ArgumentOutOfRangeException()

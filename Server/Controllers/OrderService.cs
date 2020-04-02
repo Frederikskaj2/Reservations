@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
@@ -172,7 +173,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             foreach (var reservationId in cancelledReservations)
             {
                 var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
-                if (reservation == null || !reservation.CanBeCancelled(today, reservationsOptions))
+                if (reservation == null || userId.HasValue && !reservation.CanBeCancelled(today, reservationsOptions))
                     continue;
 
                 var previousStatus = reservation.Status;
@@ -223,7 +224,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             // TODO: Handle this conversion gracefully in the client.
 
             var totals = GetTotals(order);
-            if (totals.Balance >= 0)
+            if (totals.GetBalance() >= 0)
             {
                 var reservedReservations =
                     order.Reservations.Where(reservation => reservation.Status == ReservationStatus.Reserved);
@@ -250,7 +251,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return null;
 
             var totals = GetTotals(order);
-            var amountToPay = -totals.Balance;
+            var amountToPay = -totals.GetBalance();
 
             if (amount >= amountToPay)
             {
@@ -258,16 +259,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     order.Reservations.Where(reservation => reservation.Status == ReservationStatus.Reserved);
                 foreach (var reservation in reservedReservations)
                     reservation.Status = ReservationStatus.Confirmed;
-                // TODO: Send email about reservation status change.
-            }
-
-            if (amount > amountToPay)
-            {
-                // TODO: Register payout of excess pay-in.
-            }
-            else if (amount < amountToPay)
-            {
-                // TODO: Send mail about missing payment.
+                // TODO: Include reservation status change in mail.
             }
 
             var transaction = new Transaction
@@ -290,10 +282,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return null;
             }
 
+            // TODO: Send mail about the pay-in.
+
             return order;
         }
 
-        public async Task<Order?> Settle(Instant timestamp, int orderId, int userId, int reservationId, int damages)
+        public async Task<Order?> Settle(Instant timestamp, int orderId, int userId, int reservationId, int damages, string? description)
         {
             var order = await GetOrder(orderId);
             if (order == null)
@@ -301,7 +295,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var reservation = order.Reservations.FirstOrDefault(r => r.Id == reservationId);
             if (reservation == null || reservation.Status != ReservationStatus.Confirmed
-                                    || !(0 <= damages && damages <= reservation.Price!.Deposit))
+                                    || !(0 <= damages && damages <= reservation.Price!.Deposit)
+                                    || damages > 0 && string.IsNullOrWhiteSpace(description))
                 return null;
 
             reservation.Status = ReservationStatus.Settled;
@@ -314,6 +309,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     CreatedByUserId = userId,
                     UserId = order.UserId,
                     OrderId = orderId,
+                    ResourceId = reservation.ResourceId,
+                    ReservationDate = reservation.Date,
                     Amount = reservation.Price!.Deposit
                 });
             if (damages > 0)
@@ -325,6 +322,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         CreatedByUserId = userId,
                         UserId = order.UserId,
                         OrderId = orderId,
+                        ResourceId = reservation.Id,
+                        ReservationDate = reservation.Date,
+                        Comment = description,
                         Amount = -damages
                     });
 
@@ -337,32 +337,97 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return null;
             }
 
+            // TODO: Send mail about the settlement.
+
             return order;
+        }
+
+        public async Task<Order?> PayOut(Instant timestamp, int orderId, int userId, int amount)
+        {
+            var order = await GetOrder(orderId);
+            if (order == null)
+                return null;
+
+            var transaction = new Transaction
+            {
+                Timestamp = timestamp,
+                Type = TransactionType.PayOut,
+                CreatedByUserId = userId,
+                UserId = order.UserId,
+                OrderId = orderId,
+                Amount = -amount
+            };
+            await db.Transactions.AddAsync(transaction);
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return null;
+            }
+
+            // TODO: Send mail about the payout.
+
+            return order;
+        }
+
+
+        public async Task<IEnumerable<PayOut>> GetPayOuts()
+        {
+            var orders = await db.Orders
+                .Include(order => order.User)
+                .Include(order => order.Transactions)
+                .ToListAsync();
+
+            var payOuts = orders.Select(
+                    order => new PayOut
+                    {
+                        OrderId = order.Id,
+                        Mail = order.User!.Email,
+                        FullName = order.User.FullName,
+                        Phone = order.User.PhoneNumber,
+                        ApartmentId = order.ApartmentId,
+                        AccountNumber = order.AccountNumber!,
+                        Amount = GetTotals(order).GetBalance()
+                    })
+                .Where(payOut => payOut.Amount > 0);
+            return payOuts;
         }
 
         public OrderTotals GetTotals(Order order)
         {
-            var totalPrice = order.Reservations.Aggregate(
-                new Price(),
-                (price, reservation) => reservation.Status != ReservationStatus.Cancelled
-                    ? price.Accumulate(reservation.Price!)
-                    : price);
-            var totals = new OrderTotals
+            var totals = new OrderTotals();
+            foreach (var transaction in order.Transactions!)
             {
-                Price = totalPrice.Adapt<Shared.Price>(),
-                PayIn = order.Transactions.Where(transaction => transaction.Type == TransactionType.PayIn)
-                    .Sum(transaction => transaction.Amount),
-                CancellationFee = -order.Transactions
-                    .Where(transaction => transaction.Type == TransactionType.CancellationFee)
-                    .Sum(transaction => transaction.Amount),
-                Damages = -order.Transactions
-                    .Where(transaction => transaction.Type == TransactionType.SettlementDamages)
-                    .Sum(transaction => transaction.Amount),
-                PayOut = -order.Transactions.Where(transaction => transaction.Type == TransactionType.PayOut)
-                    .Sum(transaction => transaction.Amount)
-            };
-            totals.Balance = totals.PayIn - totals.CancellationFee - totals.Damages - totals.PayOut
-                             - totalPrice.GetTotal();
+                switch (transaction.Type)
+                {
+                    case TransactionType.Order:
+                    case TransactionType.Deposit:
+                    case TransactionType.OrderCancellation:
+                    case TransactionType.DepositCancellation:
+                        totals.Price += -transaction.Amount;
+                        break;
+                    case TransactionType.CancellationFee:
+                        totals.CancellationFee += -transaction.Amount;
+                        break;
+                    case TransactionType.SettlementDeposit:
+                        totals.SettledDeposits += transaction.Amount;
+                        break;
+                    case TransactionType.SettlementDamages:
+                        totals.Damages += -transaction.Amount;
+                        break;
+                    case TransactionType.PayIn:
+                        totals.PayIn += transaction.Amount;
+                        break;
+                    case TransactionType.PayOut:
+                        totals.PayOut += -transaction.Amount;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
             return totals;
         }
     }

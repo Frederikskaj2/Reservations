@@ -1,0 +1,67 @@
+﻿@page "/til-udbetaling"
+@inject ApiClient ApiClient
+@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container>
+            <h1>Til udbetaling</h1>
+            @if (!payOuts!.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Bestilling</TableHeaderCell>
+                            <TableHeaderCell>Mail</TableHeaderCell>
+                            <TableHeaderCell>Navn</TableHeaderCell>
+                            <TableHeaderCell>Telefon</TableHeaderCell>
+                            <TableHeaderCell>Adresse</TableHeaderCell>
+                            <TableHeaderCell>Kontonummer</TableHeaderCell>
+                            <TableHeaderCell class="text-right">Beløb</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var payOut in payOuts!)
+                        {
+                            <TableRow>
+                                <TableRowCell><a href="/@Urls.Orders/@payOut.OrderId">@payOut.OrderId</a></TableRowCell>
+                                <TableRowCell><a href="mailto:@payOut.Mail?subject=Frederikskaj 2 bestilling @payOut.OrderId">@FormattingService.FormatMail(payOut.Mail)</a></TableRowCell>
+                                <TableRowCell>@payOut.FullName</TableRowCell>
+                                <TableRowCell>@FormattingService.FormatPhone(payOut.Phone)</TableRowCell>
+                                <TableRowCell>Frederikskaj @apartments![payOut.ApartmentId]</TableRowCell>
+                                <TableRowCell>@payOut.AccountNumber</TableRowCell>
+                                <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(payOut.Amount)</TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+            }
+        </Container>
+    }
+
+</main>
+
+@code {
+
+    private IReadOnlyDictionary<int, Apartment>? apartments;
+    private IEnumerable<PayOut>? payOuts;
+    private bool isInitialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apartments = (await ClientDataProvider.GetApartments()).ToDictionary(apartment => apartment.Id);
+        var maybe = await ApiClient.GetJsonAsync<IEnumerable<PayOut>>("pay-outs");
+        maybe.TryGetValue(out payOuts);
+        isInitialized = true;
+    }
+}

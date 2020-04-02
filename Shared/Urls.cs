@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Frederikskaj2.Reservations.Shared
+﻿namespace Frederikskaj2.Reservations.Shared
 {
     public static class Urls
     {
@@ -14,6 +12,7 @@ namespace Frederikskaj2.Reservations.Shared
         public const string MyTransactions = "bruger/kontoudtog";
         public const string NewPassword = "ny-adgangskode";
         public const string Orders = "bestillinger";
+        public const string PayOuts = "til-udbetaling";
         public const string ResetPassword = "anmod-om-ny-adgangskode";
         public const string RulesBanquetFacilities = "husorden/aktivitets-festlokalet";
         public const string RulesBedrooms = "husorden/sovevaerelser";

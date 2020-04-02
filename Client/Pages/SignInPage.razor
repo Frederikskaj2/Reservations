@@ -80,7 +80,6 @@
             {
                 AuthenticationStateProvider.UpdateUser(response.User!);
                 ApplicationState.ResetStateAfterSignIn();
-                ClientDataProvider.ResetState();
                 if (ApplicationState.RedirectUrl != null)
                 {
                     var redirectUrl = ApplicationState.RedirectUrl;

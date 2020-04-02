@@ -33,7 +33,7 @@
                     @foreach (var user in users!)
                     {
                         <TableRow @key="@user.Id">
-                            <TableRowCell><a href="mailto:@user.Email?subject=Frederikskaj 2">@FormattingService.FormatEmail(user.Email)</a></TableRowCell>
+                            <TableRowCell><a href="mailto:@user.Email?subject=Frederikskaj 2">@FormattingService.FormatMail(user.Email)</a></TableRowCell>
                             <TableRowCell>@user.FullName</TableRowCell>
                             <TableRowCell>@FormattingService.FormatPhone(user.Phone)</TableRowCell>
                             <TableRowCell class="text-center">@(user.OrderCount > 0 ? user.OrderCount.ToString() : string.Empty)</TableRowCell>
