@@ -16,45 +16,28 @@
 else
 {
     <main>
-        <div class="calendar-container">
-            <form>
-                <div class="row">
-                    <div class="col">
-                        <select class="form-control" @onchange="MonthChanged">
-                            @{
-                                var isFirst = true;
-                                foreach (var tuple in months!)
-                                {
-                                    <option value="@tuple.Date" selected="@isFirst">@tuple.Text</option>
-                                    isFirst = false;
-                                }
-                            }
-                        </select>
-                    </div>
-                    <div class="col">
-                        <select class="form-control" @onchange="ResourceChanged">
-                            @foreach (var resource in orderedResources!)
-                            {
-                                <option value="@resource.Id">@resource.Name</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <div class="legend-container">
-                            @{
-                                var resourceCounter = 1;
-                                foreach (var resource in orderedResources!)
-                                {
-                                    <span class="legend-icon resource resource-reserved-other resource-@(resourceCounter++)"></span>
-                                    <span class="legend-text@(resource.Id == currentResourceId ? " legend-selected-resource" : string.Empty)">@resource.Name</span>
-                                }
-                            }
-                        </div>
-                    </div>
-                </div>
-            </form>
+        <Row class="calendar-container">
+            <Form>
+                <Buttons>
+                    @{
+                        var resourceCounter = 1;
+                        foreach (var resource in orderedResources!)
+                        {
+                            var isSelected = resource.Id == currentResourceId;
+                            <Button Color="Color.Secondary" Outline="true" class="@(isSelected ? "legend-selected-resource" : string.Empty)" Clicked="@(() => SelectResource(resource.Id))">
+                                <span class="legend-icon resource resource-reserved-other resource-@(resourceCounter++)"></span>
+                                <span>@resource.Name</span>
+                            </Button>
+                        }
+                    }
+                </Buttons>
+                <Select TValue="string" SelectedValue="@currentMonthValue" SelectedValueChanged="@MonthChanged">
+                    @foreach (var tuple in months!)
+                    {
+                        <SelectItem Value="@tuple.Value">@tuple.Text</SelectItem>
+                    }
+                </Select>
+            </Form>
             <div class="calendar">
                 <div class="calendar-day-of-week-1 calendar-header">Mandag</div>
                 <div class="calendar-day-of-week-2 calendar-header">Tirsdag</div>
@@ -73,7 +56,7 @@ else
                         <div class="@GetCalendarDayClasses(day, dayOfWeek)" @onclick="@(() => MakeReservation(localDate))" tabindex="@(day.IsResourceAvailable ? "0" : string.Empty)" @onkeyup="@(e => KeyUp(e, localDate))" date="@localDate">
                             <div class="calendar-day">@day.Date.Day</div>
                             @{
-                                resourceCounter = 1;
+                                var resourceCounter = 1;
                                 foreach (var classes in orderedResources!.Select(resource => GetResourceClasses(calendar[date.PlusDays(-1)], day, calendar[date.PlusDays(1)], resource.Id, resourceCounter++)))
                                 {
                                     <div class="@classes"></div>
@@ -85,7 +68,21 @@ else
                     }
                 }
             </div>
-        </div>
+            <Form>
+                @if (previousMonth.HasValue)
+                {
+                    <Button Color="Color.Light" Clicked="@(() => SelectMonth(previousMonth.Value))">
+                        <Icon class="fa-arrow-circle-left" />
+                    </Button>
+                }
+                @if (nextMonth.HasValue)
+                {
+                    <Button Color="Color.Light" class="float-right" Clicked="@(() => SelectMonth(nextMonth.Value))">
+                        <Icon class="fa-arrow-circle-right" />
+                    </Button>
+                }
+            </Form>
+        </Row>
     </main>
     <section class="sidebar">
         @if (DataProvider.DraftOrder.Reservations.Count > 0)
@@ -130,8 +127,11 @@ else
     private static readonly LocalDatePattern MonthPattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM");
     private ReservationDialog reservationDialog = null!;
     private bool isInitialized;
-    private List<(string Date, string Text)>? months;
+    private List<(LocalDate Date, string Value, string Text)>? months;
     private LocalDate currentMonth;
+    private string currentMonthValue = string.Empty;
+    private LocalDate? previousMonth;
+    private LocalDate? nextMonth;
     private IReadOnlyDictionary<int, Resource>? resources;
     private List<Resource>? orderedResources;
     private int currentResourceId;
@@ -140,21 +140,23 @@ else
     private LocalDate lastCalendarDate;
     private Price totalPrice = new Price();
 
-    private async Task MonthChanged(ChangeEventArgs e) => await UpdateCalendar(ParseMonth(e.Value.ToString()), currentResourceId);
+    private Task MonthChanged(string value) => UpdateCalendar(ParseMonth(value), currentResourceId);
 
-    private async Task ResourceChanged(ChangeEventArgs e) => await UpdateCalendar(currentMonth, int.Parse(e.Value.ToString()));
+    private Task SelectMonth(LocalDate month) => UpdateCalendar(month, currentResourceId);
+
+    private Task SelectResource(int resourceId) => UpdateCalendar(currentMonth, resourceId);
 
     protected override async Task OnInitializedAsync()
     {
         var pattern = LocalDatePattern.Create("MMMM yyyy", CultureInfo);
         months = GetMonths()
-            .Select(date => (MonthPattern.Format(date), Capitalize(pattern.Format(date))))
+            .Select(date => (date, MonthPattern.Format(date), Capitalize(pattern.Format(date))))
             .ToList();
 
         resources = await DataProvider.GetResources();
         orderedResources = resources.Values.OrderBy(r => r.Sequence).ToList();
 
-        await UpdateCalendar(ParseMonth(months[0].Date), orderedResources[0].Id);
+        await UpdateCalendar(months[0].Date, orderedResources[0].Id);
         UpdateTotalPrice();
 
         isInitialized = true;
@@ -211,6 +213,10 @@ else
             date = date.PlusDays(1);
         }
         currentMonth = month;
+        var currentMonthIndex = months!.FindIndex(tuple => tuple.Date == currentMonth);
+        currentMonthValue = months[currentMonthIndex].Value;
+        previousMonth = currentMonthIndex > 0 ? months[currentMonthIndex - 1].Date : (LocalDate?) null;
+        nextMonth = currentMonthIndex < months.Count - 1 ? months[currentMonthIndex + 1].Date : (LocalDate?) null;
         currentResourceId = resourceId;
         calendar = days.ToDictionary(day => day.Date);
         firstCalendarDate = firstMonday;

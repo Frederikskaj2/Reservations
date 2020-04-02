@@ -397,11 +397,19 @@ a.sign-in {
     width: 42rem;
 }
 
-    .calendar-container .legend-container {
-        margin-top: 2rem;
-        display: flex;
-        align-items: center;
+    .calendar-container form {
+        width: 100%;
     }
+
+    .calendar-container .btn-group {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+        .calendar-container .btn-group .btn {
+            display: flex;
+            align-items: center;
+        }
 
     .calendar-container .legend-icon {
         float: left;
@@ -411,11 +419,9 @@ a.sign-in {
         border: 1px solid rgba(0, 0, 0, .2);
     }
 
-    .calendar-container .legend-text {
-        margin-right: 2rem;
-    }
-
     .calendar-container .legend-selected-resource {
+        background: #EEE;
+        color: black;
         font-weight: bold;
     }
 
@@ -445,7 +451,7 @@ a.sign-in {
     }
 
 .calendar {
-    margin-top: 2rem;
+    margin: 1rem 0;
     display: grid;
     grid-template-columns: repeat(7, 6rem);
     grid-template-rows: auto;
