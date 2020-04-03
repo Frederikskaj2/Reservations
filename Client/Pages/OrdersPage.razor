@@ -7,18 +7,25 @@
 @inject NavigationManager NavigationManager
 @inject ReservationsOptions ReservationsOptions
 
-    <main>
-        @if (!isInitialized)
-        {
-            <Spinner />
-        }
-        else
-        {
-            <Container>
-                <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
-                    Der er sket en fejl, og din ændring blev ikke gemt.
-                    <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
-                </Alert>
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
+                Der er sket en fejl, og din ændring blev ikke gemt.
+                <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
+            </Alert>
+            <h1>Bestillinger</h1>
+            @if (!orders!.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -85,11 +92,12 @@
                         }
                     </TableBody>
                 </Table>
-            </Container>
-            <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
-            <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
-        }
-    </main>
+                <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+                <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
+            }
+        </Container>
+    }
+</main>
 
 @code {
 
@@ -129,37 +137,37 @@
     }
 
     private async Task OnPaymentConfirm(Payment payment)
-        {
-            var request = new PaymentRequest { Amount = payment.Amount };
-            var requestUri = $"orders/{payment.OrderId}/{(payment.IsPayIn ? "pay-in" : "pay-out")}";
-            var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
-            if (maybe.TryGetValue(out var response) && response.Order != null)
-                UpdateOrder(response.Order);
-            else
-                showGeneralErrorAlert = true;
-        }
+    {
+        var request = new PaymentRequest { Amount = payment.Amount };
+        var requestUri = $"orders/{payment.OrderId}/{(payment.IsPayIn ? "pay-in" : "pay-out")}";
+        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
+        if (maybe.TryGetValue(out var response) && response.Order != null)
+            UpdateOrder(response.Order);
+        else
+            showGeneralErrorAlert = true;
+    }
 
-        private async Task OnSettlementConfirm((int OrderId, SettleReservationRequest Request) tuple)
-        {
-            var requestUri = $"orders/{tuple.OrderId}/settle";
-            var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
-            if (maybe.TryGetValue(out var response) && response.Order != null)
-                UpdateOrder(response.Order);
-            else
-                showGeneralErrorAlert = true;
-        }
+    private async Task OnSettlementConfirm((int OrderId, SettleReservationRequest Request) tuple)
+    {
+        var requestUri = $"orders/{tuple.OrderId}/settle";
+        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
+        if (maybe.TryGetValue(out var response) && response.Order != null)
+            UpdateOrder(response.Order);
+        else
+            showGeneralErrorAlert = true;
+    }
 
-        private void UpdateOrder(Order order)
-        {
-            var index = orders!.FindIndex(o => o.Id == order.Id);
-            orders[index] = order;
-        }
+    private void UpdateOrder(Order order)
+    {
+        var index = orders!.FindIndex(o => o.Id == order.Id);
+        orders[index] = order;
+    }
 
-        private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
+    private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
 
-        private bool GetIsUnpaidOrderOld(Order order)
-        {
-            var daysSinceOrderWasPlaced = -DateProvider.GetDaysFromToday(order.CreatedTimestamp);
-            return daysSinceOrderWasPlaced > ReservationsOptions.HighlightUnpaidOrdersAfterDays;
-        }
+    private bool GetIsUnpaidOrderOld(Order order)
+    {
+        var daysSinceOrderWasPlaced = -DateProvider.GetDaysFromToday(order.CreatedTimestamp);
+        return daysSinceOrderWasPlaced > ReservationsOptions.HighlightUnpaidOrdersAfterDays;
+    }
 }
