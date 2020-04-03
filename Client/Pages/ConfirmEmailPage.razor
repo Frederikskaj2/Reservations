@@ -1,5 +1,6 @@
-﻿@page "/bekraeft-mail/{email}/{token}"
+﻿@page "/bekraeft-mail"
 @inject ApiClient ApiClient
+@inject NavigationManager NavigationManager
 
 <main>
     @if (!isInitialized)
@@ -12,7 +13,7 @@
             @if (showErrorAlert)
             {
                 <Alert Color="Color.Danger" Visible="true">
-                    Der er sket en fejl. Din mail blev ikke bekræftet.
+                    Der er sket en fejl, og din mail blev ikke bekræftet.
                 </Alert>
             }
             else
@@ -29,23 +30,25 @@
     private bool isInitialized;
     private bool showErrorAlert;
 
-    [Parameter]
-    public string Email { get; set; } = null!;
-
-    [Parameter]
-    public string Token { get; set; } = null!;
-
     protected override async Task OnInitializedAsync()
     {
-        var request = new ConfirmEmailRequest
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = QueryParser.GetQuery(NavigationManager.Uri);
+        if (query.Contains("email") && query.Contains("token"))
         {
-            Email = Email,
-            Token = Token
-        };
-        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/confirm-email", request);
-        if (!maybe.TryGetValue(out var response) || response.Result == OperationResult.GeneralError)
+            var request = new ConfirmEmailRequest
+            {
+                Email = query["email"].FirstOrDefault(),
+                Token = query["token"].FirstOrDefault()
+            };
+            var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/confirm-email", request);
+            if (!maybe.TryGetValue(out var response) || response.Result == OperationResult.GeneralError)
+                showErrorAlert = true;
+        }
+        else
+        {
             showErrorAlert = true;
+        }
         isInitialized = true;
     }
-
 }

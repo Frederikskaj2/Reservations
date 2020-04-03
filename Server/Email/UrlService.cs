@@ -22,7 +22,8 @@ namespace Frederikskaj2.Reservations.Server.Email
         {
             var uriBuilder = new UriBuilder(options.BaseUrl!)
             {
-                Path = $"{Urls.ConfirmEmail}/{Uri.EscapeDataString(email)}/{Uri.EscapeDataString(token)}"
+                Path = Urls.ConfirmEmail,
+                Query = $"?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}"
             };
             return uriBuilder.Uri;
         }
@@ -31,7 +32,8 @@ namespace Frederikskaj2.Reservations.Server.Email
         {
             var uriBuilder = new UriBuilder(options.BaseUrl!)
             {
-                Path = $"{Urls.NewPassword}/{Uri.EscapeDataString(email)}/{Uri.EscapeDataString(token)}"
+                Path = Urls.NewPassword,
+                Query = $"?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}"
             };
             return uriBuilder.Uri;
         }
