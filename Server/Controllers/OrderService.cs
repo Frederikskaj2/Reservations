@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
+using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Shared;
 using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -12,26 +14,36 @@ using Order = Frederikskaj2.Reservations.Server.Data.Order;
 using Price = Frederikskaj2.Reservations.Server.Data.Price;
 using Reservation = Frederikskaj2.Reservations.Server.Data.Reservation;
 using ReservedDay = Frederikskaj2.Reservations.Server.Data.ReservedDay;
+using User = Frederikskaj2.Reservations.Server.Data.User;
+
 
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     public class OrderService
     {
+        private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
         private readonly IDataProvider dataProvider;
         private readonly DateTimeZone dateTimeZone;
         private readonly ReservationsContext db;
         private readonly IReservationPolicyProvider reservationPolicyProvider;
         private readonly ReservationsOptions reservationsOptions;
+        private readonly UserManager<User> userManager;
 
         public OrderService(
-            IDataProvider dataProvider, DateTimeZone dateTimeZone, ReservationsContext db,
-            IReservationPolicyProvider reservationPolicyProvider, ReservationsOptions reservationsOptions)
+            IBackgroundWorkQueue<EmailService> backgroundWorkQueue, IDataProvider dataProvider,
+            DateTimeZone dateTimeZone, ReservationsContext db, IReservationPolicyProvider reservationPolicyProvider,
+            ReservationsOptions reservationsOptions, UserManager<User> userManager)
         {
-            this.dataProvider = dataProvider;
-            this.dateTimeZone = dateTimeZone;
-            this.db = db;
-            this.reservationPolicyProvider = reservationPolicyProvider;
-            this.reservationsOptions = reservationsOptions;
+            this.backgroundWorkQueue =
+                backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
+            this.dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
+            this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
+            this.db = db ?? throw new ArgumentNullException(nameof(db));
+            this.reservationPolicyProvider
+                = reservationPolicyProvider ?? throw new ArgumentNullException(nameof(reservationPolicyProvider));
+            this.reservationsOptions =
+                reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
+            this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
         public async Task<Order?> GetOrder(int orderId)
@@ -118,6 +130,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return PlaceOrderResult.GeneralError;
             }
 
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            backgroundWorkQueue.Enqueue(
+                (service, _) => service.SendOrderReceivedEmail(user, order.Id, totalPrice.GetTotal()));
+
             return PlaceOrderResult.Success;
 
             async Task<Reservation?> CreateReservation(ReservationRequest reservation)
@@ -170,6 +186,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var today = timestamp.InZone(dateTimeZone).Date;
             order.AccountNumber = accountNumber;
+            var reservationsCancelledWithFee = new List<Reservation>();
             foreach (var reservationId in cancelledReservations)
             {
                 var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
@@ -206,6 +223,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         Amount = reservation.Price.Rent + reservation.Price.CleaningFee
                     });
                 if (previousStatus == ReservationStatus.Confirmed)
+                {
+                    reservationsCancelledWithFee.Add(reservation);
                     order.Transactions.Add(
                         new Transaction
                         {
@@ -218,18 +237,23 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                             ReservationDate = reservation.Date,
                             Amount = -reservationsOptions.CancellationFee
                         });
+                }
             }
 
             // TODO: If all reservations are cancelled then convert order to history order.
             // TODO: Handle this conversion gracefully in the client.
 
             var totals = GetTotals(order);
+            var orderIsConfirmed = false;
             if (totals.GetBalance() >= 0)
             {
                 var reservedReservations =
                     order.Reservations.Where(reservation => reservation.Status == ReservationStatus.Reserved);
                 foreach (var reservation in reservedReservations)
+                {
                     reservation.Status = ReservationStatus.Confirmed;
+                    orderIsConfirmed = true;
+                }
             }
 
             try
@@ -240,6 +264,15 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 return default;
             }
+
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            var resources = await dataProvider.GetResources();
+            foreach (var reservation in reservationsCancelledWithFee)
+                backgroundWorkQueue.Enqueue(
+                    (service, _) => service.SendReservationCancelledEmail(user, order.Id, resources[reservation.ResourceId].Name!, reservation.Date, reservationsOptions.CancellationFee));
+            if (orderIsConfirmed)
+                backgroundWorkQueue.Enqueue(
+                    (service, _) => service.SendOrderConfirmedEmail(user, order.Id, 0, totals.GetBalance()));
 
             return order;
         }
@@ -259,7 +292,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     order.Reservations.Where(reservation => reservation.Status == ReservationStatus.Reserved);
                 foreach (var reservation in reservedReservations)
                     reservation.Status = ReservationStatus.Confirmed;
-                // TODO: Include reservation status change in mail.
             }
 
             var transaction = new Transaction
@@ -282,12 +314,19 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return null;
             }
 
-            // TODO: Send mail about the pay-in.
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            if (amount >= amountToPay)
+                backgroundWorkQueue.Enqueue(
+                    (service, _) => service.SendOrderConfirmedEmail(user, order.Id, amount, amount - amountToPay));
+            else
+                backgroundWorkQueue.Enqueue(
+                    (service, _) => service.SendMissingPaymentEmail(user, order.Id, amount, amountToPay - amount));
 
             return order;
         }
 
-        public async Task<Order?> Settle(Instant timestamp, int orderId, int userId, int reservationId, int damages, string? description)
+        public async Task<Order?> Settle(
+            Instant timestamp, int orderId, int userId, int reservationId, int damages, string? description)
         {
             var order = await GetOrder(orderId);
             if (order == null)
@@ -400,7 +439,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             var totals = new OrderTotals();
             foreach (var transaction in order.Transactions!)
-            {
                 switch (transaction.Type)
                 {
                     case TransactionType.Order:
@@ -427,7 +465,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-            }
+
             return totals;
         }
     }

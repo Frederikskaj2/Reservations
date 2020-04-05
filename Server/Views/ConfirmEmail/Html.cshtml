@@ -1,4 +1,4 @@
-﻿@model EmailWithTokenModel
+﻿@model EmailWithUrlModel
 @inject IOptions<DataProtectionTokenProviderOptions> DataProtectionTokenProviderOptions
 @{
     var validDays = (int) DataProtectionTokenProviderOptions.Value.TokenLifespan.TotalDays;
@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-    <p>Hej @Model.User.FullName</p>
+    <p>Hej @Model.Name</p>
     <p><a href="@Model.Url">Åbn linket for at bekræfte din mail.</a></p>
     <p>Dette link er gyldigt i @validDays dag@(validDays == 1 ? string.Empty : "e").</p>
     <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>

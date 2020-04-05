@@ -37,5 +37,6 @@ namespace Frederikskaj2.Reservations.Shared
         public int CancellationFee { get; set; } = 200;
         public int MinimumCancellationNoticeInDays { get; set; } = 14;
         public int HighlightUnpaidOrdersAfterDays { get; set; } = 7;
+        public string PayInAccountNumber = "1234-12345678";
     }
 }

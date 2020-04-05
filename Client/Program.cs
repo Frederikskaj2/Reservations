@@ -57,8 +57,16 @@ namespace Frederikskaj2.Reservations.Client
                 .AddSingleton(jsonSerializerOptions)
                 .AddSingleton<ApiClient>();
 
+            var cultureInfo = new CultureInfo("da-DK")
+            {
+                NumberFormat =
+                {
+                    CurrencyPositivePattern = 2,
+                    CurrencyNegativePattern = 12
+                }
+            };
             services
-                .AddSingleton(CultureInfo.GetCultureInfo("da-DK"))
+                .AddSingleton(cultureInfo)
                 .AddSingleton<FormattingService>()
                 .AddReservationsServices()
                 .AddSingleton<ClientDataProvider>()

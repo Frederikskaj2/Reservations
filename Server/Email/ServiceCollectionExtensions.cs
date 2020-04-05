@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.Extensions.Configuration;
@@ -20,6 +21,14 @@ namespace Frederikskaj2.Reservations.Server.Email
 
             var root = Directory.GetCurrentDirectory();
             var diagnosticSource = new DiagnosticListener("Microsoft.AspNetCore");
+            var cultureInfo = new CultureInfo("da-DK")
+            {
+                NumberFormat =
+                {
+                    CurrencyPositivePattern = 2,
+                    CurrencyNegativePattern = 12
+                }
+            };
             services
                 .Configure<MvcRazorRuntimeCompilationOptions>(
                     options => options.FileProviders.Add(new PhysicalFileProvider(root)))
@@ -32,6 +41,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 .AddScoped<RazorViewToStringRenderer>()
                 .AddScoped<UrlService>()
                 .AddScoped<EmailService>()
+                .AddSingleton(cultureInfo)
                 .AddRazorPages();
             return services;
         }

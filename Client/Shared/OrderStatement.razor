@@ -1,5 +1,4 @@
 ﻿@inject ApiClient ApiClient
-@inject AuthenticationStateProvider AuthenticationStateProvider;
 @inject ClientDataProvider ClientDataProvider
 @inject IDateProvider DateProvider
 @inject FormattingService FormattingService
@@ -46,8 +45,8 @@
                     @foreach (var reservation in Reservations!)
                     {
                         var isCancelled = request.CancelledReservations.Contains(reservation.Id);
-                        var canBeSettled = isAdministrator && reservation.Status == ReservationStatus.Confirmed /*&& reservation.Date.PlusDays(reservation.DurationInDays) <= today*/;
-                        var canBeCancelled = reservation.CanBeCancelled || isAdministrator && reservation.Status == ReservationStatus.Confirmed && !canBeSettled;
+                        var canBeSettled = IsAdministrator && reservation.Status == ReservationStatus.Confirmed /*&& reservation.Date.PlusDays(reservation.DurationInDays) <= today*/;
+                        var canBeCancelled = reservation.CanBeCancelled || IsAdministrator && reservation.Status == ReservationStatus.Confirmed && !canBeSettled;
                         var color = reservation.Status == ReservationStatus.Settled ? string.Empty : "text-primary";
                         <TableRow class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : color)">
                             <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
@@ -154,7 +153,7 @@
                     {
                         <TableRow>
                             <TableRowCell colspan="6" class="border-top-0">
-                                @if (isAdministrator)
+                                @if (IsAdministrator)
                                 {
                                     if (Totals!.GetBalance() < 0)
                                     {
@@ -175,7 +174,7 @@
             </Table>
         </Validations>
     </Form>
-    @if (isAdministrator)
+    @if (IsAdministrator)
     {
         <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
         <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
@@ -188,13 +187,15 @@
     private Validations validations = null!;
     private PaymentDialog paymentDialog = null!;
     private SettlementDialog settlementDialog = null!;
-    bool isAdministrator;
     private IReadOnlyDictionary<int, Resource>? resources;
     private LocalDate today;
     private bool showGeneralErrorAlert;
     private Price? price;
     private int cancellationFee;
     private int balance;
+
+    [Parameter]
+    public bool IsAdministrator { get; set; }
 
     [Parameter]
     public int OrderId { get; set; }
@@ -215,8 +216,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
         resources = await ClientDataProvider.GetResources();
         today = DateProvider.Today;
     }

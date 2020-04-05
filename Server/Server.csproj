@@ -34,4 +34,9 @@
     <Content Update="appsettings.local.json" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\PayOut\" />
+    <Folder Include="Views\ReservationSettled\" />
+  </ItemGroup>
+
 </Project>

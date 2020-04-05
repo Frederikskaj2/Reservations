@@ -3,16 +3,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
     internal class BackgroundWorkerService<TService> : BackgroundService
     {
+        private readonly ILogger logger;
         private readonly IBackgroundWorkQueue<TService> queue;
         private readonly IServiceProvider serviceProvider;
 
-        public BackgroundWorkerService(IServiceProvider serviceProvider, IBackgroundWorkQueue<TService> queue)
+        public BackgroundWorkerService(ILogger<BackgroundWorkerService<TService>> logger, IServiceProvider serviceProvider, IBackgroundWorkQueue<TService> queue)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
             this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
@@ -32,8 +35,9 @@ namespace Frederikskaj2.Reservations.Server.Email
                 {
                     return;
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
+                    logger.LogError(exception, "An error occurred.");
                 }
             }
         }

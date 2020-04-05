@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Frederikskaj2.Reservations.Shared;
 using MailKit.Net.Smtp;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using NodaTime;
@@ -10,22 +12,27 @@ namespace Frederikskaj2.Reservations.Server.Email
 {
     public class EmailService
     {
-        private readonly IClock clock;
+        private readonly ILogger logger;
         private readonly EmailOptions options;
+        private readonly ReservationsOptions reservationsOptions;
         private readonly UrlService urlService;
         private readonly RazorViewToStringRenderer viewToStringRenderer;
 
         public EmailService(
-            IOptions<EmailOptions> options, IClock clock, RazorViewToStringRenderer viewToStringRenderer,
-            UrlService urlService)
+            ILogger<EmailService> logger, IOptions<EmailOptions> options,
+            RazorViewToStringRenderer viewToStringRenderer, UrlService urlService,
+            ReservationsOptions reservationsOptions)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
 
-            this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            this.viewToStringRenderer = viewToStringRenderer ?? throw new ArgumentNullException(nameof(viewToStringRenderer));
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.viewToStringRenderer =
+                viewToStringRenderer ?? throw new ArgumentNullException(nameof(viewToStringRenderer));
             this.urlService = urlService ?? throw new ArgumentNullException(nameof(urlService));
-            
+            this.reservationsOptions =
+                reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
+
             this.options = options.Value;
             if (string.IsNullOrEmpty(this.options.SmtpHostName))
                 throw new ConfigurationException("Missing SMTP host name.");
@@ -47,36 +54,130 @@ namespace Frederikskaj2.Reservations.Server.Email
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrEmpty(token))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(token));
 
-            var message = CreateEmptyMessage(user);
-            var model = new EmailWithTokenModel(user, urlService.GetConfirmEmailUrl(user.Email, token), options.FromName!, urlService.GetFromUrl());
-            message.Subject = await viewToStringRenderer.RenderViewToStringAsync(@"ConfirmEmail\Subject", model);
-            var bodyBuilder = new BodyBuilder
-            {
-                TextBody = await viewToStringRenderer.RenderViewToStringAsync(@"ConfirmEmail\Text", model),
-                HtmlBody = await viewToStringRenderer.RenderViewToStringAsync(@"ConfirmEmail\Html", model)
-            };
-            message.Body = bodyBuilder.ToMessageBody();
-
-            await SendMessage(message);
+            var model = new EmailWithUrlModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetConfirmEmailUrl(user.Email, token));
+            await SendMessage(user, model, "COnfirmEmail");
         }
 
         public async Task SendResetPasswordEmail(User user, string token)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrEmpty(token))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(token));
 
+            var model = new EmailWithUrlModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetResetPasswordUrl(user.Email, token));
+            await SendMessage(user, model, "ResetPassword");
+        }
+
+        public async Task SendOrderReceivedEmail(User user, int orderId, int amount)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
+
+            var model = new OrderReceivedModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId,
+                amount,
+                reservationsOptions.PayInAccountNumber);
+            await SendMessage(user, model, "OrderReceived");
+        }
+
+        public async Task SendOrderConfirmedEmail(User user, int orderId, int amount, int excessAmount)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (amount < 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
+            if (excessAmount < 0)
+                throw new ArgumentOutOfRangeException(nameof(excessAmount));
+
+            var model = new OrderConfirmedModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId,
+                amount,
+                excessAmount);
+            await SendMessage(user, model, "OrderConfirmed");
+        }
+
+        public async Task SendMissingPaymentEmail(User user, int orderId, int amount, int missingAmount)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
+            if (missingAmount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(missingAmount));
+
+            var model = new MissingPaymentModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId,
+                amount,
+                missingAmount,
+                reservationsOptions.PayInAccountNumber);
+            await SendMessage(user, model, "MissingPayment");
+        }
+
+        public async Task SendReservationCancelledEmail(
+            User user, int orderId, string resourceName, LocalDate date, int cancellationFee)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrEmpty(resourceName))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(resourceName));
+            if (cancellationFee <= 0)
+                throw new ArgumentOutOfRangeException(nameof(cancellationFee));
+
+            var model = new ReservationCancelledModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId,
+                resourceName,
+                date,
+                cancellationFee);
+            await SendMessage(user, model, "ReservationCancelled");
+        }
+
+        private async Task SendMessage<TModel>(User user, TModel model, string viewName)
+        {
+            var message = await CreateMessage(user, model, viewName);
+            await SendMessage(message);
+            logger.LogInformation("Sent message {Message} to {User}", viewName, user.Email);
+        }
+
+        private async Task<MimeMessage> CreateMessage<TModel>(User user, TModel model, string viewName)
+        {
             var message = CreateEmptyMessage(user);
-            var model = new EmailWithTokenModel(user, urlService.GetResetPasswordUrl(user.Email, token), options.FromName!, urlService.GetFromUrl());
-            message.Subject = await viewToStringRenderer.RenderViewToStringAsync(@"ResetPassword\Subject", model);
+            message.Subject = await viewToStringRenderer.RenderViewToStringAsync($@"{viewName}\Subject", model);
             var bodyBuilder = new BodyBuilder
             {
-                TextBody = await viewToStringRenderer.RenderViewToStringAsync(@"ResetPassword\Text", model),
-                HtmlBody = await viewToStringRenderer.RenderViewToStringAsync(@"ResetPassword\Html", model)
+                HtmlBody = await viewToStringRenderer.RenderViewToStringAsync($@"{viewName}\Html", model)
             };
             message.Body = bodyBuilder.ToMessageBody();
-
-            await SendMessage(message);
+            return message;
         }
 
         private MimeMessage CreateEmptyMessage(User user)
