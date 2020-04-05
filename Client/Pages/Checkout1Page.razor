@@ -72,7 +72,7 @@
                         <Validation>
                             <Select TValue="int" @bind-SelectedValue="@ClientDataProvider.DraftOrder.Request.ApartmentId">
                                 <ChildContent>
-                                    <SelectItem Value="0" disabled>Vælg lejlighed</SelectItem>
+                                    <SelectItem Value="0" disabled>Vælg din bopæl</SelectItem>
                                     @foreach (var apartment in apartments!)
                                     {
                                         <SelectItem Value="@apartment.Id">@apartment</SelectItem>

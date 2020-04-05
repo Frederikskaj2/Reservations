@@ -71,7 +71,7 @@
                     <Field>
                         <FieldLabel>Din adresse</FieldLabel>
                         <Select TValue="int" SelectedValue="@(ApplicationState.SignUpRequest.ApartmentId ?? 0)" SelectedValueChanged="@ApartmentChanged">
-                            <SelectItem Value="0">Vælg lejlighed</SelectItem>
+                            <SelectItem Value="0">Vælg din bopæl</SelectItem>
                             @foreach (var apartment in apartments)
                             {
                                 <SelectItem Value="@apartment.Id">@apartment</SelectItem>

@@ -2,6 +2,7 @@
 {
     public enum ApartmentSide
     {
+        None,
         Left,
         Right
     }

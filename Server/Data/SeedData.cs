@@ -55,8 +55,8 @@ namespace Frederikskaj2.Reservations.Server.Data
             if (!db.Database.EnsureCreated())
                 return;
 
-            var apartments = CreateApartments();
-            var resources = CreateResources();
+            CreateApartments();
+            CreateResources();
             CreateHolidays();
             await db.SaveChangesAsync();
 
@@ -120,41 +120,41 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         private static IEnumerable<Apartment> GetApartments()
         {
-            var stories = new Dictionary<char, Stories>
+            var stories = new Dictionary<char, int>
             {
-                { 'A', new Stories { Left = 5, Right = 5 } },
-                { 'B', new Stories { Left = 4, Right = 4 } },
-                { 'C', new Stories { Left = 5, Right = 5 } },
-                { 'D', new Stories { Left = 3, Right = 3 } },
-                { 'E', new Stories { Left = 6, Right = 7 } },
-                { 'F', new Stories { Left = 3, Right = 3 } },
-                { 'G', new Stories { Left = 4, Right = 4 } },
-                { 'H', new Stories { Left = 4, Right = 4 } },
-                { 'K', new Stories { Left = 5, Right = 5 } },
-                { 'L', new Stories { Left = 6, Right = 7 } },
-                { 'M', new Stories { Left = 5, Right = 5 } },
-                { 'P', new Stories { Left = 4, Right = 4 } },
-                { 'R', new Stories { Left = 6, Right = 7 } }
+                { 'A', 5 },
+                { 'B', 4 },
+                { 'C', 5 },
+                { 'D', 3 },
+                { 'E', 6 },
+                { 'F', 3 },
+                { 'G', 4 },
+                { 'H', 4 },
+                { 'K', 5 },
+                { 'L', 5 },
+                { 'M', 5 },
+                { 'P', 4 },
+                { 'R', 6 }
             };
             return stories.SelectMany(
-                    kvp =>
-                        Enumerable.Range(0, kvp.Value.Left + 1)
-                            .Select(
-                                story => new Apartment { Letter = kvp.Key, Story = story, Side = ApartmentSide.Left })
-                            .Concat(
-                                Enumerable.Range(0, kvp.Value.Right + 1)
-                                    .Select(
-                                        story => new Apartment
-                                            { Letter = kvp.Key, Story = story, Side = ApartmentSide.Right })))
+                kvp => Enumerable.Range(0, kvp.Value + 1)
+                    .SelectMany(story => new[]
+                        {
+                            new Apartment { Letter = kvp.Key, Story = story, Side = ApartmentSide.Left },
+                            new Apartment { Letter = kvp.Key, Story = story, Side = ApartmentSide.Right }
+                        }))
+                .Concat(new[]
+                {
+                    new Apartment { Letter = 'E', Story = 7 },
+                    new Apartment { Letter = 'L', Story = 6 },
+                    new Apartment { Letter = 'L', Story = 7 },
+                    new Apartment { Letter = 'R', Story = 7 },
+                    new Apartment { Letter = 'V', Story = -1 },
+                    new Apartment { Letter = 'W', Story = -1 }
+                })
                 .OrderBy(apartment => apartment.Letter)
                 .ThenBy(apartment => apartment.Story)
                 .ThenBy(apartment => apartment.Side);
-        }
-
-        private class Stories
-        {
-            public int Left { get; set; }
-            public int Right { get; set; }
         }
     }
 }
