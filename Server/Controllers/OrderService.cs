@@ -413,7 +413,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return null;
             }
 
-            // TODO: Send mail about the payout.
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(user, order.Id, amount));
 
             return order;
         }

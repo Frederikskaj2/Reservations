@@ -189,6 +189,23 @@ namespace Frederikskaj2.Reservations.Server.Email
             await SendMessage(user, model, "ReservationSettled");
         }
 
+        public async Task SendPayOutEmail(User user, int orderId, int amount)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
+
+            var model = new PayOutModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId,
+                amount);
+            await SendMessage(user, model, "PayOut");
+        }
+
         private async Task SendMessage<TModel>(User user, TModel model, string viewName)
         {
             var message = await CreateMessage(user, model, viewName);
