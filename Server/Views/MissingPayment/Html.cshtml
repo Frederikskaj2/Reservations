@@ -18,21 +18,22 @@
     <p>
         <table>
             <tbody>
-            <tr>
-                <td>Beløb:</td>
-                <td>@Model.MissingAmount.ToString("C0", CultureInfo)</td>
-            </tr>
-            <tr>
-                <td>Kontonummer:</td>
-                <td>@Model.AccountNumber</td>
-            </tr>
-            <tr>
-                <td>Tekst på indbetaling:</td>
-                <td>Bestilling @Model.OrderId</td>
-            </tr>
+                <tr>
+                    <td>Beløb:</td>
+                    <td>@Model.MissingAmount.ToString("C0", CultureInfo)</td>
+                </tr>
+                <tr>
+                    <td>Kontonummer:</td>
+                    <td>@Model.AccountNumber</td>
+                </tr>
+                <tr>
+                    <td>Tekst på indbetaling:</td>
+                    <td>Bestilling @Model.OrderId</td>
+                </tr>
             </tbody>
         </table>
     </p>
     <p>Du bedes straks indbetale det skyldige beløb, og ellers forbeholder vi os ret til at annullere din bestilling.</p>
-    <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
+    @await Html.PartialAsync("_Signature", Model)
+    @await Html.PartialAsync("_Links", Model)
 </body>

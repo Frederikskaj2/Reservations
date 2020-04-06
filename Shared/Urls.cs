@@ -8,6 +8,7 @@
         public const string ConfirmEmail = "bekraeft-mail";
         public const string Consent = "samtykke";
         public const string InventoryBanquetFacilities = "inventar/aktivitets-festlokalet";
+        public const string MyAccount = "bruger";
         public const string MyOrders = "bruger/bestillinger";
         public const string MyTransactions = "bruger/kontoudtog";
         public const string NewPassword = "ny-adgangskode";

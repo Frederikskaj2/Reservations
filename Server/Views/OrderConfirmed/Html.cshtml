@@ -25,5 +25,6 @@ else
 {
     <p>Det overskydne beløb på @Model.ExcessAmount.ToString("C0", CultureInfo) vil blive udbetalt til den bankkonto du oplyste da du afgav din bestilling.</p>
 }
-    <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
+    @await Html.PartialAsync("_Signature", Model)
+    @await Html.PartialAsync("_Links", Model)
 </body>

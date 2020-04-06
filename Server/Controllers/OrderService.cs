@@ -16,7 +16,6 @@ using Reservation = Frederikskaj2.Reservations.Server.Data.Reservation;
 using ReservedDay = Frederikskaj2.Reservations.Server.Data.ReservedDay;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
-
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     public class OrderService
@@ -269,7 +268,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var resources = await dataProvider.GetResources();
             foreach (var reservation in reservationsCancelledWithFee)
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendReservationCancelledEmail(user, order.Id, resources[reservation.ResourceId].Name!, reservation.Date, reservationsOptions.CancellationFee));
+                    (service, _) => service.SendReservationCancelledEmail(
+                        user, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
+                        reservationsOptions.CancellationFee));
             if (orderIsConfirmed)
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendOrderConfirmedEmail(user, order.Id, 0, totals.GetBalance()));
@@ -376,7 +377,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return null;
             }
 
-            // TODO: Send mail about the settlement.
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            var resources = await dataProvider.GetResources();
+            backgroundWorkQueue.Enqueue(
+                (service, _) => service.SendReservationSettledEmail(
+                    user, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
+                    reservation.Price.Deposit, damages, description));
 
             return order;
         }

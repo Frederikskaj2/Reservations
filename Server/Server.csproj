@@ -36,7 +36,6 @@
 
   <ItemGroup>
     <Folder Include="Views\PayOut\" />
-    <Folder Include="Views\ReservationSettled\" />
   </ItemGroup>
 
 </Project>

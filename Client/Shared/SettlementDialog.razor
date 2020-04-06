@@ -51,7 +51,7 @@
                         <FieldLabel ColumnSize="ColumnSize.Is4">Beskrivelse</FieldLabel>
                         <FieldBody ColumnSize="ColumnSize.Is8">
                             <Validation Validator="@ValidateDescription">
-                                <TextEdit @ref="descriptionTextEdit" @bind-Text="request.Description" MaxLength="100">
+                                <TextEdit @ref="descriptionTextEdit" @bind-Text="request.Description" Disabled="@(request.Damages == 0)" MaxLength="100">
                                     <Feedback>
                                         <ValidationError />
                                     </Feedback>
@@ -111,7 +111,7 @@
     void ValidateCompensation(ValidatorEventArgs e)
     {
         var compensation = (int) e.Value;
-        if (0 <= compensation && compensation < maximumCompensation)
+        if (0 <= compensation && compensation <= maximumCompensation)
         {
             e.Status = ValidationStatus.Success;
         }

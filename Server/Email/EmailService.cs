@@ -161,6 +161,34 @@ namespace Frederikskaj2.Reservations.Server.Email
             await SendMessage(user, model, "ReservationCancelled");
         }
 
+        public async Task SendReservationSettledEmail(
+            User user, int orderId, string resourceName, LocalDate date, int deposit, int damages, string? damagesDescription)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrEmpty(resourceName))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(resourceName));
+            if (deposit <= 0)
+                throw new ArgumentOutOfRangeException(nameof(deposit));
+            if (damages < 0)
+                throw new ArgumentOutOfRangeException(nameof(damages));
+            if (damages > 0 && string.IsNullOrEmpty(damagesDescription))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(damagesDescription));
+
+            var model = new ReservationSettledModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId,
+                resourceName,
+                date,
+                deposit,
+                damages,
+                damagesDescription);
+            await SendMessage(user, model, "ReservationSettled");
+        }
+
         private async Task SendMessage<TModel>(User user, TModel model, string viewName)
         {
             var message = await CreateMessage(user, model, viewName);
