@@ -71,7 +71,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
-        public async Task<PlaceOrderResult> PlaceOrder(
+        public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOrder(
             Instant now, int userId, int apartmentId, string accountNumber,
             IEnumerable<ReservationRequest> reservations)
         {
@@ -89,7 +89,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 var reservation = await CreateReservation(reservationRequest);
                 if (reservation == null)
-                    return PlaceOrderResult.GeneralError;
+                    return (PlaceOrderResult.GeneralError, null);
                 order.Reservations.Add(reservation);
                 totalPrice.Accumulate(reservation.Price!);
             }
@@ -125,15 +125,15 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 if (exception.InnerException is SqliteException sqliteException
                     && sqliteException.SqliteErrorCode == 19)
-                    return PlaceOrderResult.ReservationConflict;
-                return PlaceOrderResult.GeneralError;
+                    return (PlaceOrderResult.ReservationConflict, null);
+                return (PlaceOrderResult.GeneralError, null);
             }
 
             var user = await userManager.FindByIdAsync(userId.ToString());
             backgroundWorkQueue.Enqueue(
                 (service, _) => service.SendOrderReceivedEmail(user, order.Id, totalPrice.GetTotal()));
 
-            return PlaceOrderResult.Success;
+            return (PlaceOrderResult.Success, order);
 
             async Task<Reservation?> CreateReservation(ReservationRequest reservation)
             {
@@ -270,7 +270,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendReservationCancelledEmail(
                         user, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
-                        reservationsOptions.CancellationFee));
+                        reservation.Price!.Deposit, reservationsOptions.CancellationFee));
             if (orderIsConfirmed)
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendOrderConfirmedEmail(user, order.Id, 0, totals.GetBalance()));

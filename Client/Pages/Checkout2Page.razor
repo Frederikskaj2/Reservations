@@ -80,11 +80,11 @@
                                         <Validation>
                                             <CheckEdit @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidAcceptTerms">
                                                 <ChildContent>
-                                                    @if (linkBanquetFacilitiesTerms && linkBedroomTerms)
+                                                    @if (linkBanquetFacilitiesRules && linkBedroomRules)
                                                     {
                                                         <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBanquetFacilities">aktivitets-/festlokalet</a> og <a href="@Urls.RulesBedrooms">soveværelserne</a>.</text>
                                                     }
-                                                    else if (linkBanquetFacilitiesTerms)
+                                                    else if (linkBanquetFacilitiesRules)
                                                     {
                                                         <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBanquetFacilities">aktivitets-/festlokalet</a>.</text>
                                                     }
@@ -129,16 +129,16 @@
     private Validations validations = null!;
     private IEnumerable<Apartment>? apartments;
     private bool isInitialized;
-    private bool linkBanquetFacilitiesTerms;
-    private bool linkBedroomTerms;
+    private bool linkBanquetFacilitiesRules;
+    private bool linkBedroomRules;
     private bool showReservationConflictAlert;
     private bool showErrorAlert;
 
     protected override async Task OnInitializedAsync()
     {
         apartments = await ClientDataProvider.GetApartments();
-        linkBanquetFacilitiesTerms = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.BanquetFacilities);
-        linkBedroomTerms = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.Bedroom);
+        linkBanquetFacilitiesRules = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.BanquetFacilities);
+        linkBedroomRules = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.Bedroom);
         isInitialized = true;
     }
 
@@ -164,9 +164,10 @@
         {
             if (response.Result == PlaceOrderResult.Success)
             {
+                ApplicationState.MyOrder = response.Order;
                 ClientDataProvider.DraftOrder.Clear();
                 ClientDataProvider.Refresh();
-                NavigationManager.NavigateTo(Urls.MyOrders);
+                NavigationManager.NavigateTo(Urls.Checkout3);
             }
             if (response.Result == PlaceOrderResult.ReservationConflict)
             {

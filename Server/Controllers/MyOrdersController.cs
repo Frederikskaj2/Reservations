@@ -8,7 +8,6 @@ using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NodaTime;
-using Order = Frederikskaj2.Reservations.Server.Data.Order;
 using Price = Frederikskaj2.Reservations.Shared.Price;
 using Reservation = Frederikskaj2.Reservations.Shared.Reservation;
 
@@ -79,10 +78,21 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             user.ApartmentId = request.ApartmentId;
 
             var now = clock.GetCurrentInstant();
-            var result = await orderService.PlaceOrder(
+            var tuple = await orderService.PlaceOrder(
                 now, user.Id, request.ApartmentId, request.AccountNumber.Trim().ToUpperInvariant(),
                 request.Reservations);
-            return new PlaceOrderResponse { Result = result };
+            var today = now.InZone(dateTimeZone).Date;
+            var myOrder = CreateMyOrder(tuple.Order);
+            return new PlaceOrderResponse { Result = tuple.Result, Order = myOrder };
+
+            MyOrder? CreateMyOrder(Data.Order? order)
+            {
+                if (order == null)
+                    return null;
+                var myOrder = CreateOrder(order, today);
+                myOrder.Totals = orderService.GetTotals(order);
+                return myOrder;
+            }
         }
 
         [Route("{orderId:int}")]
@@ -105,7 +115,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return new OrderResponse<MyOrder> { Order = myOrder };
         }
 
-        private MyOrder CreateOrder(Order order, LocalDate today)
+        private MyOrder CreateOrder(Data.Order order, LocalDate today)
         {
             var reservations = order.Reservations.Select(CreateReservation).ToList();
             var canBeEdited = reservations.Any(r => r.CanBeCancelled);

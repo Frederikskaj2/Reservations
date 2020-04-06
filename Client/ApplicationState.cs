@@ -6,6 +6,7 @@ namespace Frederikskaj2.Reservations.Client
     {
         public string? RedirectUrl { get; set; }
         public SignUpRequest SignUpRequest { get; private set; } = new SignUpRequest();
+        public MyOrder? MyOrder { get; set; }
 
         public void ResetSignUpState()
         {

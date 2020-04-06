@@ -13,7 +13,7 @@
 <body>
     <p>Hej @Model.Name</p>
     <p>Din reservation af @Model.ResourceName @LocalDatePattern.Create("dddd 'den' d. MMMM yyyy", CultureInfo).Format(Model.Date) hørende til <a href="@Model.Url">bestilling @Model.OrderId</a> er blevet annulleret</p>
-    <p>Vi udbetaler dit depositum fraregnet et afbestillingsgebyr på @Model.CancellationFee.ToString("C0", CultureInfo) til den bankkonto du oplyste da du afgav din bestilling.</p>
+    <p>Vi udbetaler @((Model.Deposit - Model.CancellationFee).ToString("C0", CultureInfo)) (dit depositum fraregnet et afbestillingsgebyr på @Model.CancellationFee.ToString("C0", CultureInfo)) til den bankkonto du oplyste da du afgav din bestilling.</p>
     @await Html.PartialAsync("_Signature", Model)
     @await Html.PartialAsync("_Links", Model)
 </body>

@@ -1,5 +1,6 @@
 ﻿@page "/bruger/bestillinger/{orderId:int}"
 @inject ApiClient ApiClient
+@inject ClientDataProvider ClientDataProvider
 
 <main>
     @if (!isInitialized)
@@ -14,7 +15,16 @@
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <h1>Bestilling @order!.Id</h1>
-            <OrderStatement @ref="orderStatement" OrderId="@order.Id" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" OnSubmit="@Submit"/>
+            <Paragraph><a href="@Urls.Terms">Lejebetingelser</a></Paragraph>
+            @if (linkBanquetFacilitiesRules)
+            {
+                <Paragraph><a href="@Urls.RulesBanquetFacilities">Husorden for aktivitets-/festlokalet</a></Paragraph>
+            }
+            @if (linkBedroomRules)
+            {
+                <Paragraph><a href="@Urls.RulesBedrooms">Husorden for soveværelserne</a></Paragraph>
+            }
+            <OrderStatement @ref="orderStatement" OrderId="@order.Id" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" OnSubmit="@Submit" />
         </Container>
     }
     else
@@ -29,6 +39,8 @@
 
     private OrderStatement orderStatement = null!;
     private MyOrder? order;
+    private bool linkBanquetFacilitiesRules;
+    private bool linkBedroomRules;
     private bool isInitialized;
     private bool showErrorAlert;
 
@@ -40,7 +52,12 @@
         var url = $"my-orders/{OrderId}";
         var maybe = await ApiClient.GetJsonAsync<OrderResponse<MyOrder>>(url);
         if (maybe.TryGetValue(out var response) && response.Order != null)
+        {
             order = response.Order;
+            var resources = await ClientDataProvider.GetResources();
+            linkBanquetFacilitiesRules = order.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.BanquetFacilities);
+            linkBedroomRules = order.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.Bedroom);
+        }
         isInitialized = true;
     }
 
