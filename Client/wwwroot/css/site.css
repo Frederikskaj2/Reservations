@@ -450,6 +450,20 @@ a.sign-in {
         background-size: 0.6rem 0.6rem;
     }
 
+    .calendar-container .legend {
+        display: flex;
+        justify-content: space-between;
+    }
+
+        .calendar-container .legend span {
+            display: inline-block;
+            width: 10rem;
+            margin: 0.5rem;
+            padding: 0.25rem;
+            text-align: center;
+            color: #FFF;
+        }
+
 .calendar {
     margin: 1rem 0;
     display: grid;

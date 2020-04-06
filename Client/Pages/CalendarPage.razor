@@ -68,19 +68,15 @@ else
                     }
                 }
             </div>
-            <Form>
-                @if (previousMonth.HasValue)
-                {
-                    <Button Color="Color.Light" Clicked="@(() => SelectMonth(previousMonth.Value))">
-                        <Icon class="fa-arrow-circle-left" />
-                    </Button>
-                }
-                @if (nextMonth.HasValue)
-                {
-                    <Button Color="Color.Light" class="float-right" Clicked="@(() => SelectMonth(nextMonth.Value))">
-                        <Icon class="fa-arrow-circle-right" />
-                    </Button>
-                }
+            <Form class="legend">
+                <Button Color="Color.Light" Clicked="@(() => SelectMonth(previousMonth ?? currentMonth))" style="@(!previousMonth.HasValue ? "visibility: hidden;" : string.Empty)">
+                    <Icon class="fa-arrow-circle-left" />
+                </Button>
+                <span class="resource-reserved-other">Andres reservationer</span>
+                <span class="resource-reserved-me">Dine reservationer</span>
+                <Button Color="Color.Light" Clicked="@(() => SelectMonth(nextMonth ?? currentMonth))" style="@(!nextMonth.HasValue ? "visibility: hidden;" : string.Empty)">
+                    <Icon class="fa-arrow-circle-right" />
+                </Button>
             </Form>
         </Row>
     </main>
