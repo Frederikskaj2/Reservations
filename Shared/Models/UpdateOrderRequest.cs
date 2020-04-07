@@ -5,8 +5,6 @@ namespace Frederikskaj2.Reservations.Shared
 {
     public class UpdateOrderRequest
     {
-        public int OrderId { get; set; }
-
         [Required(AllowEmptyStrings = false, ErrorMessage = "Oplys kontonummer hvortil depositum kan udbetales")]
         [StringLength(50, ErrorMessage = "Kontonummeret er for langt")]
         [RegularExpression(

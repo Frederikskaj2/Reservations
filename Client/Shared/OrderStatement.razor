@@ -42,7 +42,7 @@
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    @foreach (var reservation in Reservations!)
+                    @foreach (var reservation in Reservations ?? Enumerable.Empty<Reservation>())
                     {
                         var isCancelled = request.CancelledReservations.Contains(reservation.Id);
                         var canBeSettled = IsAdministrator && reservation.Status == ReservationStatus.Confirmed /*&& reservation.Date.PlusDays(reservation.DurationInDays) <= today*/;
@@ -166,7 +166,7 @@
                                 }
                             </TableRowCell>
                             <TableRowCell class="border-top-0">
-                                <Button class="float-right" Color="@(request.CancelledReservations.Count > 0 ? Color.Danger : Color.Primary)" Disabled="@(!IsUpdated)" Clicked="@Submit">Opdatér bestilling</Button>
+                                <Button class="float-right" Color="@(request.CancelledReservations.Count > 0 ? Color.Danger : Color.Primary)" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Disabled="@(!IsUpdated)" Clicked="@Submit">Opdatér bestilling</Button>
                             </TableRowCell>
                         </TableRow>
                     }

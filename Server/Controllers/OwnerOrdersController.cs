@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
@@ -26,6 +27,22 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
+        [HttpGet]
+        public async Task<IEnumerable<OwnerOrder>> Get()
+        {
+            var orders = await orderService.GetOwnerOrders();
+            return orders.Select(order => CreateOrder(order, order.User!));
+        }
+
+        [HttpGet("{orderId:int}")]
+        public async Task<OrderResponse<OwnerOrder>> Get(int orderId)
+        {
+            var order = await orderService.GetOwnerOrder(orderId);
+            if (order == null)
+                return new OrderResponse<OwnerOrder>();
+            return new OrderResponse<OwnerOrder> { Order = CreateOrder(order, order.User!) };
+        }
+
         [HttpPost]
         public async Task<PlaceOwnerOrderResponse> Post(PlaceOwnerOrderRequest request)
         {
@@ -41,6 +58,15 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var ownerOrder = tuple.Order != null ? CreateOrder(tuple.Order, user) : null;
             return new PlaceOwnerOrderResponse { Result = tuple.Result, Order = ownerOrder };
+        }
+
+        [HttpPatch("{orderId:int}")]
+        public async Task<OrderResponse<OwnerOrder>> Patch(int orderId, UpdateOwnerOrderRequest request)
+        {
+            var order = await orderService.UpdateOwnerOrder(orderId, request.CancelledReservations);
+            if (order == null)
+                return new OrderResponse<OwnerOrder>();
+            return new OrderResponse<OwnerOrder> { Order = CreateOrder(order, order.User!) };
         }
 
         private static OwnerOrder CreateOrder(Data.Order order, User user)

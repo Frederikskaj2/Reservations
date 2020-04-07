@@ -74,6 +74,22 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
+        public async Task<Order?> GetOwnerOrder(int orderId)
+            => await db.Orders
+                .Include(order => order.User)
+                .Include(order => order.Reservations)
+                .ThenInclude(reservation => reservation.Days)
+                .FirstOrDefaultAsync(order => order.Id == orderId && order.ApartmentId == null && order.AccountNumber == null);
+
+        public async Task<IEnumerable<Order>> GetOwnerOrders()
+        => await db.Orders
+            .Include(order => order.User)
+            .Include(order => order.Reservations)
+            .ThenInclude(reservation => reservation.Days)
+            .Where(order => order.ApartmentId == null)
+            .OrderBy(order => order.CreatedTimestamp)
+            .ToListAsync();
+
         public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOrder(
             Instant timestamp, int userId, int apartmentId, string accountNumber,
             IEnumerable<ReservationRequest> reservations)
@@ -272,6 +288,36 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (orderIsConfirmed)
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendOrderConfirmedEmail(user, order.Id, 0, totals.GetBalance()));
+
+            return order;
+        }
+
+        public async Task<Order?> UpdateOwnerOrder(int orderId, IEnumerable<int> cancelledReservations)
+        {
+            var order = await GetOwnerOrder(orderId);
+            if (order == null)
+                return default;
+
+            var reservationsCancelledWithFee = new List<Reservation>();
+            foreach (var reservationId in cancelledReservations)
+            {
+                var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
+                if (reservation == null)
+                    continue;
+                order.Reservations!.Remove(reservation);
+            }
+
+            // TODO: If all reservations are cancelled then delete order.
+            // TODO: Handle this conversion gracefully in the client.
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return default;
+            }
 
             return order;
         }

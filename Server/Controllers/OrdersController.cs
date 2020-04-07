@@ -48,7 +48,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return new OrderResponse<Order> { Order = CreateOrder(order, today) };
         }
 
-        [Route("{orderId:int}")]
+        [HttpPatch("{orderId:int}")]
         public async Task<OrderResponse<Order>> Patch(int orderId, UpdateOrderRequest request)
         {
             var userId = User.Id();
