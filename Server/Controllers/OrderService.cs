@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
@@ -14,6 +15,7 @@ using Order = Frederikskaj2.Reservations.Server.Data.Order;
 using Price = Frederikskaj2.Reservations.Server.Data.Price;
 using Reservation = Frederikskaj2.Reservations.Server.Data.Reservation;
 using ReservedDay = Frederikskaj2.Reservations.Server.Data.ReservedDay;
+using Resource = Frederikskaj2.Reservations.Shared.Resource;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
@@ -51,7 +53,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
-                .FirstOrDefaultAsync(order => order.Id == orderId);
+                .FirstOrDefaultAsync(order => order.Id == orderId && order.ApartmentId != null && order.AccountNumber != null);
 
         public async Task<IEnumerable<Order>> GetOrders()
             => await db.Orders
@@ -59,6 +61,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
+                .Where(order => order.ApartmentId != null && order.AccountNumber != null)
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
@@ -67,12 +70,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
-                .Where(order => order.UserId == userId)
+                .Where(order => order.UserId == userId && order.ApartmentId != null && order.AccountNumber != null)
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
         public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOrder(
-            Instant now, int userId, int apartmentId, string accountNumber,
+            Instant timestamp, int userId, int apartmentId, string accountNumber,
             IEnumerable<ReservationRequest> reservations)
         {
             var resources = await dataProvider.GetResources();
@@ -81,13 +84,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 UserId = userId,
                 ApartmentId = apartmentId,
                 AccountNumber = accountNumber,
-                CreatedTimestamp = now,
+                CreatedTimestamp = timestamp,
                 Reservations = new List<Reservation>()
             };
             var totalPrice = new Price();
             foreach (var reservationRequest in reservations)
             {
-                var reservation = await CreateReservation(reservationRequest);
+                var reservation = await CreateReservation(timestamp, order, reservationRequest, ReservationStatus.Reserved, resources);
                 if (reservation == null)
                     return (PlaceOrderResult.GeneralError, null);
                 order.Reservations.Add(reservation);
@@ -98,7 +101,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 new Transaction
                 {
-                    Timestamp = now,
+                    Timestamp = timestamp,
                     Type = TransactionType.Order,
                     CreatedByUserId = userId,
                     UserId = userId,
@@ -107,7 +110,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 },
                 new Transaction
                 {
-                    Timestamp = now,
+                    Timestamp = timestamp,
                     Type = TransactionType.Deposit,
                     CreatedByUserId = userId,
                     UserId = userId,
@@ -134,45 +137,40 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 (service, _) => service.SendOrderReceivedEmail(user, order.Id, totalPrice.GetTotal()));
 
             return (PlaceOrderResult.Success, order);
+        }
 
-            async Task<Reservation?> CreateReservation(ReservationRequest reservation)
+        public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOwnerOrder(
+            Instant timestamp, int userId, IEnumerable<ReservationRequest> reservations)
+        {
+            var resources = await dataProvider.GetResources();
+            var order = new Order
             {
-                if (!resources.TryGetValue(reservation.ResourceId, out var resource))
-                    return null;
-                var policy = reservationPolicyProvider.GetPolicy(resource.Type);
-                if (!await IsReservationDurationValid(reservation, policy))
-                    return null;
-
-                var days = Enumerable
-                    .Range(0, reservation.DurationInDays)
-                    .Select(
-                        i => new ReservedDay
-                        {
-                            Date = reservation.Date.PlusDays(i),
-                            ResourceId = reservation.ResourceId
-                        })
-                    .ToList();
-                var price = (await policy.GetPrice(reservation.Date, reservation.DurationInDays)).Adapt<Price>();
-                return new Reservation
-                {
-                    Order = order,
-                    ResourceId = resource.Id,
-                    Status = ReservationStatus.Reserved,
-                    UpdatedTimestamp = now,
-                    Date = reservation.Date,
-                    DurationInDays = reservation.DurationInDays,
-                    Days = days,
-                    Price = price
-                };
+                UserId = userId,
+                CreatedTimestamp = timestamp,
+                Reservations = new List<Reservation>()
+            };
+            foreach (var reservationRequest in reservations)
+            {
+                var reservation = await CreateReservation(timestamp, order, reservationRequest, ReservationStatus.Confirmed, resources);
+                if (reservation == null)
+                    return (PlaceOrderResult.GeneralError, null);
+                order.Reservations.Add(reservation);
             }
 
-            static async Task<bool> IsReservationDurationValid(
-                ReservationRequest reservation, IReservationPolicy policy)
+            db.Orders.Add(order);
+            try
             {
-                var (minimumDays, maximumDays) =
-                    await policy.GetReservationAllowedNumberOfDays(reservation.ResourceId, reservation.Date);
-                return minimumDays <= reservation.DurationInDays && reservation.DurationInDays <= maximumDays;
+                await db.SaveChangesAsync();
             }
+            catch (DbUpdateException exception)
+            {
+                if (exception.InnerException is SqliteException sqliteException
+                    && sqliteException.SqliteErrorCode == 19)
+                    return (PlaceOrderResult.ReservationConflict, null);
+                return (PlaceOrderResult.GeneralError, null);
+            }
+
+            return (PlaceOrderResult.Success, order);
         }
 
         public async Task<Order?> UpdateOrder(
@@ -330,13 +328,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             Instant timestamp, int orderId, int userId, int reservationId, int damages, string? description)
         {
             var order = await GetOrder(orderId);
-            if (order == null)
-                return null;
-
-            var reservation = order.Reservations.FirstOrDefault(r => r.Id == reservationId);
+            var reservation = order?.Reservations.FirstOrDefault(r => r.Id == reservationId);
             if (reservation == null || reservation.Status != ReservationStatus.Confirmed
-                                    || !(0 <= damages && damages <= reservation.Price!.Deposit)
-                                    || damages > 0 && string.IsNullOrWhiteSpace(description))
+                || !(0 <= damages && damages <= reservation.Price!.Deposit)
+                || damages > 0 && string.IsNullOrWhiteSpace(description))
                 return null;
 
             reservation.Status = ReservationStatus.Settled;
@@ -347,7 +342,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     Timestamp = timestamp,
                     Type = TransactionType.SettlementDeposit,
                     CreatedByUserId = userId,
-                    UserId = order.UserId,
+                    UserId = order!.UserId,
                     OrderId = orderId,
                     ResourceId = reservation.ResourceId,
                     ReservationDate = reservation.Date,
@@ -425,18 +420,23 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var orders = await db.Orders
                 .Include(order => order.User)
                 .Include(order => order.Transactions)
+                .Where(order => order.ApartmentId != null && order.AccountNumber != null)
                 .ToListAsync();
 
             var payOuts = orders.Select(
-                    order => new PayOut
+                    order =>
                     {
-                        OrderId = order.Id,
-                        Mail = order.User!.Email,
-                        FullName = order.User.FullName,
-                        Phone = order.User.PhoneNumber,
-                        ApartmentId = order.ApartmentId,
-                        AccountNumber = order.AccountNumber!,
-                        Amount = GetTotals(order).GetBalance()
+                        Debug.Assert(order.ApartmentId != null, "order.ApartmentId != null");
+                        return new PayOut
+                        {
+                            OrderId = order.Id,
+                            Email = order.User!.Email,
+                            FullName = order.User.FullName,
+                            Phone = order.User.PhoneNumber,
+                            ApartmentId = order.ApartmentId.Value,
+                            AccountNumber = order.AccountNumber!,
+                            Amount = GetTotals(order).GetBalance()
+                        };
                     })
                 .Where(payOut => payOut.Amount > 0);
             return payOuts;
@@ -474,6 +474,44 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 }
 
             return totals;
+        }
+
+        private async Task<Reservation?> CreateReservation(Instant timestamp, Order order, ReservationRequest reservation, ReservationStatus status, IReadOnlyDictionary<int, Resource> resources)
+        {
+            if (!resources.TryGetValue(reservation.ResourceId, out var resource))
+                return null;
+            var policy = reservationPolicyProvider.GetPolicy(resource.Type);
+            if (!await IsReservationDurationValid(reservation, policy))
+                return null;
+
+            var days = Enumerable
+                .Range(0, reservation.DurationInDays)
+                .Select(
+                    i => new ReservedDay
+                    {
+                        Date = reservation.Date.PlusDays(i),
+                        ResourceId = reservation.ResourceId
+                    })
+                .ToList();
+            var price = (await policy.GetPrice(reservation.Date, reservation.DurationInDays)).Adapt<Price>();
+            return new Reservation
+            {
+                Order = order,
+                ResourceId = resource.Id,
+                Status = status,
+                UpdatedTimestamp = timestamp,
+                Date = reservation.Date,
+                DurationInDays = reservation.DurationInDays,
+                Days = days,
+                Price = price
+            };
+
+            static async Task<bool> IsReservationDurationValid(ReservationRequest reservation, IReservationPolicy policy)
+            {
+                var (minimumDays, maximumDays) =
+                    await policy.GetReservationAllowedNumberOfDays(reservation.ResourceId, reservation.Date);
+                return minimumDays <= reservation.DurationInDays && reservation.DurationInDays <= maximumDays;
+            }
         }
     }
 }

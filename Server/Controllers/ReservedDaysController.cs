@@ -34,7 +34,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 {
                     Date = reservedDay.Date,
                     ResourceId = reservedDay.Reservation!.ResourceId,
-                    IsMyReservation = reservedDay.Reservation.Order!.UserId == userId
+                    IsMyReservation = reservedDay.Reservation.Order!.UserId == userId && reservedDay.Reservation.Order.ApartmentId != null
                 });
 
             if (!string.IsNullOrEmpty(fromDate))

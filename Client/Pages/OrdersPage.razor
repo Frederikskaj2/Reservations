@@ -47,7 +47,7 @@
                             <TableRow @key="@order.Id">
                                 <TableRowCell>@order.Id</TableRowCell>
                                 <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
-                                <TableRowCell><a href="mailto:@order.Mail?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
+                                <TableRowCell><a href="mailto:@order.Email?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
                                 <TableRowCell>@order.Phone</TableRowCell>
                                 <TableRowCell class="text-center">
                                     @if (order.Totals!.GetBalance() < 0)

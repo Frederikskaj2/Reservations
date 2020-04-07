@@ -69,7 +69,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         public async Task<PlaceOrderResponse> Post(PlaceOrderRequest request)
         {
             var userId = User.Id();
-            if (!userId.HasValue)
+            if (!userId.HasValue || request.Reservations.Count == 0)
                 return new PlaceOrderResponse { Result = PlaceOrderResult.GeneralError };
 
             var user = await db.Users.FindAsync(userId.Value);

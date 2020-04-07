@@ -37,7 +37,8 @@ namespace Frederikskaj2.Reservations.Client
             {
                 var reservationRequest = new ReservationRequest
                 {
-                    ResourceId = reservation.Resource.Id, Date = reservation.Date,
+                    ResourceId = reservation.Resource.Id,
+                    Date = reservation.Date,
                     DurationInDays = reservation.DurationInDays
                 };
                 Request.Reservations.Add(reservationRequest);

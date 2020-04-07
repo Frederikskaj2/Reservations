@@ -14,6 +14,8 @@
         public const string MyTransactions = "bruger/kontoudtog";
         public const string NewPassword = "ny-adgangskode";
         public const string Orders = "bestillinger";
+        public const string OwnerCheckout1 = "bestil-ejer/1";
+        public const string OwnerCheckout2 = "bestil-ejer/2";
         public const string PayOuts = "til-udbetaling";
         public const string ResetPassword = "anmod-om-ny-adgangskode";
         public const string RulesBanquetFacilities = "husorden/aktivitets-festlokalet";

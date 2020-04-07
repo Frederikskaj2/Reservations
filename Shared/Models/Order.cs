@@ -7,7 +7,7 @@ namespace Frederikskaj2.Reservations.Shared
     {
         public int Id { get; set; }
         public Instant CreatedTimestamp { get; set; }
-        public string Mail { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string AccountNumber { get; set; } = string.Empty;

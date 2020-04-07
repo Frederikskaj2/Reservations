@@ -11,7 +11,7 @@ using NodaTime;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("orders")]
-    [Authorize]
+    [Authorize(Roles = Roles.Administrator)]
     [ApiController]
     public class OrdersController : Controller
     {
@@ -124,7 +124,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 Id = order.Id,
                 CreatedTimestamp = order.CreatedTimestamp,
-                Mail = order.User!.Email,
+                Email = order.User!.Email,
                 FullName = order.User.FullName,
                 Phone = order.User.PhoneNumber,
                 AccountNumber = order.AccountNumber!,

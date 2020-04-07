@@ -35,7 +35,7 @@
                         {
                             <TableRow>
                                 <TableRowCell><a href="/@Urls.Orders/@payOut.OrderId">@payOut.OrderId</a></TableRowCell>
-                                <TableRowCell><a href="mailto:@payOut.Mail?subject=Frederikskaj 2 bestilling @payOut.OrderId">@FormattingService.FormatMail(payOut.Mail)</a></TableRowCell>
+                                <TableRowCell><a href="mailto:@payOut.Email?subject=Frederikskaj 2 bestilling @payOut.OrderId">@FormattingService.FormatEmail(payOut.Email)</a></TableRowCell>
                                 <TableRowCell>@payOut.FullName</TableRowCell>
                                 <TableRowCell>@FormattingService.FormatPhone(payOut.Phone)</TableRowCell>
                                 <TableRowCell>Frederikskaj @apartments![payOut.ApartmentId]</TableRowCell>

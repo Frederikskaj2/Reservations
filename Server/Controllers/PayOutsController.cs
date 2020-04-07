@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("pay-outs")]
-    [Authorize]
+    [Authorize(Roles = Roles.Administrator)]
     [ApiController]
     public class PayOutsController : Controller
     {

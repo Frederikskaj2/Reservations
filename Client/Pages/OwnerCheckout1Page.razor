@@ -1,0 +1,97 @@
+﻿@page "/bestil-ejer/1"
+@attribute [Authorize(Roles = Roles.Administrator)]
+@inject ApiClient ApiClient
+@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+@inject NavigationManager NavigationManager
+
+<main>
+    @if (ClientDataProvider.DraftOrder.Reservations!.Count == 0)
+    {
+        <Container>
+            <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
+        </Container>
+    }
+    else
+    {
+        <Container class="container-min-md">
+            <Alert Color="Color.Danger" Visible="@showReservationConflictAlert" Dismisable="true">
+                Din bestilling blev ikke gennemført da den overlapper med andre reservationer. Opdatér kalenderen og prøv igen.
+                <CloseButton Clicked="@DismissReservationConflictAlert" />
+            </Alert>
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+                Der er sket en fejl, og din bestilling blev ikke gennemført.
+                <CloseButton Clicked="@DismissErrorAlert" />
+            </Alert>
+            <h1>Din bestilling på vegne af grundejerforeningen</h1>
+            <Form>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell class="order-table-resource-column">Lokale</TableHeaderCell>
+                            <TableHeaderCell class="order-table-date-column">Fra</TableHeaderCell>
+                            <TableHeaderCell class="text-right">Dage</TableHeaderCell>
+                            <TableHeaderCell class="order-table-date-column text-right">Til</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var reservation in ClientDataProvider.DraftOrder.Reservations)
+                        {
+                            <TableRow>
+                                <TableRowCell>@reservation.Resource!.Name</TableRowCell>
+                                <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
+                                <TableRowCell class="text-right">@reservation.DurationInDays</TableRowCell>
+                                <TableRowCell class="text-right">@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableRowCell colspan="4" Class="border-top-0">
+                                <Button class="float-right" Color="Color.Success" Clicked="@Submit">Bekræft bestilling</Button>
+                            </TableRowCell>
+                        </TableRow>
+                    </TableFooter>
+                </Table>
+            </Form>
+        </Container>
+    }
+</main>
+
+@code {
+
+    private bool showReservationConflictAlert;
+    private bool showErrorAlert;
+
+    private async Task Submit()
+    {
+        var request = new PlaceOwnerOrderRequest();
+        request.Reservations.AddRange(
+            ClientDataProvider.DraftOrder.Reservations.Select(reservation => new ReservationRequest
+            {
+                ResourceId = reservation.Resource.Id,
+                Date = reservation.Date,
+                DurationInDays = reservation.DurationInDays
+            }));
+        var maybe = await ApiClient.PostJsonAsync<PlaceOwnerOrderResponse>("owner-orders", request);
+        if (maybe.TryGetValue(out var response))
+        {
+            if (response.Result == PlaceOrderResult.Success)
+            {
+                ClientDataProvider.DraftOrder.Clear();
+                ClientDataProvider.Refresh();
+                NavigationManager.NavigateTo(Urls.OwnerCheckout2);
+            }
+            if (response.Result == PlaceOrderResult.ReservationConflict)
+            {
+                showReservationConflictAlert = true;
+                return;
+            }
+        }
+        showErrorAlert = true;
+    }
+
+    private void DismissReservationConflictAlert() => showReservationConflictAlert = false;
+
+    private void DismissErrorAlert() => showErrorAlert = false;
+}

@@ -1,4 +1,5 @@
 ﻿@page "/kalender"
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject CultureInfo CultureInfo
 @inject ClientDataProvider DataProvider
 @inject IDateProvider DateProvider
@@ -110,10 +111,14 @@ else
                 <p class="draft-order-get-started">Vælg lokale og en ledig dato for at reservere</p>
             </div>
         }
-        <div class="draft-order-total @(DataProvider.DraftOrder.Reservations.Count > 0 ? "" : "hidden")">
-            <Prices Price="@totalPrice" />
-            <Button Color="Color.Success" Block="true" Clicked="@Checkout" tabindex="@(DataProvider.DraftOrder.Reservations.Count > 0 ? 0 : -1)">Bestil</Button>
-        </div>
+    <div class="draft-order-total @(DataProvider.DraftOrder.Reservations.Count > 0 ? "" : "hidden")">
+        <Prices Price="@totalPrice" />
+        <Button Color="Color.Success" Block="true" Clicked="@Checkout" tabindex="@(DataProvider.DraftOrder.Reservations.Count > 0 ? 0 : -1)">Bestil</Button>
+        @if (isAdministrator)
+        {
+            <Button Color="Color.Primary" Block="true" Clicked="@OwnerCheckout" tabindex="@(DataProvider.DraftOrder.Reservations.Count > 0 ? 0 : -1)">Reservér til grundejerforeningen</Button>
+        }
+    </div>
     </section>
     <ReservationDialog @ref="@reservationDialog" Reservation="@DataProvider.DraftOrder.DraftReservation" OnReservationChanged="ReservationChanged" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
 }
@@ -123,6 +128,7 @@ else
     private static readonly LocalDatePattern MonthPattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM");
     private ReservationDialog reservationDialog = null!;
     private bool isInitialized;
+    private bool isAdministrator;
     private List<(LocalDate Date, string Value, string Text)>? months;
     private LocalDate currentMonth;
     private string currentMonthValue = string.Empty;
@@ -144,6 +150,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
         var pattern = LocalDatePattern.Create("MMMM yyyy", CultureInfo);
         months = GetMonths()
             .Select(date => (date, MonthPattern.Format(date), Capitalize(pattern.Format(date))))
@@ -321,4 +329,5 @@ else
 
     private void Checkout() => NavigationManager.NavigateTo(Urls.Checkout1);
 
+    private void OwnerCheckout() => NavigationManager.NavigateTo(Urls.OwnerCheckout1);
 }
