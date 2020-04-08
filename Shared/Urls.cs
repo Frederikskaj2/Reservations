@@ -8,6 +8,7 @@
         public const string Checkout3 = "bestil/3";
         public const string ConfirmEmail = "bekraeft-mail";
         public const string Consent = "samtykke";
+        public const string HistoryReservations = "historik";
         public const string InventoryBanquetFacilities = "inventar/aktivitets-festlokalet";
         public const string MyAccount = "bruger";
         public const string MyOrders = "bruger/bestillinger";

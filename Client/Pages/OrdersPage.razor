@@ -14,121 +14,121 @@
     }
     else
     {
-<Container>
-    <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
-        Der er sket en fejl, og din ændring blev ikke gemt.
-        <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
-    </Alert>
-    <h1>Bestillinger</h1>
-    @if (!orders!.Any())
-    {
-        <Paragraph>Der er intet at vise.</Paragraph>
-    }
-    else
-    {
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHeaderCell>Betilling</TableHeaderCell>
-                    <TableHeaderCell>Dato</TableHeaderCell>
-                    <TableHeaderCell>Navn</TableHeaderCell>
-                    <TableHeaderCell>Telefon</TableHeaderCell>
-                    <TableHeaderCell class="text-center">Mangler betaling</TableHeaderCell>
-                    <TableHeaderCell class="text-center">Mangler opgørelse</TableHeaderCell>
-                    <TableHeaderCell></TableHeaderCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                @foreach (var order in orders!)
-                {
-                    var reservationsToSettle = order.Reservations
-                        .Where(reservation => reservation.Status == ReservationStatus.Confirmed/* && DateProvider.GetDaysFromToday(reservation.Date) < 0*/)
-                        .ToList();
-                    <TableRow @key="@order.Id">
-                        <TableRowCell>@order.Id</TableRowCell>
-                        <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
-                        <TableRowCell><a href="mailto:@order.Email?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
-                        <TableRowCell>@order.Phone</TableRowCell>
-                        <TableRowCell class="text-center">
-                            @if (order.Totals!.GetBalance() < 0)
-                            {
-                                if (GetIsUnpaidOrderOld(order))
-                                {
-                                    <Icon class="fa-exclamation-triangle text-danger" />
-                                }
-                                else
-                                {
-                                    <Icon class="fa-exclamation-triangle" />
-                                }
-                            }
-                        </TableRowCell>
-                        <TableRowCell class="text-center">
-                            @if (reservationsToSettle.Count > 0)
-                            {
-                                <Icon class="fa-exclamation-triangle" />
-                            }
-                        </TableRowCell>
-                        <TableRowCell>
-                            <Dropdown class="float-right">
-                                <DropdownToggle Color="Color.Light" Size="ButtonSize.Small" />
-                                <DropdownMenu>
-                                    <DropdownItem Clicked="@(() => ShowOrder(order.Id))">Vis</DropdownItem>
+        <Container>
+            <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
+                Der er sket en fejl, og din ændring blev ikke gemt.
+                <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
+            </Alert>
+            <h1>Bestillinger</h1>
+            @if (!orders!.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Betilling</TableHeaderCell>
+                            <TableHeaderCell>Dato</TableHeaderCell>
+                            <TableHeaderCell>Navn</TableHeaderCell>
+                            <TableHeaderCell>Telefon</TableHeaderCell>
+                            <TableHeaderCell class="text-center">Mangler betaling</TableHeaderCell>
+                            <TableHeaderCell class="text-center">Mangler opgørelse</TableHeaderCell>
+                            <TableHeaderCell></TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var order in orders!)
+                        {
+                            var reservationsToSettle = order.Reservations
+                                .Where(reservation => reservation.Status == ReservationStatus.Confirmed/* && DateProvider.GetDaysFromToday(reservation.Date) < 0*/)
+                                .ToList();
+                            <TableRow @key="@order.Id">
+                                <TableRowCell>@order.Id</TableRowCell>
+                                <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
+                                <TableRowCell><a href="mailto:@order.Email?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
+                                <TableRowCell>@order.Phone</TableRowCell>
+                                <TableRowCell class="text-center">
                                     @if (order.Totals!.GetBalance() < 0)
                                     {
-                                        <DropdownItem Clicked="@(() => RecordPayIn(order))">Registrér indbetaling</DropdownItem>
+                                        if (GetIsUnpaidOrderOld(order))
+                                        {
+                                            <Icon class="fa-exclamation-triangle text-danger" />
+                                        }
+                                        else
+                                        {
+                                            <Icon class="fa-exclamation-triangle" />
+                                        }
                                     }
-                                    @foreach (var reservation in reservationsToSettle)
+                                </TableRowCell>
+                                <TableRowCell class="text-center">
+                                    @if (reservationsToSettle.Count > 0)
                                     {
-                                        <DropdownItem Clicked="@(() => RecordSettlement(order, reservation))">Lav opgørelse @resources![reservation.ResourceId].Name @FormattingService.FormatDate(reservation.Date)</DropdownItem>
+                                        <Icon class="fa-exclamation-triangle" />
                                     }
-                                    @if (order.Totals!.GetBalance() > 0)
-                                    {
-                                        <DropdownItem Clicked="@(() => RecordPayOut(order))">Registrér udbetaling</DropdownItem>
-                                    }
-                                </DropdownMenu>
-                            </Dropdown>
-                        </TableRowCell>
-                    </TableRow>
-                }
-            </TableBody>
-        </Table>
-        <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
-        <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
-    }
-    <h1>Bestillinger til grundejerforeningen</h1>
-    @if (!ownerOrders!.Any())
-    {
-        <Paragraph>Der er intet at vise.</Paragraph>
-    }
-    else
-    {
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHeaderCell>Betilling</TableHeaderCell>
-                    <TableHeaderCell>Dato</TableHeaderCell>
-                    <TableHeaderCell>Oprettet af</TableHeaderCell>
-                    <TableHeaderCell></TableHeaderCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                @foreach (var order in ownerOrders!)
-                {
-                    <TableRow @key="@order.Id">
-                        <TableRowCell>@order.Id</TableRowCell>
-                        <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
-                        <TableRowCell><a href="mailto:@order.CreatedByEmail?subject=Frederikskaj 2 bestilling @order.Id">@order.CreatedByName</a></TableRowCell>
-                        <TableRowCell>
-                            <Button class="float-right" Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ShowOrder(order.Id))">Vis</Button>
-                        </TableRowCell>
-                    </TableRow>
-                }
-            </TableBody>
-        </Table>
-        <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
-        <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
-    }
-</Container>
+                                </TableRowCell>
+                                <TableRowCell>
+                                    <Dropdown class="float-right">
+                                        <DropdownToggle Color="Color.Light" Size="ButtonSize.Small" />
+                                        <DropdownMenu>
+                                            <DropdownItem Clicked="@(() => ShowOrder(order.Id))">Vis</DropdownItem>
+                                            @if (order.Totals!.GetBalance() < 0)
+                                            {
+                                                <DropdownItem Clicked="@(() => RecordPayIn(order))">Registrér indbetaling</DropdownItem>
+                                            }
+                                            @foreach (var reservation in reservationsToSettle)
+                                            {
+                                                <DropdownItem Clicked="@(() => RecordSettlement(order, reservation))">Lav opgørelse @resources![reservation.ResourceId].Name @FormattingService.FormatDate(reservation.Date)</DropdownItem>
+                                            }
+                                            @if (order.Totals!.GetBalance() > 0)
+                                            {
+                                                <DropdownItem Clicked="@(() => RecordPayOut(order))">Registrér udbetaling</DropdownItem>
+                                            }
+                                        </DropdownMenu>
+                                    </Dropdown>
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+                <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+                <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
+            }
+            <h1>Bestillinger til grundejerforeningen</h1>
+            @if (!ownerOrders!.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Betilling</TableHeaderCell>
+                            <TableHeaderCell>Dato</TableHeaderCell>
+                            <TableHeaderCell>Oprettet af</TableHeaderCell>
+                            <TableHeaderCell></TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var order in ownerOrders!)
+                        {
+                            <TableRow @key="@order.Id">
+                                <TableRowCell>@order.Id</TableRowCell>
+                                <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
+                                <TableRowCell><a href="mailto:@order.CreatedByEmail?subject=Frederikskaj 2 bestilling @order.Id">@order.CreatedByName</a></TableRowCell>
+                                <TableRowCell>
+                                    <Button class="float-right" Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ShowOrder(order.Id))">Vis</Button>
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+                <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+                <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
+            }
+        </Container>
     }
 </main>
 

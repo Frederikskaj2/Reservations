@@ -74,14 +74,14 @@
     private bool isInitialized;
     private IReadOnlyDictionary<int, Resource>? resources;
     private IEnumerable<MyOrder>? orders;
-    private IEnumerable<HistoryOrder>? historyOrders;
+    private IEnumerable<HistoryReservation>? historyOrders;
 
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
         var maybe = await ApiClient.GetJsonAsync<IEnumerable<MyOrder>>("my-orders");
         maybe.TryGetValue(out orders);
-        historyOrders = Enumerable.Empty<HistoryOrder>();
+        historyOrders = Enumerable.Empty<HistoryReservation>();
         isInitialized = true;
     }
 

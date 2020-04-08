@@ -1,0 +1,65 @@
+﻿@page "/historik"
+@attribute [Authorize(Roles = Roles.Administrator)]
+@inject ApiClient ApiClient
+@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container>
+            <h1>Historik</h1>
+            @if (!reservations!.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Lokale</TableHeaderCell>
+                            <TableHeaderCell>Dato</TableHeaderCell>
+                            <TableHeaderCell>Dage</TableHeaderCell>
+                            <TableHeaderCell>Adresse</TableHeaderCell>
+                            <TableHeaderCell>Bruger</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var reservation in reservations!)
+                        {
+                            <TableRow @key="@reservation.Id">
+                                <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
+                                <TableRowCell>@FormattingService.FormatDate(reservation.Date)</TableRowCell>
+                                <TableRowCell>@reservation.DurationInDays</TableRowCell>
+                                <TableRowCell>Frederikskaj @apartments![reservation.ApartmentId]</TableRowCell>
+                                <TableRowCell><a href="mailto:@reservation.UserEmail?subject=Frederikskaj 2">@reservation.UserName</a></TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+            }
+        </Container>
+    }
+</main>
+@code {
+
+    private IReadOnlyDictionary<int, Resource>? resources;
+    private IReadOnlyDictionary<int, Apartment>? apartments;
+    private IEnumerable<HistoryReservation>? reservations;
+    private bool isInitialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        resources = await ClientDataProvider.GetResources();
+        apartments = (await ClientDataProvider.GetApartments()).ToDictionary(apartment => apartment.Id);
+        var maybe = await ApiClient.GetJsonAsync<IEnumerable<HistoryReservation>>("reservations");
+        maybe.TryGetValue(out reservations);
+        isInitialized = true;
+    }
+
+}

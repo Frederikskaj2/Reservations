@@ -53,7 +53,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
-                .FirstOrDefaultAsync(order => order.Id == orderId && order.ApartmentId != null && order.AccountNumber != null);
+                .FirstOrDefaultAsync(
+                    order => order.Id == orderId && order.ApartmentId != null && order.AccountNumber != null);
 
         public async Task<IEnumerable<Order>> GetOrders()
             => await db.Orders
@@ -79,16 +80,24 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .Include(order => order.User)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
-                .FirstOrDefaultAsync(order => order.Id == orderId && order.ApartmentId == null && order.AccountNumber == null);
+                .FirstOrDefaultAsync(
+                    order => order.Id == orderId && order.ApartmentId == null && order.AccountNumber == null);
 
         public async Task<IEnumerable<Order>> GetOwnerOrders()
-        => await db.Orders
-            .Include(order => order.User)
-            .Include(order => order.Reservations)
-            .ThenInclude(reservation => reservation.Days)
-            .Where(order => order.ApartmentId == null)
-            .OrderBy(order => order.CreatedTimestamp)
-            .ToListAsync();
+            => await db.Orders
+                .Include(order => order.User)
+                .Include(order => order.Reservations)
+                .ThenInclude(reservation => reservation.Days)
+                .Where(order => order.ApartmentId == null)
+                .OrderBy(order => order.CreatedTimestamp)
+                .ToListAsync();
+
+        public async Task<IEnumerable<Order>> GetHistoryOrders()
+            => await db.Orders
+                .Include(order => order.User)
+                .Include(order => order.Reservations)
+                .Where(order => order.ApartmentId != null && order.AccountNumber == null)
+                .ToListAsync();
 
         public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOrder(
             Instant timestamp, int userId, int apartmentId, string accountNumber,
@@ -106,7 +115,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var totalPrice = new Price();
             foreach (var reservationRequest in reservations)
             {
-                var reservation = await CreateReservation(timestamp, order, reservationRequest, ReservationStatus.Reserved, resources);
+                var reservation = await CreateReservation(
+                    timestamp, order, reservationRequest, ReservationStatus.Reserved, resources);
                 if (reservation == null)
                     return (PlaceOrderResult.GeneralError, null);
                 order.Reservations.Add(reservation);
@@ -167,7 +177,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             };
             foreach (var reservationRequest in reservations)
             {
-                var reservation = await CreateReservation(timestamp, order, reservationRequest, ReservationStatus.Confirmed, resources);
+                var reservation = await CreateReservation(
+                    timestamp, order, reservationRequest, ReservationStatus.Confirmed, resources);
                 if (reservation == null)
                     return (PlaceOrderResult.GeneralError, null);
                 order.Reservations.Add(reservation);
@@ -253,9 +264,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 }
             }
 
-            // TODO: If all reservations are cancelled then convert order to history order.
-            // TODO: Handle this conversion gracefully in the client.
-
             var totals = GetTotals(order);
             var orderIsConfirmed = false;
             if (totals.GetBalance() >= 0)
@@ -268,6 +276,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     orderIsConfirmed = true;
                 }
             }
+
+            TryMakeHistoryOrder(order, totals);
 
             try
             {
@@ -298,7 +308,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (order == null)
                 return default;
 
-            var reservationsCancelledWithFee = new List<Reservation>();
             foreach (var reservationId in cancelledReservations)
             {
                 var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
@@ -409,6 +418,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         Amount = -damages
                     });
 
+            TryMakeHistoryOrder(order, GetTotals(order));
+
             try
             {
                 await db.SaveChangesAsync();
@@ -445,6 +456,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             };
             await db.Transactions.AddAsync(transaction);
 
+            TryMakeHistoryOrder(order, GetTotals(order));
+
             try
             {
                 await db.SaveChangesAsync();
@@ -459,7 +472,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             return order;
         }
-
 
         public async Task<IEnumerable<PayOut>> GetPayOuts()
         {
@@ -522,7 +534,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return totals;
         }
 
-        private async Task<Reservation?> CreateReservation(Instant timestamp, Order order, ReservationRequest reservation, ReservationStatus status, IReadOnlyDictionary<int, Resource> resources)
+        private async Task<Reservation?> CreateReservation(
+            Instant timestamp, Order order, ReservationRequest reservation, ReservationStatus status,
+            IReadOnlyDictionary<int, Resource> resources)
         {
             if (!resources.TryGetValue(reservation.ResourceId, out var resource))
                 return null;
@@ -552,12 +566,26 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Price = price
             };
 
-            static async Task<bool> IsReservationDurationValid(ReservationRequest reservation, IReservationPolicy policy)
+            static async Task<bool> IsReservationDurationValid(
+                ReservationRequest reservation, IReservationPolicy policy)
             {
                 var (minimumDays, maximumDays) =
                     await policy.GetReservationAllowedNumberOfDays(reservation.ResourceId, reservation.Date);
                 return minimumDays <= reservation.DurationInDays && reservation.DurationInDays <= maximumDays;
             }
+        }
+
+        private static void TryMakeHistoryOrder(Order order, OrderTotals totals)
+        {
+            var isHistoryOrder = totals.GetBalance() == 0 && order.Reservations.All(
+                reservation => reservation.Status == ReservationStatus.Cancelled
+                    || reservation.Status == ReservationStatus.Settled);
+            if (!isHistoryOrder)
+                return;
+
+            order.AccountNumber = null;
+            foreach (var reservation in order.Reservations!)
+                reservation.Days!.Clear();
         }
     }
 }

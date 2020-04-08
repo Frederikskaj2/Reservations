@@ -2,6 +2,7 @@
 [*]
 
 # ReSharper properties
+resharper_align_multiline_binary_expressions_chain=false
 resharper_constructor_or_destructor_body=expression_body
 resharper_csharp_wrap_after_declaration_lpar=true
 resharper_csharp_wrap_after_invocation_lpar=true
