@@ -29,6 +29,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         return new HistoryReservation
                         {
                             Id = reservation.Id,
+                            OrderId = order.Id,
                             ResourceId = reservation.ResourceId,
                             Date = reservation.Date,
                             DurationInDays = reservation.DurationInDays,

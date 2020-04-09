@@ -7,6 +7,7 @@
     @if (price != null)
     {
         var accountNumberCanBeChanged = Totals!.GetBalance() > 0 || Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
+        var someReservationsCanBeCancelled = Reservations.Any(reservation => reservation.CanBeCancelled);
         <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
             Der er sket en fejl, og din ændring blev ikke gemt.
             <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
@@ -49,16 +50,17 @@
                         {
                             var isCancelled = request.CancelledReservations.Contains(reservation.Id);
                             var canBeSettled = IsAdministrator && reservation.Status == ReservationStatus.Confirmed /*&& reservation.Date.PlusDays(reservation.DurationInDays) <= today*/;
-                            var canBeCancelled = reservation.CanBeCancelled || IsAdministrator && reservation.Status == ReservationStatus.Confirmed && !canBeSettled;
+                            var canBeCancelled = reservation.CanBeCancelled || IsAdministrator && reservation.Status == ReservationStatus.Confirmed;
                             var color = reservation.Status == ReservationStatus.Settled ? "text-secondary" : string.Empty;
-                            <TableRow Class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : color)">
-                                <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
-                                <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
-                                <TableRowCell>@reservation.DurationInDays</TableRowCell>
-                                <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
-                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
-                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
-                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
+                            var cancelledClass = isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty;
+                            <TableRow Class="@color">
+                                <TableRowCell Class="@cancelledClass">@resources![reservation.ResourceId].Name</TableRowCell>
+                                <TableRowCell Class="@cancelledClass">@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
+                                <TableRowCell Class="@cancelledClass">@reservation.DurationInDays</TableRowCell>
+                                <TableRowCell Class="@cancelledClass">@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
+                                <TableRowCell Class="@("text-right " + cancelledClass)">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
+                                <TableRowCell Class="@("text-right " + cancelledClass)">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
+                                <TableRowCell Class="@("text-right " + cancelledClass)">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
                                 <TableRowCell Class="border-0">
                                     @if (canBeSettled)
                                     {
@@ -66,7 +68,7 @@
                                             <Icon Class="fa-handshake" />
                                         </Button>
                                     }
-                                    else if (canBeCancelled)
+                                    @if (canBeCancelled)
                                     {
                                         <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ToggleCancelReservation(reservation))">
                                             @if (!isCancelled)
@@ -152,10 +154,10 @@
                                 <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(balance)</strong></TableRowCell>
                             </TableRow>
                         }
-                        @if (!IsHistoryOrder && (accountNumberCanBeChanged || Reservations.Any(reservation => reservation.CanBeCancelled)))
+                        @if (!IsHistoryOrder && (accountNumberCanBeChanged || someReservationsCanBeCancelled))
                         {
                             <TableRow>
-                                <TableRowCell colspan="6" Class="border-top-0">
+                                <TableRowCell colspan="6" Class="border-top-0 control-row">
                                     @if (IsAdministrator)
                                     {
                                         if (Totals!.GetBalance() < 0)
@@ -165,6 +167,10 @@
                                         else if (Totals!.GetBalance() > 0)
                                         {
                                             <Button Color="Color.Secondary" Clicked="@RecordPayOut">Registrér udbetaling</Button>
+                                        }
+                                        if (someReservationsCanBeCancelled)
+                                        {
+                                            <CheckEdit Checked="@request.WaiveFee" TValue="bool" CheckedChanged="@ToggleCancelWaiveFee">Intet aflysningsgebyr</CheckEdit>
                                         }
                                     }
                                 </TableRowCell>
@@ -241,6 +247,12 @@
         UpdatePrice();
     }
 
+    private void ToggleCancelWaiveFee(bool value)
+    {
+        request.WaiveFee = value;
+        UpdatePrice();
+    }
+
     private void UpdatePrice()
     {
         price = Reservations.Aggregate(
@@ -252,7 +264,7 @@
         foreach (var reservation in Reservations.Where(r => request.CancelledReservations.Contains(r.Id)))
         {
             balance += reservation.Price!.GetTotal();
-            if (reservation.Status == ReservationStatus.Confirmed)
+            if (!request.WaiveFee && reservation.Status == ReservationStatus.Confirmed)
             {
                 cancellationFee += ReservationsOptions.CancellationFee;
                 balance -= ReservationsOptions.CancellationFee;

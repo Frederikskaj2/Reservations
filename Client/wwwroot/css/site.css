@@ -646,27 +646,21 @@ table {
     }
 }
 
-.orders-order {
-    display: grid;
-    grid-template-columns: 11rem 9rem 4rem 1fr;
-    grid-template-rows: max-content;
-    grid-gap: 0 1rem;
-    gap: 0 1rem;
+.control-row > * {
+    display: inline-block;
 }
 
-    .orders-order .order-header, .orders-order .reservation-header {
-        text-transform: uppercase;
-        font-size: 0.67rem;
-        color: #AAA;
-    }
+.control-row > * {
+    display: inline-block;
+}
 
-    .orders-order .reservation-header {
-        margin-top: 1rem;
-    }
+.control-row > :not(:first-child) {
+    margin-left: .25rem;
+}
 
-    .orders-order .order-button {
-        grid-row-end: span 2;
-    }
+.control-row > :not(:last-child) {
+    margin-right: 0.25rem;
+}
 
 .reservation-cancelled {
     text-decoration: line-through;

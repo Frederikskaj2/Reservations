@@ -58,7 +58,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var now = clock.GetCurrentInstant();
             var accountNumber = request.AccountNumber.Trim().ToUpperInvariant();
             var order = await orderService.UpdateOrder(
-                now, orderId, accountNumber, request.CancelledReservations, userId.Value);
+                now, orderId, accountNumber, request.CancelledReservations, userId.Value, request.WaiveFee);
             if (order == null)
                 return new OrderResponse<Order>();
 

@@ -148,7 +148,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 throw new ArgumentException("Value cannot be null or empty.", nameof(resourceName));
             if (deposit <= 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
-            if (cancellationFee <= 0)
+            if (cancellationFee < 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
 
             var model = new ReservationCancelledModel(

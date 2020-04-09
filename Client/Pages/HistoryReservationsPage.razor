@@ -27,6 +27,7 @@
                             <TableHeaderCell>Dage</TableHeaderCell>
                             <TableHeaderCell>Adresse</TableHeaderCell>
                             <TableHeaderCell>Bruger</TableHeaderCell>
+                            <TableHeaderCell>Bestilling</TableHeaderCell>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -38,6 +39,7 @@
                                 <TableRowCell>@reservation.DurationInDays</TableRowCell>
                                 <TableRowCell>Frederikskaj @apartments![reservation.ApartmentId]</TableRowCell>
                                 <TableRowCell><a href="mailto:@reservation.UserEmail?subject=Frederikskaj 2">@reservation.UserName</a></TableRowCell>
+                                <TableRowCell><a href="@Urls.Orders/@reservation.OrderId">@reservation.OrderId</a></TableRowCell>
                             </TableRow>
                         }
                     </TableBody>

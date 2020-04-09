@@ -11,7 +11,7 @@ namespace Frederikskaj2.Reservations.Server.Email
         {
             if (deposit <= 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
-            if (cancellationFee <= 0)
+            if (cancellationFee < 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
 
             Deposit = deposit;

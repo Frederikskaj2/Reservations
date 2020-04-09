@@ -202,7 +202,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         public async Task<Order?> UpdateOrder(
             Instant timestamp, int orderId, string accountNumber, IEnumerable<int> cancelledReservations,
-            int createdByUserId, int? userId = null)
+            int createdByUserId, bool waiveFee, int? userId = null)
         {
             var order = await GetOrder(orderId);
             if (order == null || userId.HasValue && order.UserId != userId.Value)
@@ -210,7 +210,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var today = timestamp.InZone(dateTimeZone).Date;
             order.AccountNumber = accountNumber;
-            var reservationsCancelledWithFee = new List<Reservation>();
+            var cancelledConfirmedReservations = new List<Reservation>();
             foreach (var reservationId in cancelledReservations)
             {
                 var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
@@ -248,19 +248,20 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     });
                 if (previousStatus == ReservationStatus.Confirmed)
                 {
-                    reservationsCancelledWithFee.Add(reservation);
-                    order.Transactions.Add(
-                        new Transaction
-                        {
-                            Timestamp = timestamp,
-                            Type = TransactionType.CancellationFee,
-                            CreatedByUserId = createdByUserId,
-                            UserId = order.UserId,
-                            OrderId = order.Id,
-                            ResourceId = reservation.ResourceId,
-                            ReservationDate = reservation.Date,
-                            Amount = -reservationsOptions.CancellationFee
-                        });
+                    cancelledConfirmedReservations.Add(reservation);
+                    if (!waiveFee)
+                        order.Transactions.Add(
+                            new Transaction
+                            {
+                                Timestamp = timestamp,
+                                Type = TransactionType.CancellationFee,
+                                CreatedByUserId = createdByUserId,
+                                UserId = order.UserId,
+                                OrderId = order.Id,
+                                ResourceId = reservation.ResourceId,
+                                ReservationDate = reservation.Date,
+                                Amount = -reservationsOptions.CancellationFee
+                            });
                 }
             }
 
@@ -288,16 +289,19 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return default;
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString());
             var resources = await dataProvider.GetResources();
-            foreach (var reservation in reservationsCancelledWithFee)
+            foreach (var reservation in cancelledConfirmedReservations)
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendReservationCancelledEmail(
-                        user, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
-                        reservation.Price!.Deposit, reservationsOptions.CancellationFee));
+                    (service, _) =>
+                    {
+                        var cancellationFee = !waiveFee ? reservationsOptions.CancellationFee : 0;
+                        return service.SendReservationCancelledEmail(
+                            order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
+                            reservation.Price!.Deposit, cancellationFee);
+                    });
             if (orderIsConfirmed)
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendOrderConfirmedEmail(user, order.Id, 0, totals.GetBalance()));
+                    (service, _) => service.SendOrderConfirmedEmail(order.User!, order.Id, 0, totals.GetBalance()));
 
             return order;
         }
