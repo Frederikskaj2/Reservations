@@ -9,7 +9,7 @@
         public const string ConfirmEmail = "bekraeft-mail";
         public const string Consent = "samtykke";
         public const string HistoryReservations = "historik";
-        public const string InventoryBanquetFacilities = "inventar/aktivitets-festlokalet";
+        public const string InventoryBanquetFacilities = "https://docs.google.com/spreadsheets/d/1PvfI1TQgaaYqBeck6hiv-JA0DlpZweeUolyzLH3RQtY";
         public const string MyAccount = "bruger";
         public const string MyOrders = "bruger/bestillinger";
         public const string MyTransactions = "bruger/kontoudtog";
