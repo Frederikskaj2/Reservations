@@ -118,8 +118,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private MyOrder CreateOrder(Data.Order order, LocalDate today)
         {
             var reservations = order.Reservations.Select(CreateReservation).ToList();
-            var canBeEdited = reservations.Any(r => r.CanBeCancelled);
-            return new MyOrder
+            var canBeEdited = order.AccountNumber != null && reservations.Any(r => r.CanBeCancelled);
+            var myOrder = new MyOrder
             {
                 Id = order.Id,
                 AccountNumber = order.AccountNumber!,
@@ -127,6 +127,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Reservations = reservations,
                 CanBeEdited = canBeEdited
             };
+            myOrder.Totals = orderService.GetTotals(order);
+            return myOrder;
 
             Reservation CreateReservation(Data.Reservation reservation) => new Reservation
             {

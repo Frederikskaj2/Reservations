@@ -1,185 +1,189 @@
 ﻿@inject ApiClient ApiClient
 @inject ClientDataProvider ClientDataProvider
-@inject IDateProvider DateProvider
 @inject FormattingService FormattingService
 @inject ReservationsOptions ReservationsOptions
 
-@if (price != null)
-{
-    var accountNumberCanBeChanged = Totals!.GetBalance() > 0 || Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
-    <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
-        Der er sket en fejl, og din ændring blev ikke gemt.
-        <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
-    </Alert>
-    <Form>
-        <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
-            <Row>
-                <Column ColumnSize="ColumnSize.Is9.OnTablet.IsHalf.OnWidescreen">
-                    <Field>
-                        <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
-                        <FieldBody>
-                            <Validation>
-                                <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456" ReadOnly="@(!accountNumberCanBeChanged)">
-                                    <Feedback>
-                                        <ValidationError />
-                                    </Feedback>
-                                </TextEdit>
-                            </Validation>
-                        </FieldBody>
-                    </Field>
-                </Column>
-            </Row>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHeaderCell>Lokale</TableHeaderCell>
-                        <TableHeaderCell>Fra</TableHeaderCell>
-                        <TableHeaderCell>Dage</TableHeaderCell>
-                        <TableHeaderCell>Til</TableHeaderCell>
-                        <TableHeaderCell class="text-right">Leje</TableHeaderCell>
-                        <TableHeaderCell class="text-right">Rengøring</TableHeaderCell>
-                        <TableHeaderCell class="text-right">Depositum</TableHeaderCell>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    @foreach (var reservation in Reservations ?? Enumerable.Empty<Reservation>())
-                    {
-                        var isCancelled = request.CancelledReservations.Contains(reservation.Id);
-                        var canBeSettled = IsAdministrator && reservation.Status == ReservationStatus.Confirmed /*&& reservation.Date.PlusDays(reservation.DurationInDays) <= today*/;
-                        var canBeCancelled = reservation.CanBeCancelled || IsAdministrator && reservation.Status == ReservationStatus.Confirmed && !canBeSettled;
-                        var color = reservation.Status == ReservationStatus.Settled ? "text-secondary" : string.Empty;
-                        <TableRow class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : color)">
-                            <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
-                            <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
-                            <TableRowCell>@reservation.DurationInDays</TableRowCell>
-                            <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
-                            <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
-                            <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
-                            <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
-                            <TableRowCell class="border-0">
-                                @if (canBeSettled)
-                                {
-                                    <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => RecordSettlement(reservation))">
-                                        <Icon class="fa-handshake" />
-                                    </Button>
-                                }
-                                else if (canBeCancelled)
-                                {
-                                    <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ToggleCancelReservation(reservation))">
-                                        @if (!isCancelled)
-                                        {
-                                            <Icon class="fa-trash text-danger" />
-                                        }
-                                        else
-                                        {
-                                            <Icon class="fa-undo text-success" />
-                                        }
-                                    </Button>
-                                }
-                            </TableRowCell>
-                        </TableRow>
-                    }
-                </TableBody>
-                <TableFooter>
-                    <TableRow>
-                        <TableRowCell colspan="5">Leje (inklusiv rengøring)</TableRowCell>
-                        <TableRowCell class="text-right">+</TableRowCell>
-                        <TableRowCell class="text-right">@FormattingService.FormatMoneyLong(price!.Rent + price!.CleaningFee)</TableRowCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableRowCell colspan="5" class="border-top-0">Depositum</TableRowCell>
-                        <TableRowCell class="text-right border-top-0">+</TableRowCell>
-                        <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.Deposit)</TableRowCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableRowCell colspan="5" class="border-bottom"><strong>Til betaling</strong></TableRowCell>
-                        <TableRowCell class="text-right border-bottom"><strong>=</strong></TableRowCell>
-                        <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
-                    </TableRow>
-                    @if (Totals!.PayIn > 0)
-                    {
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-top-0">Pris (inklusiv depositum)</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">−</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.GetTotal())</TableRowCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-top-0">Indbetalt</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">+</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayIn)</TableRowCell>
-                        </TableRow>
-                    }
-                    @if (cancellationFee > 0)
-                    {
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-top-0">Aflysningsgebyr</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">−</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(cancellationFee)</TableRowCell>
-                        </TableRow>
-                    }
-                    @if (Totals.SettledDeposits > 0)
-                    {
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-top-0">Depositum refundering</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">+</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.SettledDeposits)</TableRowCell>
-                        </TableRow>
-                    }
-                    @if (Totals.Damages > 0)
-                    {
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-top-0">Skader</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">−</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.Damages)</TableRowCell>
-                        </TableRow>
-                    }
-                    @if (Totals.PayOut > 0)
-                    {
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-top-0">Udbetalt</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">−</TableRowCell>
-                            <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayOut)</TableRowCell>
-                        </TableRow>
-                    }
-                    @if (Totals.PayIn > 0)
-                    {
-                        <TableRow>
-                            <TableRowCell colspan="5" class="border-bottom"><strong>Saldo</strong></TableRowCell>
-                            <TableRowCell class="text-right border-bottom"><strong>=</strong></TableRowCell>
-                            <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(balance)</strong></TableRowCell>
-                        </TableRow>
-                    }
-                    @if (accountNumberCanBeChanged || Reservations.Any(reservation => reservation.CanBeCancelled))
-                    {
-                        <TableRow>
-                            <TableRowCell colspan="6" class="border-top-0">
-                                @if (IsAdministrator)
-                                {
-                                    if (Totals!.GetBalance() < 0)
-                                    {
-                                        <Button Color="Color.Secondary" Clicked="@RecordPayIn">Registrér indbetaling</Button>
-                                    }
-                                    else if (Totals!.GetBalance() > 0)
-                                    {
-                                        <Button Color="Color.Secondary" Clicked="@RecordPayOut">Registrér udbetaling</Button>
-                                    }
-                                }
-                            </TableRowCell>
-                            <TableRowCell class="border-top-0">
-                                <Button class="float-right" Color="@(request.CancelledReservations.Count > 0 ? Color.Danger : Color.Primary)" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Disabled="@(!IsUpdated)" Clicked="@Submit">Opdatér bestilling</Button>
-                            </TableRowCell>
-                        </TableRow>
-                    }
-                </TableFooter>
-            </Table>
-        </Validations>
-    </Form>
-    @if (IsAdministrator)
+<div class="order-statement">
+    @if (price != null)
     {
-        <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
-        <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
+        var accountNumberCanBeChanged = Totals!.GetBalance() > 0 || Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
+        <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
+            Der er sket en fejl, og din ændring blev ikke gemt.
+            <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
+        </Alert>
+        <Form>
+            <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
+                @if (!IsHistoryOrder)
+                {
+                    <Row>
+                        <Column ColumnSize="ColumnSize.Is9.OnTablet.IsHalf.OnWidescreen">
+                            <Field>
+                                <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
+                                <FieldBody>
+                                    <Validation>
+                                        <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456" ReadOnly="@(!accountNumberCanBeChanged)">
+                                            <Feedback>
+                                                <ValidationError />
+                                            </Feedback>
+                                        </TextEdit>
+                                    </Validation>
+                                </FieldBody>
+                            </Field>
+                        </Column>
+                    </Row>
+                }
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell Class="order-table-resource-column">Lokale</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-time-column">Fra</TableHeaderCell>
+                            <TableHeaderCell>Dage</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-time-column">Til</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Leje</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Rengøring</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Depositum</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var reservation in Reservations ?? Enumerable.Empty<Reservation>())
+                        {
+                            var isCancelled = request.CancelledReservations.Contains(reservation.Id);
+                            var canBeSettled = IsAdministrator && reservation.Status == ReservationStatus.Confirmed /*&& reservation.Date.PlusDays(reservation.DurationInDays) <= today*/;
+                            var canBeCancelled = reservation.CanBeCancelled || IsAdministrator && reservation.Status == ReservationStatus.Confirmed && !canBeSettled;
+                            var color = reservation.Status == ReservationStatus.Settled ? "text-secondary" : string.Empty;
+                            <TableRow Class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : color)">
+                                <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
+                                <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
+                                <TableRowCell>@reservation.DurationInDays</TableRowCell>
+                                <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
+                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
+                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
+                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
+                                <TableRowCell Class="border-0">
+                                    @if (canBeSettled)
+                                    {
+                                        <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => RecordSettlement(reservation))">
+                                            <Icon Class="fa-handshake" />
+                                        </Button>
+                                    }
+                                    else if (canBeCancelled)
+                                    {
+                                        <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ToggleCancelReservation(reservation))">
+                                            @if (!isCancelled)
+                                            {
+                                                <Icon Class="fa-trash text-danger" />
+                                            }
+                                            else
+                                            {
+                                                <Icon Class="fa-undo text-success" />
+                                            }
+                                        </Button>
+                                    }
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableRowCell colspan="5">Leje (inklusiv rengøring)</TableRowCell>
+                            <TableRowCell Class="text-right">+</TableRowCell>
+                            <TableRowCell Class="text-right">@FormattingService.FormatMoneyLong(price!.Rent + price!.CleaningFee)</TableRowCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableRowCell colspan="5" Class="border-top-0">Depositum</TableRowCell>
+                            <TableRowCell Class="text-right border-top-0">+</TableRowCell>
+                            <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.Deposit)</TableRowCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableRowCell colspan="5" Class="border-bottom"><strong>Til betaling</strong></TableRowCell>
+                            <TableRowCell Class="text-right border-bottom"><strong>=</strong></TableRowCell>
+                            <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
+                        </TableRow>
+                        @if (Totals!.PayIn > 0)
+                        {
+                            <TableRow>
+                                <TableRowCell colspan="5" Class="border-top-0">Pris (inklusiv depositum)</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.GetTotal())</TableRowCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableRowCell colspan="5" Class="border-top-0">Indbetalt</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">+</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayIn)</TableRowCell>
+                            </TableRow>
+                        }
+                        @if (cancellationFee > 0)
+                        {
+                            <TableRow>
+                                <TableRowCell colspan="5" Class="border-top-0">Aflysningsgebyr</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(cancellationFee)</TableRowCell>
+                            </TableRow>
+                        }
+                        @if (Totals.SettledDeposits > 0)
+                        {
+                            <TableRow>
+                                <TableRowCell colspan="5" Class="border-top-0">Depositum refundering</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">+</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.SettledDeposits)</TableRowCell>
+                            </TableRow>
+                        }
+                        @if (Totals.Damages > 0)
+                        {
+                            <TableRow>
+                                <TableRowCell colspan="5" Class="border-top-0">Skader</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.Damages)</TableRowCell>
+                            </TableRow>
+                        }
+                        @if (Totals.PayOut > 0)
+                        {
+                            <TableRow>
+                                <TableRowCell colspan="5" Class="border-top-0">Udbetalt</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayOut)</TableRowCell>
+                            </TableRow>
+                        }
+                        @if (Totals.PayIn > 0)
+                        {
+                            <TableRow>
+                                <TableRowCell colspan="5" Class="border-bottom"><strong>Saldo</strong></TableRowCell>
+                                <TableRowCell Class="text-right border-bottom"><strong>=</strong></TableRowCell>
+                                <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(balance)</strong></TableRowCell>
+                            </TableRow>
+                        }
+                        @if (!IsHistoryOrder && (accountNumberCanBeChanged || Reservations.Any(reservation => reservation.CanBeCancelled)))
+                        {
+                            <TableRow>
+                                <TableRowCell colspan="6" Class="border-top-0">
+                                    @if (IsAdministrator)
+                                    {
+                                        if (Totals!.GetBalance() < 0)
+                                        {
+                                            <Button Color="Color.Secondary" Clicked="@RecordPayIn">Registrér indbetaling</Button>
+                                        }
+                                        else if (Totals!.GetBalance() > 0)
+                                        {
+                                            <Button Color="Color.Secondary" Clicked="@RecordPayOut">Registrér udbetaling</Button>
+                                        }
+                                    }
+                                </TableRowCell>
+                                <TableRowCell Class="border-top-0">
+                                    <Button Class="float-right" Color="@(request.CancelledReservations.Count > 0 ? Color.Danger : Color.Primary)" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Disabled="@(!IsUpdated)" Clicked="@Submit">Opdatér bestilling</Button>
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableFooter>
+                </Table>
+            </Validations>
+        </Form>
+        @if (IsAdministrator)
+        {
+            <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+            <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
+        }
     }
-}
+</div>
 
 @code {
 
@@ -188,7 +192,6 @@
     private PaymentDialog paymentDialog = null!;
     private SettlementDialog settlementDialog = null!;
     private IReadOnlyDictionary<int, Resource>? resources;
-    private LocalDate today;
     private bool showGeneralErrorAlert;
     private Price? price;
     private int cancellationFee;
@@ -210,6 +213,9 @@
     public OrderTotals? Totals { get; set; }
 
     [Parameter]
+    public bool IsHistoryOrder { get; set; }
+
+    [Parameter]
     public EventCallback<UpdateOrderRequest> OnSubmit { get; set; }
 
     private bool IsUpdated => AccountNumber != request.AccountNumber.Trim() || request.CancelledReservations.Count > 0;
@@ -217,7 +223,6 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        today = DateProvider.Today;
     }
 
     protected override void OnParametersSet()

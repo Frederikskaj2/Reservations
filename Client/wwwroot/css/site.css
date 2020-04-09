@@ -217,12 +217,17 @@ nav {
         color: hsl(48, 100%, 75%);
     }
 
+    .nav-tab > div {
+        text-align: center;
+    }
+
 .user-info {
     align-items: center;
     display: flex;
     flex-direction: row;
     justify-content: center;
     margin-left: auto;
+    padding-left: 1rem;
 }
 
     .user-info img {
@@ -603,21 +608,41 @@ table {
     margin-top: 2rem;
 }
 
+.extra-border-top {
+    border-top-width: 2px !important;
+}
+
+.order-statement {
+    margin-top: 1rem;
+}
+
 .order-table-resource-column {
-    min-width: 11rem;
+    min-width: 0;
+}
+
+.order-table-time-column {
+    min-width: 5rem;
 }
 
 .order-table-date-column {
     min-width: 7rem;
 }
 
+.order-table-status-column {
+    min-width: 0rem;
+}
+
 @media (min-width: 768px) {
     .order-table-resource-column {
-        min-width: 12rem;
+        min-width: 10rem;
     }
 
-    .order-table-date-column {
-        min-width: 10rem;
+    .order-table-time-column {
+        min-width: 7rem;
+    }
+
+    .order-table-status-column {
+        min-width: 8rem;
     }
 }
 

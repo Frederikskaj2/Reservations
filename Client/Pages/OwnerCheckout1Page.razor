@@ -14,7 +14,7 @@
     }
     else
     {
-        <Container class="container-min-md">
+        <Container Class="container-min-md">
             <Alert Color="Color.Danger" Visible="@showReservationConflictAlert" Dismisable="true">
                 Din bestilling blev ikke gennemført da den overlapper med andre reservationer. Opdatér kalenderen og prøv igen.
                 <CloseButton Clicked="@DismissReservationConflictAlert" />
@@ -28,10 +28,10 @@
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHeaderCell class="order-table-resource-column">Lokale</TableHeaderCell>
-                            <TableHeaderCell class="order-table-date-column">Fra</TableHeaderCell>
-                            <TableHeaderCell class="text-right">Dage</TableHeaderCell>
-                            <TableHeaderCell class="order-table-date-column text-right">Til</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-resource-column">Lokale</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-time-column">Fra</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Dage</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-time-column text-right">Til</TableHeaderCell>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -40,15 +40,15 @@
                             <TableRow>
                                 <TableRowCell>@reservation.Resource!.Name</TableRowCell>
                                 <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
-                                <TableRowCell class="text-right">@reservation.DurationInDays</TableRowCell>
-                                <TableRowCell class="text-right">@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
+                                <TableRowCell Class="text-right">@reservation.DurationInDays</TableRowCell>
+                                <TableRowCell Class="text-right">@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
                             </TableRow>
                         }
                     </TableBody>
                     <TableFooter>
                         <TableRow>
                             <TableRowCell colspan="4" Class="border-top-0">
-                                <Button class="float-right" Color="Color.Success" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Submit">Bekræft bestilling</Button>
+                                <Button Class="float-right" Color="Color.Success" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Submit">Bekræft bestilling</Button>
                             </TableRowCell>
                         </TableRow>
                     </TableFooter>

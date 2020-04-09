@@ -19,7 +19,7 @@
     }
     else
     {
-        <Container class="container-min-md">
+        <Container Class="container-min-md">
             <Alert Color="Color.Danger" Visible="@showReservationConflictAlert" Dismisable="true">
                 Din bestilling blev ikke gennemført da den overlapper med andre reservationer. Opdatér kalenderen og prøv igen.
                 <CloseButton Clicked="@DismissReservationConflictAlert" />
@@ -38,13 +38,13 @@
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHeaderCell class="order-table-resource-column">Lokale</TableHeaderCell>
-                                <TableHeaderCell class="order-table-date-column">Fra</TableHeaderCell>
+                                <TableHeaderCell Class="order-table-resource-column">Lokale</TableHeaderCell>
+                                <TableHeaderCell Class="order-table-time-column">Fra</TableHeaderCell>
                                 <TableHeaderCell>Dage</TableHeaderCell>
-                                <TableHeaderCell class="order-table-date-column">Til</TableHeaderCell>
-                                <TableHeaderCell class="text-right">Leje</TableHeaderCell>
-                                <TableHeaderCell class="text-right">Rengøring</TableHeaderCell>
-                                <TableHeaderCell class="text-right">Depositum</TableHeaderCell>
+                                <TableHeaderCell Class="order-table-time-column">Til</TableHeaderCell>
+                                <TableHeaderCell Class="text-right">Leje</TableHeaderCell>
+                                <TableHeaderCell Class="text-right">Rengøring</TableHeaderCell>
+                                <TableHeaderCell Class="text-right">Depositum</TableHeaderCell>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -55,24 +55,24 @@
                                     <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
                                     <TableRowCell>@reservation.DurationInDays</TableRowCell>
                                     <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
-                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
-                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
-                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
+                                    <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
+                                    <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
+                                    <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
                                 </TableRow>
                             }
                         </TableBody>
                         <TableFooter>
                             <TableRow>
                                 <TableRowCell colspan="6">Leje (inkl. rengøring)</TableRowCell>
-                                <TableRowCell class="text-right">@FormattingService.FormatMoneyLong(GetTotalRentAndCleaningFee())</TableRowCell>
+                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyLong(GetTotalRentAndCleaningFee())</TableRowCell>
                             </TableRow>
                             <TableRow>
-                                <TableRowCell colspan="6" class="border-top-0">Depositum</TableRowCell>
-                                <TableRowCell class="text-right border-top-0">@FormattingService.FormatMoneyLong(GetTotalDeposit())</TableRowCell>
+                                <TableRowCell colspan="6" Class="border-top-0">Depositum</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(GetTotalDeposit())</TableRowCell>
                             </TableRow>
                             <TableRow>
-                                <TableRowCell colspan="6" class="border-bottom"><strong>Til betaling</strong></TableRowCell>
-                                <TableRowCell class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(GetGrandTotal())</strong></TableRowCell>
+                                <TableRowCell colspan="6" Class="border-bottom"><strong>Til betaling</strong></TableRowCell>
+                                <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(GetGrandTotal())</strong></TableRowCell>
                             </TableRow>
                             <TableRow>
                                 <TableRowCell colspan="7" Class="border-top-0">
@@ -111,8 +111,8 @@
                                             </CheckEdit>
                                         </Validation>
                                     </Field>
-                                    <a class="btn btn-secondary" href="javascript:history.back()">Tilbage</a>
-                                    <Button class="float-right" Color="Color.Success" Clicked="@Submit">Bekræft bestilling</Button>
+                                    <a Class="btn btn-secondary" href="javascript:history.back()">Tilbage</a>
+                                    <Button Class="float-right" Color="Color.Success" Clicked="@Submit">Bekræft bestilling</Button>
                                 </TableRowCell>
                             </TableRow>
                         </TableFooter>

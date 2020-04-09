@@ -12,54 +12,95 @@
     }
     else
     {
-        <Container class="container-min-md orders">
+        <Container class="container-min-md">
             @if (orders!.Any())
             {
                 <h1>Aktuelle bestillinger</h1>
-                @foreach (var order in orders!)
-                {
-                    <Row>
-                        <Column>
-                            <Card Background="Background.Light">
-                                <CardBody class="orders-order">
-                                    <div class="order-header">Bestillings-nr.</div>
-                                    <div class="order-header">Bestillingsdato</div>
-                                    <div class="order-header"></div>
-                                    <div class="order-header order-button">
-                                        <Button Color="Color.Info" Size="ButtonSize.Small" class="btn-fixed float-right" Clicked="@(() => EditOrder(order))">
-                                            @if (order.CanBeEdited)
-                                            {
-                                                <text>Redigér</text>
-                                            }
-                                            else
-                                            {
-                                                <text>Vis</text>
-                                            }
-                                        </Button>
-                                    </div>
-                                    <div>@order.Id</div>
-                                    <div>@FormattingService.FormatDate(order.CreatedTimestamp)</div>
-                                    <div></div>
-                                    <div class="reservation-header">Lokale</div>
-                                    <div class="reservation-header">Dato</div>
-                                    <div class="reservation-header">Antal dage</div>
-                                    <div class="reservation-header">Status</div>
-                                    @foreach (var reservation in order.Reservations!)
-                                    {
-                                        <div>@resources![reservation.ResourceId].Name</div>
-                                        <div>@FormattingService.FormatDate(reservation.Date)</div>
-                                        <div>@reservation.DurationInDays</div>
-                                        <div>@GetReservationStatus(reservation)</div>
-                                    }
-                                </CardBody>
-                            </Card>
-                        </Column>
-                    </Row>
-                }
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Nr.</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-resource-column">Lokale</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-date-column">Dato</TableHeaderCell>
+                            <TableHeaderCell>Dage</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-status-column">Status</TableHeaderCell>
+                            <TableHeaderCell></TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var order in orders!)
+                        {
+                            var reservations = order.Reservations!.ToList();
+                            for (var i = 0; i < reservations.Count; i += 1)
+                            {
+                                var isFirstReservation = i == 0;
+                                var reservation = reservations[i];
+                                <TableRow>
+                                    <TableRowHeader Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">@(isFirstReservation ? @order.Id.ToString() : string.Empty)</TableRowHeader>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@resources![reservation.ResourceId].Name</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@FormattingService.FormatDate(reservation.Date)</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@reservation.DurationInDays</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@GetReservationStatus(reservation)</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">
+                                        @if (isFirstReservation)
+                                        {
+                                            <Button Color="Color.Light" Size="ButtonSize.Small" Class="btn-fixed float-right" Clicked="@(() => EditOrder(order))">
+                                                @if (order.CanBeEdited)
+                                                {
+                                                    <text>Redigér</text>
+                                                }
+                                                else
+                                                {
+                                                    <text>Vis</text>
+                                                }
+                                            </Button>
+                                        }
+                                    </TableRowCell>
+                                </TableRow>
+                            }
+                        }
+                    </TableBody>
+                </Table>
             }
             @if (historyOrders!.Any())
             {
                 <h1>Tidligere bestillinger</h1>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Nr.</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-resource-column">Lokale</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-date-column">Dato</TableHeaderCell>
+                            <TableHeaderCell>Dage</TableHeaderCell>
+                            <TableHeaderCell Class="order-table-status-column">Status</TableHeaderCell>
+                            <TableHeaderCell></TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var order in historyOrders!)
+                        {
+                            var reservations = order.Reservations!.ToList();
+                            for (var i = 0; i < reservations.Count; i += 1)
+                            {
+                                var isFirstReservation = i == 0;
+                                var reservation = reservations[i];
+                                <TableRow>
+                                    <TableRowHeader Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">@(isFirstReservation ? @order.Id.ToString() : string.Empty)</TableRowHeader>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@resources![reservation.ResourceId].Name</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@FormattingService.FormatDate(reservation.Date)</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@reservation.DurationInDays</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@GetReservationStatus(reservation)</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">
+                                        @if (isFirstReservation)
+                                        {
+                                            <Button Color="Color.Light" Size="ButtonSize.Small" Class="btn-fixed float-right" Clicked="@(() => EditOrder(order))">Vis</Button>
+                                        }
+                                    </TableRowCell>
+                                </TableRow>
+                            }
+                        }
+                    </TableBody>
+                </Table>
             }
             @if (!orders!.Any() && !historyOrders!.Any())
             {
@@ -74,14 +115,17 @@
     private bool isInitialized;
     private IReadOnlyDictionary<int, Resource>? resources;
     private IEnumerable<MyOrder>? orders;
-    private IEnumerable<HistoryReservation>? historyOrders;
+    private IEnumerable<MyOrder>? historyOrders;
 
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
         var maybe = await ApiClient.GetJsonAsync<IEnumerable<MyOrder>>("my-orders");
-        maybe.TryGetValue(out orders);
-        historyOrders = Enumerable.Empty<HistoryReservation>();
+        if (maybe.TryGetValue(out var response))
+        {
+            orders = response.Where(order => order.AccountNumber != null).ToList();
+            historyOrders = response.Where(order => order.AccountNumber == null).ToList();
+        }
         isInitialized = true;
     }
 

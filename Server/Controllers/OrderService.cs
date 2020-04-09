@@ -54,7 +54,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
                 .FirstOrDefaultAsync(
-                    order => order.Id == orderId && order.ApartmentId != null && order.AccountNumber != null);
+                    order => order.Id == orderId && order.ApartmentId != null);
 
         public async Task<IEnumerable<Order>> GetOrders()
             => await db.Orders
@@ -71,7 +71,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
-                .Where(order => order.UserId == userId && order.ApartmentId != null && order.AccountNumber != null)
+                .Where(order => order.UserId == userId && order.ApartmentId != null)
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 

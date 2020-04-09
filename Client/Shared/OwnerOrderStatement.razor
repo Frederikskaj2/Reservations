@@ -5,30 +5,30 @@
     <Table>
         <TableHeader>
             <TableRow>
-                <TableHeaderCell>Lokale</TableHeaderCell>
-                <TableHeaderCell>Fra</TableHeaderCell>
-                <TableHeaderCell class="text-right">Dage</TableHeaderCell>
-                <TableHeaderCell class="text-right">Til</TableHeaderCell>
+                <TableHeaderCell Class="order-table-resource-column">Lokale</TableHeaderCell>
+                <TableHeaderCell Class="order-table-time-column">Fra</TableHeaderCell>
+                <TableHeaderCell Class="text-right">Dage</TableHeaderCell>
+                <TableHeaderCell Class="order-table-time-column text-right">Til</TableHeaderCell>
             </TableRow>
         </TableHeader>
         <TableBody>
             @foreach (var reservation in Reservations ?? Enumerable.Empty<Reservation>())
             {
                 var isCancelled = request.CancelledReservations.Contains(reservation.Id);
-                <TableRow class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty)">
+                <TableRow Class="@(isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty)">
                     <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
                     <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
-                    <TableRowCell class="text-right">@reservation.DurationInDays</TableRowCell>
-                    <TableRowCell class="text-right">@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
-                    <TableRowCell class="border-0">
+                    <TableRowCell Class="text-right">@reservation.DurationInDays</TableRowCell>
+                    <TableRowCell Class="text-right">@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
+                    <TableRowCell Class="border-0">
                         <Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ToggleCancelReservation(reservation))">
                             @if (!request.CancelledReservations.Contains(reservation.Id))
                             {
-                                <Icon class="fa-trash text-danger" />
+                                <Icon Class="fa-trash text-danger" />
                             }
                             else
                             {
-                                <Icon class="fa-undo text-success" />
+                                <Icon Class="fa-undo text-success" />
                             }
                         </Button>
                     </TableRowCell>
@@ -37,7 +37,7 @@
         </TableBody>
         <TableFooter>
             <TableRow>
-                <TableRowCell colspan="4" class="border-top-0 text-right">
+                <TableRowCell colspan="4" Class="border-top-0 text-right">
                     <Button Color="Color.Danger" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Disabled="@(request.CancelledReservations.Count == 0)" Clicked="@Submit">Opdatér bestilling</Button>
                 </TableRowCell>
             </TableRow>

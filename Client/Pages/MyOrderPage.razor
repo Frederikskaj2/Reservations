@@ -15,16 +15,19 @@
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <h1>Bestilling @order!.Id</h1>
-            <Paragraph><a href="@Urls.Terms">Lejebetingelser</a></Paragraph>
-            @if (linkBanquetFacilitiesRules)
+            @if (!isHistoryOrder)
             {
-                <Paragraph><a href="@Urls.RulesBanquetFacilities">Husorden for aktivitets-/festlokalet</a></Paragraph>
+                <div><a href="@Urls.Terms">Lejebetingelser</a></div>
+                @if (linkBanquetFacilitiesRules)
+                {
+                    <div><a href="@Urls.RulesBanquetFacilities">Husorden for aktivitets-/festlokalet</a></div>
+                }
+                @if (linkBedroomRules)
+                {
+                    <div><a href="@Urls.RulesBedrooms">Husorden for soveværelserne</a></div>
+                }
             }
-            @if (linkBedroomRules)
-            {
-                <Paragraph><a href="@Urls.RulesBedrooms">Husorden for soveværelserne</a></Paragraph>
-            }
-            <OrderStatement @ref="orderStatement" OrderId="@order.Id" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" OnSubmit="@Submit" />
+            <OrderStatement @ref="orderStatement" OrderId="@order.Id" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" IsHistoryOrder="@isHistoryOrder" OnSubmit="@Submit" />
         </Container>
     }
     else
@@ -39,6 +42,7 @@
 
     private OrderStatement orderStatement = null!;
     private MyOrder? order;
+    private bool isHistoryOrder;
     private bool linkBanquetFacilitiesRules;
     private bool linkBedroomRules;
     private bool isInitialized;
@@ -55,6 +59,7 @@
         {
             order = response.Order;
             var resources = await ClientDataProvider.GetResources();
+            isHistoryOrder = order.AccountNumber == null;
             linkBanquetFacilitiesRules = order.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.BanquetFacilities);
             linkBedroomRules = order.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.Bedroom);
         }
