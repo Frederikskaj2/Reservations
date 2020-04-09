@@ -6,6 +6,7 @@ namespace Frederikskaj2.Reservations.Shared
     internal class BanquetFacilitiesReservationPolicy : ReservationPolicy, IReservationPolicy
     {
         private const ResourceType ResourceType = Shared.ResourceType.BanquetFacilities;
+        private const int HighPriceMinimumNumberOfDays = 1;
 
         public BanquetFacilitiesReservationPolicy(IDataProvider dataProvider, ReservationsOptions options, IDateProvider dateProvider)
             : base(dataProvider, options, options.Prices[ResourceType], dateProvider)
@@ -18,17 +19,17 @@ namespace Frederikskaj2.Reservations.Shared
             int resourceId, LocalDate date)
         {
             var (minimumDays, maximumDays) = await base.GetReservationAllowedNumberOfDays(resourceId, date);
-            return !await DataProvider.IsHighPriceDay(date) ? (minimumDays, maximumDays) : (2, maximumDays);
+            return !await DataProvider.IsHighPriceDay(date) ? (minimumDays, maximumDays) : (HighPriceMinimumNumberOfDays, maximumDays);
         }
 
         public override async Task<bool> IsResourceAvailable(LocalDate date, int resourceId)
         {
-            var minimumNumberOfDays = await DataProvider.IsHighPriceDay(date) ? 2 : 1;
+            var minimumNumberOfDays = await DataProvider.IsHighPriceDay(date) ? HighPriceMinimumNumberOfDays : 1;
             return await IsResourceAvailable(date, minimumNumberOfDays, resourceId);
         }
 
         public override async Task<bool> IsResourceAvailable(LocalDate date, int durationInDays, int resourceId)
             => await base.IsResourceAvailable(date, durationInDays, resourceId)
-               && (durationInDays > 1 || !await DataProvider.IsHighPriceDay(date));
+               && (durationInDays >= HighPriceMinimumNumberOfDays || !await DataProvider.IsHighPriceDay(date));
     }
 }
