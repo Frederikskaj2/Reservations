@@ -9,10 +9,10 @@
                     <main>
                         <div class="container not-authorized">
                             <h1>Du er ikke logget ind</h1>
-                            <p>Log ind for at fortsætte.</p>
-                            <p><button class="btn btn-primary btn-text" type="button" @onclick="SignIn">Log ind</button></p>
-                            <p>Hvis du ikke har en bruger kan du oprette dig.</p>
-                            <p><button class="btn btn-secondary btn-text" type="button" @onclick="SignUp">Opret bruger</button></p>
+                            <Paragraph>Log ind for at fortsætte.</Paragraph>
+                            <Paragraph><Button Color="Color.Primary" Class="btn-fixed" Clicked="@SignIn">Log ind</Button></Paragraph>
+                            <Paragraph>Hvis du ikke har en bruger kan du oprette dig.</Paragraph>
+                            <Paragraph><Button Color="Color.Secondary" Class="btn-fixed" Clicked="@SignUp">Opret bruger</Button></Paragraph>
                         </div>
                     </main>
                 </NotAuthorized>
@@ -27,7 +27,7 @@
             <LayoutView Layout="typeof(MainLayout)">
                 <main>
                     <div class="container">
-                        <p>Der er intet at vise på denne side.</p>
+                        <Paragraph>Der er intet at vise.</Paragraph>
                     </div>
                 </main>
             </LayoutView>

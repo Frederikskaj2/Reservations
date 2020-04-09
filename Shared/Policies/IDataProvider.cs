@@ -9,7 +9,8 @@ namespace Frederikskaj2.Reservations.Shared
         Task<IReadOnlyDictionary<int, Resource>> GetResources();
         Task<bool> IsHighPriceDay(LocalDate date);
         Task<int> GetNumberOfHighPriceDays(LocalDate date, int durationInDays);
-        Task<IEnumerable<ReservedDay>> GetReservedDays(int resourceId, LocalDate fromDate, LocalDate toDate);
+        Task<IEnumerable<ReservedDay>> GetReservedDays(
+            int resourceId, LocalDate fromDate, LocalDate toDate, bool includeOrder);
         void Refresh();
     }
 }

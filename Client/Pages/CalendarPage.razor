@@ -191,7 +191,7 @@ else
         var lastSunday = GetPreviousMonday(month.PlusMonths(1).PlusDays(-1)).PlusDays(6);
 
         var policy = ReservationPolicyProvider.GetPolicy(resources![resourceId].Type);
-        var reservedDays = (await DataProvider.GetReservedDaysAndCacheResult(firstMonday.PlusDays(-1), lastSunday.PlusDays(1)))
+        var reservedDays = (await DataProvider.GetReservedDays(firstMonday.PlusDays(-1), lastSunday.PlusDays(1), true))
             .GroupBy(day
                 => day.Date,
                 (key, reservations)

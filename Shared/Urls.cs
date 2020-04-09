@@ -6,6 +6,7 @@
         public const string Checkout1 = "bestil/1";
         public const string Checkout2 = "bestil/2";
         public const string Checkout3 = "bestil/3";
+        public const string CheckoutConflict = "bestil/overlap";
         public const string ConfirmEmail = "bekraeft-mail";
         public const string Consent = "samtykke";
         public const string HistoryReservations = "historik";

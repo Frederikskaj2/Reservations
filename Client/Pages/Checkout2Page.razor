@@ -5,6 +5,7 @@
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
 @inject NavigationManager NavigationManager
+@inject IReservationPolicyProvider ReservationPolicyProvider
 
 <main>
     @if (ClientDataProvider.DraftOrder.Reservations!.Count == 0)
@@ -20,10 +21,6 @@
     else
     {
         <Container Class="container-min-md">
-            <Alert Color="Color.Danger" Visible="@showReservationConflictAlert" Dismisable="true">
-                Din bestilling blev ikke gennemført da den overlapper med andre reservationer. Opdatér kalenderen og prøv igen.
-                <CloseButton Clicked="@DismissReservationConflictAlert" />
-            </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl, og din bestilling blev ikke gennemført.
                 <CloseButton Clicked="@DismissErrorAlert" />
@@ -131,7 +128,6 @@
     private bool isInitialized;
     private bool linkBanquetFacilitiesRules;
     private bool linkBedroomRules;
-    private bool showReservationConflictAlert;
     private bool showErrorAlert;
 
     protected override async Task OnInitializedAsync()
@@ -139,6 +135,8 @@
         apartments = await ClientDataProvider.GetApartments();
         linkBanquetFacilitiesRules = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.BanquetFacilities);
         linkBedroomRules = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.Bedroom);
+        ClientDataProvider.DraftOrder.Request.DidAcceptTerms = false;
+        ClientDataProvider.DraftOrder.Request.DidConsent = false;
         isInitialized = true;
     }
 
@@ -157,6 +155,7 @@
             return;
 
         validations.ClearAll();
+        DismissErrorAlert();
 
         ClientDataProvider.DraftOrder.PrepareRequest();
         var maybe = await ApiClient.PostJsonAsync<PlaceOrderResponse>("my-orders", ClientDataProvider.DraftOrder.Request);
@@ -171,15 +170,32 @@
             }
             if (response.Result == PlaceOrderResult.ReservationConflict)
             {
-                showReservationConflictAlert = true;
-                return;
+                try
+                {
+                    ClientDataProvider.Refresh();
+                    var reservations = ClientDataProvider.DraftOrder.Reservations.ToList();
+                    foreach (var reservation in reservations)
+                    {
+                        var policy = ReservationPolicyProvider.GetPolicy(reservation.Resource.Type);
+                        var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(reservation.Resource.Id, reservation.Date, false);
+                        Console.WriteLine($"{reservation.Resource.Id} {reservation.Date} {reservation.DurationInDays} {minimumDays}-{maximumDays}");
+                        if (!(minimumDays <= reservation.DurationInDays && reservation.DurationInDays <= maximumDays))
+                        {
+                            ClientDataProvider.DraftOrder.Reservations.Remove(reservation);
+                            Console.WriteLine("Removed");
+                        }
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine(exception);
+                    throw;
+                }
+                NavigationManager.NavigateTo(Urls.CheckoutConflict);
             }
         }
         showErrorAlert = true;
     }
 
-    private void DismissReservationConflictAlert() => showReservationConflictAlert = false;
-
     private void DismissErrorAlert() => showErrorAlert = false;
-
 }

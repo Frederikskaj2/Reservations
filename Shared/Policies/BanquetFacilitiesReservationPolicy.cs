@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
@@ -16,20 +17,21 @@ namespace Frederikskaj2.Reservations.Shared
         public ResourceType Type => ResourceType;
 
         public override async Task<(int MinimumDays, int MaximumDays)> GetReservationAllowedNumberOfDays(
-            int resourceId, LocalDate date)
+            int resourceId, LocalDate date, bool includeOrder)
         {
-            var (minimumDays, maximumDays) = await base.GetReservationAllowedNumberOfDays(resourceId, date);
-            return !await DataProvider.IsHighPriceDay(date) ? (minimumDays, maximumDays) : (HighPriceMinimumNumberOfDays, maximumDays);
+            var (minimumDays, maximumDays) = await base.GetReservationAllowedNumberOfDays(resourceId, date, includeOrder);
+            return !await DataProvider.IsHighPriceDay(date) ? (minimumDays, maximumDays) : (Math.Min(HighPriceMinimumNumberOfDays, maximumDays), maximumDays);
         }
 
-        public override async Task<bool> IsResourceAvailable(LocalDate date, int resourceId)
+        public override async Task<bool> IsResourceAvailable(LocalDate date, int resourceId, bool includeOrder)
         {
             var minimumNumberOfDays = await DataProvider.IsHighPriceDay(date) ? HighPriceMinimumNumberOfDays : 1;
-            return await IsResourceAvailable(date, minimumNumberOfDays, resourceId);
+            return await IsResourceAvailable(date, minimumNumberOfDays, resourceId, includeOrder);
         }
 
-        public override async Task<bool> IsResourceAvailable(LocalDate date, int durationInDays, int resourceId)
-            => await base.IsResourceAvailable(date, durationInDays, resourceId)
+        protected override async Task<bool> IsResourceAvailable(
+            LocalDate date, int durationInDays, int resourceId, bool includeOrder)
+            => await base.IsResourceAvailable(date, durationInDays, resourceId, includeOrder)
                && (durationInDays >= HighPriceMinimumNumberOfDays || !await DataProvider.IsHighPriceDay(date));
     }
 }

@@ -31,31 +31,20 @@ namespace Frederikskaj2.Reservations.Shared
         protected PriceOptions PriceOptions { get; }
 
         public virtual async Task<(int MinimumDays, int MaximumDays)> GetReservationAllowedNumberOfDays(
-            int resourceId, LocalDate date)
+            int resourceId, LocalDate date, bool includeOrder)
         {
             var fromDate = date;
             var toDate = date.PlusDays(Options.MaximumAllowedReservationDays);
-            var reservations = await DataProvider.GetReservedDays(resourceId, fromDate, toDate);
+            var reservations = await DataProvider.GetReservedDays(resourceId, fromDate, toDate, includeOrder);
             var nextReservation = reservations.FirstOrDefault();
             var maximumDays = nextReservation == null
                 ? Options.MaximumAllowedReservationDays
                 : (nextReservation.Date - date).Days;
-            return (1, maximumDays);
+            return (Math.Min(1, maximumDays), maximumDays);
         }
 
-        public virtual Task<bool> IsResourceAvailable(LocalDate date, int resourceId)
-            => IsResourceAvailable(date, 1, resourceId);
-
-        public virtual async Task<bool> IsResourceAvailable(LocalDate date, int durationInDays, int resourceId)
-        {
-            if (date < reservationsAreNotAllowedBefore || date > reservationsAreNotAllowedAfter)
-                return false;
-
-            var fromDate = date.PlusDays(-Options.MaximumAllowedReservationDays);
-            var toDate = date.PlusDays(durationInDays);
-            var reservations = (await DataProvider.GetReservedDays(resourceId, fromDate, toDate)).ToDictionary(reservation => reservation.Date);
-            return Enumerable.Range(0, durationInDays).All(i => !reservations.ContainsKey(date.PlusDays(i)));
-        }
+        public virtual Task<bool> IsResourceAvailable(LocalDate date, int resourceId, bool includeOrder)
+            => IsResourceAvailable(date, 1, resourceId, includeOrder);
 
         public virtual async Task<Price> GetPrice(LocalDate date, int durationInDays)
         {
@@ -69,6 +58,19 @@ namespace Frederikskaj2.Reservations.Shared
                 CleaningFee = PriceOptions.CleaningFee,
                 Deposit = deposit
             };
+        }
+
+        protected virtual async Task<bool> IsResourceAvailable(
+            LocalDate date, int durationInDays, int resourceId, bool includeOrder)
+        {
+            if (date < reservationsAreNotAllowedBefore || date > reservationsAreNotAllowedAfter)
+                return false;
+
+            var fromDate = date.PlusDays(-Options.MaximumAllowedReservationDays);
+            var toDate = date.PlusDays(durationInDays);
+            var reservations = (await DataProvider.GetReservedDays(resourceId, fromDate, toDate, includeOrder))
+                .ToDictionary(reservation => reservation.Date);
+            return Enumerable.Range(0, durationInDays).All(i => !reservations.ContainsKey(date.PlusDays(i)));
         }
     }
 }

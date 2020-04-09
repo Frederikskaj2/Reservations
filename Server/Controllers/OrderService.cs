@@ -115,10 +115,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var totalPrice = new Price();
             foreach (var reservationRequest in reservations)
             {
-                var reservation = await CreateReservation(
+                var (result, reservation) = await CreateReservation(
                     timestamp, order, reservationRequest, ReservationStatus.Reserved, resources);
                 if (reservation == null)
-                    return (PlaceOrderResult.GeneralError, null);
+                    return (result, null);
                 order.Reservations.Add(reservation);
                 totalPrice.Accumulate(reservation.Price!);
             }
@@ -177,10 +177,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             };
             foreach (var reservationRequest in reservations)
             {
-                var reservation = await CreateReservation(
+                var (result, reservation) = await CreateReservation(
                     timestamp, order, reservationRequest, ReservationStatus.Confirmed, resources);
                 if (reservation == null)
-                    return (PlaceOrderResult.GeneralError, null);
+                    return (result, null);
                 order.Reservations.Add(reservation);
             }
 
@@ -538,37 +538,38 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return totals;
         }
 
-        private async Task<Reservation?> CreateReservation(
-            Instant timestamp, Order order, ReservationRequest reservation, ReservationStatus status,
+        private async Task<(PlaceOrderResult Result, Reservation? Reservation)> CreateReservation(
+            Instant timestamp, Order order, ReservationRequest request, ReservationStatus status,
             IReadOnlyDictionary<int, Resource> resources)
         {
-            if (!resources.TryGetValue(reservation.ResourceId, out var resource))
-                return null;
+            if (!resources.TryGetValue(request.ResourceId, out var resource))
+                return (PlaceOrderResult.GeneralError, null);
             var policy = reservationPolicyProvider.GetPolicy(resource.Type);
-            if (!await IsReservationDurationValid(reservation, policy))
-                return null;
+            if (!await IsReservationDurationValid(request, policy))
+                return (PlaceOrderResult.ReservationConflict, null);
 
             var days = Enumerable
-                .Range(0, reservation.DurationInDays)
+                .Range(0, request.DurationInDays)
                 .Select(
                     i => new ReservedDay
                     {
-                        Date = reservation.Date.PlusDays(i),
-                        ResourceId = reservation.ResourceId
+                        Date = request.Date.PlusDays(i),
+                        ResourceId = request.ResourceId
                     })
                 .ToList();
-            var price = (await policy.GetPrice(reservation.Date, reservation.DurationInDays)).Adapt<Price>();
-            return new Reservation
+            var price = (await policy.GetPrice(request.Date, request.DurationInDays)).Adapt<Price>();
+            var reservation = new Reservation
             {
                 Order = order,
                 ResourceId = resource.Id,
                 Status = status,
                 UpdatedTimestamp = timestamp,
-                Date = reservation.Date,
-                DurationInDays = reservation.DurationInDays,
+                Date = request.Date,
+                DurationInDays = request.DurationInDays,
                 Days = days,
                 Price = price
             };
+            return (PlaceOrderResult.Success, reservation);;
 
             static async Task<bool> IsReservationDurationValid(
                 ReservationRequest reservation, IReservationPolicy policy)

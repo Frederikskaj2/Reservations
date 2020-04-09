@@ -33,7 +33,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         }
 
         public async Task<IEnumerable<Shared.ReservedDay>> GetReservedDays(
-            int resourceId, LocalDate fromDate, LocalDate toDate)
+            int resourceId, LocalDate fromDate, LocalDate toDate, bool includeOrder)
             => await db.ReservedDays
                 .Where(day => day.ResourceId == resourceId && fromDate <= day.Date && day.Date <= toDate)
                 .OrderBy(day => day.Date)
