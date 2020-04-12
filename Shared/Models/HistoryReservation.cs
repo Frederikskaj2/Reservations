@@ -10,7 +10,7 @@ namespace Frederikskaj2.Reservations.Shared
         public LocalDate Date { get; set; }
         public int DurationInDays { get; set; }
         public int ApartmentId { get; set; }
-        public string UserEmail { get; set; } = string.Empty;
-        public string UserName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? FullName { get; set; }
     }
 }

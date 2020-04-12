@@ -104,7 +104,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var now = clock.GetCurrentInstant();
             var accountNumber = request.AccountNumber.Trim().ToUpperInvariant();
-            var order = await orderService.UpdateOrder(
+            var (isUserDeleted, order) = await orderService.UpdateOrder(
                 now, orderId, accountNumber, request.CancelledReservations, userId.Value, false, userId.Value);
             if (order == null)
                 return new OrderResponse<MyOrder>();
@@ -112,7 +112,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var today = now.InZone(dateTimeZone).Date;
             var myOrder = CreateOrder(order, today);
             myOrder.Totals = orderService.GetTotals(order);
-            return new OrderResponse<MyOrder> { Order = myOrder };
+            return new OrderResponse<MyOrder> { Order = myOrder, IsUserDeleted = isUserDeleted };
         }
 
         private MyOrder CreateOrder(Data.Order order, LocalDate today)

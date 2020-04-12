@@ -1,6 +1,8 @@
 ﻿@page "/bruger/bestillinger/{orderId:int}"
 @inject ApiClient ApiClient
+@inject IAuthenticationStateProvider AuthenticationStateProvider
 @inject ClientDataProvider ClientDataProvider
+@inject NavigationManager NavigationManager
 
 <main>
     @if (!isInitialized)
@@ -71,7 +73,14 @@
         var url = $"my-orders/{order!.Id}";
         var maybe = await ApiClient.PatchJsonAsync<OrderResponse<MyOrder>>(url, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
+        {
+            if (response.IsUserDeleted)
+            {
+                AuthenticationStateProvider.UpdateUser(AuthenticatedUser.UnknownUser);
+                NavigationManager.NavigateTo(string.Empty);
+            }
             order = response.Order;
+        }
         else
             showErrorAlert = true;
     }

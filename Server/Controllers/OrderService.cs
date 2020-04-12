@@ -28,12 +28,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private readonly ReservationsContext db;
         private readonly IReservationPolicyProvider reservationPolicyProvider;
         private readonly ReservationsOptions reservationsOptions;
+        private readonly SignInManager<User> signInManager;
         private readonly UserManager<User> userManager;
 
         public OrderService(
             IBackgroundWorkQueue<EmailService> backgroundWorkQueue, IDataProvider dataProvider,
             DateTimeZone dateTimeZone, ReservationsContext db, IReservationPolicyProvider reservationPolicyProvider,
-            ReservationsOptions reservationsOptions, UserManager<User> userManager)
+            ReservationsOptions reservationsOptions, SignInManager<User> signInManager, UserManager<User> userManager)
         {
             this.backgroundWorkQueue =
                 backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
@@ -44,6 +45,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 = reservationPolicyProvider ?? throw new ArgumentNullException(nameof(reservationPolicyProvider));
             this.reservationsOptions =
                 reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
+            this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
@@ -200,7 +202,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return (PlaceOrderResult.Success, order);
         }
 
-        public async Task<Order?> UpdateOrder(
+        public async Task<(bool IsUserDeleted, Order? Order)> UpdateOrder(
             Instant timestamp, int orderId, string accountNumber, IEnumerable<int> cancelledReservations,
             int createdByUserId, bool waiveFee, int? userId = null)
         {
@@ -279,7 +281,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             }
 
             TryMakeHistoryOrder(order, totals);
-
             try
             {
                 await db.SaveChangesAsync();
@@ -303,7 +304,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendOrderConfirmedEmail(order.User!, order.Id, 0, totals.GetBalance()));
 
-            return order;
+            var isUserDeleted = await TryDeleteUser(order.User!);
+
+            return (isUserDeleted, order);
         }
 
         public async Task<Order?> UpdateOwnerOrder(int orderId, IEnumerable<int> cancelledReservations)
@@ -391,7 +394,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (reservation == null || reservation.Status != ReservationStatus.Confirmed
                 || !(0 <= damages && damages <= reservation.Price!.Deposit)
                 || damages > 0 && string.IsNullOrWhiteSpace(description))
-                return null;
+                return default;
 
             reservation.Status = ReservationStatus.Settled;
 
@@ -430,7 +433,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             }
             catch (DbUpdateException)
             {
-                return null;
+                return default;
             }
 
             var user = await userManager.FindByIdAsync(userId.ToString());
@@ -439,6 +442,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 (service, _) => service.SendReservationSettledEmail(
                     user, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
                     reservation.Price.Deposit, damages, description));
+
+            await TryDeleteUser(order.User!);
 
             return order;
         }
@@ -473,6 +478,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var user = await userManager.FindByIdAsync(userId.ToString());
             backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(user, order.Id, amount));
+
+            await TryDeleteUser(order.User!);
 
             return order;
         }
@@ -538,6 +545,20 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return totals;
         }
 
+        public async Task<bool> DeleteUser(User user)
+        {
+            var hasOrders = await db.Orders.AnyAsync(order => order.UserId == user.Id && order.AccountNumber != null);
+            if (hasOrders)
+            {
+                user.IsPendingDelete = true;
+                await userManager.UpdateAsync(user);
+                return false;
+            }
+
+            await ReallyDeleteUser(user);
+            return true;
+        }
+
         private async Task<(PlaceOrderResult Result, Reservation? Reservation)> CreateReservation(
             Instant timestamp, Order order, ReservationRequest request, ReservationStatus status,
             IReadOnlyDictionary<int, Resource> resources)
@@ -591,6 +612,27 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             order.AccountNumber = null;
             foreach (var reservation in order.Reservations!)
                 reservation.Days!.Clear();
+        }
+
+        private async Task<bool> TryDeleteUser(User user)
+        {
+            if (!user.IsPendingDelete)
+                return false;
+
+            var hasOrders = await db.Orders.AnyAsync(order => order.UserId == user.Id && order.AccountNumber != null);
+            if (hasOrders)
+                return false;
+
+            await ReallyDeleteUser(user);
+
+            return true;
+        }
+
+        private async Task ReallyDeleteUser(User user)
+        {
+            await userManager.DeleteAsync(user);
+            await signInManager.SignOutAsync();
+            backgroundWorkQueue.Enqueue((service, _) => service.SendUserDeletedEmail(user));
         }
     }
 }

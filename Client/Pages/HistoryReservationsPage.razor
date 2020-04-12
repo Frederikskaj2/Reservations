@@ -38,7 +38,16 @@
                                 <TableRowCell>@FormattingService.FormatDate(reservation.Date)</TableRowCell>
                                 <TableRowCell>@reservation.DurationInDays</TableRowCell>
                                 <TableRowCell>Frederikskaj @apartments![reservation.ApartmentId]</TableRowCell>
-                                <TableRowCell><a href="mailto:@reservation.UserEmail?subject=Frederikskaj 2">@reservation.UserName</a></TableRowCell>
+                                <TableRowCell>
+                                    @if (reservation.Email != null)
+                                    {
+                                        <a href="mailto:@reservation.Email?subject=Frederikskaj 2">@reservation.FullName</a>
+                                    }
+                                    else
+                                    {
+                                        <text>(Slettet)</text>
+                                    }
+                                </TableRowCell>
                                 <TableRowCell><a href="@Urls.Orders/@reservation.OrderId">@reservation.OrderId</a></TableRowCell>
                             </TableRow>
                         }

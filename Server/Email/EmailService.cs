@@ -209,6 +209,18 @@ namespace Frederikskaj2.Reservations.Server.Email
             await SendMessage(user, model, "PayOut");
         }
 
+        public async Task SendUserDeletedEmail(User user)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+
+            var model = new EmailWithNameModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName);
+            await SendMessage(user, model, "UserDeleted");
+        }
+
         private async Task SendMessage<TModel>(User user, TModel model, string viewName)
         {
             var message = await CreateMessage(user, model, viewName);

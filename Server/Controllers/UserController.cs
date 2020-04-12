@@ -21,20 +21,19 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     public class UserController : Controller
     {
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
+        private readonly OrderService orderService;
         private readonly ReservationsContext db;
         private readonly Random random = new Random();
         private readonly SignInManager<User> signInManager;
         private readonly UserManager<User> userManager;
 
-        public UserController(
-            UserManager<User> userManager, SignInManager<User> signInManager,
-            IBackgroundWorkQueue<EmailService> backgroundWorkQueue, ReservationsContext db)
+        public UserController(IBackgroundWorkQueue<EmailService> backgroundWorkQueue, OrderService orderService, ReservationsContext db, SignInManager<User> signInManager, UserManager<User> userManager)
         {
-            this.backgroundWorkQueue =
-                backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
-            this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-            this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
+            this.backgroundWorkQueue = backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
+            this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
+            this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
+            this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
         [HttpGet("")]
@@ -178,18 +177,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (user == null)
                 return new DeleteUserResponse { Result = DeleteUserResult.GeneralError };
 
-            var deleteUser = !await db.Orders.AnyAsync(order => order.UserId == user.Id);
-            if (deleteUser)
-            {
-                await userManager.DeleteAsync(user);
-                await signInManager.SignOutAsync();
-                return new DeleteUserResponse { Result = DeleteUserResult.Success };
-            }
-
-            user.IsPendingDelete = true;
-            await userManager.UpdateAsync(user);
-
-            return new DeleteUserResponse { Result = DeleteUserResult.IsPendingDelete };
+            var isDeleted = await orderService.DeleteUser(user);
+            return new DeleteUserResponse { Result = isDeleted ? DeleteUserResult.Success : DeleteUserResult.IsPendingDelete };
         }
 
         [HttpPost("confirm-email")]

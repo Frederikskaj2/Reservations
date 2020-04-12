@@ -57,7 +57,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var now = clock.GetCurrentInstant();
             var accountNumber = request.AccountNumber.Trim().ToUpperInvariant();
-            var order = await orderService.UpdateOrder(
+            var (_, order) = await orderService.UpdateOrder(
                 now, orderId, accountNumber, request.CancelledReservations, userId.Value, request.WaiveFee);
             if (order == null)
                 return new OrderResponse<Order>();
@@ -124,10 +124,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 Id = order.Id,
                 CreatedTimestamp = order.CreatedTimestamp,
-                Email = order.User!.Email,
-                FullName = order.User.FullName,
-                Phone = order.User.PhoneNumber,
-                AccountNumber = order.AccountNumber!,
+                Email = order.User?.Email,
+                FullName = order.User?.FullName,
+                Phone = order.User?.PhoneNumber,
+                AccountNumber = order.AccountNumber,
                 Reservations = order.Reservations.Select(CreateReservation),
                 Totals = orderService.GetTotals(order)
             };

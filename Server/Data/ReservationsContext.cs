@@ -50,10 +50,15 @@ namespace Frederikskaj2.Reservations.Server.Data
                     .HasForeignKey(userRole => userRole.UserId)
                     .IsRequired();
 
+                builder.HasMany(user => user.Orders)
+                    .WithOne(order => order.User!)
+                    .HasForeignKey(user => user.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
                 builder.HasMany(user => user.Transactions)
                     .WithOne(transaction => transaction.User!)
                     .HasForeignKey(user => user.UserId)
-                    .IsRequired();
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<Role>(builder =>
@@ -83,13 +88,6 @@ namespace Frederikskaj2.Reservations.Server.Data
             modelBuilder.Entity<Order>()
                 .Property(order => order.CreatedTimestamp)
                 .HasConversion(instantConverter);
-            modelBuilder.Entity<Order>(builder =>
-            {
-                builder.HasMany(order => order.Transactions)
-                    .WithOne(transaction => transaction.Order!)
-                    .HasForeignKey(transaction => transaction.OrderId)
-                    .IsRequired();
-            });
 
             modelBuilder.Entity<Reservation>()
                 .Property(reservation => reservation.UpdatedTimestamp)

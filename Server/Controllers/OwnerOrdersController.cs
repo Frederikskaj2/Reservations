@@ -31,7 +31,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         public async Task<IEnumerable<OwnerOrder>> Get()
         {
             var orders = await orderService.GetOwnerOrders();
-            return orders.Select(order => CreateOrder(order, order.User!));
+            return orders.Select(order => CreateOrder(order, order.User));
         }
 
         [HttpGet("{orderId:int}")]
@@ -69,7 +69,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return new OrderResponse<OwnerOrder> { Order = CreateOrder(order, order.User!) };
         }
 
-        private static OwnerOrder CreateOrder(Data.Order order, User user)
+        private static OwnerOrder CreateOrder(Data.Order order, User? user)
         {
             var reservations = order.Reservations.Select(CreateReservation).ToList();
             return new OwnerOrder
@@ -77,8 +77,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Id = order.Id,
                 CreatedTimestamp = order.CreatedTimestamp,
                 Reservations = reservations,
-                CreatedByEmail = user.Email,
-                CreatedByName = user.FullName
+                CreatedByEmail = user?.Email,
+                CreatedByName = user?.FullName
             };
 
             static Reservation CreateReservation(Data.Reservation reservation) => new Reservation

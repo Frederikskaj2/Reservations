@@ -117,7 +117,16 @@
                             <TableRow @key="@order.Id">
                                 <TableRowCell>@order.Id</TableRowCell>
                                 <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
-                                <TableRowCell><a href="mailto:@order.CreatedByEmail?subject=Frederikskaj 2 bestilling @order.Id">@order.CreatedByName</a></TableRowCell>
+                                <TableRowCell>
+                                    @if (order.CreatedByEmail != null)
+                                    {
+                                        <a href="mailto:@order.CreatedByEmail?subject=Frederikskaj 2 bestilling @order.Id">@order.CreatedByName</a>
+                                    }
+                                    else
+                                    {
+                                        <text>(Slettet)</text>
+                                    }
+                                </TableRowCell>
                                 <TableRowCell>
                                     <Button class="float-right" Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ShowOrder(order.Id))">Vis</Button>
                                 </TableRowCell>
@@ -196,7 +205,10 @@
     private void UpdateOrder(Order order)
     {
         var index = orders!.FindIndex(o => o.Id == order.Id);
-        orders[index] = order;
+        if (order.AccountNumber != null)
+            orders[index] = order;
+        else
+            orders.RemoveAt(index);
     }
 
     private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;

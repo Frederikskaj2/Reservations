@@ -34,8 +34,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                             Date = reservation.Date,
                             DurationInDays = reservation.DurationInDays,
                             ApartmentId = order.ApartmentId.Value,
-                            UserEmail = order.User!.Email,
-                            UserName = order.User.FullName
+                            Email = order.User?.Email,
+                            FullName = order.User?.FullName
                         };
                     })
                 .OrderBy(reservation => reservation.Date)
