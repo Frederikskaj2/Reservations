@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
@@ -16,6 +17,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     [Route("my-orders")]
     [Authorize]
     [ApiController]
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
     public class MyOrdersController : Controller
     {
         private readonly IClock clock;

@@ -12,7 +12,7 @@ namespace Frederikskaj2.Reservations.Shared
             ErrorMessage = "Angiv et kontonummer (inklusiv registreringsnummer) eller et IBAN-nummer")]
         public string AccountNumber { get; set; } = string.Empty;
 
-        public HashSet<int> CancelledReservations { get; set; } = new HashSet<int>();
+        public HashSet<int> CancelledReservations { get; } = new HashSet<int>();
 
         public bool WaiveFee { get; set; }
     }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
@@ -14,6 +16,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     [Route("owner-orders")]
     [Authorize(Roles = Roles.Administrator)]
     [ApiController]
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
     public class OwnerOrdersController : Controller
     {
         private readonly IClock clock;
@@ -49,7 +52,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var userId = User.Id();
             if (!userId.HasValue || request.Reservations.Count == 0)
                 return new PlaceOwnerOrderResponse { Result = PlaceOrderResult.GeneralError };
-            var user = await userManager.FindByIdAsync(userId.Value.ToString());
+            var user = await userManager.FindByIdAsync(userId.Value.ToString(CultureInfo.InvariantCulture));
             if (user == null)
                 return new PlaceOwnerOrderResponse { Result = PlaceOrderResult.GeneralError };
 

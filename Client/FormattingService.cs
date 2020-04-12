@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Frederikskaj2.Reservations.Shared;
 using NodaTime;
@@ -42,8 +43,10 @@ namespace Frederikskaj2.Reservations.Client
 
         public string FormatDate(Instant instant) => longDatePattern.Format(instant.InZone(dateTimeZone).Date);
 
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is accessed through an injected instance.")]
         public string? FormatEmail(string? email) => email?.Replace("@", "\x00AD@", StringComparison.Ordinal);
 
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is accessed through an injected instance.")]
         public string? FormatPhone(string? phone) => phone?.Replace(' ', '\x00A0');
 
         private string FormatTimeLong(LocalDateTime time)

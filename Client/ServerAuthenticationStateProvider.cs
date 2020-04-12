@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace Frederikskaj2.Reservations.Client
                 {
                     yield return new Claim(ClaimTypes.Name, user.Name);
                     if (user.Id.HasValue)
-                        yield return new Claim(ClaimTypes.NameIdentifier, user.Id.Value.ToString());
+                        yield return new Claim(ClaimTypes.NameIdentifier, user.Id.Value.ToString(CultureInfo.InvariantCulture));
                     if (user.IsAdministrator)
                         yield return new Claim(ClaimTypes.Role, Roles.Administrator);
                 }

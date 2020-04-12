@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
-    internal class BackgroundWorkQueue<TService> : IBackgroundWorkQueue<TService>
+    internal sealed class BackgroundWorkQueue<TService> : IBackgroundWorkQueue<TService>, IDisposable
     {
         private readonly SemaphoreSlim signal = new SemaphoreSlim(0);
         private readonly ConcurrentQueue<Func<TService, CancellationToken, Task>> queue = new ConcurrentQueue<Func<TService, CancellationToken, Task>>();
@@ -24,5 +24,7 @@ namespace Frederikskaj2.Reservations.Server.Email
             await signal.WaitAsync(cancellationToken);
             return queue.TryDequeue(out var asyncAction) ? asyncAction : (_, __) => Task.CompletedTask;
         }
+
+        public void Dispose() => signal.Dispose();
     }
 }

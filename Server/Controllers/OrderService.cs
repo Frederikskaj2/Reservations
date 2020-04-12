@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
@@ -105,6 +107,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             Instant timestamp, int userId, int apartmentId, string accountNumber,
             IEnumerable<ReservationRequest> reservations)
         {
+            if (reservations is null)
+                throw new ArgumentNullException(nameof(reservations));
+
             var resources = await dataProvider.GetResources();
             var order = new Order
             {
@@ -160,7 +165,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return (PlaceOrderResult.GeneralError, null);
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString());
+            var user = await userManager.FindByIdAsync(userId.ToString(CultureInfo.InvariantCulture));
             backgroundWorkQueue.Enqueue(
                 (service, _) => service.SendOrderReceivedEmail(user, order.Id, totalPrice.GetTotal()));
 
@@ -170,6 +175,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOwnerOrder(
             Instant timestamp, int userId, IEnumerable<ReservationRequest> reservations)
         {
+            if (reservations is null)
+                throw new ArgumentNullException(nameof(reservations));
+
             var resources = await dataProvider.GetResources();
             var order = new Order
             {
@@ -206,6 +214,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             Instant timestamp, int orderId, string accountNumber, IEnumerable<int> cancelledReservations,
             int createdByUserId, bool waiveFee, int? userId = null)
         {
+            if (cancelledReservations is null)
+                throw new ArgumentNullException(nameof(cancelledReservations));
+
             var order = await GetOrder(orderId);
             if (order == null || userId.HasValue && order.UserId != userId.Value)
                 return default;
@@ -311,6 +322,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         public async Task<Order?> UpdateOwnerOrder(int orderId, IEnumerable<int> cancelledReservations)
         {
+            if (cancelledReservations is null)
+                throw new ArgumentNullException(nameof(cancelledReservations));
+
             var order = await GetOwnerOrder(orderId);
             if (order == null)
                 return default;
@@ -375,7 +389,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return null;
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString());
+            var user = await userManager.FindByIdAsync(userId.ToString(CultureInfo.InvariantCulture));
             if (amount >= amountToPay)
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendOrderConfirmedEmail(user, order.Id, amount, amount - amountToPay));
@@ -436,7 +450,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return default;
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString());
+            var user = await userManager.FindByIdAsync(userId.ToString(CultureInfo.InvariantCulture));
             var resources = await dataProvider.GetResources();
             backgroundWorkQueue.Enqueue(
                 (service, _) => service.SendReservationSettledEmail(
@@ -476,7 +490,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return null;
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString());
+            var user = await userManager.FindByIdAsync(userId.ToString(CultureInfo.InvariantCulture));
             backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(user, order.Id, amount));
 
             await TryDeleteUser(order.User!);
@@ -511,8 +525,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return payOuts;
         }
 
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is accessed through an injected instance.")]
         public OrderTotals GetTotals(Order order)
         {
+            if (order is null)
+                throw new ArgumentNullException(nameof(order));
+
             var totals = new OrderTotals();
             foreach (var transaction in order.Transactions!)
                 switch (transaction.Type)
@@ -539,7 +557,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         totals.PayOut += -transaction.Amount;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(order), "Unknown transaction type.");
                 }
 
             return totals;
@@ -547,6 +565,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         public async Task<bool> DeleteUser(User user)
         {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+
             var hasOrders = await db.Orders.AnyAsync(order => order.UserId == user.Id && order.AccountNumber != null);
             if (hasOrders)
             {

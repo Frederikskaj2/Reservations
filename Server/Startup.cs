@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Controllers;
@@ -88,6 +89,7 @@ namespace Frederikskaj2.Reservations.Server
                     });
         }
 
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is called by convention and cannot be static.")]
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseResponseCompression();

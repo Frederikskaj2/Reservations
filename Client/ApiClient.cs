@@ -19,7 +19,8 @@ namespace Frederikskaj2.Reservations.Client
 
         public async Task<Maybe<T>> GetJsonAsync<T>(string requestUri)
         {
-            var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUri));
+            using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+            var response = await httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
                 return Maybe.None;
             var json = await response.Content.ReadAsStringAsync();
@@ -36,7 +37,8 @@ namespace Frederikskaj2.Reservations.Client
         {
             var requestJson = JsonSerializer.Serialize(content, jsonSerializerOptions);
             using var requestContent = new StringContent(requestJson, Encoding.UTF8, "application/json");
-            var response = await httpClient.SendAsync(new HttpRequestMessage(method, requestUri) { Content = requestContent });
+            using var request = new HttpRequestMessage(method, requestUri) { Content = requestContent };
+            var response = await httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
                 return Maybe.None;
             var json = await response.Content.ReadAsStringAsync();

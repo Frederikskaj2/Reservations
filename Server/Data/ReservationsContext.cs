@@ -26,6 +26,9 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            if (modelBuilder is null)
+                throw new ArgumentNullException(nameof(modelBuilder));
+
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<User>(builder =>

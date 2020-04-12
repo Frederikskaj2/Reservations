@@ -5,7 +5,7 @@ namespace Frederikskaj2.Reservations.Shared
 {
     public class ReservationsOptions
     {
-        public Dictionary<ResourceType, PriceOptions> Prices = new Dictionary<ResourceType, PriceOptions>
+        public IReadOnlyDictionary<ResourceType, PriceOptions> Prices { get; } = new Dictionary<ResourceType, PriceOptions>
         {
             {
                 ResourceType.BanquetFacilities, new PriceOptions
@@ -37,6 +37,6 @@ namespace Frederikskaj2.Reservations.Shared
         public int CancellationFee { get; set; } = 200;
         public int MinimumCancellationNoticeInDays { get; set; } = 14;
         public int HighlightUnpaidOrdersAfterDays { get; set; } = 7;
-        public string PayInAccountNumber = "1234-12345678";
+        public string PayInAccountNumber { get; set; } = "1234-12345678";
     }
 }

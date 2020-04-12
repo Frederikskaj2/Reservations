@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
@@ -12,6 +13,9 @@ namespace Frederikskaj2.Reservations.Server.Email
 {
     public static class ServiceCollectionExtensions
     {
+        [SuppressMessage(
+            "Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "The dependency injection container will dispose the instance.")]
         public static IServiceCollection AddEmail(this IServiceCollection services, IConfiguration configuration)
         {
             if (services is null)

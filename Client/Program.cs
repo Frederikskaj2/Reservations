@@ -17,6 +17,9 @@ namespace Frederikskaj2.Reservations.Client
     [SuppressMessage(
         "Design", "RCS1102:Make class static.",
         Justification = "Blazor client side app cannot be hosted in ASP.NET Core website if it is static.")]
+    [SuppressMessage(
+        "Design", "CA1052:Static holder types should be Static or NotInheritable",
+        Justification = "Blazor client side app cannot be hosted in ASP.NET Core website if it is static.")]
     public class Program
     {
         public static async Task Main(string[] args)

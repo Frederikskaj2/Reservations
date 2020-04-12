@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
@@ -18,6 +20,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("user")]
     [ApiController]
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
     public class UserController : Controller
     {
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
@@ -273,7 +276,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private async Task<User?> FindUser()
         {
             var userId = User.Id();
-            return userId.HasValue ? await userManager.FindByIdAsync(userId.Value.ToString()) : null;
+            return userId.HasValue ? await userManager.FindByIdAsync(userId.Value.ToString(CultureInfo.InvariantCulture)) : null;
         }
 
         private Task WaitRandomDelay()

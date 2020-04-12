@@ -1,4 +1,6 @@
-﻿namespace Frederikskaj2.Reservations.Shared
+﻿using System;
+
+namespace Frederikskaj2.Reservations.Shared
 {
     public class Price
     {
@@ -10,6 +12,9 @@
 
         public Price Accumulate(Price price)
         {
+            if (price is null)
+                throw new ArgumentNullException(nameof(price));
+
             Rent += price.Rent;
             CleaningFee += price.CleaningFee;
             Deposit += price.Deposit;
