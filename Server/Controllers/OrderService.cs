@@ -12,6 +12,7 @@ using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NodaTime;
 using Order = Frederikskaj2.Reservations.Server.Data.Order;
 using Price = Frederikskaj2.Reservations.Server.Data.Price;
@@ -28,16 +29,19 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private readonly IDataProvider dataProvider;
         private readonly DateTimeZone dateTimeZone;
         private readonly ReservationsContext db;
+        private readonly ILogger logger;
         private readonly IReservationPolicyProvider reservationPolicyProvider;
         private readonly ReservationsOptions reservationsOptions;
         private readonly SignInManager<User> signInManager;
         private readonly UserManager<User> userManager;
 
         public OrderService(
-            IBackgroundWorkQueue<EmailService> backgroundWorkQueue, IDataProvider dataProvider,
-            DateTimeZone dateTimeZone, ReservationsContext db, IReservationPolicyProvider reservationPolicyProvider,
-            ReservationsOptions reservationsOptions, SignInManager<User> signInManager, UserManager<User> userManager)
+            ILogger<OrderService> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue,
+            IDataProvider dataProvider, DateTimeZone dateTimeZone, ReservationsContext db,
+            IReservationPolicyProvider reservationPolicyProvider, ReservationsOptions reservationsOptions,
+            SignInManager<User> signInManager, UserManager<User> userManager)
         {
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.backgroundWorkQueue =
                 backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
             this.dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
@@ -159,6 +163,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             }
             catch (DbUpdateException exception)
             {
+                logger.LogWarning(exception, "Unable to place order");
                 if (exception.InnerException is SqliteException sqliteException
                     && sqliteException.SqliteErrorCode == 19)
                     return (PlaceOrderResult.ReservationConflict, null);
@@ -201,6 +206,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             }
             catch (DbUpdateException exception)
             {
+                logger.LogWarning(exception, "Unable to place owner order");
                 if (exception.InnerException is SqliteException sqliteException
                     && sqliteException.SqliteErrorCode == 19)
                     return (PlaceOrderResult.ReservationConflict, null);
@@ -296,8 +302,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 await db.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException exception)
             {
+                logger.LogWarning(exception, "Unable to update order");
                 return default;
             }
 
@@ -344,8 +351,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 await db.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException exception)
             {
+                logger.LogWarning(exception, "Unable to update owner order");
                 return default;
             }
 
@@ -384,8 +392,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 await db.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException exception)
             {
+                logger.LogWarning(exception, "Unable to pay in");
                 return null;
             }
 
@@ -445,8 +454,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 await db.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException exception)
             {
+                logger.LogWarning(exception, "Unable to settle order");
                 return default;
             }
 
@@ -485,8 +495,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             {
                 await db.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException exception)
             {
+                logger.LogWarning(exception, "Unable to update pay out");
                 return null;
             }
 
@@ -525,7 +536,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return payOuts;
         }
 
-        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is accessed through an injected instance.")]
+        [SuppressMessage(
+            "Performance", "CA1822:Mark members as static",
+            Justification = "This member is accessed through an injected instance.")]
         public OrderTotals GetTotals(Order order)
         {
             if (order is null)
@@ -611,7 +624,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Days = days,
                 Price = price
             };
-            return (PlaceOrderResult.Success, reservation);;
+            return (PlaceOrderResult.Success, reservation);
+            ;
 
             static async Task<bool> IsReservationDurationValid(
                 ReservationRequest reservation, IReservationPolicy policy)

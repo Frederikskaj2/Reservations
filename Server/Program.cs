@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
-using Frederikskaj2.Reservations.Server.Email;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Frederikskaj2.Reservations.Server
 {
@@ -29,8 +29,14 @@ namespace Frederikskaj2.Reservations.Server
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(
                     webBuilder => webBuilder
-                        .UseStartup<Startup>()
-                        .ConfigureAppConfiguration(
-                            builder => builder.AddJsonFile("appSettings.local.json", true, true)));
+                        .ConfigureAppConfiguration(builder => builder.AddJsonFile("appSettings.local.json", true, true))
+                        .ConfigureLogging(
+                            (context, builder) =>
+                            {
+                                var section = context.Configuration.GetSection("Logging");
+                                builder.AddConfiguration(section);
+                                builder.AddFile(section);
+                            })
+                        .UseStartup<Startup>());
     }
 }

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SignInResult = Frederikskaj2.Reservations.Shared.SignInResult;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
@@ -20,19 +21,27 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("user")]
     [ApiController]
-    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
+    [SuppressMessage(
+        "Design", "CA1062:Validate arguments of public methods",
+        Justification = "The framework ensures that the action arguments are non-null.")]
     public class UserController : Controller
     {
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
-        private readonly OrderService orderService;
         private readonly ReservationsContext db;
+        private readonly ILogger logger;
+        private readonly OrderService orderService;
         private readonly Random random = new Random();
         private readonly SignInManager<User> signInManager;
         private readonly UserManager<User> userManager;
 
-        public UserController(IBackgroundWorkQueue<EmailService> backgroundWorkQueue, OrderService orderService, ReservationsContext db, SignInManager<User> signInManager, UserManager<User> userManager)
+        public UserController(
+            ILogger<UserController> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue,
+            OrderService orderService, ReservationsContext db, SignInManager<User> signInManager,
+            UserManager<User> userManager)
         {
-            this.backgroundWorkQueue = backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.backgroundWorkQueue =
+                backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
             this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
             this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
@@ -67,6 +76,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         public async Task<SignUpResponse> SignUp(SignUpRequest request)
         {
             var trimmedEmail = request.Email.Trim();
+            logger.LogInformation("New user sign-up with email {Email}", trimmedEmail.MaskEmail());
             var user = new User
             {
                 UserName = trimmedEmail,
@@ -99,7 +109,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, true);
             if (!result.Succeeded)
-                return new SignInResponse { Result = result.IsLockedOut ? SignInResult.LockedOut : SignInResult.InvalidEmailOrPassword };
+                return new SignInResponse
+                    { Result = result.IsLockedOut ? SignInResult.LockedOut : SignInResult.InvalidEmailOrPassword };
 
             var authenticationProperties = new AuthenticationProperties { IsPersistent = request.IsPersistent };
             await signInManager.SignInAsync(user, authenticationProperties);
@@ -139,7 +150,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             user.PhoneNumber = request.Phone;
 
             var result = await userManager.UpdateAsync(user);
-            return new OperationResponse { Result = result.Succeeded ? OperationResult.Success : OperationResult.GeneralError };
+            return new OperationResponse
+                { Result = result.Succeeded ? OperationResult.Success : OperationResult.GeneralError };
         }
 
         [HttpPost("update-password")]
@@ -180,8 +192,11 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (user == null)
                 return new DeleteUserResponse { Result = DeleteUserResult.GeneralError };
 
+            logger.LogInformation("Request deletion of user with email {Email}", user.Email.MaskEmail());
+
             var isDeleted = await orderService.DeleteUser(user);
-            return new DeleteUserResponse { Result = isDeleted ? DeleteUserResult.Success : DeleteUserResult.IsPendingDelete };
+            return new DeleteUserResponse
+                { Result = isDeleted ? DeleteUserResult.Success : DeleteUserResult.IsPendingDelete };
         }
 
         [HttpPost("confirm-email")]
@@ -189,6 +204,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token))
                 return new OperationResponse { Result = OperationResult.GeneralError };
+
+            logger.LogInformation("Request confirmation of email {Email}", request.Email.MaskEmail());
 
             var user = await FindUser(request.Email);
             if (user == null)
@@ -276,7 +293,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private async Task<User?> FindUser()
         {
             var userId = User.Id();
-            return userId.HasValue ? await userManager.FindByIdAsync(userId.Value.ToString(CultureInfo.InvariantCulture)) : null;
+            return userId.HasValue
+                ? await userManager.FindByIdAsync(userId.Value.ToString(CultureInfo.InvariantCulture))
+                : null;
         }
 
         private Task WaitRandomDelay()

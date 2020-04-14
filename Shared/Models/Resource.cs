@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Frederikskaj2.Reservations.Shared
+﻿namespace Frederikskaj2.Reservations.Shared
 {
     public class Resource
     {

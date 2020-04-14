@@ -225,7 +225,7 @@ namespace Frederikskaj2.Reservations.Server.Email
         {
             var message = await CreateMessage(user, model, viewName);
             await SendMessage(message);
-            logger.LogInformation("Sent message {Message} to {User}", viewName, user.Email);
+            logger.LogInformation("Sent message {Message} to {User}", viewName, user.Email.MaskEmail());
         }
 
         private async Task<MimeMessage> CreateMessage<TModel>(User user, TModel model, string viewName)
