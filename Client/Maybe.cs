@@ -53,8 +53,10 @@ namespace Frederikskaj2.Reservations.Client
             }
 
 #pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8653 // A default expression introduces a null value when 'T' is a non-nullable reference type.
             value = default;
 #pragma warning restore CS8601 // Possible null reference assignment.
+#pragma warning restore CS8653 // A default expression introduces a null value when 'T' is a non-nullable reference type.
             return false;
         }
 
