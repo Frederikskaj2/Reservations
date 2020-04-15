@@ -1,5 +1,7 @@
 # Frederikskaj 2 lokalereservation
 
+![.NET Core](https://github.com/Frederikskaj2/Reservations/workflows/.NET%20Core/badge.svg)
+
 Dette project er en website som anvendes af Grundejerforeningen Frederikskaj 2 til at håndtere reservation af lokaler i fælleshuset.
 
 ## Forretningsgang
