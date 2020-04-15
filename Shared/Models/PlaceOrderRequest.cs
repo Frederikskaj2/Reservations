@@ -21,14 +21,14 @@ namespace Frederikskaj2.Reservations.Shared
         [Required(AllowEmptyStrings = false, ErrorMessage = "Oplys kontonummer hvortil depositum kan udbetales")]
         [StringLength(50, ErrorMessage = "Kontonummeret er for langt")]
         [RegularExpression(
-            @"^\s*(?:[0-9]{4}(?:[- 0-9]+)*|[a-zA-Z]{2}[0-9]{2}(?: ?[0-9a-zA-Z]{4})*(?: ?[0-9a-zA-Z]{1,4}))\s*$",
-            ErrorMessage = "Angiv et kontonummer (inklusiv registreringsnummer) eller et IBAN-nummer")]
+            @"^\s*[0-9]{4}-[0-9]{4,}\s*$", ErrorMessage = "Angiv et kontonummer (inklusiv registreringsnummer)")]
         public string AccountNumber { get; set; } = string.Empty;
 
         [Range(typeof(bool), "true", "true", ErrorMessage = "Du skal acceptere betingelserne")]
         public bool DidAcceptTerms { get; set; }
 
-        [Range(typeof(bool), "true", "true", ErrorMessage = "Du skal samtykke til at vi behandler dine personoplysninger")]
+        [Range(
+            typeof(bool), "true", "true", ErrorMessage = "Du skal samtykke til at vi behandler dine personoplysninger")]
         public bool DidConsent { get; set; }
 
         public List<ReservationRequest> Reservations { get; } = new List<ReservationRequest>();

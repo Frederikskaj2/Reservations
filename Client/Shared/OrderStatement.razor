@@ -22,7 +22,7 @@
                                 <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
                                 <FieldBody>
                                     <Validation>
-                                        <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344 eller DK1234567890123456" ReadOnly="@(!accountNumberCanBeChanged)">
+                                        <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344" ReadOnly="@(!accountNumberCanBeChanged)">
                                             <Feedback>
                                                 <ValidationError />
                                             </Feedback>
