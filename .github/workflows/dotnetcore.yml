@@ -24,7 +24,7 @@ jobs:
     - name: Publish
       run: dotnet publish Server --runtime win-x86 --self-contained false --configuration Release --no-build
     - name: Upload
-        uses: actions/upload-artifact@v1
-        with:
-          name: Website
-          path: Server/bin/Release/netcoreapp3.1/publish
+      uses: actions/upload-artifact@v1
+      with:
+        name: Website
+        path: Server/bin/Release/netcoreapp3.1/publish
