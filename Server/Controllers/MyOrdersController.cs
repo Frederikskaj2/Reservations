@@ -10,6 +10,8 @@ using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NodaTime;
+using KeyCode = Frederikskaj2.Reservations.Server.Data.KeyCode;
+using Order = Frederikskaj2.Reservations.Server.Data.Order;
 using Price = Frederikskaj2.Reservations.Shared.Price;
 using Reservation = Frederikskaj2.Reservations.Shared.Reservation;
 
@@ -24,16 +26,18 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private readonly IClock clock;
         private readonly DateTimeZone dateTimeZone;
         private readonly ReservationsContext db;
+        private readonly KeyCodeService keyCodeService;
         private readonly OrderService orderService;
         private readonly ReservationsOptions reservationsOptions;
 
         public MyOrdersController(
-            IClock clock, DateTimeZone dateTimeZone, ReservationsContext db, OrderService orderService,
-            ReservationsOptions reservationsOptions)
+            IClock clock, DateTimeZone dateTimeZone, ReservationsContext db, KeyCodeService keyCodeService,
+            OrderService orderService, ReservationsOptions reservationsOptions)
         {
             this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
             this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
+            this.keyCodeService = keyCodeService ?? throw new ArgumentNullException(nameof(keyCodeService));
             this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
             this.reservationsOptions =
                 reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
@@ -62,8 +66,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (order == null || order.UserId != userId.Value)
                 return new OrderResponse<MyOrder>();
 
+
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            var myOrder = CreateOrder(order, today);
+            var keyCodes = await GetKeyCodes(order, today);
+            var myOrder = CreateOrder(order, today, keyCodes);
             myOrder.Totals = orderService.GetTotals(order);
             return new OrderResponse<MyOrder> { Order = myOrder };
         }
@@ -84,18 +90,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var tuple = await orderService.PlaceOrder(
                 now, user.Id, request.ApartmentId, request.AccountNumber.Trim().ToUpperInvariant(),
                 request.Reservations);
-            var today = now.InZone(dateTimeZone).Date;
-            var myOrder = CreateMyOrder(tuple.Order);
-            return new PlaceOrderResponse { Result = tuple.Result, Order = myOrder };
+            if (tuple.Order == null)
+                return new PlaceOrderResponse { Result = tuple.Result };
 
-            MyOrder? CreateMyOrder(Data.Order? order)
-            {
-                if (order == null)
-                    return null;
-                var myOrder = CreateOrder(order, today);
-                myOrder.Totals = orderService.GetTotals(order);
-                return myOrder;
-            }
+            var today = now.InZone(dateTimeZone).Date;
+            var myOrder = CreateOrder(tuple.Order, today);
+            myOrder.Totals = orderService.GetTotals(tuple.Order);
+            return new PlaceOrderResponse { Result = PlaceOrderResult.Success, Order = myOrder };
         }
 
         [Route("{orderId:int}")]
@@ -113,12 +114,53 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new OrderResponse<MyOrder>();
 
             var today = now.InZone(dateTimeZone).Date;
-            var myOrder = CreateOrder(order, today);
+            var keyCodes = await GetKeyCodes(order, today);
+            var myOrder = CreateOrder(order, today, keyCodes);
             myOrder.Totals = orderService.GetTotals(order);
             return new OrderResponse<MyOrder> { Order = myOrder, IsUserDeleted = isUserDeleted };
         }
 
-        private MyOrder CreateOrder(Data.Order order, LocalDate today)
+        private async Task<Dictionary<int, List<DatedKeyCode>>> GetKeyCodes(Order order, LocalDate today)
+        {
+            var reservationsNeedingKeyCodes = order.Reservations
+                .Where(
+                    reservation =>
+                        reservation.Status == ReservationStatus.Confirmed
+                        && reservation.Date.PlusDays(-reservationsOptions.RevealKeyCodeDaysBeforeReservationStart)
+                        <= today
+                        && today <= reservation.Date.PlusDays(reservation.DurationInDays))
+                .ToList();
+            var keyCodes = reservationsNeedingKeyCodes.Count > 0
+                ? await keyCodeService.GetKeyCodes(today)
+                : Enumerable.Empty<KeyCode>();
+            return reservationsNeedingKeyCodes.ToDictionary(
+                reservation => reservation.Id,
+                reservation => GetDatedKeyCodes(reservation).ToList());
+
+            IEnumerable<DatedKeyCode> GetDatedKeyCodes(Data.Reservation reservation)
+            {
+                var previousMonday = GetPreviousMonday(reservation.Date);
+                var firstKeyCode = keyCodes.FirstOrDefault(keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == previousMonday);
+                if (firstKeyCode == null)
+                    yield break;
+                yield return new DatedKeyCode { Date = reservation.Date, Code = firstKeyCode.Code };
+                var nextMonday = previousMonday.PlusWeeks(1);
+                if (reservation.Date.PlusDays(reservation.DurationInDays) < nextMonday)
+                    yield break;
+                var nextKeyCode = keyCodes.FirstOrDefault(keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == nextMonday);
+                if (nextKeyCode == null)
+                    yield break;
+                yield return new DatedKeyCode { Date = nextMonday, Code = nextKeyCode.Code };
+            }
+
+            static LocalDate GetPreviousMonday(LocalDate d)
+            {
+                var daysAfterMonday = ((int) d.DayOfWeek - 1)%7;
+                return d.PlusDays(-daysAfterMonday);
+            }
+        }
+
+        private MyOrder CreateOrder(Order order, LocalDate today, Dictionary<int, List<DatedKeyCode>>? keyCodes = null)
         {
             var reservations = order.Reservations.Select(CreateReservation).ToList();
             var canBeEdited = order.AccountNumber != null && reservations.Any(r => r.CanBeCancelled);
@@ -142,7 +184,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Price = reservation.Price!.Adapt<Price>(),
                 Date = reservation.Date,
                 DurationInDays = reservation.DurationInDays,
-                CanBeCancelled = reservation.CanBeCancelled(today, reservationsOptions)
+                CanBeCancelled = reservation.CanBeCancelled(today, reservationsOptions),
+                KeyCodes = keyCodes != null && keyCodes.TryGetValue(reservation.Id, out var datedKeyCodes) ? datedKeyCodes : null
             };
         }
     }

@@ -1,4 +1,5 @@
-﻿using NodaTime;
+﻿using System.Collections.Generic;
+using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
 {
@@ -12,5 +13,6 @@ namespace Frederikskaj2.Reservations.Shared
         public LocalDate Date { get; set; }
         public int DurationInDays { get; set; }
         public bool CanBeCancelled { get; set; }
+        public List<DatedKeyCode>? KeyCodes { get; set; }
     }
 }

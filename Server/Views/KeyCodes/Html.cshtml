@@ -21,26 +21,26 @@
             <tr>
                 <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Uge</th>
                 <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Dato</th>
-                @foreach (var resource in orderedResources)
-                {
-                    <th style="padding: 8px; text-align: center; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">@resource.Name</th>
-                }
+            @foreach (var resource in orderedResources)
+            {
+                <th style="padding: 8px; text-align: center; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">@resource.Name</th>
+            }
             </tr>
         </thead>
         <tbody>
             @{
                 var pattern = LocalDatePattern.Create("d. MMMM yyyy", CultureInfo);
-                @foreach (var weeklyKeyCodes in Model.WeeklyKeyCodes)
-                {
-                    <tr>
-                        <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@weeklyKeyCodes.WeekNumber</th>
-                        <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@pattern.Format(weeklyKeyCodes.Date)</td>
-                        @foreach (var resource in orderedResources)
-                        {
-                            <td style="padding: 8px; text-align: center; border-top: solid 1px #CCC; border-collapse: collapse">@(weeklyKeyCodes.Codes.TryGetValue(resource.Id, out var code) ? code : string.Empty)</td>
-                        }
-                    </tr>
-                }
+        @foreach (var weeklyKeyCodes in Model.WeeklyKeyCodes)
+        {
+            <tr>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@weeklyKeyCodes.WeekNumber</th>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@pattern.Format(weeklyKeyCodes.Date)</td>
+            @foreach (var resource in orderedResources)
+            {
+                <td style="padding: 8px; text-align: center; border-top: solid 1px #CCC; border-collapse: collapse">@(weeklyKeyCodes.Codes.TryGetValue(resource.Id, out var code) ? code : string.Empty)</td>
+            }
+            </tr>
+        }
             }
         </tbody>
     </table>

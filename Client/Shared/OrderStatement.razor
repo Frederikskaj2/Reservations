@@ -83,33 +83,47 @@
                                     }
                                 </TableRowCell>
                             </TableRow>
+                            @if (reservation.KeyCodes != null)
+                            {
+                                <TableRow>
+                                    @if (reservation.KeyCodes.Count == 1)
+                                    {
+                                        <TableRowCell ColumnSpan="7" Class="border-top-0">Nøglebokskode: <strong class="text-primary">@reservation.KeyCodes[0].Code</strong></TableRowCell>
+                                    }
+                                    else
+                                    {
+                                        <TableRowCell ColumnSpan="2" Class="border-top-0">Nøglebokskode (fra @FormattingService.FormatDate(reservation.KeyCodes[0].Date)): <strong class="text-primary">@reservation.KeyCodes[0].Code</strong></TableRowCell>
+                                        <TableRowCell ColumnSpan="5" Class="border-top-0">Nøglebokskode (fra @FormattingService.FormatDate(reservation.KeyCodes[1].Date)): <strong class="text-primary">@reservation.KeyCodes[1].Code</strong></TableRowCell>
+                                    }
+                                </TableRow>
+                            }
                         }
                     </TableBody>
                     <TableFooter>
                         <TableRow>
-                            <TableRowCell colspan="5">Leje (inklusiv rengøring)</TableRowCell>
+                            <TableRowCell ColumnSpan="5">Leje (inklusiv rengøring)</TableRowCell>
                             <TableRowCell Class="text-right">+</TableRowCell>
                             <TableRowCell Class="text-right">@FormattingService.FormatMoneyLong(price!.Rent + price!.CleaningFee)</TableRowCell>
                         </TableRow>
                         <TableRow>
-                            <TableRowCell colspan="5" Class="border-top-0">Depositum</TableRowCell>
+                            <TableRowCell ColumnSpan="5" Class="border-top-0">Depositum</TableRowCell>
                             <TableRowCell Class="text-right border-top-0">+</TableRowCell>
                             <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.Deposit)</TableRowCell>
                         </TableRow>
                         <TableRow>
-                            <TableRowCell colspan="5" Class="border-bottom"><strong>Til betaling</strong></TableRowCell>
+                            <TableRowCell ColumnSpan="5" Class="border-bottom"><strong>Til betaling</strong></TableRowCell>
                             <TableRowCell Class="text-right border-bottom"><strong>=</strong></TableRowCell>
                             <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
                         </TableRow>
                         @if (Totals!.PayIn > 0)
                         {
                             <TableRow>
-                                <TableRowCell colspan="5" Class="border-top-0">Pris (inklusiv depositum)</TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Pris (inklusiv depositum)</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">−</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.GetTotal())</TableRowCell>
                             </TableRow>
                             <TableRow>
-                                <TableRowCell colspan="5" Class="border-top-0">Indbetalt</TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Indbetalt</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">+</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayIn)</TableRowCell>
                             </TableRow>
@@ -117,7 +131,7 @@
                         @if (cancellationFee > 0)
                         {
                             <TableRow>
-                                <TableRowCell colspan="5" Class="border-top-0">Aflysningsgebyr</TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Afbestillingsgebyr</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">−</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(cancellationFee)</TableRowCell>
                             </TableRow>
@@ -125,7 +139,7 @@
                         @if (Totals.SettledDeposits > 0)
                         {
                             <TableRow>
-                                <TableRowCell colspan="5" Class="border-top-0">Depositum refundering</TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Depositum refundering</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">+</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.SettledDeposits)</TableRowCell>
                             </TableRow>
@@ -133,7 +147,7 @@
                         @if (Totals.Damages > 0)
                         {
                             <TableRow>
-                                <TableRowCell colspan="5" Class="border-top-0">Skader</TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Skader</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">−</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.Damages)</TableRowCell>
                             </TableRow>
@@ -141,7 +155,7 @@
                         @if (Totals.PayOut > 0)
                         {
                             <TableRow>
-                                <TableRowCell colspan="5" Class="border-top-0">Udbetalt</TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Udbetalt</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">−</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayOut)</TableRowCell>
                             </TableRow>
@@ -149,7 +163,7 @@
                         @if (Totals.PayIn > 0)
                         {
                             <TableRow>
-                                <TableRowCell colspan="5" Class="border-bottom"><strong>Saldo</strong></TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-bottom"><strong>Saldo</strong></TableRowCell>
                                 <TableRowCell Class="text-right border-bottom"><strong>=</strong></TableRowCell>
                                 <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(balance)</strong></TableRowCell>
                             </TableRow>
@@ -157,7 +171,7 @@
                         @if (!IsHistoryOrder && (accountNumberCanBeChanged || someReservationsCanBeCancelled))
                         {
                             <TableRow>
-                                <TableRowCell colspan="6" Class="border-top-0 control-row">
+                                <TableRowCell ColumnSpan="5" Class="border-top-0 control-row">
                                     @if (IsAdministrator)
                                     {
                                         if (Totals!.GetBalance() < 0)
@@ -170,11 +184,11 @@
                                         }
                                         if (someReservationsCanBeCancelled)
                                         {
-                                            <CheckEdit Checked="@request.WaiveFee" TValue="bool" CheckedChanged="@ToggleCancelWaiveFee">Intet aflysningsgebyr</CheckEdit>
+                                            <CheckEdit Checked="@request.WaiveFee" TValue="bool" CheckedChanged="@ToggleCancelWaiveFee">Intet afbestillingsgebyr</CheckEdit>
                                         }
                                     }
                                 </TableRowCell>
-                                <TableRowCell Class="border-top-0">
+                                <TableRowCell ColumnSpan="2" Class="border-top-0">
                                     <Button Class="float-right" Color="@(request.CancelledReservations.Count > 0 ? Color.Danger : Color.Primary)" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Disabled="@(!IsUpdated)" Clicked="@Submit">Opdatér bestilling</Button>
                                 </TableRowCell>
                             </TableRow>
