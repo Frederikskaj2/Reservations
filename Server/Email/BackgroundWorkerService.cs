@@ -14,14 +14,18 @@ namespace Frederikskaj2.Reservations.Server.Email
         private readonly IBackgroundWorkQueue<TService> queue;
         private readonly IServiceProvider serviceProvider;
 
-        public BackgroundWorkerService(ILogger<BackgroundWorkerService<TService>> logger, IServiceProvider serviceProvider, IBackgroundWorkQueue<TService> queue)
+        public BackgroundWorkerService(
+            ILogger<BackgroundWorkerService<TService>> logger, IServiceProvider serviceProvider,
+            IBackgroundWorkQueue<TService> queue)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
             this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "This method should not pass exceptions to callers.")]
+        [SuppressMessage(
+            "Design", "CA1031:Do not catch general exception types",
+            Justification = "This method should not pass exceptions to callers.")]
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
@@ -39,7 +43,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 }
                 catch (Exception exception)
                 {
-                    logger.LogError(exception, "An error occurred.");
+                    logger.LogError(exception, "An error occurred");
                 }
             }
         }

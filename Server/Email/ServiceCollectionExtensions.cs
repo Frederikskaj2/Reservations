@@ -34,9 +34,11 @@ namespace Frederikskaj2.Reservations.Server.Email
                 .AddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>()
                 .AddSingleton(typeof(IBackgroundWorkQueue<>), typeof(BackgroundWorkQueue<>))
                 .AddHostedService<BackgroundWorkerService<EmailService>>()
+                .AddHostedService<SchedulingService<ScheduledEmailService>>()
                 .AddScoped<RazorViewToStringRenderer>()
                 .AddScoped<UrlService>()
                 .AddScoped<EmailService>()
+                .AddScoped<ScheduledEmailService>()
                 .AddSingleton(cultureInfo)
                 .AddRazorPages();
             return services;
