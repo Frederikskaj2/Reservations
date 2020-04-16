@@ -2,6 +2,7 @@
 {
     public static class Urls
     {
+        public const string Accounting = "bogfoering";
         public const string Calendar = "kalender";
         public const string Checkout1 = "bestil/1";
         public const string Checkout2 = "bestil/2";
@@ -11,6 +12,7 @@
         public const string Consent = "samtykke";
         public const string HistoryReservations = "historik";
         public const string InventoryBanquetFacilities = "https://docs.google.com/spreadsheets/d/1PvfI1TQgaaYqBeck6hiv-JA0DlpZweeUolyzLH3RQtY";
+        public const string KeyCodes = "noeglekoder";
         public const string MyAccount = "bruger";
         public const string MyOrders = "bruger/bestillinger";
         public const string MyTransactions = "bruger/kontoudtog";

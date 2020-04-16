@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
 using NodaTime;
+using NodaTime.Calendars;
 using static System.FormattableString;
 
 namespace Frederikskaj2.Reservations.Client
@@ -15,6 +16,7 @@ namespace Frederikskaj2.Reservations.Client
         private HashSet<LocalDate>? cachedHolidays;
         private IEnumerable<ReservedDay>? cachedReservedDays;
         private IReadOnlyDictionary<int, Resource>? cachedResources;
+        private IEnumerable<WeeklyKeyCodes>? cachedWeeklyKeyCodes;
 
         public ClientDataProvider(ApiClient apiClient)
             => this.apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
@@ -30,6 +32,7 @@ namespace Frederikskaj2.Reservations.Client
                     ? resources.ToDictionary(resource => resource.Id)
                     : new Dictionary<int, Resource>();
             }
+
             return cachedResources;
         }
 
@@ -46,12 +49,35 @@ namespace Frederikskaj2.Reservations.Client
 
         public async Task<IEnumerable<ReservedDay>> GetReservedDays(
             int resourceId, LocalDate fromDate, LocalDate toDate, bool includeOrder)
-            => (await GetReservedDays(includeOrder)).Where(day => day.ResourceId == resourceId && fromDate <= day.Date && day.Date <= toDate);
+            => (await GetReservedDays(includeOrder)).Where(
+                day => day.ResourceId == resourceId && fromDate <= day.Date && day.Date <= toDate);
 
         public void Refresh()
         {
             cachedHolidays = null;
             cachedReservedDays = null;
+        }
+
+        public async Task<IEnumerable<WeeklyKeyCodes>> GetKeyCodes()
+        {
+            if (cachedWeeklyKeyCodes == null)
+            {
+                var maybe = await apiClient.GetJsonAsync<IEnumerable<KeyCode>>("key-codes");
+                if (maybe.TryGetValue(out var keyCodes))
+                    cachedWeeklyKeyCodes = keyCodes
+                        .GroupBy(keyCode => keyCode.Date)
+                        .Select(
+                            grouping => new WeeklyKeyCodes(
+                                WeekYearRules.Iso.GetWeekOfWeekYear(grouping.Key),
+                                grouping.Key,
+                                grouping.ToDictionary(keyCode => keyCode.ResourceId, keyCode => keyCode.Code)
+                            ))
+                        .OrderBy(keyCode => keyCode.WeekNumber);
+                else
+                    cachedWeeklyKeyCodes = Enumerable.Empty<WeeklyKeyCodes>();
+            }
+
+            return cachedWeeklyKeyCodes;
         }
 
         public void ResetState()
@@ -68,6 +94,7 @@ namespace Frederikskaj2.Reservations.Client
                 if (!maybe.TryGetValue(out cachedApartments))
                     cachedApartments = Enumerable.Empty<Apartment>();
             }
+
             return cachedApartments;
         }
 
@@ -99,7 +126,10 @@ namespace Frederikskaj2.Reservations.Client
 
         private static IEnumerable<ReservedDay> GetReservationReservedDays(DraftReservation reservation)
             => Enumerable.Range(0, reservation.DurationInDays).Select(
-                i => new ReservedDay { Date = reservation.Date.PlusDays(i), ResourceId = reservation.Resource.Id, IsMyReservation = true });
+                i => new ReservedDay
+                {
+                    Date = reservation.Date.PlusDays(i), ResourceId = reservation.Resource.Id, IsMyReservation = true
+                });
 
         private async Task<HashSet<LocalDate>> GetHolidays()
         {
@@ -108,6 +138,7 @@ namespace Frederikskaj2.Reservations.Client
                 var maybe = await apiClient.GetJsonAsync<IEnumerable<LocalDate>>("holidays");
                 cachedHolidays = maybe.TryGetValue(out var holidays) ? holidays.ToHashSet() : new HashSet<LocalDate>();
             }
+
             return cachedHolidays;
         }
     }

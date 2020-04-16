@@ -2,9 +2,8 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider;
 
 <nav>
-    <div class="logo">Frederikskaj&nbsp;2</div>
     <NavLink href="" class="nav-tab" Match="NavLinkMatch.All">
-        <div>Fælleshus</div>
+        <div class="logo">Frederikskaj&nbsp;2</div>
     </NavLink>
     <NavLink href="@Urls.Calendar" class="nav-tab">
         <div>Kalender</div>
@@ -15,10 +14,16 @@
     @if (isAdministrator)
     {
         <NavLink href="@Urls.Orders" class="nav-tab nav-administrator">
-            <div>Bestillinger</div>
+            <div>Bestil­linger</div>
         </NavLink>
         <NavLink href="@Urls.PayOuts" class="nav-tab nav-administrator">
-            <div>Til udbetaling</div>
+            <div>Ud­betaling</div>
+        </NavLink>
+        <NavLink href="@Urls.Accounting" class="nav-tab nav-administrator">
+            <div>Bog­føring</div>
+        </NavLink>
+        <NavLink href="@Urls.KeyCodes" class="nav-tab nav-administrator">
+            <div>Nøgleboks­koder</div>
         </NavLink>
         <NavLink href="@Urls.HistoryReservations" class="nav-tab nav-administrator">
             <div>Historik</div>

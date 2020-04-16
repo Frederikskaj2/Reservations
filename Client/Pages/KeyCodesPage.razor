@@ -1,0 +1,97 @@
+﻿@page "/noeglekoder"
+@inject ApiClient ApiClient
+@inject ClientDataProvider ClientDataProvider
+@inject FormattingService FormattingService
+@inject ServerAuthenticationStateProvider AuthenticationStateProvider
+
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        var orderedResources = resources!.Values.OrderBy(resource => resource.Sequence);
+        <Container>
+            <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
+                Listen med nøglebokskoder er blevet send til @email.
+                <CloseButton Clicked="@DismissSuccessAlert" />
+            </Alert>
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+                Der er sket en fejl, og listen med nøglebokskoder blev ikke send til @email.
+                <CloseButton Clicked="@DismissErrorAlert" />
+            </Alert>
+            <h1>Koder til nøglebokse</h1>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>Uge</TableHeaderCell>
+                        <TableHeaderCell>Dato</TableHeaderCell>
+                        @foreach (var resource in orderedResources)
+                        {
+                            <TableHeaderCell Class="text-center">@resource.Name</TableHeaderCell>
+                        }
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    @foreach (var weeklyKeyCodes in allWeeklyKeyCodes!)
+                    {
+                        <TableRow>
+                            <TableHeaderCell>@weeklyKeyCodes.WeekNumber</TableHeaderCell>
+                            <TableRowCell>@FormattingService.FormatDate(weeklyKeyCodes.Date)</TableRowCell>
+                            @foreach (var resource in orderedResources)
+                            {
+                                <TableRowCell Class="text-center">@(weeklyKeyCodes.Codes!.TryGetValue(resource.Id, out var code) ? code : string.Empty)</TableRowCell>
+                            }
+                        </TableRow>
+                    }
+                </TableBody>
+            </Table>
+            <Form>
+                <Paragraph>
+                    <Button Color="Color.Secondary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@SendList">Send liste som mail</Button>
+                </Paragraph>
+            </Form>
+        </Container>
+    }
+</main>
+
+@code {
+
+    private IReadOnlyDictionary<int, Resource>? resources;
+    private IEnumerable<WeeklyKeyCodes>? allWeeklyKeyCodes;
+    private string? email;
+    private bool isInitialized;
+    private bool showSuccessAlert;
+    private bool showErrorAlert;
+
+    protected override async Task OnInitializedAsync()
+    {
+        resources = await ClientDataProvider.GetResources();
+        allWeeklyKeyCodes = await ClientDataProvider.GetKeyCodes();
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        email = state.User.Identity.Name;
+        isInitialized = true;
+    }
+
+    private async Task SendList()
+    {
+        DismissAllAlerts();
+
+        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("key-codes/send", null);
+        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
+            showSuccessAlert = true;
+        else
+            showErrorAlert = true;
+    }
+
+    private void DismissSuccessAlert() => showSuccessAlert = false;
+
+    private void DismissErrorAlert() => showErrorAlert = false;
+
+    private void DismissAllAlerts()
+    {
+        DismissSuccessAlert();
+        DismissErrorAlert();
+    }
+}

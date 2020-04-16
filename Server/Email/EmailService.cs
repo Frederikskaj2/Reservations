@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
 using MailKit.Net.Smtp;
@@ -6,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using NodaTime;
+using NodaTime.Calendars;
+using KeyCode = Frederikskaj2.Reservations.Server.Data.KeyCode;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Email
@@ -219,6 +223,36 @@ namespace Frederikskaj2.Reservations.Server.Email
                 urlService.GetFromUrl(),
                 user.FullName);
             await SendMessage(user, model, "UserDeleted");
+        }
+
+        public async Task SendKeyCodesEmail(User user, IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (resources is null)
+                throw new ArgumentNullException(nameof(resources));
+            if (keyCodes is null)
+                throw new ArgumentNullException(nameof(keyCodes));
+
+            var resourcesDictionary = resources.ToDictionary(
+                resource => resource.Id,
+                resource => new Resource(resource.Id, resource.Sequence, resource.Name));
+            var weeklyKeyCodes = keyCodes
+                .GroupBy(keyCode => keyCode.Date)
+                .Select(
+                    grouping => new WeeklyKeyCodes(
+                        WeekYearRules.Iso.GetWeekOfWeekYear(grouping.Key),
+                        grouping.Key,
+                        grouping.ToDictionary(keyCode => keyCode.ResourceId, keyCode => keyCode.Code)
+                    ))
+                .OrderBy(keyCode => keyCode.WeekNumber);
+            var model = new KeyCodesModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                resourcesDictionary,
+                weeklyKeyCodes);
+            await SendMessage(user, model, "KeyCodes");
         }
 
         private async Task SendMessage<TModel>(User user, TModel model, string viewName)

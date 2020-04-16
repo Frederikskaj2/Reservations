@@ -40,11 +40,6 @@ namespace Frederikskaj2.Reservations.Server.Data
                 .ProjectToType<Shared.ReservedDay>()
                 .ToListAsync();
 
-        public void Refresh()
-        {
-            // Do nothing as this is already a scoped service.
-        }
-
         private static bool IsHighPriceWeekDay(LocalDate date)
             => date.DayOfWeek == IsoDayOfWeek.Friday
                || date.DayOfWeek == IsoDayOfWeek.Saturday

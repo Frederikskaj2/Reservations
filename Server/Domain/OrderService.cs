@@ -21,7 +21,7 @@ using ReservedDay = Frederikskaj2.Reservations.Server.Data.ReservedDay;
 using Resource = Frederikskaj2.Reservations.Shared.Resource;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
-namespace Frederikskaj2.Reservations.Server.Controllers
+namespace Frederikskaj2.Reservations.Server.Domain
 {
     public class OrderService
     {

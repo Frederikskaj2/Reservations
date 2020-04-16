@@ -18,6 +18,7 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         public DbSet<Apartment> Apartments { get; set; } = null!;
         public DbSet<Holiday> Holidays { get; set; } = null!;
+        public DbSet<KeyCode> KeyCodes { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<Reservation> Reservations { get; set; } = null!;
         public DbSet<ReservedDay> ReservedDays { get; set; } = null!;
@@ -86,6 +87,10 @@ namespace Frederikskaj2.Reservations.Server.Data
 
             modelBuilder.Entity<Holiday>()
                 .Property(holiday => holiday.Date)
+                .HasConversion(localDateConverter);
+
+            modelBuilder.Entity<KeyCode>()
+                .Property(keyCode => keyCode.Date)
                 .HasConversion(localDateConverter);
 
             modelBuilder.Entity<Order>()

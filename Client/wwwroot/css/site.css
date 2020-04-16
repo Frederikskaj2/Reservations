@@ -145,7 +145,7 @@ nav {
     display: flex;
     height: 5rem;
     left: 0;
-    padding: 0 2rem;
+    padding-right: 1rem;
     position: fixed;
     right: 0;
     top: 0;
@@ -161,8 +161,9 @@ nav {
     font-size: 1.25rem;
     justify-content: center;
     margin: 0;
-    padding: 0.3rem 1.8rem;
+    padding: 0.3rem 1rem;
     position: relative;
+    text-transform: none;
 }
 
 .nav-tab {
@@ -175,7 +176,7 @@ nav {
     font-size: 0.9rem;
     justify-content: center;
     margin: 0;
-    padding: 0.3rem 1.8rem;
+    padding: 0.3rem 1rem;
     position: relative;
     text-transform: uppercase;
     transition: 0.2s ease-out;

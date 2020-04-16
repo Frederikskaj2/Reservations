@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Shared;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
+using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Shared;
 using Mapster;
