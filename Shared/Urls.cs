@@ -2,7 +2,6 @@
 {
     public static class Urls
     {
-        public const string Accounting = "bogfoering";
         public const string Calendar = "kalender";
         public const string Checkout1 = "bestil/1";
         public const string Checkout2 = "bestil/2";
@@ -21,6 +20,7 @@
         public const string OwnerCheckout1 = "bestil-ejer/1";
         public const string OwnerCheckout2 = "bestil-ejer/2";
         public const string PayOuts = "til-udbetaling";
+        public const string Postings = "posteringer";
         public const string ResetPassword = "anmod-om-ny-adgangskode";
         public const string RulesBanquetFacilities = "husorden/aktivitets-festlokalet";
         public const string RulesBedrooms = "husorden/sovevaerelser";

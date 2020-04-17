@@ -28,7 +28,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        [HttpGet("")]
+        [HttpGet]
         public async Task<IEnumerable<Shared.User>> Get()
             => await db.Users
                 .Include(user => user.Orders)

@@ -29,6 +29,14 @@ namespace Frederikskaj2.Reservations.Shared
             }
         };
 
+        public IReadOnlyDictionary<Account, string> AccountNames {get; } = new Dictionary<Account, string>
+        {
+            { Account.Income, "1201 - Udlejning af fælleslokale" },
+            { Account.Deposits, "7601 - Depositum" },
+            { Account.PayIns, "4021 - Bank" },
+            { Account.PayOuts, "8003 - Udbetalinger" }
+        };
+
         public int ReservationIsNotAllowedBeforeDaysFromNow { get; set; } = 5;
         public int ReservationIsNotAllowedAfterDaysFromNow { get; set; } = 270;
         // The key code logic expects that at most two key codes are required for a single reservation.

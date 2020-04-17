@@ -32,7 +32,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        [HttpGet("")]
+        [HttpGet]
         public async Task<IEnumerable<KeyCode>> Get()
         {
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;

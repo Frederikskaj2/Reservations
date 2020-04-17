@@ -1,0 +1,152 @@
+﻿@page "/posteringer"
+@inject ApiClient ApiClient
+@inject CultureInfo CultureInfo
+@inject FormattingService FormattingService
+@inject ReservationsOptions ReservationsOptions
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else
+    {
+        <Container>
+            <h1>Posteringer</h1>
+            @if (postingsRange != null)
+            {
+                <Form>
+                    <Row>
+                        <Column ColumnSize="ColumnSize.IsHalf">
+                            <Field>
+                                <FieldLabel>År</FieldLabel>
+                                <FieldBody>
+                                    <Select TValue="int" SelectedValue="@currentYear" SelectedValueChanged="@YearChanged">
+                                        @foreach (var year in years!)
+                                        {
+                                            <SelectItem Value="@year">@year</SelectItem>
+                                        }
+                                    </Select>
+                                </FieldBody>
+                            </Field>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.IsHalf">
+                            <Field>
+                                <FieldLabel>Måned</FieldLabel>
+                                <FieldBody>
+                                    <Select TValue="int" SelectedValue="@currentMonth" SelectedValueChanged="@MonthChanged">
+                                        @foreach (var month in months!)
+                                        {
+                                            <SelectItem Value="@month">@Capitalize(monthPattern!.Format(new LocalDate(currentYear, month, 1)))</SelectItem>
+                                        }
+                                    </Select>
+                                </FieldBody>
+                            </Field>
+                        </Column>
+                    </Row>
+                </Form>
+            }
+            @if (!(postings?.Any() ?? false))
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Dato</TableHeaderCell>
+                            <TableHeaderCell>Bestillingsnr.</TableHeaderCell>
+                            <TableHeaderCell>Konto</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Debit</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Kredit</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var posting in postings)
+                        {
+                            <TableRow>
+                                <TableRowCell>@FormattingService.FormatDate(posting.Date)</TableRowCell>
+                                <TableRowCell><a href="@Urls.Orders/@posting.OrderId">@posting.OrderId</a></TableRowCell>
+                                <TableRowCell>@ReservationsOptions.AccountNames[posting.Account]</TableRowCell>
+                                <TableRowCell Class="text-right">@(posting.Amount > 0 ? FormattingService.FormatMoneyShort(posting.Amount) : string.Empty)</TableRowCell>
+                                <TableRowCell Class="text-right">@(posting.Amount < 0 ? FormattingService.FormatMoneyShort(-posting.Amount) : string.Empty)</TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+            }
+        </Container>
+    }
+</main>
+
+@code {
+
+    private LocalDatePattern? monthPattern;
+    private PostingsRange? postingsRange;
+    private List<int>? years;
+    private List<int>? months;
+    int currentYear;
+    int currentMonth;
+    private IEnumerable<Posting>? postings;
+    private bool isInitialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        monthPattern = LocalDatePattern.Create("MMMM", CultureInfo);
+
+        await InitializeCalendar();
+        await UpdatePostings();
+
+        isInitialized = true;
+    }
+
+    private async Task InitializeCalendar()
+    {
+        var maybe = await ApiClient.GetJsonAsync<PostingsRange>("postings/range");
+        if (!maybe.TryGetValue(out postingsRange))
+            return;
+        var earliestYear = postingsRange.EarliestMonth.Year;
+        var latestYear = postingsRange.LatestMonth.Year;
+        years = Enumerable.Range(earliestYear, latestYear - earliestYear + 1).ToList();
+        currentYear = years[^1];
+        UpdateMonths();
+    }
+
+    private async Task UpdatePostings()
+    {
+        var requestUri = $"postings?month={currentYear}-{currentMonth:00}-01";
+        var maybe = await ApiClient.GetJsonAsync<IEnumerable<Posting>>(requestUri);
+        if (!maybe.TryGetValue(out postings))
+            return;
+    }
+
+    private void YearChanged(int value)
+    {
+        currentYear = value;
+        UpdateMonths();
+    }
+
+    private Task MonthChanged(int value)
+    {
+        currentMonth = value;
+        return UpdatePostings();
+    }
+
+    private void UpdateMonths()
+    {
+        months = GetMonths(currentYear).ToList();
+        currentMonth = months[^1];
+    }
+
+    private IEnumerable<int> GetMonths(int year)
+    {
+        for (var month = 1; month <= 12; month += 1)
+        {
+            var date = new LocalDate(year, month, 1);
+            if (postingsRange!.EarliestMonth <= date && date <= postingsRange.LatestMonth)
+                yield return month;
+        }
+    }
+
+    private string Capitalize(string text) => CultureInfo.TextInfo.ToUpper(text[0]) + text.Substring(1);
+}

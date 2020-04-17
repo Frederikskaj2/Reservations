@@ -74,6 +74,7 @@ namespace Frederikskaj2.Reservations.Server
                 .AddScoped<IDataProvider, ServerDataProvider>()
                 .AddScoped<OrderService>()
                 .AddScoped<KeyCodeService>()
+                .AddScoped<PostingsService>()
                 .AddEmail(Configuration)
                 .AddResponseCompression(
                     options
