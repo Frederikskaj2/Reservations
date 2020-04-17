@@ -178,10 +178,6 @@
                                         {
                                             <Button Color="Color.Secondary" Clicked="@RecordPayIn">Registrér indbetaling</Button>
                                         }
-                                        else if (Totals!.GetBalance() > 0)
-                                        {
-                                            <Button Color="Color.Secondary" Clicked="@RecordPayOut">Registrér udbetaling</Button>
-                                        }
                                         if (someReservationsCanBeCancelled)
                                         {
                                             <CheckEdit Checked="@request.WaiveFee" TValue="bool" CheckedChanged="@ToggleCancelWaiveFee">Intet afbestillingsgebyr</CheckEdit>
@@ -305,12 +301,6 @@
         paymentDialog.Show(new Payment(OrderId, -Totals!.GetBalance(), true));
     }
 
-    private void RecordPayOut()
-    {
-        DismissShowGeneralErrorAlert();
-        paymentDialog.Show(new Payment(OrderId, Totals!.GetBalance(), false));
-    }
-
     private void RecordSettlement(Reservation reservation)
     {
         DismissShowGeneralErrorAlert();
@@ -320,7 +310,7 @@
     private async Task OnPaymentConfirm(Payment payment)
     {
         var request = new PaymentRequest { Amount = payment.Amount };
-        var requestUri = $"orders/{payment.OrderId}/{(payment.IsPayIn ? "pay-in" : "pay-out")}";
+        var requestUri = $"orders/{payment.OrderId}/pay-in";
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
         {

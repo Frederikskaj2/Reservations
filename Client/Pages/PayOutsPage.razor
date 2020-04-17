@@ -11,8 +11,12 @@
     else
     {
         <Container>
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+                Der er sket en fejl, og din ændring blev ikke gemt.
+                <CloseButton Clicked="@DismissErrorAlert" />
+            </Alert>
             <h1>Til udbetaling</h1>
-            @if (!payOuts!.Any())
+            @if (payOuts.Count == 0)
             {
                 <Paragraph>Der er intet at vise.</Paragraph>
             }
@@ -27,41 +31,74 @@
                             <TableHeaderCell>Telefon</TableHeaderCell>
                             <TableHeaderCell>Adresse</TableHeaderCell>
                             <TableHeaderCell>Kontonummer</TableHeaderCell>
-                            <TableHeaderCell class="text-right">Beløb</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Beløb</TableHeaderCell>
+                            <TableHeaderCell></TableHeaderCell>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        @foreach (var payOut in payOuts!)
+                        @foreach (var payOut in payOuts)
                         {
-                            <TableRow>
+                            <TableRow @key="@payOut.OrderId">
                                 <TableRowCell><a href="/@Urls.Orders/@payOut.OrderId">@payOut.OrderId</a></TableRowCell>
                                 <TableRowCell><a href="mailto:@payOut.Email?subject=Frederikskaj 2 bestilling @payOut.OrderId">@FormattingService.FormatEmail(payOut.Email)</a></TableRowCell>
                                 <TableRowCell>@payOut.FullName</TableRowCell>
                                 <TableRowCell>@FormattingService.FormatPhone(payOut.Phone)</TableRowCell>
                                 <TableRowCell>Frederikskaj @apartments![payOut.ApartmentId]</TableRowCell>
                                 <TableRowCell>@payOut.AccountNumber</TableRowCell>
-                                <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(payOut.Amount)</TableRowCell>
+                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(payOut.Amount)</TableRowCell>
+                                <TableRowCell><Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => RecordPayOut(payOut))">Registrér udbetaling</Button></TableRowCell>
                             </TableRow>
                         }
                     </TableBody>
                 </Table>
+                <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
             }
         </Container>
     }
-
 </main>
 
 @code {
 
+    private PaymentDialog paymentDialog = null!;
     private IReadOnlyDictionary<int, Apartment>? apartments;
-    private IEnumerable<PayOut>? payOuts;
+    private List<PayOut> payOuts = new List<PayOut>();
     private bool isInitialized;
+    private bool showErrorAlert;
 
     protected override async Task OnInitializedAsync()
     {
         apartments = (await ClientDataProvider.GetApartments()).ToDictionary(apartment => apartment.Id);
         var maybe = await ApiClient.GetJsonAsync<IEnumerable<PayOut>>("pay-outs");
-        maybe.TryGetValue(out payOuts);
+        if (maybe.TryGetValue(out var response))
+            payOuts = response.ToList();
         isInitialized = true;
     }
+
+    private void RecordPayOut(PayOut payOut)
+    {
+        DismissErrorAlert();
+        paymentDialog.Show(new Payment(payOut.OrderId, payOut.Amount, false));
+    }
+
+    private async Task OnPaymentConfirm(Payment payment)
+    {
+        var request = new PaymentRequest { Amount = payment.Amount };
+        var requestUri = $"orders/{payment.OrderId}/pay-out";
+        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
+        if (maybe.TryGetValue(out var response) && response.Order != null)
+        {
+            var index = payOuts.FindIndex(payOut => payOut.OrderId == response.Order.Id);
+            if (index >= 0)
+            {
+                if (response.Order.Totals!.GetBalance() <= 0)
+                    payOuts.RemoveAt(index);
+                else
+                    payOuts[index].Amount = response.Order.Totals.GetBalance();
+            }
+        }
+        else
+            showErrorAlert = true;
+    }
+
+    private void DismissErrorAlert() => showErrorAlert = false;
 }

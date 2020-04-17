@@ -81,10 +81,6 @@
                                             {
                                                 <DropdownItem Clicked="@(() => RecordSettlement(order, reservation))">Lav opgørelse @resources![reservation.ResourceId].Name @FormattingService.FormatDate(reservation.Date)</DropdownItem>
                                             }
-                                            @if (order.Totals!.GetBalance() > 0)
-                                            {
-                                                <DropdownItem Clicked="@(() => RecordPayOut(order))">Registrér udbetaling</DropdownItem>
-                                            }
                                         </DropdownMenu>
                                     </Dropdown>
                                 </TableRowCell>
@@ -169,12 +165,6 @@
         paymentDialog.Show(new Payment(order.Id, -order.Totals!.GetBalance(), true));
     }
 
-    private void RecordPayOut(Order order)
-    {
-        DismissShowGeneralErrorAlert();
-        paymentDialog.Show(new Payment(order.Id, order.Totals!.GetBalance(), false));
-    }
-
     private void RecordSettlement(Order order, Reservation reservation)
     {
         DismissShowGeneralErrorAlert();
@@ -184,7 +174,7 @@
     private async Task OnPaymentConfirm(Payment payment)
     {
         var request = new PaymentRequest { Amount = payment.Amount };
-        var requestUri = $"orders/{payment.OrderId}/{(payment.IsPayIn ? "pay-in" : "pay-out")}";
+        var requestUri = $"orders/{payment.OrderId}/pay-in";
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
             UpdateOrder(response.Order);
