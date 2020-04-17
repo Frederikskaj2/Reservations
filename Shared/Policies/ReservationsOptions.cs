@@ -31,6 +31,7 @@ namespace Frederikskaj2.Reservations.Shared
 
         public int ReservationIsNotAllowedBeforeDaysFromNow { get; set; } = 5;
         public int ReservationIsNotAllowedAfterDaysFromNow { get; set; } = 270;
+        // The key code logic expects that at most two key codes are required for a single reservation.
         public int MaximumAllowedReservationDays { get; set; } = 7;
         public LocalTime CheckInTime { get; set; } = new LocalTime(12, 0);
         public LocalTime CheckOutTime { get; set; } = new LocalTime(10, 0);

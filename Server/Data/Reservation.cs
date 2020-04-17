@@ -19,6 +19,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         public int DurationInDays { get; set; }
         public virtual ICollection<ReservedDay>? Days { get; set; }
         public Price? Price { get; set; }
+        public bool IsKeyCodeEmailSent { get; set; }
 
         public bool CanBeCancelled(LocalDate today, ReservationsOptions options)
         {

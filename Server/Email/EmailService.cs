@@ -10,6 +10,7 @@ using MimeKit;
 using NodaTime;
 using NodaTime.Calendars;
 using KeyCode = Frederikskaj2.Reservations.Server.Data.KeyCode;
+using Reservation = Frederikskaj2.Reservations.Server.Data.Reservation;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Email
@@ -223,6 +224,47 @@ namespace Frederikskaj2.Reservations.Server.Email
                 urlService.GetFromUrl(),
                 user.FullName);
             await SendMessage(user, model, "UserDeleted");
+        }
+
+        public async Task SendKeyCodeEmail(User user, Reservation reservation, IEnumerable<KeyCode> keyCodes)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (reservation is null)
+                throw new ArgumentNullException(nameof(reservation));
+            if (keyCodes is null)
+                throw new ArgumentNullException(nameof(keyCodes));
+
+            var model = new KeyCodeModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                reservation.Resource!.Name,
+                reservation.Date,
+                GetDatedKeyCodes().ToList());
+            await SendMessage(user, model, "KeyCode");
+
+            IEnumerable<DatedKeyCode> GetDatedKeyCodes()
+            {
+                var previousMonday = GetPreviousMonday(reservation.Date);
+                var firstKeyCode = keyCodes.FirstOrDefault(keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == previousMonday);
+                if (firstKeyCode == null)
+                    yield break;
+                yield return new DatedKeyCode(reservation.Date, firstKeyCode.Code);
+                var nextMonday = previousMonday.PlusWeeks(1);
+                if (reservation.Date.PlusDays(reservation.DurationInDays) < nextMonday)
+                    yield break;
+                var nextKeyCode = keyCodes.FirstOrDefault(keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == nextMonday);
+                if (nextKeyCode == null)
+                    yield break;
+                yield return new DatedKeyCode(nextMonday, nextKeyCode.Code);
+            }
+
+            static LocalDate GetPreviousMonday(LocalDate d)
+            {
+                var daysAfterMonday = ((int) d.DayOfWeek - 1)%7;
+                return d.PlusDays(-daysAfterMonday);
+            }
         }
 
         public async Task SendKeyCodesEmail(User user, IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes)

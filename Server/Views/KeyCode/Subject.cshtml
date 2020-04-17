@@ -1,0 +1,3 @@
+﻿@model KeyCodeModel
+@inject CultureInfo CultureInfo
+Nøglebokskode til @Model.ResourceName den @LocalDatePattern.Create("d. MMMM yyyy", CultureInfo).Format(Model.Date)

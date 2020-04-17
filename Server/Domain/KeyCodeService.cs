@@ -4,10 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
+using Frederikskaj2.Reservations.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using KeyCode = Frederikskaj2.Reservations.Server.Data.KeyCode;
 using Resource = Frederikskaj2.Reservations.Server.Data.Resource;
+using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Domain
 {
@@ -19,14 +22,16 @@ namespace Frederikskaj2.Reservations.Server.Domain
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
         private readonly ReservationsContext db;
         private readonly ILogger<KeyCodeService> logger;
+        private readonly ReservationsOptions reservationsOptions;
 
         public KeyCodeService(
             ILogger<KeyCodeService> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue,
-            ReservationsContext db)
+            ReservationsContext db, ReservationsOptions reservationsOptions)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.backgroundWorkQueue = backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
+            this.reservationsOptions = reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
         }
 
         public async Task<IEnumerable<KeyCode>> GetKeyCodes(LocalDate date)
@@ -124,6 +129,33 @@ namespace Frederikskaj2.Reservations.Server.Domain
                     return nextCode;
                 }
             }
+        }
+
+        public async Task SendKeyCodeEmails(LocalDate date)
+        {
+            var reservations = (await db.Reservations
+                .Include(reservation => reservation.Order)
+                .ThenInclude(order => order!.User)
+                .Include(reservation => reservation.Resource)
+                .Where(
+                    reservation => reservation.Status == ReservationStatus.Confirmed && !reservation.IsKeyCodeEmailSent)
+                .ToListAsync())
+                .Where(
+                    reservation => reservation.Date.PlusDays(
+                        -reservationsOptions.RevealKeyCodeDaysBeforeReservationStart) <= date)
+                .ToList();
+
+            if (reservations.Count == 0)
+                return;
+
+            var keyCodes = await GetKeyCodes(date);
+            foreach (var reservation in reservations)
+            {
+                backgroundWorkQueue.Enqueue((service, _) => service.SendKeyCodeEmail(reservation.Order!.User!, reservation, keyCodes));
+                reservation.IsKeyCodeEmailSent = true;
+            }
+
+            await db.SaveChangesAsync();
         }
 
         public async Task SendKeyCodes(User user, LocalDate date)
