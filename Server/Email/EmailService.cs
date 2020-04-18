@@ -363,6 +363,8 @@ namespace Frederikskaj2.Reservations.Server.Email
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(options.FromName, options.FromEmail));
             message.To.Add(new MailboxAddress(user.FullName, user.Email));
+            if (!string.IsNullOrEmpty(options.ReplyToName) && !string.IsNullOrEmpty(options.ReplyToEmail))
+                message.ReplyTo.Add(new MailboxAddress(options.ReplyToName, options.ReplyToEmail));
             return message;
         }
 

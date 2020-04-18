@@ -13,6 +13,8 @@ namespace Frederikskaj2.Reservations.Server.Email
         public string? Password { get; set; }
         public string? FromName { get; set; }
         public string? FromEmail { get; set; }
+        public string? ReplyToName { get; set; }
+        public string? ReplyToEmail { get; set; }
         public Uri? BaseUrl { get; set; }
         public Duration ConfirmEmailUrlLifetime { get; set; } = Duration.FromDays(7);
         public string? CleaningCompanyName { get; set; }
