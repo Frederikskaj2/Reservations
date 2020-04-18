@@ -15,5 +15,7 @@ namespace Frederikskaj2.Reservations.Server.Email
         public string? FromEmail { get; set; }
         public Uri? BaseUrl { get; set; }
         public Duration ConfirmEmailUrlLifetime { get; set; } = Duration.FromDays(7);
+        public string? CleaningCompanyName { get; set; }
+        public string? CleaningCompanyEmail { get; set; }
     }
 }

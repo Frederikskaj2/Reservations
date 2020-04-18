@@ -1,8 +1,9 @@
 ﻿@page "/noeglekoder"
+@attribute [Authorize(Roles = Roles.Administrator)]
 @inject ApiClient ApiClient
+@inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
-@inject ServerAuthenticationStateProvider AuthenticationStateProvider
 
 <main>
     @if (!isInitialized)
@@ -69,8 +70,7 @@
     {
         resources = await ClientDataProvider.GetResources();
         allWeeklyKeyCodes = await ClientDataProvider.GetKeyCodes();
-        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        email = state.User.Identity.Name;
+        email = await ApplicationState.GetUserEmail();
         isInitialized = true;
     }
 

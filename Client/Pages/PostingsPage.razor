@@ -1,4 +1,5 @@
 ﻿@page "/posteringer"
+@attribute [Authorize(Roles = Roles.Administrator)]
 @inject ApiClient ApiClient
 @inject CultureInfo CultureInfo
 @inject FormattingService FormattingService

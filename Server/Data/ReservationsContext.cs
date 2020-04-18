@@ -17,6 +17,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         }
 
         public DbSet<Apartment> Apartments { get; set; } = null!;
+        public DbSet<CleaningTask> CleaningTasks { get; set; } = null!;
         public DbSet<Holiday> Holidays { get; set; } = null!;
         public DbSet<KeyCode> KeyCodes { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
@@ -84,6 +85,10 @@ namespace Frederikskaj2.Reservations.Server.Data
             var localDateConverter = new ValueConverter<LocalDate, DateTime>(
                 localDate => localDate.ToDateTimeUnspecified(),
                 dateTime => LocalDate.FromDateTime(dateTime));
+
+            modelBuilder.Entity<CleaningTask>()
+                .Property(cleaningTask => cleaningTask.Date)
+                .HasConversion(localDateConverter);
 
             modelBuilder.Entity<Holiday>()
                 .Property(holiday => holiday.Date)

@@ -1,5 +1,7 @@
 ﻿@page "/bestillinger/{orderId:int}"
+@attribute [Authorize(Roles = Roles.Administrator)]
 @inject ApiClient ApiClient
+@inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
 @inject NavigationManager NavigationManager
 
@@ -86,23 +88,34 @@
 
     private async Task Submit(UpdateOrderRequest request)
     {
+        var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"orders/{order!.Id}";
         var maybe = await ApiClient.PatchJsonAsync<OrderResponse<Order>>(url, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
+        {
+            if (isUpdatingCalendar)
+                ClientDataProvider.Refresh();
             order = response.Order;
+        }
         else
             showErrorAlert = true;
     }
 
     private async Task SubmitOwnerOrder(UpdateOwnerOrderRequest request)
     {
+        var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"owner-orders/{ownerOrder!.Id}";
         var maybe = await ApiClient.PatchJsonAsync<OrderResponse<OwnerOrder>>(url, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
+        {
+            if (isUpdatingCalendar)
+                ClientDataProvider.Refresh();
             ownerOrder = response.Order;
+        }
         else
             showErrorAlert = true;
     }
 
     private void DismissErrorAlert() => showErrorAlert = false;
 }
+ 

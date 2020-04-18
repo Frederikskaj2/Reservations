@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using Frederikskaj2.Reservations.Server.Controllers;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Server.Email;
@@ -75,6 +74,7 @@ namespace Frederikskaj2.Reservations.Server
                 .AddScoped<OrderService>()
                 .AddScoped<KeyCodeService>()
                 .AddScoped<PostingsService>()
+                .AddScoped<CleaningTaskService>()
                 .AddEmail(Configuration)
                 .AddResponseCompression(
                     options

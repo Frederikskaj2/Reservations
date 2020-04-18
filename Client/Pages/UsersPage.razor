@@ -1,7 +1,7 @@
 ﻿@page "/brugere"
 @attribute [Authorize(Roles = Roles.Administrator)]
 @inject ApiClient ApiClient
-@inject AuthenticationStateProvider AuthenticationStateProvider;
+@inject ApplicationState ApplicationState
 @inject FormattingService FormattingService
 
 <main>
@@ -97,8 +97,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        currentUserId = authenticationState.User.Id();
+        currentUserId = await ApplicationState.GetUserId();
         var maybe = await ApiClient.GetJsonAsync<IEnumerable<User>>("users");
         users = maybe.TryGetValue(out var response) ? response.ToList() : new List<User>();
         isInitialized = true;

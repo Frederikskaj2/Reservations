@@ -1,0 +1,90 @@
+﻿@model CleaningScheduleModel
+@inject CultureInfo CultureInfo
+@{
+    var pattern = LocalDatePattern.Create("d. MMMM yyyy", CultureInfo);
+}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>
+    <title>Rengøringsplan</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 " />
+    <style>
+    </style>
+</head>
+<body>
+    <p>Hej @Model.Name</p>
+    <p>Rengøringsplanen for Frederikskaj 2 er blevet opdateret.</p>
+@if (Model.CancelledTasks.Any())
+{
+    <p><strong>Aflysninger</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Dato</th>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Lokale</th>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Nøglebokskode</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var task in Model.CancelledTasks)
+        {
+            <tr style="text-decoration: line-through">
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@pattern.Format(task.Date)</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@task.ResourceName</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@task.KeyCode</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+@if (Model.NewTasks.Any())
+{
+    <p><strong>Nye opgaver</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Dato</th>
+                <th style="        padding: 8px;
+        text-align: left;
+        border-top: solid 1px #CCC;
+        border-bottom: solid 2px #CCC;
+        border-collapse: collapse">Lokale</th>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Nøglebokskode</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var task in Model.NewTasks)
+        {
+            <tr>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@pattern.Format(task.Date)</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@task.ResourceName</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@task.KeyCode</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+    <p><strong>Aktuel rengøringsplan</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Dato</th>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Lokale</th>
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Nøglebokskode</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var task in Model.CurrentTasks)
+        {
+            <tr>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@pattern.Format(task.Date)</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@task.ResourceName</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@task.KeyCode</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @await Html.PartialAsync("_Signature", Model)
+</body>

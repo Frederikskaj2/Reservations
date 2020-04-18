@@ -15,9 +15,11 @@ namespace Frederikskaj2.Reservations.Client
 
         public ServerAuthenticationStateProvider(HttpClient httpClient) => this.httpClient = httpClient;
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync() => GetAuthenticationState(httpClient.GetJsonAsync<AuthenticatedUser>("user/authenticated"));
+        public void UpdateUser(AuthenticatedUser user)
+            => NotifyAuthenticationStateChanged(GetAuthenticationState(Task.FromResult(user)));
 
-        public void UpdateUser(AuthenticatedUser user) => NotifyAuthenticationStateChanged(GetAuthenticationState(Task.FromResult(user)));
+        public override Task<AuthenticationState> GetAuthenticationStateAsync()
+            => GetAuthenticationState(httpClient.GetJsonAsync<AuthenticatedUser>("user/authenticated"));
 
         private static async Task<AuthenticationState> GetAuthenticationState(Task<AuthenticatedUser> userTask)
         {
@@ -27,13 +29,16 @@ namespace Frederikskaj2.Reservations.Client
             ClaimsIdentity GetIdentity()
             {
                 const string authenticationType = "serverauth";
-                return user.IsAuthenticated ? new ClaimsIdentity(GetClaims(), authenticationType) : new ClaimsIdentity();
+                return user.IsAuthenticated
+                    ? new ClaimsIdentity(GetClaims(), authenticationType)
+                    : new ClaimsIdentity();
 
                 IEnumerable<Claim> GetClaims()
                 {
                     yield return new Claim(ClaimTypes.Name, user.Name);
                     if (user.Id.HasValue)
-                        yield return new Claim(ClaimTypes.NameIdentifier, user.Id.Value.ToString(CultureInfo.InvariantCulture));
+                        yield return new Claim(
+                            ClaimTypes.NameIdentifier, user.Id.Value.ToString(CultureInfo.InvariantCulture));
                     if (user.IsAdministrator)
                         yield return new Claim(ClaimTypes.Role, Roles.Administrator);
                 }

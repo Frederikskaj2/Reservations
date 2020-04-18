@@ -67,7 +67,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 urlService.GetFromUrl(),
                 user.FullName,
                 urlService.GetConfirmEmailUrl(user.Email, token));
-            await SendMessage(user, model, "COnfirmEmail");
+            await SendMessage(user, model, "ConfirmEmail");
         }
 
         public async Task SendResetPasswordEmail(User user, string token)
@@ -170,7 +170,8 @@ namespace Frederikskaj2.Reservations.Server.Email
         }
 
         public async Task SendReservationSettledEmail(
-            User user, int orderId, string resourceName, LocalDate date, int deposit, int damages, string? damagesDescription)
+            User user, int orderId, string resourceName, LocalDate date, int deposit, int damages,
+            string? damagesDescription)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
@@ -247,27 +248,24 @@ namespace Frederikskaj2.Reservations.Server.Email
             IEnumerable<DatedKeyCode> GetDatedKeyCodes()
             {
                 var previousMonday = GetPreviousMonday(reservation.Date);
-                var firstKeyCode = keyCodes.FirstOrDefault(keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == previousMonday);
+                var firstKeyCode = keyCodes.FirstOrDefault(
+                    keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == previousMonday);
                 if (firstKeyCode == null)
                     yield break;
                 yield return new DatedKeyCode(reservation.Date, firstKeyCode.Code);
                 var nextMonday = previousMonday.PlusWeeks(1);
                 if (reservation.Date.PlusDays(reservation.DurationInDays) < nextMonday)
                     yield break;
-                var nextKeyCode = keyCodes.FirstOrDefault(keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == nextMonday);
+                var nextKeyCode = keyCodes.FirstOrDefault(
+                    keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == nextMonday);
                 if (nextKeyCode == null)
                     yield break;
                 yield return new DatedKeyCode(nextMonday, nextKeyCode.Code);
             }
-
-            static LocalDate GetPreviousMonday(LocalDate d)
-            {
-                var daysAfterMonday = ((int) d.DayOfWeek - 1)%7;
-                return d.PlusDays(-daysAfterMonday);
-            }
         }
 
-        public async Task SendKeyCodesEmail(User user, IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes)
+        public async Task SendKeyCodesEmail(
+            User user, IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
@@ -295,6 +293,50 @@ namespace Frederikskaj2.Reservations.Server.Email
                 resourcesDictionary,
                 weeklyKeyCodes);
             await SendMessage(user, model, "KeyCodes");
+        }
+
+        public async Task SendCleaningScheduleEmail(
+            IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes,
+            IEnumerable<Data.CleaningTask> cancelledTasks, IEnumerable<Data.CleaningTask> newTasks,
+            IEnumerable<Data.CleaningTask> currentTasks)
+        {
+            if (resources is null)
+                throw new ArgumentNullException(nameof(resources));
+            if (keyCodes is null)
+                throw new ArgumentNullException(nameof(keyCodes));
+            if (cancelledTasks is null)
+                throw new ArgumentNullException(nameof(cancelledTasks));
+            if (newTasks is null)
+                throw new ArgumentNullException(nameof(newTasks));
+            if (currentTasks is null)
+                throw new ArgumentNullException(nameof(currentTasks));
+
+            var resourceDictionary = resources.ToDictionary(resource => resource.Id);
+            var keyCodesDictionary = keyCodes.ToDictionary(
+                keyCode => (keyCode.ResourceId, keyCode.Date), keyCode => keyCode.Code);
+            var user = new User
+            {
+                FullName = options.CleaningCompanyName!,
+                Email = options.CleaningCompanyEmail
+            };
+            var model = new CleaningScheduleModel(
+                options.FromName!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                GetCleaningTasks(cancelledTasks),
+                GetCleaningTasks(newTasks),
+                GetCleaningTasks(currentTasks));
+            await SendMessage(user, model, "CleaningSchedule");
+
+            IEnumerable<CleaningTask> GetCleaningTasks(IEnumerable<Data.CleaningTask> tasks)
+                => tasks.Select(
+                    task => new CleaningTask(
+                        task.Date,
+                        resourceDictionary[task.ResourceId].Name,
+                        resourceDictionary[task.ResourceId].Sequence,
+                        keyCodesDictionary[(task.ResourceId, GetPreviousMonday(task.Date))]))
+                    .OrderBy(task => task.Date)
+                    .ThenBy(task => task.ResourceName);
         }
 
         private async Task SendMessage<TModel>(User user, TModel model, string viewName)
@@ -330,6 +372,12 @@ namespace Frederikskaj2.Reservations.Server.Email
             await client.ConnectAsync(options.SmtpHostName, options.SmtpPort, options.SocketOptions);
             await client.AuthenticateAsync(options.UserName, options.Password);
             await client.SendAsync(message);
+        }
+
+        private static LocalDate GetPreviousMonday(LocalDate date)
+        {
+            var daysAfterMonday = ((int) date.DayOfWeek - 1)%7;
+            return date.PlusDays(-daysAfterMonday);
         }
     }
 }

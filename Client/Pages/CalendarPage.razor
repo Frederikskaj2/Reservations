@@ -1,5 +1,5 @@
 ﻿@page "/kalender"
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ApplicationState ApplicationState
 @inject CultureInfo CultureInfo
 @inject ClientDataProvider DataProvider
 @inject IDateProvider DateProvider
@@ -150,8 +150,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
+        isAdministrator = await ApplicationState.GetIsAdministrator();
         var pattern = LocalDatePattern.Create("MMMM yyyy", CultureInfo);
         months = GetMonths()
             .Select(date => (date, MonthPattern.Format(date), Capitalize(pattern.Format(date))))

@@ -1,12 +1,30 @@
-﻿using Frederikskaj2.Reservations.Shared;
+﻿using System;
+using System.Threading.Tasks;
+using Frederikskaj2.Reservations.Shared;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Frederikskaj2.Reservations.Client
 {
     public class ApplicationState
     {
+        private readonly AuthenticationStateProvider authenticationStateProvider;
+        private AuthenticationState? authenticationState;
+
+        public ApplicationState(AuthenticationStateProvider authenticationStateProvider)
+            => this.authenticationStateProvider = authenticationStateProvider
+                ?? throw new ArgumentNullException(nameof(authenticationStateProvider));
+
         public string? RedirectUrl { get; set; }
         public SignUpRequest SignUpRequest { get; private set; } = new SignUpRequest();
         public MyOrder? MyOrder { get; set; }
+
+        public async Task<bool> GetIsAdministrator()
+            => (await GetAuthenticationState()).User.IsInRole(Roles.Administrator);
+
+        public async Task<int?> GetUserId() => (await GetAuthenticationState()).User.Id();
+
+        public async Task<string> GetUserEmail() => (await GetAuthenticationState()).User.Identity.Name;
+
 
         public void ResetSignUpState()
         {
@@ -16,6 +34,13 @@ namespace Frederikskaj2.Reservations.Client
             SignUpRequest.IsPersistent = false;
         }
 
-        public void ResetStateAfterSignIn() => SignUpRequest = new SignUpRequest();
+        public void ResetStateAfterSignIn()
+        {
+            authenticationState = null;
+            SignUpRequest = new SignUpRequest();
+        }
+
+        private async Task<AuthenticationState> GetAuthenticationState()
+            => authenticationState ??= await authenticationStateProvider.GetAuthenticationStateAsync();
     }
 }
