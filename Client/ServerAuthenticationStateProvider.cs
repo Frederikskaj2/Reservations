@@ -1,29 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Frederikskaj2.Reservations.Client
 {
     public class ServerAuthenticationStateProvider : AuthenticationStateProvider, IAuthenticationStateProvider
     {
-        private readonly HttpClient httpClient;
+        private readonly ApiClient apiClient;
 
-        public ServerAuthenticationStateProvider(HttpClient httpClient) => this.httpClient = httpClient;
+        public ServerAuthenticationStateProvider(ApiClient apiClient)
+            => this.apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
 
         public void UpdateUser(AuthenticatedUser user)
-            => NotifyAuthenticationStateChanged(GetAuthenticationState(Task.FromResult(user)));
+            => NotifyAuthenticationStateChanged(GetAuthenticationState(Task.FromResult((Maybe<AuthenticatedUser>) user)));
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
-            => GetAuthenticationState(httpClient.GetJsonAsync<AuthenticatedUser>("user/authenticated"));
-
-        private static async Task<AuthenticationState> GetAuthenticationState(Task<AuthenticatedUser> userTask)
         {
-            var user = await userTask;
+            return GetAuthenticationState(apiClient.GetJsonAsync<AuthenticatedUser>("user/authenticated"));
+        }
+
+        private static async Task<AuthenticationState> GetAuthenticationState(Task<Maybe<AuthenticatedUser>> userTask)
+        {
+            var maybe = await userTask;
+            maybe.TryGetValue(out var user);
             return new AuthenticationState(new ClaimsPrincipal(GetIdentity()));
 
             ClaimsIdentity GetIdentity()
