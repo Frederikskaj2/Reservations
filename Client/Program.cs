@@ -6,8 +6,8 @@ using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
 using Frederikskaj2.Reservations.Shared;
-using Microsoft.AspNetCore.Blazor.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
@@ -36,6 +36,9 @@ namespace Frederikskaj2.Reservations.Client
 
         private static void ConfigureServices(IServiceCollection services)
         {
+            services
+                .AddBaseAddressHttpClient();
+
             services
                 .AddBlazorise(options => options.ChangeTextOnKeyPress = true)
                 .AddBootstrapProviders()

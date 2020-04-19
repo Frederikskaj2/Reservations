@@ -10,8 +10,8 @@
   <ItemGroup>
     <PackageReference Include="Blazorise.Bootstrap" Version="$(BlazorizeVersion)" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="$(BlazorizeVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="$(BlazorVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="$(BlazorVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(BlazorVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="$(BlazorVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="$(AspNetCoreVersion)" />
     <PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.0.0-beta01" />
   </ItemGroup>

@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Domain;
@@ -9,7 +8,6 @@ using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -75,11 +73,7 @@ namespace Frederikskaj2.Reservations.Server
                 .AddScoped<KeyCodeService>()
                 .AddScoped<PostingsService>()
                 .AddScoped<CleaningTaskService>()
-                .AddEmail(Configuration)
-                .AddResponseCompression(
-                    options
-                        => options.MimeTypes =
-                            ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" }));
+                .AddEmail(Configuration);
 
             services
                 .AddControllers()
@@ -95,18 +89,16 @@ namespace Frederikskaj2.Reservations.Server
         [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is called by convention and cannot be static.")]
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseResponseCompression();
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseBlazorDebugging();
+                app.UseWebAssemblyDebugging();
             }
 
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();
-            app.UseClientSideBlazorFiles<Client.Program>();
+            app.UseBlazorFrameworkFiles();
 
             app.UseRouting();
 
@@ -117,7 +109,7 @@ namespace Frederikskaj2.Reservations.Server
                 endpoints =>
                 {
                     endpoints.MapControllers();
-                    endpoints.MapFallbackToClientSideBlazor<Client.Program>("index.html");
+                    endpoints.MapFallbackToFile("index.html");
                 });
         }
     }
