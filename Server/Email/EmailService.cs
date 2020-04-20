@@ -296,14 +296,11 @@ namespace Frederikskaj2.Reservations.Server.Email
         }
 
         public async Task SendCleaningScheduleEmail(
-            IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes,
-            IEnumerable<Data.CleaningTask> cancelledTasks, IEnumerable<Data.CleaningTask> newTasks,
-            IEnumerable<Data.CleaningTask> currentTasks)
+            IEnumerable<Data.Resource> resources, IEnumerable<Data.CleaningTask> cancelledTasks,
+            IEnumerable<Data.CleaningTask> newTasks, IEnumerable<Data.CleaningTask> currentTasks)
         {
             if (resources is null)
                 throw new ArgumentNullException(nameof(resources));
-            if (keyCodes is null)
-                throw new ArgumentNullException(nameof(keyCodes));
             if (cancelledTasks is null)
                 throw new ArgumentNullException(nameof(cancelledTasks));
             if (newTasks is null)
@@ -312,8 +309,6 @@ namespace Frederikskaj2.Reservations.Server.Email
                 throw new ArgumentNullException(nameof(currentTasks));
 
             var resourceDictionary = resources.ToDictionary(resource => resource.Id);
-            var keyCodesDictionary = keyCodes.ToDictionary(
-                keyCode => (keyCode.ResourceId, keyCode.Date), keyCode => keyCode.Code);
             var user = new User
             {
                 FullName = options.CleaningCompanyName!,
@@ -330,11 +325,10 @@ namespace Frederikskaj2.Reservations.Server.Email
 
             IEnumerable<CleaningTask> GetCleaningTasks(IEnumerable<Data.CleaningTask> tasks)
                 => tasks.Select(
-                    task => new CleaningTask(
-                        task.Date,
-                        resourceDictionary[task.ResourceId].Name,
-                        resourceDictionary[task.ResourceId].Sequence,
-                        keyCodesDictionary[(task.ResourceId, GetPreviousMonday(task.Date))]))
+                        task => new CleaningTask(
+                            task.Date,
+                            resourceDictionary[task.ResourceId].Name,
+                            resourceDictionary[task.ResourceId].Sequence))
                     .OrderBy(task => task.Date)
                     .ThenBy(task => task.ResourceName);
         }

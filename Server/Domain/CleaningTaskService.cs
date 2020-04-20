@@ -16,31 +16,23 @@ namespace Frederikskaj2.Reservations.Server.Domain
         private static readonly IEqualityComparer<CleaningTask> EqualityComparer = new CleaningTaskEqualityComparer();
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
         private readonly ReservationsContext db;
-        private readonly KeyCodeService keyCodeService;
 
         public CleaningTaskService(
-            IBackgroundWorkQueue<EmailService> backgroundWorkQueue, ReservationsContext db,
-            KeyCodeService keyCodeService)
+            IBackgroundWorkQueue<EmailService> backgroundWorkQueue, ReservationsContext db)
         {
             this.backgroundWorkQueue =
                 backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
-            this.keyCodeService = keyCodeService ?? throw new ArgumentNullException(nameof(keyCodeService));
         }
 
         public async Task SendCleaningTasksEmail(LocalDate date)
         {
-            var keyCodes = await keyCodeService.GetKeyCodes(date);
-            var mostFutureKeyCodeDate = keyCodes.OrderByDescending(keyCode => keyCode.Date).First().Date;
-
             var allTasks = await db.CleaningTasks.ToListAsync();
             var currentTasks = allTasks.Where(cleaningTask => cleaningTask.Date >= date).ToHashSet(EqualityComparer);
             var confirmedReservations = await db.Reservations
                 .Where(reservation => reservation.Status == ReservationStatus.Confirmed).ToListAsync();
             var requiredTasks = confirmedReservations
-                .Where(
-                    reservation => date <= reservation.Date.PlusDays(reservation.DurationInDays)
-                        && reservation.Date.PlusDays(reservation.DurationInDays) <= mostFutureKeyCodeDate.PlusDays(6))
+                .Where(reservation => date <= reservation.Date.PlusDays(reservation.DurationInDays))
                 .Select(
                     reservation => new CleaningTask
                     {
@@ -60,7 +52,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 var resources = await db.Resources.ToListAsync();
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendCleaningScheduleEmail(
-                        resources, keyCodes, cancelledTasks, newTasks, requiredTasks));
+                        resources, cancelledTasks, newTasks, requiredTasks));
             }
 
             foreach (var task in allTasks.Where(task => !requiredTasks.Contains(task)))
