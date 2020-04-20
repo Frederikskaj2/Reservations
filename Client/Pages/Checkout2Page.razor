@@ -75,7 +75,7 @@
                                 <TableRowCell colspan="7" Class="border-top-0">
                                     <Field>
                                         <Validation>
-                                            <CheckEdit @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidAcceptTerms">
+                                            <Check @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidAcceptTerms">
                                                 <ChildContent>
                                                     @if (linkBanquetFacilitiesRules && linkBedroomRules)
                                                     {
@@ -93,19 +93,19 @@
                                                 <Feedback>
                                                     <ValidationError />
                                                 </Feedback>
-                                            </CheckEdit>
+                                            </Check>
                                         </Validation>
                                     </Field>
                                     <Field>
                                         <Validation>
-                                            <CheckEdit @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidConsent">
+                                            <Check @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidConsent">
                                                 <ChildContent>
                                                     Jeg <a href="@Urls.Consent">samtykker</a> til at ovenstående oplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler.
                                                 </ChildContent>
                                                 <Feedback>
                                                     <ValidationError />
                                                 </Feedback>
-                                            </CheckEdit>
+                                            </Check>
                                         </Validation>
                                     </Field>
                                     <a Class="btn btn-secondary" href="javascript:history.back()">Tilbage</a>

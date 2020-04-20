@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Blazorise;
@@ -26,7 +28,7 @@ namespace Frederikskaj2.Reservations.Client
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
-            ConfigureServices(builder.Services);
+            ConfigureServices(builder.Services, builder.HostEnvironment);
             var host = builder.Build();
             host.Services
                 .UseBootstrapProviders()
@@ -34,10 +36,12 @@ namespace Frederikskaj2.Reservations.Client
             await host.RunAsync();
         }
 
-        private static void ConfigureServices(IServiceCollection services)
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "The HttpClient should never be disposed.")]
+        private static void ConfigureServices(IServiceCollection services, IWebAssemblyHostEnvironment hostEnvironment)
         {
+            var httpClient = new HttpClient { BaseAddress = new Uri(hostEnvironment.BaseAddress) };
             services
-                .AddBaseAddressHttpClient();
+                .AddSingleton(httpClient);
 
             services
                 .AddBlazorise(options => options.ChangeTextOnKeyPress = true)
@@ -54,10 +58,10 @@ namespace Frederikskaj2.Reservations.Client
                     sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
 
             var jsonSerializerOptions = new JsonSerializerOptions
-                {
-                    IgnoreNullValues = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                }
+            {
+                IgnoreNullValues = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            }
                 .ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
             services
                 .AddSingleton(jsonSerializerOptions)

@@ -32,11 +32,11 @@
                             </FieldBody>
                         </Field>
                     </Validation>
-                    <CheckEdit @bind-Checked="@request.IsAdministrator" Disabled="@(!canEditIsAdministrator)">
+                    <Check @bind-Checked="@request.IsAdministrator" Disabled="@(!canEditIsAdministrator)">
                         <ChildContent>
                             Administrator
                         </ChildContent>
-                    </CheckEdit>
+                    </Check>
                 </Validations>
             </ModalBody>
             <ModalFooter>

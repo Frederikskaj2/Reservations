@@ -104,18 +104,18 @@
                     </Field>
                     <Field>
                         <Validation>
-                            <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.DidConsent">
+                            <Check @bind-Checked="@ApplicationState.SignUpRequest.DidConsent">
                                 <ChildContent>
                                     Jeg <a href="@Urls.Consent">samtykker</a> til at ovenstående oplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler.
                                 </ChildContent>
                                 <Feedback>
                                     <ValidationError />
                                 </Feedback>
-                            </CheckEdit>
+                            </Check>
                         </Validation>
                     </Field>
                     <Field>
-                        <CheckEdit @bind-Checked="@ApplicationState.SignUpRequest.IsPersistent">Husk mig</CheckEdit>
+                        <Check @bind-Checked="@ApplicationState.SignUpRequest.IsPersistent">Husk mig</Check>
                     </Field>
                     <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Submit" class="btn-text">Opret bruger</Button>
                 </Validations>
