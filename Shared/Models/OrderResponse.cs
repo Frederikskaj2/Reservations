@@ -3,6 +3,6 @@
     public class OrderResponse<TOrder> where TOrder : class
     {
         public TOrder? Order { get; set; }
-        public bool IsUserDeleted { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

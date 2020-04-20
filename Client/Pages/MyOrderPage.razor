@@ -78,7 +78,7 @@
         {
             if (isUpdatingCalendar)
                 ClientDataProvider.Refresh();
-            if (response.IsUserDeleted)
+            if (response.IsDeleted)
             {
                 AuthenticationStateProvider.UpdateUser(AuthenticatedUser.UnknownUser);
                 NavigationManager.NavigateTo(string.Empty);

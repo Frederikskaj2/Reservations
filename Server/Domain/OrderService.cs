@@ -327,7 +327,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return (isUserDeleted, order);
         }
 
-        public async Task<Order?> UpdateOwnerOrder(int orderId, IEnumerable<int> cancelledReservations)
+        public async Task<(bool IsOrderDeleted, Order? Order)> UpdateOwnerOrder(int orderId, IEnumerable<int> cancelledReservations)
         {
             if (cancelledReservations is null)
                 throw new ArgumentNullException(nameof(cancelledReservations));
@@ -344,8 +344,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 order.Reservations!.Remove(reservation);
             }
 
-            // TODO: If all reservations are cancelled then delete order.
-            // TODO: Handle this conversion gracefully in the client.
+            var isOrderDeleted = order.Reservations!.Count == 0;
+            if (isOrderDeleted)
+                db.Orders.Remove(order);
 
             try
             {
@@ -357,7 +358,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return default;
             }
 
-            return order;
+            return !isOrderDeleted ? (false, order) : (true, default);
         }
 
         public async Task<Order?> PayIn(Instant timestamp, int orderId, int userId, int amount)

@@ -44,7 +44,7 @@
     else
     {
         <Container>
-            <Text>Bestilling @OrderId er ikke tilgængelig.</Text>
+            <Text>Bestilling @OrderId findes ikke eller er blevet slettet.</Text>
         </Container>
     }
 </main>
@@ -106,7 +106,7 @@
         var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"owner-orders/{ownerOrder!.Id}";
         var maybe = await ApiClient.PatchJsonAsync<OrderResponse<OwnerOrder>>(url, request);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
+        if (maybe.TryGetValue(out var response) && (response.Order != null || response.IsDeleted))
         {
             if (isUpdatingCalendar)
                 ClientDataProvider.Refresh();

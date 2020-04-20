@@ -67,9 +67,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpPatch("{orderId:int}")]
         public async Task<OrderResponse<OwnerOrder>> Patch(int orderId, UpdateOwnerOrderRequest request)
         {
-            var order = await orderService.UpdateOwnerOrder(orderId, request.CancelledReservations);
-            if (order == null)
+            var tuple = await orderService.UpdateOwnerOrder(orderId, request.CancelledReservations);
+            if (tuple == default)
                 return new OrderResponse<OwnerOrder>();
+            if (tuple.IsOrderDeleted)
+                return new OrderResponse<OwnerOrder> { IsDeleted = true };
+            var order = tuple.Order!;
             return new OrderResponse<OwnerOrder> { Order = CreateOrder(order, order.User!) };
         }
 

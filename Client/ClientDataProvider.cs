@@ -54,7 +54,6 @@ namespace Frederikskaj2.Reservations.Client
 
         public void Refresh()
         {
-            Console.WriteLine("Refresh");
             cachedHolidays = null;
             cachedReservedDays = null;
         }

@@ -117,7 +117,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var keyCodes = await GetKeyCodes(order, today);
             var myOrder = CreateOrder(order, today, keyCodes);
             myOrder.Totals = orderService.GetTotals(order);
-            return new OrderResponse<MyOrder> { Order = myOrder, IsUserDeleted = isUserDeleted };
+            return new OrderResponse<MyOrder> { Order = myOrder, IsDeleted = isUserDeleted };
         }
 
         private async Task<Dictionary<int, List<DatedKeyCode>>> GetKeyCodes(Order order, LocalDate today)
