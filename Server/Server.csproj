@@ -23,7 +23,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="appsettings.local.json" CopyToPublishDirectory="Never" />
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.local.json">
+      <DependentUpon>appsettings.json</DependentUpon>
+      <CopyToOutputDirectory>None</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.Development.json">
+      <DependentUpon>appsettings.json</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
