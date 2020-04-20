@@ -1,5 +1,6 @@
 ﻿@inject ApiClient ApiClient
 @inject ClientDataProvider ClientDataProvider
+@inject IDateProvider DateProvider
 @inject FormattingService FormattingService
 @inject ReservationsOptions ReservationsOptions
 
@@ -49,7 +50,7 @@
                         @foreach (var reservation in Reservations ?? Enumerable.Empty<Reservation>())
                         {
                             var isCancelled = request.CancelledReservations.Contains(reservation.Id);
-                            var canBeSettled = IsAdministrator && reservation.Status == ReservationStatus.Confirmed /*&& reservation.Date.PlusDays(reservation.DurationInDays) <= today*/;
+                            var canBeSettled = IsAdministrator && reservation.Status == ReservationStatus.Confirmed && reservation.Date.PlusDays(reservation.DurationInDays) <= today;
                             var canBeCancelled = reservation.CanBeCancelled || IsAdministrator && reservation.Status == ReservationStatus.Confirmed;
                             var color = reservation.Status == ReservationStatus.Settled ? "text-secondary" : string.Empty;
                             var cancelledClass = isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty;
@@ -207,6 +208,7 @@
     private Validations validations = null!;
     private PaymentDialog paymentDialog = null!;
     private SettlementDialog settlementDialog = null!;
+    private LocalDate today;
     private IReadOnlyDictionary<int, Resource>? resources;
     private bool showGeneralErrorAlert;
     private Price? price;
@@ -238,6 +240,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        today = DateProvider.Today;
         resources = await ClientDataProvider.GetResources();
     }
 
