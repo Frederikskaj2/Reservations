@@ -4,11 +4,11 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
-    public class KeyCodeModel : EmailWithNameModel
+    public class KeyCodeModel : OrderModel
     {
         public KeyCodeModel(
-            string from, Uri fromUrl, string name, string resourceName, LocalDate date,
-            List<DatedKeyCode> datedKeyCodes) : base(from, fromUrl, name)
+            string from, Uri fromUrl, string name, Uri url, int orderId, string resourceName, LocalDate date,
+            List<DatedKeyCode> datedKeyCodes) : base(from, fromUrl, name, url, orderId)
         {
             if (string.IsNullOrEmpty(resourceName))
                 throw new ArgumentException("Value cannot be null or empty.", nameof(resourceName));

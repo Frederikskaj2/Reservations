@@ -29,7 +29,7 @@
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHeaderCell>Betilling</TableHeaderCell>
+                            <TableHeaderCell>Betillingsnr.</TableHeaderCell>
                             <TableHeaderCell>Dato</TableHeaderCell>
                             <TableHeaderCell>Navn</TableHeaderCell>
                             <TableHeaderCell>Telefon</TableHeaderCell>
@@ -45,7 +45,7 @@
                                 .Where(reservation => reservation.Status == ReservationStatus.Confirmed && DateProvider.GetDaysFromToday(reservation.Date) < 0)
                                 .ToList();
                             <TableRow @key="@order.Id">
-                                <TableRowCell>@order.Id</TableRowCell>
+                                <TableHeaderCell>@order.Id</TableHeaderCell>
                                 <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
                                 <TableRowCell><a href="mailto:@order.Email?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
                                 <TableRowCell>@order.Phone</TableRowCell>
@@ -101,7 +101,7 @@
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHeaderCell>Betilling</TableHeaderCell>
+                            <TableHeaderCell>Betillingsnr.</TableHeaderCell>
                             <TableHeaderCell>Dato</TableHeaderCell>
                             <TableHeaderCell>Oprettet af</TableHeaderCell>
                             <TableHeaderCell></TableHeaderCell>
@@ -111,7 +111,7 @@
                         @foreach (var order in ownerOrders!)
                         {
                             <TableRow @key="@order.Id">
-                                <TableRowCell>@order.Id</TableRowCell>
+                                <TableHeaderCell>@order.Id</TableHeaderCell>
                                 <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
                                 <TableRowCell>
                                     @if (order.CreatedByEmail != null)

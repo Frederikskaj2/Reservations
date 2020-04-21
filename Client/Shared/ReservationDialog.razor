@@ -18,7 +18,7 @@
                     </FieldBody>
                 </Field>
                 <Field Horizontal="true">
-                    <FieldLabel ColumnSize="ColumnSize.Is4">Antal dage</FieldLabel>
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Antal nætter</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
                         <Select @ref="@select" TValue="int" SelectedValue="@(Reservation?.DurationInDays ?? 0)" SelectedValueChanged="@DurationInDaysChanged">
                             @for (var i = MinimumDays; i <= MaximumDays; i += 1)

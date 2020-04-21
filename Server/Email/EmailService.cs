@@ -240,6 +240,8 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.FromName!,
                 urlService.GetFromUrl(),
                 user.FullName,
+                urlService.GetOrderUrl(reservation.OrderId),
+                reservation.OrderId,
                 reservation.Resource!.Name,
                 reservation.Date,
                 GetDatedKeyCodes().ToList());
