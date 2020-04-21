@@ -4,3 +4,4 @@ obj/
 Logs/
 Reservations.db*
 appSettings.local.json
+key-*.xml

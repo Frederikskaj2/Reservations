@@ -1,11 +1,13 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +34,10 @@ namespace Frederikskaj2.Reservations.Server
                 .AddDbContext<ReservationsContext>(options => options.UseSqlite("Data Source=Reservations.db"))
                 .Configure<SeedDataOptions>(Configuration.GetSection("SeedData"))
                 .AddScoped<SeedData>();
+
+            services
+                .AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo("."));
 
             services
                 .Configure<IdentityOptions>(
