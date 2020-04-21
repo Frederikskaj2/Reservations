@@ -101,7 +101,7 @@ html {
     margin-left: 0;
 }
 
-html, body, .contents {
+html, body, .contents, main {
     height: 100%;
 }
 
