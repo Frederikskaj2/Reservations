@@ -107,7 +107,6 @@ html, body, .contents, main {
 
 body {
     font-family: 'Akrobat', sans-serif;
-    padding-top: 5rem;
     overflow: hidden;
 }
 
@@ -119,6 +118,8 @@ body {
     display: flex;
     justify-content: space-between;
     padding-right: 0;
+    padding-top: 5rem;
+    position: fixed;
 }
 
 main {
