@@ -26,12 +26,30 @@
         </div>
     </app>
     <section>
-        <div class="main" id="blazor-error-ui">
+        <div class="container-fluid" id="blazor-error-ui">
             Der er opstået en fejl.
             <a href="" class="reload">Indlæs igen</a>
             <a class="dismiss">&times;</a>
         </div>
     </section>
+    <section id="web-assembly-error" style="display: none;">
+        <main>
+            <div class="container">
+                <p>Dette website kræver en moderne browser som understøtter <i>WebAssembly</i>. Din browser understøtter desværre ikke denne teknologi. Her er nogle forslag til browsere du kan bruge:</p>
+                <ul>
+                    <li><a href="https://www.google.com/intl/da/chrome/">Google Chrome</a></li>
+                    <li><a href="https://www.microsoft.com/da-dk/edge">Microsoft Edge</a></li>
+                    <li><a href="https://www.mozilla.org/da/firefox/new/">Mozilla Firefox</a></li>
+                </ul>
+            </div>
+        </main>
+    </section>
+    <script type="text/javascript">
+        if (typeof WebAssembly === 'undefined') {
+            document.getElementsByTagName('app')[0].style.display = 'none';
+            document.getElementById('web-assembly-error').style.display = 'block';
+        }
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
