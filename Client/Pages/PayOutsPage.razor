@@ -92,9 +92,14 @@
             if (index >= 0)
             {
                 if (response.Order.Totals!.GetBalance() <= 0)
+                {
                     payOuts.RemoveAt(index);
+                    ClientDataProvider.Refresh();
+                }
                 else
+                {
                     payOuts[index].Amount = response.Order.Totals.GetBalance();
+                }
             }
         }
         else

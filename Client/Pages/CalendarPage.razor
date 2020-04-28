@@ -111,14 +111,14 @@ else
                 <p class="draft-order-get-started">Vælg lokale og en ledig dato for at reservere</p>
             </div>
         }
-    <div class="draft-order-total @(DataProvider.DraftOrder.Reservations.Count > 0 ? "" : "hidden")">
-        <Prices Price="@totalPrice" />
-        <Button Color="Color.Success" Block="true" Clicked="@Checkout" tabindex="@(DataProvider.DraftOrder.Reservations.Count > 0 ? 0 : -1)">Bestil</Button>
-        @if (isAdministrator)
-        {
-            <Button Color="Color.Primary" Block="true" Clicked="@OwnerCheckout" tabindex="@(DataProvider.DraftOrder.Reservations.Count > 0 ? 0 : -1)">Reservér til grundejerforeningen</Button>
-        }
-    </div>
+        <div class="draft-order-total @(DataProvider.DraftOrder.Reservations.Count > 0 ? "" : "hidden")">
+            <Prices Price="@totalPrice" />
+            <Button Color="Color.Success" Block="true" Clicked="@Checkout" tabindex="@(DataProvider.DraftOrder.Reservations.Count > 0 ? 0 : -1)">Bestil</Button>
+            @if (isAdministrator)
+            {
+                <Button Color="Color.Primary" Block="true" Clicked="@OwnerCheckout" tabindex="@(DataProvider.DraftOrder.Reservations.Count > 0 ? 0 : -1)">Reservér til grundejerforeningen</Button>
+            }
+        </div>
     </section>
     <ReservationDialog @ref="@reservationDialog" Reservation="@DataProvider.DraftOrder.DraftReservation" OnReservationChanged="ReservationChanged" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
 }
@@ -190,7 +190,8 @@ else
         var lastSunday = GetPreviousMonday(month.PlusMonths(1).PlusDays(-1)).PlusDays(6);
 
         var policy = ReservationPolicyProvider.GetPolicy(resources![resourceId].Type);
-        var reservedDays = (await DataProvider.GetReservedDays(firstMonday.PlusDays(-1), lastSunday.PlusDays(1), true))
+        var fromDate = today < firstMonday.PlusDays(-1) ? firstMonday.PlusDays(-1) : today;
+        var reservedDays = (await DataProvider.GetReservedDays(fromDate, lastSunday.PlusDays(1), true))
             .GroupBy(day
                 => day.Date,
                 (key, reservations)
