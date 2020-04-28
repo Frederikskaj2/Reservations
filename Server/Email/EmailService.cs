@@ -255,7 +255,8 @@ namespace Frederikskaj2.Reservations.Server.Email
                 reservation.OrderId,
                 reservation.Resource!.Name,
                 reservation.Date,
-                GetDatedKeyCodes().ToList());
+                GetDatedKeyCodes().ToList(),
+                urlService.GetRulesUri(reservation.Resource.Type));
             await SendMessage(model, "KeyCode", new EmailRecipient { Name = user.FullName, Email = user.Email });
 
             IEnumerable<DatedKeyCode> GetDatedKeyCodes()

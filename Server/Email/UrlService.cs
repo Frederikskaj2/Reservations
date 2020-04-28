@@ -46,5 +46,14 @@ namespace Frederikskaj2.Reservations.Server.Email
             };
             return uriBuilder.Uri;
         }
+
+        public Uri GetRulesUri(ResourceType resourceType)
+        {
+            var uriBuilder = new UriBuilder(options.BaseUrl!)
+            {
+                Path = resourceType == ResourceType.BanquetFacilities ? Urls.RulesBanquetFacilities : Urls.RulesBedrooms
+            };
+            return uriBuilder.Uri;
+        }
     }
 }
