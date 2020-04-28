@@ -44,7 +44,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         IsEmailConfirmed = user.EmailConfirmed,
                         IsAdministrator = user.UserRoles.Any(role => role.Role!.Name == Roles.Administrator),
                         IsPendingDelete = user.IsPendingDelete,
-                        OrderCount = user.Orders!.Count
+                        OrderCount = user.Orders!.Count(order => order.ApartmentId != null)
                     })
                 .OrderBy(user => user.Email)
                 .ToListAsync();
