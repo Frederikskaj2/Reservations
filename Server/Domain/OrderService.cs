@@ -399,7 +399,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return null;
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString(CultureInfo.InvariantCulture));
+            Debug.Assert(order.UserId != null, "order.UserId != null");
+            var user = await userManager.FindByIdAsync(order.UserId.Value.ToString(CultureInfo.InvariantCulture));
             if (amount >= amountToPay)
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendOrderConfirmedEmail(user, order.Id, amount, amount - amountToPay));
@@ -461,7 +462,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return default;
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString(CultureInfo.InvariantCulture));
+            Debug.Assert(order.UserId != null, "order.UserId != null");
+            var user = await userManager.FindByIdAsync(order.UserId.Value.ToString(CultureInfo.InvariantCulture));
             var resources = await dataProvider.GetResources();
             backgroundWorkQueue.Enqueue(
                 (service, _) => service.SendReservationSettledEmail(
@@ -502,7 +504,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return null;
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString(CultureInfo.InvariantCulture));
+            Debug.Assert(order.UserId != null, "order.UserId != null");
+            var user = await userManager.FindByIdAsync(order.UserId.Value.ToString(CultureInfo.InvariantCulture));
             backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(user, order.Id, amount));
 
             await TryDeleteUser(order.User!);
