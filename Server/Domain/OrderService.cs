@@ -399,14 +399,12 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return null;
             }
 
-            Debug.Assert(order.UserId != null, "order.UserId != null");
-            var user = await userManager.FindByIdAsync(order.UserId.Value.ToString(CultureInfo.InvariantCulture));
             if (amount >= amountToPay)
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendOrderConfirmedEmail(user, order.Id, amount, amount - amountToPay));
+                    (service, _) => service.SendOrderConfirmedEmail(order.User!, order.Id, amount, amount - amountToPay));
             else
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendMissingPaymentEmail(user, order.Id, amount, amountToPay - amount));
+                    (service, _) => service.SendMissingPaymentEmail(order.User!, order.Id, amount, amountToPay - amount));
 
             return order;
         }
@@ -462,12 +460,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return default;
             }
 
-            Debug.Assert(order.UserId != null, "order.UserId != null");
-            var user = await userManager.FindByIdAsync(order.UserId.Value.ToString(CultureInfo.InvariantCulture));
             var resources = await dataProvider.GetResources();
             backgroundWorkQueue.Enqueue(
                 (service, _) => service.SendReservationSettledEmail(
-                    user, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
+                    order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
                     reservation.Price.Deposit, damages, description));
 
             await TryDeleteUser(order.User!);
@@ -504,9 +500,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return null;
             }
 
-            Debug.Assert(order.UserId != null, "order.UserId != null");
-            var user = await userManager.FindByIdAsync(order.UserId.Value.ToString(CultureInfo.InvariantCulture));
-            backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(user, order.Id, amount));
+            backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(order.User!, order.Id, amount));
 
             await TryDeleteUser(order.User!);
 
