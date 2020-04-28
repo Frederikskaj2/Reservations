@@ -32,8 +32,8 @@ namespace Frederikskaj2.Reservations.Shared
         public IReadOnlyDictionary<Account, string> AccountNames {get; } = new Dictionary<Account, string>
         {
             { Account.Income, "1201 - Udlejning af fælleslokale" },
-            { Account.Deposits, "7601 - Depositum" },
             { Account.PayIns, "4021 - Bank" },
+            { Account.Deposits, "7601 - Depositum" },
             { Account.PayOuts, "8003 - Udbetalinger" }
         };
 

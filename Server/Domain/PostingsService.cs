@@ -68,9 +68,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .GroupBy(transaction => transaction.OrderId)
                 .SelectMany(CreatePostings)
                 .OrderBy(posting => posting.Date)
-                .ThenBy(posting => posting.OrderId)
-                .ThenBy(posting => posting.TransactionId)
-                .ThenBy(posting => posting.Account);
+                .ThenBy(posting => posting.OrderId);
 
             IEnumerable<Posting> CreatePostings(IGrouping<int, Transaction> grouping)
             {

@@ -67,18 +67,21 @@ namespace Frederikskaj2.Reservations.Server.Domain
         {
             var date = transaction.Timestamp.InZone(dateTimeZone).Date;
 
-            var localPostings = new List<Posting>
+            var accountAmounts = new List<AccountAmount>();
+            var posting = new Posting
             {
-                // Amount paid by the user.
-                new Posting
+                Date = date,
+                OrderId = orderId,
+                AccountAmounts = accountAmounts
+            };
+
+            // Amount paid by the user.
+            accountAmounts.Add(
+                new AccountAmount
                 {
-                    TransactionId = transaction.Id,
-                    Date = date,
-                    OrderId = orderId,
                     Account = Account.PayIns,
                     Amount = transaction.Amount
-                }
-            };
+                });
 
             var payIn = transaction.Amount;
             var income = -accountBalances[Account.Income];
@@ -86,12 +89,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var incomeConsumed = Math.Min(income, payIn);
             Debug.Assert(incomeConsumed > 0);
             // Rent.
-            localPostings.Add(
-                new Posting
+            accountAmounts.Add(
+                new AccountAmount
                 {
-                    TransactionId = transaction.Id,
-                    Date = date,
-                    OrderId = orderId,
                     Account = Account.Income,
                     Amount = -incomeConsumed
                 });
@@ -101,43 +101,39 @@ namespace Frederikskaj2.Reservations.Server.Domain
             if (payIn > 0)
             {
                 // The deposit (and any excess amount paid by the user).
-                localPostings.Add(
-                    new Posting
+                accountAmounts.Add(
+                    new AccountAmount
                     {
-                        TransactionId = transaction.Id,
-                        Date = date,
-                        OrderId = orderId,
                         Account = Account.Deposits,
                         Amount = -payIn
                     });
                 accountBalances[Account.Deposits] += payIn;
             }
 
-#if DEBUG
-            Debug.Assert(localPostings.All(posting => posting.Amount != 0));
-            var debit = localPostings.Where(posting => posting.Amount > 0).Sum(posting => posting.Amount);
-            var credit = localPostings.Where(posting => posting.Amount < 0).Sum(posting => -posting.Amount);
-            Debug.Assert(debit == credit);
-#endif
-            postings.AddRange(localPostings);
+            ValidatePosting(posting);
+
+            postings.Add(posting);
         }
 
         private void CreatePayOutPostings(Transaction transaction)
         {
             var date = transaction.Timestamp.InZone(dateTimeZone).Date;
 
-            var localPostings = new List<Posting>
+            var accountAmounts = new List<AccountAmount>();
+            var posting = new Posting
             {
-                // Amount paid to the user.
-                new Posting
+                Date = date,
+                OrderId = orderId,
+                AccountAmounts = accountAmounts
+            };
+
+            // Amount paid to the user.
+            accountAmounts.Add(
+                new AccountAmount
                 {
-                    TransactionId = transaction.Id,
-                    Date = date,
-                    OrderId = orderId,
                     Account = Account.PayOuts,
                     Amount = transaction.Amount
-                }
-            };
+                });
 
             var payOut = -transaction.Amount;
             var income = -accountBalances[Account.Income];
@@ -147,12 +143,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 if (income > 0)
                 {
                     // Damages.
-                    localPostings.Add(
-                        new Posting
+                    accountAmounts.Add(
+                        new AccountAmount
                         {
-                            TransactionId = transaction.Id,
-                            Date = date,
-                            OrderId = orderId,
                             Account = Account.Income,
                             Amount = -income
                         });
@@ -161,12 +154,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
                 var deposits = income + payOut;
                 // Deposit being refunded.
-                localPostings.Add(
-                    new Posting
+                accountAmounts.Add(
+                    new AccountAmount
                     {
-                        TransactionId = transaction.Id,
-                        Date = date,
-                        OrderId = orderId,
                         Account = Account.Deposits,
                         Amount = deposits
                     });
@@ -177,12 +167,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 var refunded = Math.Min(-income, payOut);
                 Debug.Assert(refunded > 0);
                 // Rent being refunded.
-                localPostings.Add(
-                    new Posting
+                accountAmounts.Add(
+                    new AccountAmount
                     {
-                        TransactionId = transaction.Id,
-                        Date = date,
-                        OrderId = orderId,
                         Account = Account.Income,
                         Amount = refunded
                     });
@@ -192,12 +179,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 if (payOut > 0)
                 {
                     // Deposit being refunded.
-                    localPostings.Add(
-                        new Posting
+                    accountAmounts.Add(
+                        new AccountAmount
                         {
-                            TransactionId = transaction.Id,
-                            Date = date,
-                            OrderId = orderId,
                             Account = Account.Deposits,
                             Amount = payOut
                         });
@@ -205,14 +189,23 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 }
             }
 
-#if DEBUG
-            Debug.Assert(localPostings.All(posting => posting.Amount != 0));
-            var debit = localPostings.Where(posting => posting.Amount > 0).Sum(posting => posting.Amount);
-            var credit = localPostings.Where(posting => posting.Amount < 0).Sum(posting => -posting.Amount);
-            Debug.Assert(debit == credit);
-#endif
-            postings.AddRange(localPostings);
+            ValidatePosting(posting);
 
+            postings.Add(posting);
+        }
+
+        [Conditional("DEBUG")]
+        private static void ValidatePosting(Posting posting)
+        {
+            Debug.Assert(posting.AccountAmounts.All(accountAmount => accountAmount.Amount != 0));
+            Debug.Assert(
+                posting.AccountAmounts.GroupBy(accountAmount => accountAmount.Account)
+                    .All(grouping => grouping.Count() == 1));
+            var debit = posting.AccountAmounts.Where(accountAmount => accountAmount.Amount > 0)
+                .Sum(accountAmount => accountAmount.Amount);
+            var credit = posting.AccountAmounts.Where(accountAmount => accountAmount.Amount < 0)
+                .Sum(accountAmount => -accountAmount.Amount);
+            Debug.Assert(debit == credit);
         }
     }
 }

@@ -52,14 +52,16 @@
             }
             else
             {
+                var accounts = ReservationsOptions.AccountNames.OrderBy(kvp => kvp.Value).ToList();
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHeaderCell>Dato</TableHeaderCell>
                             <TableHeaderCell>Bestillingsnr.</TableHeaderCell>
-                            <TableHeaderCell>Konto</TableHeaderCell>
-                            <TableHeaderCell Class="text-right">Debet</TableHeaderCell>
-                            <TableHeaderCell Class="text-right">Kredit</TableHeaderCell>
+                            @foreach (var account in accounts)
+                            {
+                                <TableHeaderCell Class="text-right">@account.Value</TableHeaderCell>
+                            }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -68,9 +70,20 @@
                             <TableRow>
                                 <TableRowCell>@FormattingService.FormatDate(posting.Date)</TableRowCell>
                                 <TableRowCell><a href="@Urls.Orders/@posting.OrderId">@posting.OrderId</a></TableRowCell>
-                                <TableRowCell>@ReservationsOptions.AccountNames[posting.Account]</TableRowCell>
-                                <TableRowCell Class="text-right">@(posting.Amount > 0 ? FormattingService.FormatMoneyShort(posting.Amount) : string.Empty)</TableRowCell>
-                                <TableRowCell Class="text-right">@(posting.Amount < 0 ? FormattingService.FormatMoneyShort(-posting.Amount) : string.Empty)</TableRowCell>
+                                @foreach (var account in accounts)
+                                {
+                                    var accountAmount = posting.AccountAmounts.FirstOrDefault(aa => aa.Account == account.Key);
+                                    if (accountAmount != null)
+                                    {
+                                        var amount = Math.Abs(accountAmount.Amount);
+                                        var debitCredit = accountAmount.Amount > 0 ? "D" : "K";
+                                        <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(amount) @debitCredit</TableRowCell>
+                                    }
+                                    else
+                                    {
+                                        <TableRowCell Class="text-right"></TableRowCell>
+                                    }
+                                }
                             </TableRow>
                         }
                     </TableBody>
