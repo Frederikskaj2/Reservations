@@ -316,7 +316,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                         var cancellationFee = !waiveFee ? reservationsOptions.CancellationFee : 0;
                         return service.SendReservationCancelledEmail(
                             order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
-                            reservation.Price!.Deposit, cancellationFee);
+                            reservation.Price!.GetTotal(), cancellationFee);
                     });
             if (orderIsConfirmed)
                 backgroundWorkQueue.Enqueue(

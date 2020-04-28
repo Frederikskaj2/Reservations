@@ -145,13 +145,13 @@ namespace Frederikskaj2.Reservations.Server.Email
         }
 
         public async Task SendReservationCancelledEmail(
-            User user, int orderId, string resourceName, LocalDate date, int deposit, int cancellationFee)
+            User user, int orderId, string resourceName, LocalDate date, int total, int cancellationFee)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
             if (string.IsNullOrEmpty(resourceName))
                 throw new ArgumentException("Value cannot be null or empty.", nameof(resourceName));
-            if (deposit <= 0)
+            if (total <= 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
             if (cancellationFee < 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
@@ -164,7 +164,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 orderId,
                 resourceName,
                 date,
-                deposit,
+                total,
                 cancellationFee);
             await SendMessage(user, model, "ReservationCancelled");
         }

@@ -7,18 +7,18 @@ namespace Frederikskaj2.Reservations.Server.Email
     {
         public ReservationCancelledModel(
             string from, Uri fromUrl, string name, Uri url, int orderId, string resourceName, LocalDate date,
-            int deposit, int cancellationFee) : base(from, fromUrl, name, url, orderId, resourceName, date)
+            int total, int cancellationFee) : base(from, fromUrl, name, url, orderId, resourceName, date)
         {
-            if (deposit <= 0)
+            if (total <= 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
             if (cancellationFee < 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
 
-            Deposit = deposit;
+            Total = total;
             CancellationFee = cancellationFee;
         }
 
-        public int Deposit { get; }
+        public int Total { get; }
         public int CancellationFee { get; }
     }
 }
