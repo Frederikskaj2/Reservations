@@ -6,7 +6,6 @@ namespace Frederikskaj2.Reservations.Shared
     {
         public Instant Timestamp { get; set; }
         public TransactionType Type { get; set; }
-        public User? User { get; set; }
         public int? OrderId { get; set; }
         public int? ResourceId { get; set; }
         public LocalDate? ReservationDate { get; set; }

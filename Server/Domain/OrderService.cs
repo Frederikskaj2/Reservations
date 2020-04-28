@@ -443,7 +443,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                         CreatedByUserId = userId,
                         UserId = order.UserId,
                         OrderId = orderId,
-                        ResourceId = reservation.Id,
+                        ResourceId = reservation.ResourceId,
                         ReservationDate = reservation.Date,
                         Comment = description,
                         Amount = -damages
