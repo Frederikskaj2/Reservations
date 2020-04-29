@@ -51,7 +51,7 @@
                         }
                     </TableBody>
                 </Table>
-                <Paragraph>Alle beløb er i kr.</Paragraph>
+                <Paragraph>Alle beløb er i kr. En positiv saldo betyder at du har penge til gode som vil blive udbetalt. En negativ saldo betyder at du mangler at indbetale.</Paragraph>
             }
         </Container>
     }
@@ -77,13 +77,13 @@
 
     private string GetTransactionText(MyTransaction transaction) => transaction.Type switch
     {
-        TransactionType.Order => $"Bestilling leje",
-        TransactionType.Deposit => $"Bestilling depositum",
-        TransactionType.OrderCancellation => $"Afbestilling {GetReservationText(transaction)} leje",
-        TransactionType.DepositCancellation => $"Afbestilling {GetReservationText(transaction)} depositum",
-        TransactionType.CancellationFee => $"Afbestillingsgebyr {GetReservationText(transaction)}",
-        TransactionType.SettlementDeposit => $"Opgørelse {GetReservationText(transaction)} depositum",
-        TransactionType.SettlementDamages => $"Opgørelse {GetReservationText(transaction)} skader: {transaction.Comment}",
+        TransactionType.Order => $"Bestilling - leje",
+        TransactionType.Deposit => $"Bestilling - depositum",
+        TransactionType.OrderCancellation => $"Afbestilling {GetReservationText(transaction)} - leje",
+        TransactionType.DepositCancellation => $"Afbestilling {GetReservationText(transaction)} - depositum",
+        TransactionType.CancellationFee => $"Afbestilling {GetReservationText(transaction)} - gebyr",
+        TransactionType.SettlementDeposit => $"Opgørelse {GetReservationText(transaction)} - depositum",
+        TransactionType.SettlementDamages => $"Opgørelse {GetReservationText(transaction)} - skader: {transaction.Comment}",
         TransactionType.PayIn => "Indbetaling",
         TransactionType.PayOut => "Udbetaling",
         _ => throw new ArgumentOutOfRangeException()
