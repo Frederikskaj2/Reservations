@@ -179,7 +179,7 @@
                                         {
                                             <Button Color="Color.Secondary" Clicked="@RecordPayIn">Registrér indbetaling</Button>
                                         }
-                                        if (request.CancelledReservations.Count > 0)
+                                        if (Reservations.Any(reservation => reservation.Status == ReservationStatus.Confirmed && request.CancelledReservations.Contains(reservation.Id)))
                                         {
                                             <Check Checked="@request.WaiveFee" TValue="bool" CheckedChanged="@ToggleCancelWaiveFee">Intet afbestillingsgebyr</Check>
                                         }

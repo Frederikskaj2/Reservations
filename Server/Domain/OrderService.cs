@@ -229,6 +229,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             var today = timestamp.InZone(dateTimeZone).Date;
             order.AccountNumber = accountNumber;
+            var cancelledReservedReservations = new List<Reservation>();
             var cancelledConfirmedReservations = new List<Reservation>();
             foreach (var reservationId in cancelledReservations)
             {
@@ -282,6 +283,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
                                 Amount = -reservationsOptions.CancellationFee
                             });
                 }
+                else
+                {
+                    cancelledReservedReservations.Add(reservation);
+                }
             }
 
             var totals = GetTotals(order);
@@ -318,6 +323,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
                             order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
                             reservation.Price!.GetTotal(), cancellationFee);
                     });
+            foreach (var reservation in cancelledReservedReservations)
+                backgroundWorkQueue.Enqueue(
+                    (service, _) => service.SendReservationCancelledEmail(
+                        order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date, 0, 0));
             if (orderIsConfirmed)
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendOrderConfirmedEmail(order.User!, order.Id, 0, totals.GetBalance()));
@@ -327,7 +336,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return (isUserDeleted, order);
         }
 
-        public async Task<(bool IsOrderDeleted, Order? Order)> UpdateOwnerOrder(int orderId, IEnumerable<int> cancelledReservations)
+        public async Task<(bool IsOrderDeleted, Order? Order)> UpdateOwnerOrder(
+            int orderId, IEnumerable<int> cancelledReservations)
         {
             if (cancelledReservations is null)
                 throw new ArgumentNullException(nameof(cancelledReservations));
@@ -401,10 +411,12 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             if (amount >= amountToPay)
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendOrderConfirmedEmail(order.User!, order.Id, amount, amount - amountToPay));
+                    (service, _) => service.SendOrderConfirmedEmail(
+                        order.User!, order.Id, amount, amount - amountToPay));
             else
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendMissingPaymentEmail(order.User!, order.Id, amount, amountToPay - amount));
+                    (service, _) => service.SendMissingPaymentEmail(
+                        order.User!, order.Id, amount, amountToPay - amount));
 
             return order;
         }

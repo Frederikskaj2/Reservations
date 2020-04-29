@@ -13,6 +13,8 @@
 <body>
     <p>Hej @Model.Name</p>
     <p>Din reservation af @Model.ResourceName @LocalDatePattern.Create("dddd 'den' d. MMMM yyyy", CultureInfo).Format(Model.Date) hørende til <a href="@Model.Url">bestilling @Model.OrderId</a> er blevet annulleret</p>
+@if (Model.Total > 0)
+{
     <p>
         Vi udbetaler @((Model.Total - Model.CancellationFee).ToString("C0", CultureInfo))
         @if (Model.CancellationFee > 0)
@@ -21,6 +23,7 @@
         }
         til den bankkonto du oplyste da du afgav din bestilling.
     </p>
+}
     @await Html.PartialAsync("_Signature", Model)
     @await Html.PartialAsync("_Links", Model)
 </body>

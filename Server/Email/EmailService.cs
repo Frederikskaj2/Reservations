@@ -160,7 +160,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 throw new ArgumentNullException(nameof(user));
             if (string.IsNullOrEmpty(resourceName))
                 throw new ArgumentException("Value cannot be null or empty.", nameof(resourceName));
-            if (total <= 0)
+            if (total < 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
             if (cancellationFee < 0)
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
