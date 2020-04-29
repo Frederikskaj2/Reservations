@@ -20,8 +20,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         {
             { Account.Income, 0 },
             { Account.Deposits, 0 },
-            { Account.PayIns, 0 },
-            { Account.PayOuts, 0 }
+            { Account.Bank, 0 }
         };
 
         private readonly DateTimeZone dateTimeZone;
@@ -51,11 +50,11 @@ namespace Frederikskaj2.Reservations.Server.Domain
                     accountBalances[Account.Deposits] += transaction.Amount;
                     break;
                 case TransactionType.PayIn:
-                    accountBalances[Account.PayIns] += transaction.Amount;
+                    accountBalances[Account.Bank] += transaction.Amount;
                     CreatePayInPostings(transaction);
                     break;
                 case TransactionType.PayOut:
-                    accountBalances[Account.PayOuts] += transaction.Amount;
+                    accountBalances[Account.Bank] += transaction.Amount;
                     CreatePayOutPostings(transaction);
                     break;
                 default:
@@ -79,7 +78,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             accountAmounts.Add(
                 new AccountAmount
                 {
-                    Account = Account.PayIns,
+                    Account = Account.Bank,
                     Amount = transaction.Amount
                 });
 
@@ -131,7 +130,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             accountAmounts.Add(
                 new AccountAmount
                 {
-                    Account = Account.PayOuts,
+                    Account = Account.Bank,
                     Amount = transaction.Amount
                 });
 

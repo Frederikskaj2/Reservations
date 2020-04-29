@@ -32,9 +32,8 @@ namespace Frederikskaj2.Reservations.Shared
         public IReadOnlyDictionary<Account, string> AccountNames {get; } = new Dictionary<Account, string>
         {
             { Account.Income, "1201 - Udlejning af fælleslokale" },
-            { Account.PayIns, "4021 - Bank" },
-            { Account.Deposits, "7601 - Depositum" },
-            { Account.PayOuts, "8003 - Udbetalinger" }
+            { Account.Bank, "4021 - Bank" },
+            { Account.Deposits, "7601 - Depositum" }
         };
 
         public int ReservationIsNotAllowedBeforeDaysFromNow { get; set; } = 1; //5;

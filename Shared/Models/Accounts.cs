@@ -3,9 +3,8 @@
     public enum Account
     {
         None,
-        PayIns,
-        PayOuts,
         Income,
+        Bank,
         Deposits,
     }
 }
