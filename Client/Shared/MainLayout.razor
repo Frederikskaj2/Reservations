@@ -1,58 +1,83 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Security.Claims
+@inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider;
 
-<nav>
-    <NavLink href="" class="nav-tab" Match="NavLinkMatch.All">
-        <div class="logo">Frederikskaj&nbsp;2</div>
-    </NavLink>
-    <NavLink href="@Urls.Calendar" class="nav-tab">
-        <div>Kalender</div>
-    </NavLink>
-    <NavLink href="@Urls.MyOrders" class="nav-tab">
-        <div>Mine bestillinger</div>
-    </NavLink>
-    @if (isAdministrator)
-    {
-        <NavLink href="@Urls.Orders" class="nav-tab nav-administrator">
-            <div>Bestil­linger</div>
-        </NavLink>
-        <NavLink href="@Urls.PayOuts" class="nav-tab nav-administrator">
-            <div>Ud­betaling</div>
-        </NavLink>
-        <NavLink href="@Urls.Postings" class="nav-tab nav-administrator">
-            <div>Bog­føring</div>
-        </NavLink>
-        <NavLink href="@Urls.KeyCodes" class="nav-tab nav-administrator">
-            <div>Nøgleboks­koder</div>
-        </NavLink>
-        <NavLink href="@Urls.HistoryReservations" class="nav-tab nav-administrator">
-            <div>Historik</div>
-        </NavLink>
-        <NavLink href="@Urls.Users" class="nav-tab nav-administrator">
-            <div>Brugere</div>
-        </NavLink>
-    }
-    <CurrentUser />
-</nav>
 <div class="contents">
+    <nav>
+        <NavLink href="" class="nav-tab" Match="NavLinkMatch.All">
+            <div class="logo">Frederikskaj&nbsp;2</div>
+        </NavLink>
+        <NavLink href="@Urls.Calendar" class="nav-tab">
+            <div>Kalender</div>
+        </NavLink>
+        <NavLink href="@Urls.MyOrders" class="nav-tab">
+            <div>Mine bestillinger</div>
+        </NavLink>
+        @if (user != null)
+        {
+            if (user.IsInRole(Roles.OrderHandling) || user.IsInRole(Roles.Payment) || user.IsInRole(Roles.Settlement))
+            {
+                <NavLink href="@Urls.Orders" class="nav-tab nav-administrator">
+                    <div>Bestil­linger</div>
+                </NavLink>
+            }
+            if (user.IsInRole(Roles.Payment))
+            {
+                <NavLink href="@Urls.PayOuts" class="nav-tab nav-administrator">
+                    <div>Ud­betaling</div>
+                </NavLink>
+            }
+            if (user.IsInRole(Roles.Bookkeeping))
+            {
+                <NavLink href="@Urls.Postings" class="nav-tab nav-administrator">
+                    <div>Bog­føring</div>
+                </NavLink>
+            }
+            if (user.IsInRole(Roles.Cleaning))
+            {
+                <NavLink href="@Urls.CleaningSchedule" class="nav-tab nav-administrator">
+                    <div>Ren­gøring</div>
+                </NavLink>
+            }
+            if (user.IsInRole(Roles.KeyCodes))
+            {
+                <NavLink href="@Urls.KeyCodes" class="nav-tab nav-administrator">
+                    <div>Nøgleboks­koder</div>
+                </NavLink>
+            }
+            if (user.IsInRole(Roles.OrderHandling))
+            {
+                <NavLink href="@Urls.HistoryReservations" class="nav-tab nav-administrator">
+                    <div>Historik</div>
+                </NavLink>
+            }
+            if (user.IsInRole(Roles.UserAdministration))
+            {
+                <NavLink href="@Urls.Users" class="nav-tab nav-administrator">
+                    <div>Brugere</div>
+                </NavLink>
+            }
+        }
+        <CurrentUser />
+    </nav>
     @Body
 </div>
 
 @code {
 
-    private bool isAdministrator;
+    private ClaimsPrincipal? user;
 
     protected override async Task OnInitializedAsync()
     {
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
+        user = authenticationState.User;
     }
 
     private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
     {
         var authenticationState = await task;
-        isAdministrator = authenticationState.User.IsInRole(Roles.Administrator);
+        user = authenticationState.User;
         StateHasChanged();
     }
 }

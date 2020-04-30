@@ -18,9 +18,6 @@ namespace Frederikskaj2.Reservations.Client
         public SignUpRequest SignUpRequest { get; private set; } = new SignUpRequest();
         public MyOrder? MyOrder { get; set; }
 
-        public async Task<bool> GetIsAdministrator()
-            => (await GetAuthenticationState()).User.IsInRole(Roles.Administrator);
-
         public async Task<int?> GetUserId() => (await GetAuthenticationState()).User.Id();
 
         public async Task<string> GetUserEmail() => (await GetAuthenticationState()).User.Identity.Name;

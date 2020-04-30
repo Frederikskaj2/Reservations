@@ -1,4 +1,6 @@
-﻿namespace Frederikskaj2.Reservations.Shared
+﻿using System.Collections.Generic;
+
+namespace Frederikskaj2.Reservations.Shared
 {
     public class AuthenticatedUser
     {
@@ -7,7 +9,7 @@
         public int? Id { get; set; }
         public string? Name { get; set; }
         public bool IsAuthenticated { get; set; }
-        public bool IsAdministrator { get; set; }
+        public IEnumerable<string>? Roles { get; set; }
         public int? ApartmentId { get; set; }
     }
 }

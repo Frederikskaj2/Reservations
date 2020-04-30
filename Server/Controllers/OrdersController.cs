@@ -13,32 +13,25 @@ using NodaTime;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("orders")]
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize(Roles = Roles.OrderHandling + "," + Roles.Payment + "," + Roles.Settlement)]
     [ApiController]
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
     public class OrdersController : Controller
     {
         private readonly IClock clock;
-        private readonly DateTimeZone dateTimeZone;
         private readonly OrderService orderService;
-        private readonly ReservationsOptions reservationsOptions;
 
-        public OrdersController(
-            IClock clock, DateTimeZone dateTimeZone, OrderService orderService, ReservationsOptions reservationsOptions)
+        public OrdersController(IClock clock, OrderService orderService)
         {
             this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
             this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
-            this.reservationsOptions =
-                reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
         }
 
         [HttpGet]
         public async Task<IEnumerable<Order>> Get()
         {
             var orders = await orderService.GetOrders();
-            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            return orders.Select(order => CreateOrder(order, today));
+            return orders.Select(CreateOrder);
         }
 
         [HttpGet("{orderId:int}")]
@@ -47,8 +40,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var order = await orderService.GetOrder(orderId);
             if (order == null)
                 return new OrderResponse<Order>();
-            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            return new OrderResponse<Order> { Order = CreateOrder(order, today) };
+            return new OrderResponse<Order> { Order = CreateOrder(order) };
         }
 
         [HttpPatch("{orderId:int}")]
@@ -65,8 +57,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (order == null)
                 return new OrderResponse<Order>();
 
-            var today = now.InZone(dateTimeZone).Date;
-            return new OrderResponse<Order> { Order = CreateOrder(order, today) };
+            return new OrderResponse<Order> { Order = CreateOrder(order) };
         }
 
         [HttpPost("{orderId:int}/pay-in")]
@@ -81,8 +72,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (order == null)
                 return new OrderResponse<Order>();
 
-            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            return new OrderResponse<Order> { Order = CreateOrder(order, today) };
+            return new OrderResponse<Order> { Order = CreateOrder(order) };
         }
 
         [HttpPost("{orderId:int}/settle")]
@@ -101,8 +91,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (order == null)
                 return new OrderResponse<Order>();
 
-            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            return new OrderResponse<Order> { Order = CreateOrder(order, today) };
+            return new OrderResponse<Order> { Order = CreateOrder(order) };
         }
 
         [HttpPost("{orderId:int}/pay-out")]
@@ -117,11 +106,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (order == null)
                 return new OrderResponse<Order>();
 
-            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            return new OrderResponse<Order> { Order = CreateOrder(order, today) };
+            return new OrderResponse<Order> { Order = CreateOrder(order) };
         }
 
-        private Order CreateOrder(Data.Order order, LocalDate today)
+        private Order CreateOrder(Data.Order order)
         {
             return new Order
             {
@@ -143,8 +131,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 UpdatedTimestamp = reservation.UpdatedTimestamp,
                 Price = reservation.Price!.Adapt<Price>(),
                 Date = reservation.Date,
-                DurationInDays = reservation.DurationInDays,
-                CanBeCancelled = reservation.CanBeCancelled(today, reservationsOptions)
+                DurationInDays = reservation.DurationInDays
             };
         }
     }

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("reservations")]
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize(Roles = Roles.OrderHandling)]
     [ApiController]
     public class ReservationsController : Controller
     {

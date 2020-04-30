@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
@@ -57,65 +57,16 @@ namespace Frederikskaj2.Reservations.Server.Data
 
             CreateApartments();
             CreateResources();
-            CreateHolidays();
             await db.SaveChangesAsync();
 
+            await CreateRoles();
             await CreateUsers();
         }
 
-        private async Task CreateUsers()
+        private void CreateApartments()
         {
-            var administratorRole = new Role { Name = Roles.Administrator };
-            await roleManager.CreateAsync(administratorRole);
-
-            foreach (var user in options.Users!)
-            {
-                var u = new User
-                {
-                    UserName = user!.Email,
-                    Email = user.Email,
-                    EmailConfirmed = true,
-                    FullName = user.FullName!,
-                    PhoneNumber = user.Phone
-                };
-                await userManager.CreateAsync(u, user.Password);
-                if (user.IsAdministrator)
-                    await userManager.AddToRoleAsync(u, Roles.Administrator);
-            }
-        }
-
-        private Resource[] CreateResources()
-        {
-            var resources = options.Resources
-                .Select((resource, i) => new Resource { Sequence = i + 1, Type = resource.Type, Name = resource.Name! })
-                .ToArray();
-            db.Resources.AddRange(resources);
-            return resources;
-        }
-
-        private Holiday[] CreateHolidays()
-        {
-            var holidays = new[]
-            {
-                new Holiday { Date = new LocalDate(2020, 4, 9) },
-                new Holiday { Date = new LocalDate(2020, 4, 10) },
-                new Holiday { Date = new LocalDate(2020, 4, 13) },
-                new Holiday { Date = new LocalDate(2020, 5, 8) },
-                new Holiday { Date = new LocalDate(2020, 5, 21) },
-                new Holiday { Date = new LocalDate(2020, 6, 1) },
-                new Holiday { Date = new LocalDate(2020, 12, 24) },
-                new Holiday { Date = new LocalDate(2020, 12, 25) },
-                new Holiday { Date = new LocalDate(2020, 12, 31) }
-            };
-            db.Holidays.AddRange(holidays);
-            return holidays;
-        }
-
-        private Apartment[] CreateApartments()
-        {
-            var apartments = GetApartments().ToArray();
+            var apartments = GetApartments();
             db.Apartments.AddRange(apartments);
-            return apartments;
         }
 
         private static IEnumerable<Apartment> GetApartments()
@@ -155,6 +106,43 @@ namespace Frederikskaj2.Reservations.Server.Data
                 .OrderBy(apartment => apartment.Letter)
                 .ThenBy(apartment => apartment.Story)
                 .ThenBy(apartment => apartment.Side);
+        }
+        private void CreateResources()
+        {
+            var resources = options.Resources
+                .Select((resource, i) => new Resource { Sequence = i + 1, Type = resource.Type, Name = resource.Name! });
+            db.Resources.AddRange(resources);
+        }
+
+        private async Task CreateRoles()
+        {
+            var roles = typeof(Roles)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(field => field.IsLiteral && field.FieldType == typeof(string))
+                .Select(field => new Role { Name = (string?) field.GetValue(null) });
+            foreach (var role in roles)
+                await roleManager.CreateAsync(role);
+        }
+
+        private async Task CreateUsers()
+        {
+            foreach (var userOptions in options.Users!)
+            {
+                var user = new User
+                {
+                    UserName = userOptions!.Email,
+                    Email = userOptions.Email,
+                    EmailConfirmed = true,
+                    FullName = userOptions.FullName!,
+                    PhoneNumber = userOptions.Phone,
+                    EmailSubscriptions = userOptions.EmailSubscriptions
+                };
+                await userManager.CreateAsync(user, userOptions.Password);
+                if (userOptions.Roles == null)
+                    continue;
+                foreach (var role in userOptions.Roles)
+                    await userManager.AddToRoleAsync(user, role);
+            }
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
@@ -13,14 +12,6 @@ namespace Frederikskaj2.Reservations.Shared
                 throw new ArgumentNullException(nameof(holidays));
 
             return IsHighPriceDayOfWeek(date) || IsHolidayOrDayBeforeHoliday(date, holidays);
-        }
-
-        public static async Task<bool> IsHighPriceDay(LocalDate date, Func<Task<HashSet<LocalDate>>> getHolidays)
-        {
-            if (getHolidays is null)
-                throw new ArgumentNullException(nameof(getHolidays));
-
-            return IsHighPriceDayOfWeek(date) || IsHolidayOrDayBeforeHoliday(date, await getHolidays());
         }
 
         private static bool IsHighPriceDayOfWeek(LocalDate date)

@@ -20,18 +20,18 @@ namespace Frederikskaj2.Reservations.Shared
             int resourceId, LocalDate date, bool includeOrder)
         {
             var (minimumDays, maximumDays) = await base.GetReservationAllowedNumberOfDays(resourceId, date, includeOrder);
-            return !await DataProvider.IsHighPriceDay(date) ? (minimumDays, maximumDays) : (Math.Min(HighPriceMinimumNumberOfDays, maximumDays), maximumDays);
+            return !DataProvider.IsHighPriceDay(date) ? (minimumDays, maximumDays) : (Math.Min(HighPriceMinimumNumberOfDays, maximumDays), maximumDays);
         }
 
         public override async Task<bool> IsResourceAvailable(LocalDate date, int resourceId, bool includeOrder)
         {
-            var minimumNumberOfDays = await DataProvider.IsHighPriceDay(date) ? HighPriceMinimumNumberOfDays : 1;
+            var minimumNumberOfDays = DataProvider.IsHighPriceDay(date) ? HighPriceMinimumNumberOfDays : 1;
             return await IsResourceAvailable(date, minimumNumberOfDays, resourceId, includeOrder);
         }
 
         protected override async Task<bool> IsResourceAvailable(
             LocalDate date, int durationInDays, int resourceId, bool includeOrder)
             => await base.IsResourceAvailable(date, durationInDays, resourceId, includeOrder)
-               && (durationInDays >= HighPriceMinimumNumberOfDays || !await DataProvider.IsHighPriceDay(date));
+               && (durationInDays >= HighPriceMinimumNumberOfDays || !DataProvider.IsHighPriceDay(date));
     }
 }

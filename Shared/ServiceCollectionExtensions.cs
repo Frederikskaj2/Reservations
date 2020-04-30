@@ -16,6 +16,7 @@ namespace Frederikskaj2.Reservations.Shared
                 .AddSingleton(DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen"))
                 .AddSingleton<IDateProvider, DateProvider>()
                 .AddSingleton<ReservationsOptions>()
+                .AddSingleton<HolidaysProvider>()
                 .AddScoped<BanquetFacilitiesReservationPolicy>()
                 .AddScoped<BedroomReservationPolicy>()
                 .AddScoped<IReservationPolicyProvider, ReservationPolicyProvider>();

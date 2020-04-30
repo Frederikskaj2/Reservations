@@ -17,9 +17,17 @@ namespace Frederikskaj2.Reservations.Client
         private IEnumerable<ReservedDay>? cachedReservedDays;
         private IReadOnlyDictionary<int, Resource>? cachedResources;
         private IEnumerable<WeeklyKeyCodes>? cachedWeeklyKeyCodes;
+        private readonly Lazy<HashSet<LocalDate>> holidays;
 
-        public ClientDataProvider(ApiClient apiClient)
-            => this.apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+        public ClientDataProvider(ApiClient apiClient, HolidaysProvider holidaysProvider)
+        {
+            if (holidaysProvider is null)
+                throw new ArgumentNullException(nameof(holidaysProvider));
+
+            this.apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
+
+            holidays = new Lazy<HashSet<LocalDate>>(holidaysProvider.GetHolidays);
+        }
 
         public DraftOrder DraftOrder { get; private set; } = new DraftOrder();
 
@@ -36,15 +44,13 @@ namespace Frederikskaj2.Reservations.Client
             return cachedResources;
         }
 
-        public Task<bool> IsHighPriceDay(LocalDate date)
-            => HighPricePolicy.IsHighPriceDay(date, async () => await GetHolidays());
+        public bool IsHighPriceDay(LocalDate date) => HighPricePolicy.IsHighPriceDay(date, holidays.Value);
 
-        public async Task<int> GetNumberOfHighPriceDays(LocalDate date, int durationInDays)
+        public int GetNumberOfHighPriceDays(LocalDate date, int durationInDays)
         {
-            var holidays = await GetHolidays();
             return Enumerable.Range(0, durationInDays).Aggregate(
                 0,
-                (count, i) => count + (HighPricePolicy.IsHighPriceDay(date.PlusDays(i), holidays) ? 1 : 0));
+                (count, i) => count + (HighPricePolicy.IsHighPriceDay(date.PlusDays(i), holidays.Value) ? 1 : 0));
         }
 
         public async Task<IEnumerable<ReservedDay>> GetReservedDays(

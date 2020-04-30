@@ -14,7 +14,7 @@ using User = Frederikskaj2.Reservations.Server.Data.User;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("users")]
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize(Roles = Roles.UserAdministration)]
     [ApiController]
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
     public class UsersController : Controller
@@ -42,7 +42,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         FullName = user.FullName,
                         Phone = user.PhoneNumber,
                         IsEmailConfirmed = user.EmailConfirmed,
-                        IsAdministrator = user.UserRoles.Any(role => role.Role!.Name == Roles.Administrator),
+                        IsAdministrator = user.UserRoles.Any(role => role.Role!.Name == Roles.UserAdministration),
                         IsPendingDelete = user.IsPendingDelete,
                         OrderCount = user.Orders!.Count(order => order.ApartmentId != null)
                     })
@@ -57,9 +57,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new UpdateUserResponse { Result = UpdateUserResult.GeneralError };
 
             if (request.IsAdministrator)
-                await userManager.AddToRoleAsync(user, Roles.Administrator);
+                await userManager.AddToRoleAsync(user, Roles.UserAdministration);
             else
-                await userManager.RemoveFromRoleAsync(user, Roles.Administrator);
+                await userManager.RemoveFromRoleAsync(user, Roles.UserAdministration);
 
             user.FullName = request.FullName;
             user.PhoneNumber = request.Phone;

@@ -94,11 +94,11 @@
         Task.Run(() => select.Focus());
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         if (Reservation != null)
             policy = ReservationPolicyProvider.GetPolicy(Reservation!.Resource.Type);
-        await UpdatePrice();
+        UpdatePrice();
     }
 
     private void Cancel() => modal.Hide();
@@ -114,15 +114,15 @@
     private async Task DurationInDaysChanged(int value)
     {
         Reservation!.DurationInDays = value;
-        await UpdatePrice();
+        UpdatePrice();
         await OnReservationChanged.InvokeAsync(null);
     }
 
-    private async Task UpdatePrice()
+    private void UpdatePrice()
     {
         if (Reservation == null || policy == null)
             return;
-        Reservation.Price = await policy.GetPrice(Reservation.Date, Reservation.DurationInDays);
+        Reservation.Price = policy.GetPrice(Reservation.Date, Reservation.DurationInDays);
         rent = $"{FormattingService.FormatMoneyLong(Reservation.Price.Rent + Reservation.Price.CleaningFee)} (inklusiv rengøring {FormattingService.FormatMoneyLong(Reservation.Price.CleaningFee)})";
         deposit = FormattingService.FormatMoneyLong(Reservation.Price.Deposit);
         total = FormattingService.FormatMoneyLong(Reservation.Price.GetTotal());

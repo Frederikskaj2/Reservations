@@ -58,7 +58,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var myUser = user.Adapt<MyUser>();
             myUser.Phone = user.PhoneNumber;
             myUser.IsEmailConfirmed = user.EmailConfirmed;
-            myUser.IsAdministrator = await userManager.IsInRoleAsync(user, Roles.Administrator);
+            myUser.IsAdministrator = await userManager.IsInRoleAsync(user, Roles.UserAdministration);
             return myUser;
         }
 
@@ -278,13 +278,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         private async Task<AuthenticatedUser> GetAuthenticatedUser(User user)
         {
-            var isAdministrator = await userManager.IsInRoleAsync(user, Roles.Administrator);
+            var roles = await userManager.GetRolesAsync(user);
             return new AuthenticatedUser
             {
                 Id = user.Id,
                 Name = user.Email,
                 IsAuthenticated = true,
-                IsAdministrator = isAdministrator,
+                Roles = roles,
                 ApartmentId = user.ApartmentId
             };
         }

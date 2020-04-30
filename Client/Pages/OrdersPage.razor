@@ -1,6 +1,7 @@
 ﻿@page "/bestillinger"
-@attribute [Authorize(Roles = Roles.Administrator)]
+@attribute [Authorize(Roles = Roles.OrderHandling + "," + Roles.Payment + "," + Roles.Settlement)]
 @inject ApiClient ApiClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ClientDataProvider ClientDataProvider
 @inject IDateProvider DateProvider
 @inject FormattingService FormattingService
@@ -75,13 +76,16 @@
                                         <DropdownToggle Color="Color.Light" Size="ButtonSize.Small" />
                                         <DropdownMenu>
                                             <DropdownItem Clicked="@(() => ShowOrder(order.Id))">Vis</DropdownItem>
-                                            @if (order.Totals!.GetBalance() < 0)
+                                            @if (canHandlePayments && order.Totals!.GetBalance() < 0)
                                             {
                                                 <DropdownItem Clicked="@(() => RecordPayIn(order))">Registrér indbetaling</DropdownItem>
                                             }
-                                            @foreach (var reservation in reservationsToSettle)
+                                            @if (canHandleSettlements)
                                             {
-                                                <DropdownItem Clicked="@(() => RecordSettlement(order, reservation))">Lav opgørelse @resources![reservation.ResourceId].Name @FormattingService.FormatDate(reservation.Date)</DropdownItem>
+                                                foreach (var reservation in reservationsToSettle)
+                                                {
+                                                    <DropdownItem Clicked="@(() => RecordSettlement(order, reservation))">Lav opgørelse @resources![reservation.ResourceId].Name @FormattingService.FormatDate(reservation.Date)</DropdownItem>
+                                                }
                                             }
                                         </DropdownMenu>
                                     </Dropdown>
@@ -90,59 +94,69 @@
                         }
                     </TableBody>
                 </Table>
-                <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
-                <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
             }
-            <h1>Bestillinger til grundejerforeningen</h1>
-            @if (!ownerOrders!.Any())
+            @if (canHandleOrders)
             {
-                <Paragraph>Der er intet at vise.</Paragraph>
-            }
-            else
-            {
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHeaderCell>Betillingsnr.</TableHeaderCell>
-                            <TableHeaderCell>Dato</TableHeaderCell>
-                            <TableHeaderCell>Oprettet af</TableHeaderCell>
-                            <TableHeaderCell></TableHeaderCell>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        @foreach (var order in ownerOrders!)
-                        {
-                            <TableRow @key="@order.Id">
-                                <TableHeaderCell>@order.Id</TableHeaderCell>
-                                <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
-                                <TableRowCell>
-                                    @if (order.CreatedByEmail != null)
-                                    {
-                                        <a href="mailto:@order.CreatedByEmail?subject=Frederikskaj 2 bestilling @order.Id">@order.CreatedByName</a>
-                                    }
-                                    else
-                                    {
-                                        <text>(Slettet)</text>
-                                    }
-                                </TableRowCell>
-                                <TableRowCell>
-                                    <Button class="float-right" Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ShowOrder(order.Id))">Vis</Button>
-                                </TableRowCell>
+                <h1>Bestillinger til grundejerforeningen</h1>
+                @if (!ownerOrders!.Any())
+                {
+                    <Paragraph>Der er intet at vise.</Paragraph>
+                }
+                else
+                {
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>Betillingsnr.</TableHeaderCell>
+                                <TableHeaderCell>Dato</TableHeaderCell>
+                                <TableHeaderCell>Oprettet af</TableHeaderCell>
+                                <TableHeaderCell></TableHeaderCell>
                             </TableRow>
-                        }
-                    </TableBody>
-                </Table>
-                <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
-                <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
+                        </TableHeader>
+                        <TableBody>
+                            @foreach (var order in ownerOrders!)
+                            {
+                                <TableRow @key="@order.Id">
+                                    <TableHeaderCell>@order.Id</TableHeaderCell>
+                                    <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
+                                    <TableRowCell>
+                                        @if (order.CreatedByEmail != null)
+                                        {
+                                            <a href="mailto:@order.CreatedByEmail?subject=Frederikskaj 2 bestilling @order.Id">@order.CreatedByName</a>
+                                        }
+                                        else
+                                        {
+                                            <text>(Slettet)</text>
+                                        }
+                                    </TableRowCell>
+                                    <TableRowCell>
+                                        <Button class="float-right" Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ShowOrder(order.Id))">Vis</Button>
+                                    </TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                    </Table>
+                }
             }
         </Container>
     }
 </main>
+@if (canHandlePayments)
+{
+    <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+}
+@if (canHandleSettlements)
+{
+    <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
+}
 
 @code {
 
     private PaymentDialog paymentDialog = null!;
     private SettlementDialog settlementDialog = null!;
+    private bool canHandleOrders;
+    private bool canHandlePayments;
+    private bool canHandleSettlements;
     private IReadOnlyDictionary<int, Resource>? resources;
     private bool isInitialized;
     private List<Order>? orders;
@@ -151,11 +165,21 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        canHandleOrders = authenticationState.User.IsInRole(Roles.OrderHandling);
+        canHandlePayments = authenticationState.User.IsInRole(Roles.Payment);
+        canHandleSettlements = authenticationState.User.IsInRole(Roles.Settlement);
+
         resources = await ClientDataProvider.GetResources();
+
         var maybeOrders = await ApiClient.GetJsonAsync<IEnumerable<Order>>("orders");
         orders = maybeOrders.TryGetValue(out var ordersResponse) ? ordersResponse.ToList() : new List<Order>();
-        var maybeOwnerOrders = await ApiClient.GetJsonAsync<IEnumerable<OwnerOrder>>("owner-orders");
-        ownerOrders = maybeOwnerOrders.TryGetValue(out var ownerOrdersReponse) ? ownerOrdersReponse.ToList() : new List<OwnerOrder>();
+        if (canHandleOrders)
+        {
+            var maybeOwnerOrders = await ApiClient.GetJsonAsync<IEnumerable<OwnerOrder>>("owner-orders");
+            ownerOrders = maybeOwnerOrders.TryGetValue(out var ownerOrdersReponse) ? ownerOrdersReponse.ToList() : new List<OwnerOrder>();
+        }
+
         isInitialized = true;
     }
 

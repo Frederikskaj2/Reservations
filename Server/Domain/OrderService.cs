@@ -622,7 +622,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                         ResourceId = request.ResourceId
                     })
                 .ToList();
-            var price = (await policy.GetPrice(request.Date, request.DurationInDays)).Adapt<Price>();
+            var price = policy.GetPrice(request.Date, request.DurationInDays).Adapt<Price>();
             var reservation = new Reservation
             {
                 Order = order,
@@ -635,7 +635,6 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 Price = price
             };
             return (PlaceOrderResult.Success, reservation);
-            ;
 
             static async Task<bool> IsReservationDurationValid(
                 ReservationRequest reservation, IReservationPolicy policy)

@@ -16,12 +16,11 @@ namespace Frederikskaj2.Reservations.Client
             => this.apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
 
         public void UpdateUser(AuthenticatedUser user)
-            => NotifyAuthenticationStateChanged(GetAuthenticationState(Task.FromResult((Maybe<AuthenticatedUser>) user)));
+            => NotifyAuthenticationStateChanged(
+                GetAuthenticationState(Task.FromResult((Maybe<AuthenticatedUser>) user)));
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
-        {
-            return GetAuthenticationState(apiClient.GetJsonAsync<AuthenticatedUser>("user/authenticated"));
-        }
+            => GetAuthenticationState(apiClient.GetJsonAsync<AuthenticatedUser>("user/authenticated"));
 
         private static async Task<AuthenticationState> GetAuthenticationState(Task<Maybe<AuthenticatedUser>> userTask)
         {
@@ -42,8 +41,9 @@ namespace Frederikskaj2.Reservations.Client
                     if (user.Id.HasValue)
                         yield return new Claim(
                             ClaimTypes.NameIdentifier, user.Id.Value.ToString(CultureInfo.InvariantCulture));
-                    if (user.IsAdministrator)
-                        yield return new Claim(ClaimTypes.Role, Roles.Administrator);
+                    if (user.Roles != null)
+                        foreach (var role in user.Roles)
+                            yield return new Claim(ClaimTypes.Role, role);
                 }
             }
         }

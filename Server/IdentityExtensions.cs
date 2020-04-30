@@ -3,7 +3,7 @@ using System.Linq;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Identity;
 
-namespace Frederikskaj2.Reservations.Server.Controllers
+namespace Frederikskaj2.Reservations.Server
 {
     internal static class IdentityExtensions
     {

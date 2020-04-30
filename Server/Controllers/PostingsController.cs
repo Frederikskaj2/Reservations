@@ -11,7 +11,7 @@ using NodaTime.Text;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("postings")]
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize(Roles = Roles.Bookkeeping)]
     [ApiController]
     public class PostingsController : Controller
     {

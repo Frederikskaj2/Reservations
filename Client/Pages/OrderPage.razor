@@ -1,6 +1,7 @@
 ﻿@page "/bestillinger/{orderId:int}"
-@attribute [Authorize(Roles = Roles.Administrator)]
+@attribute [Authorize(Roles = Roles.OrderHandling + "," + Roles.Payment + "," + Roles.Settlement)]
 @inject ApiClient ApiClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
 @inject NavigationManager NavigationManager
@@ -25,10 +26,10 @@
                 <div>@order.FullName</div>
                 <div>@order.Phone</div>
             }
-            <OrderStatement @ref="orderStatement" IsAdministrator="true" OrderId="@order.Id" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" IsHistoryOrder="@(order.AccountNumber == null)" OnSubmit="@Submit" />
+            <OrderStatement @ref="orderStatement" IsCancellationEnabled="canHandleOrders" IsPaymentEnabled="canHandlePayments" IsSettlementEnabled="canHandleSettlements" OrderId="@order.Id" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" IsHistoryOrder="@(order.AccountNumber == null)" OnSubmit="@Submit" />
         </Container>
     }
-    else if (ownerOrder != null)
+    else if (canHandleOrders && ownerOrder != null)
     {
         <Container class="container-min-md">
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
@@ -44,7 +45,7 @@
     else
     {
         <Container>
-            <Text>Bestilling @OrderId findes ikke eller er blevet slettet.</Text>
+            <Text>Bestilling @OrderId er ikke tilgængelig.</Text>
         </Container>
     }
 </main>
@@ -52,6 +53,9 @@
 @code {
 
     private OrderStatement orderStatement = null!;
+    private bool canHandleOrders;
+    private bool canHandlePayments;
+    private bool canHandleSettlements;
     private Order? order;
     private OwnerOrder? ownerOrder;
     private bool isInitialized;
@@ -62,6 +66,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        canHandleOrders = authenticationState.User.IsInRole(Roles.OrderHandling);
+        canHandlePayments = authenticationState.User.IsInRole(Roles.Payment);
+        canHandleSettlements = authenticationState.User.IsInRole(Roles.Settlement);
+
         order = await GetOrder();
         if (order == null)
             ownerOrder = await GetOwnerOrder();
@@ -118,4 +127,3 @@
 
     private void DismissErrorAlert() => showErrorAlert = false;
 }
- 

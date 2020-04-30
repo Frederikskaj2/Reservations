@@ -15,7 +15,7 @@ using User = Frederikskaj2.Reservations.Server.Data.User;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("owner-orders")]
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize(Roles = Roles.OrderHandling)]
     [ApiController]
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
     public class OwnerOrdersController : Controller

@@ -12,24 +12,29 @@ namespace Frederikskaj2.Reservations.Server.Data
     internal class ServerDataProvider : IDataProvider
     {
         private readonly ReservationsContext db;
+        private readonly Lazy<HashSet<LocalDate>> holidays;
 
-        public ServerDataProvider(ReservationsContext db)
-            => this.db = db ?? throw new ArgumentNullException(nameof(db));
+        public ServerDataProvider(ReservationsContext db, HolidaysProvider holidaysProvider)
+        {
+            if (holidaysProvider is null)
+                throw new ArgumentNullException(nameof(holidaysProvider));
+
+            this.db = db ?? throw new ArgumentNullException(nameof(db));
+
+            holidays = new Lazy<HashSet<LocalDate>>(holidaysProvider.GetHolidays);
+        }
 
         public async Task<IReadOnlyDictionary<int, Shared.Resource>> GetResources()
             => await db.Resources.ToDictionaryAsync(resource => resource.Id, resource => resource.Adapt<Shared.Resource>());
 
-        public async Task<bool> IsHighPriceDay(LocalDate date)
-            => await HighPricePolicy.IsHighPriceDay(
-                date, async () => (await db.Holidays.Select(h => h.Date).ToListAsync()).ToHashSet());
+        public bool IsHighPriceDay(LocalDate date) => HighPricePolicy.IsHighPriceDay(date, holidays.Value);
 
-        public async Task<int> GetNumberOfHighPriceDays(LocalDate date, int durationInDays)
+        public int GetNumberOfHighPriceDays(LocalDate date, int durationInDays)
         {
-            var holidays = (await db.Holidays.Select(h => h.Date).ToListAsync()).ToHashSet();
             return Enumerable.Range(0, durationInDays)
                 .Aggregate(0, (count, i) => count + (IsHighPriceDay(date.PlusDays(i)) ? 1 : 0));
 
-            bool IsHighPriceDay(LocalDate d) => IsHighPriceWeekDay(d) || holidays.Contains(d);
+            bool IsHighPriceDay(LocalDate d) => IsHighPriceWeekDay(d) || holidays.Value.Contains(d);
         }
 
         public async Task<IEnumerable<Shared.ReservedDay>> GetReservedDays(

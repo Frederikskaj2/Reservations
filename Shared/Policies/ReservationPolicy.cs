@@ -46,9 +46,9 @@ namespace Frederikskaj2.Reservations.Shared
         public virtual Task<bool> IsResourceAvailable(LocalDate date, int resourceId, bool includeOrder)
             => IsResourceAvailable(date, 1, resourceId, includeOrder);
 
-        public virtual async Task<Price> GetPrice(LocalDate date, int durationInDays)
+        public virtual Price GetPrice(LocalDate date, int durationInDays)
         {
-            var numberOfHighPriceDays = await DataProvider.GetNumberOfHighPriceDays(date, durationInDays);
+            var numberOfHighPriceDays = DataProvider.GetNumberOfHighPriceDays(date, durationInDays);
             var rent = numberOfHighPriceDays*PriceOptions.HighRentPerDay
                        + (durationInDays - numberOfHighPriceDays)*PriceOptions.LowRentPerDay;
             var deposit = numberOfHighPriceDays > 0 ? PriceOptions.HighDeposit : PriceOptions.LowDeposit;

@@ -15,7 +15,7 @@ using User = Frederikskaj2.Reservations.Server.Data.User;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("key-codes")]
-    [Authorize(Roles = Roles.Administrator)]
+    [Authorize(Roles = Roles.KeyCodes)]
     [ApiController]
     public class KeyCodesController : Controller
     {
