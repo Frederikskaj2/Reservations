@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using MailKit.Security;
 using NodaTime;
 
@@ -16,6 +15,6 @@ namespace Frederikskaj2.Reservations.Server.Email
         public EmailRecipient? ReplyTo { get; set; }
         public Uri? BaseUrl { get; set; }
         public Duration ConfirmEmailUrlLifetime { get; set; } = Duration.FromDays(7);
-        public IEnumerable<EmailRecipient>? CleaningEmailRecipients { get; set; }
+        public TimeSpan ScheduleEmailInterval { get; set; } = TimeSpan.FromHours(6);
     }
 }

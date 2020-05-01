@@ -32,9 +32,41 @@
                             </FieldBody>
                         </Field>
                     </Validation>
-                    <Check @bind-Checked="@request.IsAdministrator" Disabled="@(!canEditIsAdministrator)">
+                    <h2>Administrative adgange</h2>
+                    <Paragraph>Bemærk at ændringer i disse først træder i kraft når brugeren logger ind næste gang. Hvis brugeren allerede er logget skal brugeren logge ud og ind igen.</Paragraph>
+                    <Check TValue="bool" Checked="@request.Roles.Contains(Roles.OrderHandling)" CheckedChanged="@(isChecked => CheckRole(isChecked, Roles.OrderHandling))">
                         <ChildContent>
-                            Administrator
+                            Bestillinger
+                        </ChildContent>
+                    </Check>
+                    <Check TValue="bool" Checked="@request.Roles.Contains(Roles.Payment)" CheckedChanged="@(isChecked => CheckRole(isChecked, Roles.Payment))">
+                        <ChildContent>
+                            Betaling
+                        </ChildContent>
+                    </Check>
+                    <Check TValue="bool" Checked="@request.Roles.Contains(Roles.Settlement)" CheckedChanged="@(isChecked => CheckRole(isChecked, Roles.Settlement))">
+                        <ChildContent>
+                            Opgørelse
+                        </ChildContent>
+                    </Check>
+                    <Check TValue="bool" Checked="@request.Roles.Contains(Roles.Bookkeeping)" CheckedChanged="@(isChecked => CheckRole(isChecked, Roles.Bookkeeping))">
+                        <ChildContent>
+                            Bogføring
+                        </ChildContent>
+                    </Check>
+                    <Check TValue="bool" Checked="@request.Roles.Contains(Roles.Cleaning)" CheckedChanged="@(isChecked => CheckRole(isChecked, Roles.Cleaning))">
+                        <ChildContent>
+                            Rengøring
+                        </ChildContent>
+                    </Check>
+                    <Check TValue="bool" Checked="@request.Roles.Contains(Roles.KeyCodes)" CheckedChanged="@(isChecked => CheckRole(isChecked, Roles.KeyCodes))">
+                        <ChildContent>
+                            Nøglebokskoder
+                        </ChildContent>
+                    </Check>
+                    <Check TValue="bool" Checked="@request.Roles.Contains(Roles.UserAdministration)" CheckedChanged="@(isChecked => CheckRole(isChecked, Roles.UserAdministration))" Disabled="@isCurrentUser">
+                        <ChildContent>
+                            Brugere
                         </ChildContent>
                     </Check>
                 </Validations>
@@ -49,27 +81,34 @@
 
 @code
 {
-
     private readonly UpdateUserRequest request = new UpdateUserRequest();
     private Modal modal = null!;
     private TextEdit nameTextEdit = null!;
     private Validations validations = null!;
     private User? user;
-    private bool canEditIsAdministrator;
+    private bool isCurrentUser;
 
     [Parameter]
     public EventCallback<(int UserId, UpdateUserRequest Request)> OnConfirm { get; set; }
 
-    public void Show(User user, bool canEditIsAdministrator)
+    public void Show(User user, bool isCurrentUser)
     {
         this.user = user;
         request.FullName = user.FullName!;
         request.Phone = user.Phone!;
-        request.IsAdministrator = user.IsAdministrator;
+        request.Roles = user.Roles!.ToHashSet();
         request.IsPendingDelete = user.IsPendingDelete;
-        this.canEditIsAdministrator = canEditIsAdministrator;
+        this.isCurrentUser = isCurrentUser;
         modal.Show();
         Task.Run(() => nameTextEdit.Focus());
+    }
+
+    private void CheckRole(bool isChecked, string role)
+    {
+        if (isChecked)
+            request.Roles.Add(role);
+        else
+            request.Roles.Remove(role);
     }
 
     private Task Confirm()
@@ -89,5 +128,4 @@
         modal.Hide();
         user = null;
     }
-
 }

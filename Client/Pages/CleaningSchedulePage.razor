@@ -1,5 +1,5 @@
-﻿@page "/noeglebokskoder"
-@attribute [Authorize(Roles = Roles.KeyCodes)]
+﻿@page "/rengoeringsplan"
+@attribute [Authorize(Roles = Roles.Cleaning)]
 @inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
@@ -15,35 +15,27 @@
         var orderedResources = resources!.Values.OrderBy(resource => resource.Sequence);
         <Container>
             <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
-                Listen med nøglebokskoder er blevet send til @email.
+                Rengøringsplanen er blevet send til @email.
                 <CloseButton Clicked="@DismissSuccessAlert" />
             </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl, og listen med nøglebokskoder blev ikke send til @email.
+                Der er sket en fejl, og rengøringsplane blev ikke send til @email.
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
-            <h1>Koder til nøglebokse</h1>
+            <h1>Rengøringsplan</h1>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHeaderCell>Uge</TableHeaderCell>
                         <TableHeaderCell>Dato</TableHeaderCell>
-                        @foreach (var resource in orderedResources)
-                        {
-                            <TableHeaderCell Class="text-center">@resource.Name</TableHeaderCell>
-                        }
+                        <TableHeaderCell>Lokale</TableHeaderCell>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    @foreach (var weeklyKeyCodes in allWeeklyKeyCodes!)
+                    @foreach (var cleaningTask in cleaningTasks!)
                     {
                         <TableRow>
-                            <TableHeaderCell>@weeklyKeyCodes.WeekNumber</TableHeaderCell>
-                            <TableRowCell>@FormattingService.FormatDate(weeklyKeyCodes.Date)</TableRowCell>
-                            @foreach (var resource in orderedResources)
-                            {
-                                <TableRowCell Class="text-center">@(weeklyKeyCodes.Codes!.TryGetValue(resource.Id, out var code) ? code : string.Empty)</TableRowCell>
-                            }
+                            <TableRowCell>@FormattingService.FormatDate(cleaningTask.Date)</TableRowCell>
+                            <TableRowCell>@resources[cleaningTask.ResourceId].Name</TableRowCell>
                         </TableRow>
                     }
                 </TableBody>
@@ -60,7 +52,7 @@
 @code {
 
     private IReadOnlyDictionary<int, Resource>? resources;
-    private IEnumerable<WeeklyKeyCodes>? allWeeklyKeyCodes;
+    private IEnumerable<CleaningTask>? cleaningTasks;
     private string? email;
     private bool isInitialized;
     private bool showSuccessAlert;
@@ -69,7 +61,9 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        allWeeklyKeyCodes = await ClientDataProvider.GetKeyCodes();
+        var maybe = await ApiClient.GetJsonAsync<IEnumerable<CleaningTask>>("cleaning-tasks");
+        if (!maybe.TryGetValue(out cleaningTasks))
+            cleaningTasks = Enumerable.Empty<CleaningTask>();
         email = await ApplicationState.GetUserEmail();
         isInitialized = true;
     }
@@ -78,7 +72,7 @@
     {
         DismissAllAlerts();
 
-        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("key-codes/send", null);
+        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("cleaning-tasks/send", null);
         if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
             showSuccessAlert = true;
         else

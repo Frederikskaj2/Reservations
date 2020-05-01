@@ -27,7 +27,7 @@ namespace Frederikskaj2.Reservations.Server.Email
         public Task DoWork()
         {
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            return Task.WhenAll(keyCodeService.SendKeyCodeEmails(today), cleaningTaskService.SendCleaningTasksEmail(today));
+            return Task.WhenAll(keyCodeService.SendKeyCodeEmails(today), cleaningTaskService.SendDifferentialCleaningTasksEmail(today));
         }
     }
 }

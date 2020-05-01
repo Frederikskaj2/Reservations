@@ -25,7 +25,7 @@
                         <TableHeaderCell>Telefon</TableHeaderCell>
                         <TableHeaderCell class="text-center">Bestillinger</TableHeaderCell>
                         <TableHeaderCell class="text-center">Email bekræftet</TableHeaderCell>
-                        <TableHeaderCell class="text-center">Administrator</TableHeaderCell>
+                        <TableHeaderCell>Administrative adgange</TableHeaderCell>
                         <TableHeaderCell class="text-center">Sletning ønsket</TableHeaderCell>
                         <TableHeaderCell></TableHeaderCell>
                     </TableRow>
@@ -44,11 +44,8 @@
                                     <Icon class="fa-check" />
                                 }
                             </TableRowCell>
-                            <TableRowCell class="text-center">
-                                @if (@user.IsAdministrator)
-                                {
-                                    <Icon class="fa-check" />
-                                }
+                            <TableRowCell>
+                                @((MarkupString) string.Join("<br/>", user.Roles.OrderBy(GetLogicalRoleOrder).Select(GetRoleName)))
                             </TableRowCell>
                             <TableRowCell class="text-center">
                                 @if (@user.IsPendingDelete)
@@ -61,14 +58,6 @@
                                     <DropdownToggle Color="Color.Light" />
                                     <DropdownMenu>
                                         <DropdownItem Clicked="@(() => Edit(user))">Redigér</DropdownItem>
-                                        @if (!user.IsAdministrator)
-                                        {
-                                            <DropdownItem Clicked="@(() => MakeAdministrator(user))">Gør til administrator</DropdownItem>
-                                        }
-                                        else if (user.IsAdministrator && user.Id != currentUserId)
-                                        {
-                                            <DropdownItem Clicked="@(() => MakeNormalUser(user))">Gør til almindelig bruger</DropdownItem>
-                                        }
                                         @if (!user.IsPendingDelete && user.Id != currentUserId)
                                         {
                                             <DropdownItem Clicked="@(() => Delete(user))">Slet</DropdownItem>
@@ -103,7 +92,7 @@
         isInitialized = true;
     }
 
-    private void Edit(User user) => editUserDialog.Show(user, user.Id != currentUserId);
+    private void Edit(User user) => editUserDialog.Show(user, user.Id == currentUserId);
 
     private Task MakeAdministrator(User user) => PatchUser(user, true, null);
 
@@ -123,7 +112,6 @@
         {
             FullName = user.FullName!,
             Phone = user.Phone!,
-            IsAdministrator = isAdministrator ?? user.IsAdministrator,
             IsPendingDelete = isPendingDelete ?? user.IsPendingDelete
         };
         await PatchUser(user.Id, request);
@@ -160,4 +148,28 @@
         var index = users!.FindIndex(u => u.Id == userId);
         users.RemoveAt(index);
     }
+
+    private string GetRoleName(string role) => role switch
+    {
+        Roles.OrderHandling => "Bestillinger",
+        Roles.Payment => "Betaling",
+        Roles.Settlement => "Opgørelse",
+        Roles.Bookkeeping => "Bogføring",
+        Roles.Cleaning => "Rengøring",
+        Roles.KeyCodes => "Nøglebokskoder",
+        Roles.UserAdministration => "Brugeradministration",
+        _ => "?"
+    };
+
+    private int GetLogicalRoleOrder(string role) => role switch
+    {
+        Roles.OrderHandling => 1,
+        Roles.Payment => 2,
+        Roles.Settlement => 3,
+        Roles.Bookkeeping => 4,
+        Roles.Cleaning => 5,
+        Roles.KeyCodes => 6,
+        Roles.UserAdministration => 7,
+        _ => 8,
+    };
 }

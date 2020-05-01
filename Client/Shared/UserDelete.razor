@@ -15,7 +15,7 @@
         <CardTitle Size="1">Sletning</CardTitle>
     </CardHeader>
     <CardBody>
-        @if (!User.IsPendingDelete && !User.IsAdministrator)
+        @if (!User.IsPendingDelete && !User.Roles.Contains(Roles.UserAdministration))
         {
             <Paragraph>
                 Hvis du sletter din bruger kan du ikke længere reservere lokaler på Frederikskaj 2. Når din bruger bliver slettet fjerner vi alle oplysninger om dig fra vores system. Hvis du tidligere har foretaget bestillinger vil disse fortsat findes i systemet af hensyn til statistik, men de er ikke længere knyttet til din person.
@@ -36,7 +36,7 @@
         else
         {
             <Paragraph>
-                Du kan ikke slette din bruger så længe du er adminstrator af systemet. For at slette din bruger skal du bede en anden administrator om at gøre dig til almindelig bruger. Når dette er sket kan du selv slette din bruger.
+                Du kan ikke slette din bruger så længe du er brugeradminstrator i systemet. For at slette din bruger skal du bede en anden brugeradministrator om at fjerne din adgang til at administrere brugere. Når dette er sket kan du selv slette din bruger.
             </Paragraph>
         }
     </CardBody>

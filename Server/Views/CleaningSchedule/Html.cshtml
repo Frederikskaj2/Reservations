@@ -15,7 +15,10 @@
 </head>
 <body>
     <p>Hej @Model.Name</p>
+@if (Model.CancelledTasks.Any() || Model.NewTasks.Any())
+{
     <p>Rengøringsplanen for Frederikskaj 2 er blevet opdateret.</p>
+}
 @if (Model.CancelledTasks.Any())
 {
     <p><strong>Aflysninger</strong></p>
@@ -77,4 +80,5 @@
         </tbody>
     </table>
     @await Html.PartialAsync("_Signature", Model)
+    <p><a href="@($"{Model.FromUrl}/{Urls.CleaningSchedule}")" />Rengøringsplan</a> • <a href="@($"{Model.FromUrl}/{Urls.MyAccount}")" />Din konto</a></p>
 </body>

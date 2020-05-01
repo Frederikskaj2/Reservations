@@ -13,5 +13,7 @@ namespace Frederikskaj2.Reservations.Shared
         [StringLength(50, ErrorMessage = "Teksten er for lang")]
         [RegularExpression(@"^\s*\+?[0-9](?:[- ]?[0-9]+)+\s*$", ErrorMessage = "Angiv et korrekt telefonnummer")]
         public string Phone { get; set; } = string.Empty;
+
+        public EmailSubscriptions EmailSubscriptions { get; set; }
     }
 }

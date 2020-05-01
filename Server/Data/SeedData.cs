@@ -2,30 +2,35 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
-    internal class SeedData
+    internal sealed class SeedData : IDisposable
     {
+        private readonly IClock clock;
         private readonly ReservationsContext db;
         private readonly SeedDataOptions options;
+        private readonly RandomNumberGenerator randomNumberGenerator = RandomNumberGenerator.Create();
         private readonly RoleManager<Role> roleManager;
         private readonly UserManager<User> userManager;
 
         public SeedData(
-            IOptions<SeedDataOptions> options, ReservationsContext db, UserManager<User> userManager,
-            RoleManager<Role> roleManager)
+            IOptions<SeedDataOptions> options, IClock clock, ReservationsContext db,
+            RoleManager<Role> roleManager, UserManager<User> userManager)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
 
+            this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
-            this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             this.roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+            this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
 
             this.options = options.Value;
 
@@ -39,8 +44,6 @@ namespace Frederikskaj2.Reservations.Server.Data
                     throw new ConfigurationException("Missing seed data user full name.");
                 if (string.IsNullOrEmpty(user.Phone))
                     throw new ConfigurationException("Missing seed data user phone.");
-                if (string.IsNullOrEmpty(user.Password))
-                    throw new ConfigurationException("Missing seed data user password.");
             }
 
             if (!(this.options.Resources?.Any() ?? false))
@@ -49,6 +52,8 @@ namespace Frederikskaj2.Reservations.Server.Data
                 if (string.IsNullOrEmpty(resource.Name))
                     throw new ConfigurationException("Missing seed data resource name.");
         }
+
+        public void Dispose() => randomNumberGenerator.Dispose();
 
         public async Task Initialize()
         {
@@ -126,6 +131,7 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         private async Task CreateUsers()
         {
+            var now = clock.GetCurrentInstant();
             foreach (var userOptions in options.Users!)
             {
                 var user = new User
@@ -135,14 +141,26 @@ namespace Frederikskaj2.Reservations.Server.Data
                     EmailConfirmed = true,
                     FullName = userOptions.FullName!,
                     PhoneNumber = userOptions.Phone,
-                    EmailSubscriptions = userOptions.EmailSubscriptions
+                    EmailSubscriptions = userOptions.EmailSubscriptions,
+                    Created = now,
+                    LatestSignIn = now
                 };
-                await userManager.CreateAsync(user, userOptions.Password);
+                var password = !string.IsNullOrEmpty(userOptions.Password)
+                    ? userOptions.Password
+                    : CreateRandomPassword();
+                await userManager.CreateAsync(user, password);
                 if (userOptions.Roles == null)
                     continue;
                 foreach (var role in userOptions.Roles)
                     await userManager.AddToRoleAsync(user, role);
             }
+        }
+
+        private string CreateRandomPassword()
+        {
+            var bytes = new byte[18];
+            randomNumberGenerator.GetBytes(bytes);
+            return Convert.ToBase64String(bytes);
         }
     }
 }

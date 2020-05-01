@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using SignInResult = Frederikskaj2.Reservations.Shared.SignInResult;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
@@ -28,6 +29,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     public class UserController : Controller
     {
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
+        private readonly IClock clock;
         private readonly ReservationsContext db;
         private readonly ILogger logger;
         private readonly OrderService orderService;
@@ -36,15 +38,15 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private readonly UserManager<User> userManager;
 
         public UserController(
-            ILogger<UserController> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue,
-            OrderService orderService, ReservationsContext db, SignInManager<User> signInManager,
+            ILogger<UserController> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue, IClock clock,
+            ReservationsContext db, OrderService orderService, SignInManager<User> signInManager,
             UserManager<User> userManager)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.backgroundWorkQueue =
-                backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
-            this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
+            this.backgroundWorkQueue = backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
+            this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
+            this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
             this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
@@ -58,7 +60,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var myUser = user.Adapt<MyUser>();
             myUser.Phone = user.PhoneNumber;
             myUser.IsEmailConfirmed = user.EmailConfirmed;
-            myUser.IsAdministrator = await userManager.IsInRoleAsync(user, Roles.UserAdministration);
+            myUser.Roles = await userManager.GetRolesAsync(user);
             return myUser;
         }
 
@@ -78,13 +80,16 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             var trimmedEmail = request.Email.Trim();
             logger.LogInformation("New user sign-up with email {Email}", trimmedEmail.MaskEmail());
+            var now = clock.GetCurrentInstant();
             var user = new User
             {
                 UserName = trimmedEmail,
                 Email = trimmedEmail,
                 FullName = request.FullName.Trim(),
                 PhoneNumber = request.Phone.Trim(),
-                ApartmentId = request.ApartmentId
+                ApartmentId = request.ApartmentId,
+                Created = now,
+                LatestSignIn = now
             };
             var result = await userManager.CreateAsync(user, request.Password);
             if (!result.Succeeded)
@@ -112,6 +117,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (!result.Succeeded)
                 return new SignInResponse
                     { Result = result.IsLockedOut ? SignInResult.LockedOut : SignInResult.InvalidEmailOrPassword };
+
+            user.LatestSignIn = clock.GetCurrentInstant();
+            await userManager.UpdateAsync(user);
 
             var authenticationProperties = new AuthenticationProperties { IsPersistent = request.IsPersistent };
             await signInManager.SignInAsync(user, authenticationProperties);
@@ -149,6 +157,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
             user.FullName = request.FullName;
             user.PhoneNumber = request.Phone;
+            user.EmailSubscriptions = request.EmailSubscriptions;
 
             var result = await userManager.UpdateAsync(user);
             return new OperationResponse

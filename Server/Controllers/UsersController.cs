@@ -42,7 +42,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         FullName = user.FullName,
                         Phone = user.PhoneNumber,
                         IsEmailConfirmed = user.EmailConfirmed,
-                        IsAdministrator = user.UserRoles.Any(role => role.Role!.Name == Roles.UserAdministration),
+                        Roles = user.UserRoles.Select(role => role.Role!.Name),
                         IsPendingDelete = user.IsPendingDelete,
                         OrderCount = user.Orders!.Count(order => order.ApartmentId != null)
                     })
@@ -56,10 +56,14 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (user == null)
                 return new UpdateUserResponse { Result = UpdateUserResult.GeneralError };
 
-            if (request.IsAdministrator)
-                await userManager.AddToRoleAsync(user, Roles.UserAdministration);
-            else
-                await userManager.RemoveFromRoleAsync(user, Roles.UserAdministration);
+            var currentRoles = (await userManager.GetRolesAsync(user)).ToHashSet();
+            var rolesToAdd = request.Roles.Where(role => !currentRoles.Contains(role));
+            foreach (var role in rolesToAdd)
+                await userManager.AddToRoleAsync(user, role);
+            var rolesToRemove = currentRoles.Where(role => !request.Roles.Contains(role));
+            foreach (var role in rolesToRemove)
+                await userManager.RemoveFromRoleAsync(user, role);
+            CleanupEmailSubscriptions(user, request.Roles);
 
             user.FullName = request.FullName;
             user.PhoneNumber = request.Phone;
@@ -81,7 +85,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                     FullName = user.FullName,
                     Phone = user.PhoneNumber,
                     IsEmailConfirmed = user.EmailConfirmed,
-                    IsAdministrator = request.IsAdministrator,
+                    Roles = request.Roles,
                     IsPendingDelete = user.IsPendingDelete,
                     OrderCount = await db.Orders.Where(order => order.UserId == user.Id).CountAsync()
                 };
@@ -97,6 +101,18 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             }
 
             return response;
+
+            static void CleanupEmailSubscriptions(User user, HashSet<string> roles)
+            {
+                if (user.EmailSubscriptions.HasFlag(EmailSubscriptions.NewOrder) && !(roles.Contains(Roles.OrderHandling) || roles.Contains(Roles.Payment)))
+                    user.EmailSubscriptions &= ~EmailSubscriptions.NewOrder;
+                if (user.EmailSubscriptions.HasFlag(EmailSubscriptions.OverduePayment) && !(roles.Contains(Roles.OrderHandling) || roles.Contains(Roles.Payment)))
+                    user.EmailSubscriptions &= ~EmailSubscriptions.OverduePayment;
+                if (user.EmailSubscriptions.HasFlag(EmailSubscriptions.SettlementRequired) && !roles.Contains(Roles.Settlement))
+                    user.EmailSubscriptions &= ~EmailSubscriptions.SettlementRequired;
+                if (user.EmailSubscriptions.HasFlag(EmailSubscriptions.CleaningScheduleUpdated) && !roles.Contains(Roles.Cleaning))
+                    user.EmailSubscriptions &= ~EmailSubscriptions.CleaningScheduleUpdated;
+            }
         }
     }
 }

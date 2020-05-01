@@ -53,15 +53,6 @@ namespace Frederikskaj2.Reservations.Server.Email
                 throw new ConfigurationException("Missing base URL.");
             if (this.options.ConfirmEmailUrlLifetime <= Duration.Zero)
                 throw new ConfigurationException("Invalid confirm email url lifetime.");
-            if (this.options.CleaningEmailRecipients == null || !this.options.CleaningEmailRecipients.Any())
-                throw new ConfigurationException("No cleaning email recipients.");
-            foreach (var recipient in this.options.CleaningEmailRecipients)
-            {
-                if (string.IsNullOrEmpty(recipient.Name))
-                    throw new ConfigurationException("Missing cleaning email recipient name.");
-                if (string.IsNullOrEmpty(recipient.Email))
-                    throw new ConfigurationException("Missing cleaning email recipient email.");
-            }
         }
 
         public async Task SendConfirmEmail(User user, string token)
@@ -310,9 +301,11 @@ namespace Frederikskaj2.Reservations.Server.Email
         }
 
         public async Task SendCleaningScheduleEmail(
-            IEnumerable<Data.Resource> resources, IEnumerable<Data.CleaningTask> cancelledTasks,
+            User user, IEnumerable<Data.Resource> resources, IEnumerable<Data.CleaningTask> cancelledTasks,
             IEnumerable<Data.CleaningTask> newTasks, IEnumerable<Data.CleaningTask> currentTasks)
         {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
             if (resources is null)
                 throw new ArgumentNullException(nameof(resources));
             if (cancelledTasks is null)
@@ -326,17 +319,14 @@ namespace Frederikskaj2.Reservations.Server.Email
             var cancelledCleaningTasks = GetCleaningTasks(cancelledTasks).ToList();
             var newCleaningTasks = GetCleaningTasks(newTasks).ToList();
             var currentCleaningTasks = GetCleaningTasks(currentTasks).ToList();
-            foreach (var recipient in options.CleaningEmailRecipients!)
-            {
-                var model = new CleaningScheduleModel(
-                    options.From!.Name!,
-                    urlService.GetFromUrl(),
-                    recipient.Name!,
-                    cancelledCleaningTasks,
-                    newCleaningTasks,
-                    currentCleaningTasks);
-                await SendMessage(model, "CleaningSchedule", recipient);
-            }
+            var model = new CleaningScheduleModel(
+                options.From!.Name!,
+                urlService.GetFromUrl(),
+                user.FullName!,
+                cancelledCleaningTasks,
+                newCleaningTasks,
+                currentCleaningTasks);
+            await SendMessage(model, "CleaningSchedule", new EmailRecipient { Name = user.FullName, Email = user.Email });
 
             IEnumerable<CleaningTask> GetCleaningTasks(IEnumerable<Data.CleaningTask> tasks)
                 => tasks.Select(

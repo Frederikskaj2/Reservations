@@ -6,8 +6,9 @@ namespace Frederikskaj2.Reservations.Shared
     public enum EmailSubscriptions
     {
         None,
-        Order,
-        Settlement = Order << 1,
-        Cleaning = Settlement << 1
+        NewOrder,
+        OverduePayment = NewOrder << 1,
+        SettlementRequired = OverduePayment << 1,
+        CleaningScheduleUpdated = SettlementRequired << 1
     }
 }

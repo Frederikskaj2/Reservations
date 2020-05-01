@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Identity;
+using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
     public class User : IdentityUser<int>
     {
         public string FullName { get; set; } = string.Empty;
+        public Instant Created { get; set; }
+        public Instant LatestSignIn { get; set; }
         public bool IsPendingDelete { get; set; }
         public int? ApartmentId { get; set; }
         public Apartment? Apartment { get; set; }

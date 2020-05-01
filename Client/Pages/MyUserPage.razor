@@ -18,6 +18,10 @@
             {
                 <UserInformation User="@user" />
                 <UserUpdatePassword />
+                @if (user.Roles.Contains(Roles.OrderHandling) || user.Roles.Contains(Roles.Payment) || user.Roles.Contains(Roles.Settlement) || user.Roles.Contains(Roles.Cleaning))
+                {
+                    <UserEmailSubscriptions User="@user" />
+                }
                 <Card Background="Background.Light">
                     <CardHeader>
                         <CardTitle Size="1">Kontoudtog</CardTitle>

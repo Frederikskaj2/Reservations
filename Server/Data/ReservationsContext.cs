@@ -32,8 +32,21 @@ namespace Frederikskaj2.Reservations.Server.Data
 
             base.OnModelCreating(modelBuilder);
 
+            var instantConverter = new ValueConverter<Instant, DateTime>(
+                instant => instant.ToDateTimeUtc(),
+                dateTime => Instant.FromDateTimeUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)));
+            var localDateConverter = new ValueConverter<LocalDate, DateTime>(
+                localDate => localDate.ToDateTimeUnspecified(),
+                dateTime => LocalDate.FromDateTime(dateTime));
+
             modelBuilder.Entity<User>(builder =>
             {
+                builder.Property(user => user.Created)
+                    .HasConversion(instantConverter);
+
+                builder.Property(user => user.LatestSignIn)
+                    .HasConversion(instantConverter);
+
                 builder.HasMany(user => user.Claims)
                     .WithOne(userClaim => userClaim.User!)
                     .HasForeignKey(userClaim => userClaim.UserId)
@@ -77,13 +90,6 @@ namespace Frederikskaj2.Reservations.Server.Data
                     .HasForeignKey(roleClaim => roleClaim.RoleId)
                     .IsRequired();
             });
-
-            var instantConverter = new ValueConverter<Instant, DateTime>(
-                instant => instant.ToDateTimeUtc(),
-                dateTime => Instant.FromDateTimeUtc(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)));
-            var localDateConverter = new ValueConverter<LocalDate, DateTime>(
-                localDate => localDate.ToDateTimeUnspecified(),
-                dateTime => LocalDate.FromDateTime(dateTime));
 
             modelBuilder.Entity<CleaningTask>()
                 .Property(cleaningTask => cleaningTask.Date)

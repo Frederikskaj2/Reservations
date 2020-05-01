@@ -8,6 +8,7 @@ using Frederikskaj2.Reservations.Shared;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using CleaningTask = Frederikskaj2.Reservations.Server.Data.CleaningTask;
+using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Domain
 {
@@ -25,21 +26,37 @@ namespace Frederikskaj2.Reservations.Server.Domain
             this.db = db ?? throw new ArgumentNullException(nameof(db));
         }
 
-        public async Task SendCleaningTasksEmail(LocalDate date)
+        public async Task<IEnumerable<CleaningTask>> GetTasks(LocalDate date)
         {
-            var allTasks = await db.CleaningTasks.ToListAsync();
-            var currentTasks = allTasks.Where(cleaningTask => cleaningTask.Date >= date).ToHashSet(EqualityComparer);
             var confirmedReservations = await db.Reservations
                 .Where(reservation => reservation.Status == ReservationStatus.Confirmed).ToListAsync();
-            var requiredTasks = confirmedReservations
+            return confirmedReservations
                 .Where(reservation => date <= reservation.Date.PlusDays(reservation.DurationInDays))
                 .Select(
                     reservation => new CleaningTask
                     {
                         ResourceId = reservation.ResourceId,
                         Date = reservation.Date.PlusDays(reservation.DurationInDays)
-                    })
-                .ToHashSet(EqualityComparer);
+                    });
+        }
+
+        public async Task SendCleaningTasksEmail(User user, LocalDate date)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+
+            var requiredTasks = await GetTasks(date);
+            var resources = await db.Resources.ToListAsync();
+            backgroundWorkQueue.Enqueue(
+                (service, _) => service.SendCleaningScheduleEmail(
+                    user, resources, Enumerable.Empty<CleaningTask>(), Enumerable.Empty<CleaningTask>(), requiredTasks));
+        }
+
+        public async Task SendDifferentialCleaningTasksEmail(LocalDate date)
+        {
+            var allTasks = await db.CleaningTasks.ToListAsync();
+            var currentTasks = allTasks.Where(cleaningTask => cleaningTask.Date >= date).ToHashSet(EqualityComparer);
+            var requiredTasks = (await GetTasks(date)).ToHashSet(EqualityComparer);
 
             var cancelledTasks = currentTasks.ToHashSet(EqualityComparer);
             cancelledTasks.ExceptWith(requiredTasks);
@@ -50,9 +67,13 @@ namespace Frederikskaj2.Reservations.Server.Domain
             if (cancelledTasks.Count != 0 || newTasks.Count != 0)
             {
                 var resources = await db.Resources.ToListAsync();
-                backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendCleaningScheduleEmail(
-                        resources, cancelledTasks, newTasks, requiredTasks));
+                var users = await db.Users
+                    .Where(user => user.EmailSubscriptions.HasFlag(EmailSubscriptions.CleaningScheduleUpdated))
+                    .ToListAsync();
+                foreach (var user in users)
+                    backgroundWorkQueue.Enqueue(
+                        (service, _) => service.SendCleaningScheduleEmail(
+                            user, resources, cancelledTasks, newTasks, requiredTasks));
             }
 
             foreach (var task in allTasks.Where(task => !requiredTasks.Contains(task)))
