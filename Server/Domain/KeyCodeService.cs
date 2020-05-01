@@ -138,7 +138,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .ThenInclude(order => order!.User)
                 .Include(reservation => reservation.Resource)
                 .Where(
-                    reservation => reservation.Status == ReservationStatus.Confirmed && !reservation.IsKeyCodeEmailSent)
+                    reservation => reservation.Status == ReservationStatus.Confirmed && !reservation.SentEmails.HasFlag(ReservationEmails.KeyCode))
                 .ToListAsync())
                 .Where(
                     reservation => reservation.Date.PlusDays(
@@ -152,7 +152,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             foreach (var reservation in reservations)
             {
                 backgroundWorkQueue.Enqueue((service, _) => service.SendKeyCodeEmail(reservation.Order!.User!, reservation, keyCodes));
-                reservation.IsKeyCodeEmailSent = true;
+                reservation.SentEmails |= ReservationEmails.KeyCode;
             }
 
             await db.SaveChangesAsync();

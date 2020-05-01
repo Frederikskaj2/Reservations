@@ -44,7 +44,7 @@ namespace Frederikskaj2.Reservations.Shared
         public LocalTime CheckOutTime { get; set; } = new LocalTime(10, 0);
         public int CancellationFee { get; set; } = 200;
         public int MinimumCancellationNoticeInDays { get; set; } = 14;
-        public int HighlightUnpaidOrdersAfterDays { get; set; } = 7;
+        public int PaymentDeadlineInDays { get; set; } = 7;
         public string PayInAccountNumber { get; set; } = "9444-12501110";
         public int RevealKeyCodeDaysBeforeReservationStart { get; set; } = 3;
     }

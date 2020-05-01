@@ -232,6 +232,6 @@
     private bool GetIsUnpaidOrderOld(Order order)
     {
         var daysSinceOrderWasPlaced = -DateProvider.GetDaysFromToday(order.CreatedTimestamp);
-        return daysSinceOrderWasPlaced > ReservationsOptions.HighlightUnpaidOrdersAfterDays;
+        return daysSinceOrderWasPlaced >= ReservationsOptions.PaymentDeadlineInDays;
     }
 }

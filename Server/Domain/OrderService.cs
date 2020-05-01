@@ -174,6 +174,12 @@ namespace Frederikskaj2.Reservations.Server.Domain
             backgroundWorkQueue.Enqueue(
                 (service, _) => service.SendOrderReceivedEmail(user, order.Id, totalPrice.GetTotal()));
 
+            var users = await db.Users
+                .Where(u => u.EmailSubscriptions.HasFlag(EmailSubscriptions.NewOrder))
+                .ToListAsync();
+            foreach (var u in users)
+                backgroundWorkQueue.Enqueue((service, _) => service.SendNewOrderEmail(user, order.Id));
+
             return (PlaceOrderResult.Success, order);
         }
 
@@ -601,6 +607,79 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             await ReallyDeleteUser(user);
             return true;
+        }
+
+        public async Task SendOverduePaymentEmails(LocalDate date)
+        {
+            var deadline = date.PlusDays(1 - reservationsOptions.PaymentDeadlineInDays).AtStartOfDayInZone(dateTimeZone)
+                .ToInstant();
+            var orders = await db.Orders
+                .Include(order => order.Reservations)
+                .Where(
+                    order => order.CreatedTimestamp <= deadline
+                        && order.Reservations.Any(
+                            reservation => reservation.Status == ReservationStatus.Reserved
+                                && !reservation.SentEmails.HasFlag(ReservationEmails.OverduePayment)))
+                .ToListAsync();
+            if (orders.Count == 0)
+                return;
+
+            var users = await db.Users
+                .Where(user => user.EmailSubscriptions.HasFlag(EmailSubscriptions.OverduePayment))
+                .ToListAsync();
+            if (users.Count == 0)
+                return;
+
+            foreach (var order in orders)
+            {
+                foreach (var user in users)
+                    backgroundWorkQueue.Enqueue(
+                        (service, _) => service.SendOverduePaymentEmail(user, order.Id));
+                var reservationsToUpdate = order.Reservations
+                    .Where(reservation => reservation.Status == ReservationStatus.Reserved);
+                foreach (var reservation in reservationsToUpdate)
+                    reservation.SentEmails |= ReservationEmails.OverduePayment;
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+
+        public async Task SendSettlementNeededEmails(LocalDate date)
+        {
+            var orders = await db.Orders
+                .Include(order => order.Reservations)
+                .ThenInclude(reservation => reservation.Resource)
+                .Where(
+                    order => order.Reservations.Any(
+                        reservation => reservation.Status == ReservationStatus.Confirmed && reservation.Date < date
+                            && !reservation.SentEmails.HasFlag(ReservationEmails.NeedsSettlement)))
+                .ToListAsync();
+            // EF Core is not able to convert the NodaTime date arithmetic to SQL so the filtering is done client side instead.
+            var reservations = orders.SelectMany(
+                    order => order.Reservations.Where(
+                        reservation => reservation.Date.PlusDays(reservation.DurationInDays) <= date))
+                .ToList();
+            if (reservations.Count == 0)
+                return;
+
+            var users = await db.Users
+                .Where(user => user.EmailSubscriptions.HasFlag(EmailSubscriptions.SettlementRequired))
+                .ToListAsync();
+            if (users.Count == 0)
+                return;
+
+            foreach (var reservation in reservations)
+            {
+                foreach (var user in users)
+                    backgroundWorkQueue.Enqueue(
+                        (service, _) => service.SendSettlementNeededEmail(
+                            user, reservation.OrderId, reservation.Resource!.Name,
+                            reservation.Date.PlusDays(reservation.DurationInDays)));
+                reservation.SentEmails |= ReservationEmails.NeedsSettlement;
+            }
+
+            await db.SaveChangesAsync();
         }
 
         private async Task<(PlaceOrderResult Result, Reservation? Reservation)> CreateReservation(

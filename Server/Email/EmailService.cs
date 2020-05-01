@@ -96,11 +96,25 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
-                urlService.GetOrderUrl(orderId),
+                urlService.GetMyOrderUrl(orderId),
                 orderId,
                 amount,
                 reservationsOptions.PayInAccountNumber);
             await SendMessage(model, "OrderReceived", new EmailRecipient { Name = user.FullName, Email = user.Email });
+        }
+
+        public async Task SendNewOrderEmail(User user, int orderId)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+
+            var model = new OrderModel(
+                options.From!.Name!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId);
+            await SendMessage(model, "NewOrder", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
         public async Task SendOrderConfirmedEmail(User user, int orderId, int amount, int excessAmount)
@@ -116,7 +130,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
-                urlService.GetOrderUrl(orderId),
+                urlService.GetMyOrderUrl(orderId),
                 orderId,
                 amount,
                 excessAmount);
@@ -136,12 +150,26 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
-                urlService.GetOrderUrl(orderId),
+                urlService.GetMyOrderUrl(orderId),
                 orderId,
                 amount,
                 missingAmount,
                 reservationsOptions.PayInAccountNumber);
             await SendMessage(model, "MissingPayment", new EmailRecipient { Name = user.FullName, Email = user.Email });
+        }
+
+        public async Task SendOverduePaymentEmail(User user, int orderId)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+
+            var model = new OrderModel(
+                options.From!.Name!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId);
+            await SendMessage(model, "OverduePayment", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
         public async Task SendReservationCancelledEmail(
@@ -160,7 +188,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
-                urlService.GetOrderUrl(orderId),
+                urlService.GetMyOrderUrl(orderId),
                 orderId,
                 resourceName,
                 date,
@@ -168,6 +196,24 @@ namespace Frederikskaj2.Reservations.Server.Email
                 cancellationFee);
             await SendMessage(
                 model, "ReservationCancelled", new EmailRecipient { Name = user.FullName, Email = user.Email });
+        }
+
+        public async Task SendSettlementNeededEmail(User user, int orderId, string resourceName, LocalDate date)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrEmpty(resourceName))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(resourceName));
+
+            var model = new ReservationModel(
+                options.From!.Name!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                urlService.GetOrderUrl(orderId),
+                orderId,
+                resourceName,
+                date);
+            await SendMessage(model, "SettlementNeeded", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
         public async Task SendReservationSettledEmail(
@@ -189,7 +235,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
-                urlService.GetOrderUrl(orderId),
+                urlService.GetMyOrderUrl(orderId),
                 orderId,
                 resourceName,
                 date,
@@ -211,7 +257,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
-                urlService.GetOrderUrl(orderId),
+                urlService.GetMyOrderUrl(orderId),
                 orderId,
                 amount);
             await SendMessage(model, "PayOut", new EmailRecipient { Name = user.FullName, Email = user.Email });
@@ -242,7 +288,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
-                urlService.GetOrderUrl(reservation.OrderId),
+                urlService.GetMyOrderUrl(reservation.OrderId),
                 reservation.OrderId,
                 reservation.Resource!.Name,
                 reservation.Date,

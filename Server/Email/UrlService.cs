@@ -38,11 +38,20 @@ namespace Frederikskaj2.Reservations.Server.Email
             return uriBuilder.Uri;
         }
 
-        public Uri GetOrderUrl(int orderId)
+        public Uri GetMyOrderUrl(int orderId)
         {
             var uriBuilder = new UriBuilder(options.BaseUrl!)
             {
                 Path = $"{Urls.MyOrders}/{orderId}"
+            };
+            return uriBuilder.Uri;
+        }
+
+        public Uri GetOrderUrl(int orderId)
+        {
+            var uriBuilder = new UriBuilder(options.BaseUrl!)
+            {
+                Path = $"{Urls.Orders}/{orderId}"
             };
             return uriBuilder.Uri;
         }
