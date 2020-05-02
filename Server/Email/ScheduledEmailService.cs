@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Domain;
+using Microsoft.Extensions.Options;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Email
@@ -11,20 +12,26 @@ namespace Frederikskaj2.Reservations.Server.Email
         private readonly IClock clock;
         private readonly DateTimeZone dateTimeZone;
         private readonly KeyCodeService keyCodeService;
+        private readonly EmailOptions options;
         private readonly OrderService orderService;
 
         public ScheduledEmailService(
-            CleaningTaskService cleaningTaskService, IClock clock, DateTimeZone dateTimeZone,
-            KeyCodeService keyCodeService, OrderService orderService)
+            IOptions<EmailOptions> options, CleaningTaskService cleaningTaskService, IClock clock,
+            DateTimeZone dateTimeZone, KeyCodeService keyCodeService, OrderService orderService)
         {
+            if (options is null)
+                throw new ArgumentNullException(nameof(options));
+
             this.cleaningTaskService = cleaningTaskService ?? throw new ArgumentNullException(nameof(cleaningTaskService));
             this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
             this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
             this.keyCodeService = keyCodeService ?? throw new ArgumentNullException(nameof(keyCodeService));
             this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
+
+            this.options = options.Value;
         }
 
-        public TimeSpan Interval => TimeSpan.FromHours(6);
+        public TimeSpan Interval => options.ScheduleEmailInterval;
 
         public Task DoWork()
         {
