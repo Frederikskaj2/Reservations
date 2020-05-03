@@ -116,13 +116,24 @@
                             <TableRowCell Class="text-right border-bottom"><strong>=</strong></TableRowCell>
                             <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
                         </TableRow>
-                        @if (Totals!.PayIn > 0)
+                        @if (Totals!.BalanceIn + Totals!.PayIn > 0)
                         {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-top-0">Pris (inklusiv depositum)</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">−</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.GetTotal())</TableRowCell>
                             </TableRow>
+                        }
+                        @if (Totals!.BalanceIn > 0)
+                        {
+                            <TableRow>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Tidligere indbetalt</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">+</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.BalanceIn)</TableRowCell>
+                            </TableRow>
+                        }
+                        @if (Totals!.PayIn > 0)
+                        {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-top-0">Indbetalt</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">+</TableRowCell>
@@ -153,6 +164,14 @@
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.Damages)</TableRowCell>
                             </TableRow>
                         }
+                        @if (Totals.BalanceOut > 0)
+                        {
+                            <TableRow>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Anvendt til andre bestillinger</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.BalanceOut)</TableRowCell>
+                            </TableRow>
+                        }
                         @if (Totals.PayOut > 0)
                         {
                             <TableRow>
@@ -161,7 +180,7 @@
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayOut)</TableRowCell>
                             </TableRow>
                         }
-                        @if (Totals.PayIn > 0)
+                        @if (Totals!.BalanceIn + Totals!.PayIn > 0)
                         {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-bottom"><strong>Saldo</strong></TableRowCell>
@@ -202,8 +221,8 @@
     }
 </div>
 
-@code {
-
+@code
+{
     private readonly UpdateOrderRequest request = new UpdateOrderRequest();
     private Validations validations = null!;
     private PaymentDialog paymentDialog = null!;
@@ -318,7 +337,7 @@
 
     private async Task OnPaymentConfirm(Payment payment)
     {
-        var request = new PaymentRequest { Amount = payment.Amount };
+        var request = new PaymentRequest { Date = payment.Date, Amount = payment.Amount };
         var requestUri = $"orders/{payment.OrderId}/pay-in";
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)

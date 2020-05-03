@@ -267,8 +267,10 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return Enumerable.Empty<MyTransaction>();
 
             return await db.Transactions
-                .Where(transaction => transaction.UserId == userId.Value)
-                .OrderBy(transaction => transaction.Id)
+                .Where(transaction => transaction.UserId == userId.Value && transaction.Type != TransactionType.BalanceIn && transaction.Type != TransactionType.BalanceOut)
+                .OrderBy(transaction => transaction.Date)
+                .ThenBy(transaction => transaction.OrderId)
+                .ThenBy(transaction => transaction.Type)
                 .ProjectToType<MyTransaction>()
                 .ToListAsync();
         }

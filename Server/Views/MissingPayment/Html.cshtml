@@ -11,7 +11,7 @@
 <body>
     <p>Hej @Model.Name</p>
     <p>Vi har modtaget din indbetaling af @Model.Amount.ToString("C0", CultureInfo) for <a href="@Model.Url">bestilling @Model.OrderId</a>.</p>
-    <p>Den samlede pris for din bestilling (inklusiv depositum) er @((Model.Amount + Model.MissingAmount).ToString("C0", CultureInfo)), og du mangler derfor stadig at indbetale @Model.MissingAmount.ToString("C0", CultureInfo).</p>
+    <p>Desværre er din samlede betaling mindre end det krævede beløb. Du mangler stadig at indbetale @Model.MissingAmount.ToString("C0", CultureInfo).</p>
     <p>Din bestilling bliver først godkendt når du har indbetalt det skyldige beløb til grundejerforeningens bankkonto:</p>
     <p>
         <table>
@@ -31,7 +31,7 @@
             </tbody>
         </table>
     </p>
-    <p>Du bedes straks indbetale det skyldige beløb, og ellers forbeholder vi os ret til at annullere din bestilling.</p>
+    <p>Du bedes <strong>inden fire dage</strong> indbetale det skyldige beløb. Ellers forbeholder vi os ret til at annullere din bestilling.</p>
     @await Html.PartialAsync("_Signature", Model)
     @await Html.PartialAsync("_Links", Model)
 </body>

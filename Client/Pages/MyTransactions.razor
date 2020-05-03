@@ -41,8 +41,8 @@
                                 balance += transaction.Amount;
                                 var localBalance = balance;
                                 <TableRow>
-                                    <TableRowCell>@FormattingService.FormatDate(transaction.Timestamp)</TableRowCell>
-                                    <TableRowCell>@transaction.OrderId</TableRowCell>
+                                    <TableRowCell>@FormattingService.FormatDate(transaction.Date)</TableRowCell>
+                                    <TableRowCell><a href="@Urls.MyOrders/@transaction.OrderId">@transaction.OrderId</a></TableRowCell>
                                     <TableRowCell>@GetTransactionText(transaction)</TableRowCell>
                                     <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(transaction.Amount)</TableRowCell>
                                     <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(localBalance)</TableRowCell>

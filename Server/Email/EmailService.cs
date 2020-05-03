@@ -86,10 +86,12 @@ namespace Frederikskaj2.Reservations.Server.Email
             await SendMessage(model, "ResetPassword", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
-        public async Task SendOrderReceivedEmail(User user, int orderId, int amount)
+        public async Task SendOrderReceivedEmail(User user, int orderId, int balance, int amount)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
+            if (balance < 0)
+                throw new ArgumentOutOfRangeException(nameof(balance));
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount));
 
@@ -99,6 +101,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 user.FullName,
                 urlService.GetMyOrderUrl(orderId),
                 orderId,
+                balance,
                 amount,
                 reservationsOptions.PayInAccountNumber);
             await SendMessage(model, "OrderReceived", new EmailRecipient { Name = user.FullName, Email = user.Email });

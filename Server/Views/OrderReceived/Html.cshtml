@@ -11,13 +11,23 @@
 <body>
     <p>Hej @Model.Name</p>
     <p>Tak for din bestilling med <a href="@Model.Url">bestillingsnummer @Model.OrderId</a>.</p>
+    @if (Model.Balance >= Model.Amount)
+    {
+    <p>Da du afgav din bestilling havde du @Model.Balance.ToString("C0", CultureInfo) til gode hvilket er nok til at betale for din bestilling. Din bestilling er derfor godkendt og betalt, og du behøver ikke at foretage dig yderligere.</p>
+    }
+    else
+    {
+        if (Model.Balance > 0)
+        {
+    <p>Da du afgav din bestilling havde du @Model.Balance.ToString("C0", CultureInfo) til gode, og du behøver derfor kun at betale forskellen mellem den fulde pris @Model.Amount.ToString("C0", CultureInfo) og beløbet du har til gode.</p>
+        }
     <p>Din bestilling bliver først godkendt når du har indbetalt det skyldige beløb til grundejerforeningens bankkonto:</p>
     <p>
         <table>
             <tbody>
                 <tr>
                     <td>Beløb:</td>
-                    <td><strong>@Model.Amount.ToString("C0", CultureInfo)</strong></td>
+                    <td><strong>@((Model.Amount - Model.Balance).ToString("C0", CultureInfo))</strong></td>
                 </tr>
                 <tr>
                     <td>Kontonummer:</td>
@@ -31,6 +41,7 @@
         </table>
     </p>
     <p>Du bedes <strong>inden fire dage</strong> indbetale det skyldige beløb. Ellers forbeholder vi os ret til at annullere din bestilling.</p>
+    }
     @await Html.PartialAsync("_Signature", Model)
     @await Html.PartialAsync("_Links", Model)
 </body>

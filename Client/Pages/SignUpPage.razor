@@ -36,7 +36,7 @@
                         <FieldLabel>Mail</FieldLabel>
                         <FieldBody>
                             <Validation>
-                                <TextEdit Role="TextRole.Email" @bind-Text="@ApplicationState.SignUpRequest.Email">
+                                <TextEdit @ref="emailTextEdit" Role="TextRole.Email" @bind-Text="@ApplicationState.SignUpRequest.Email">
                                     <Feedback>
                                         <ValidationError />
                                     </Feedback>
@@ -127,6 +127,7 @@
 @code {
 
     private Validations validations = null!;
+    private TextEdit emailTextEdit = null!;
     private IEnumerable<Apartment> apartments = null!;
     private bool isInitialized;
     private bool showErrorAlert;
@@ -138,6 +139,8 @@
 
         apartments = await ClientDataProvider.GetApartments();
         isInitialized = true;
+
+        Task.Run(() => emailTextEdit.Focus());
     }
 
     private void ApartmentChanged(int apartmentId) => ApplicationState.SignUpRequest.ApartmentId = apartmentId > 0 ? (int?) apartmentId : null;

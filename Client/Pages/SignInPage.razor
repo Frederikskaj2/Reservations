@@ -25,7 +25,7 @@
                     <FieldLabel>Mail</FieldLabel>
                     <FieldBody>
                         <Validation>
-                            <TextEdit Role="TextRole.Email" @bind-Text="@request.Email">
+                            <TextEdit @ref="emailTextEdit" Role="TextRole.Email" @bind-Text="@request.Email">
                                 <Feedback>
                                     <ValidationError />
                                 </Feedback>
@@ -62,8 +62,14 @@
 
     private readonly SignInRequest request = new SignInRequest();
     private Validations validations = null!;
+    private TextEdit emailTextEdit = null!;
     private bool showErrorAlert;
     private SignInResult signInResult;
+
+    protected override void OnInitialized()
+    {
+        Task.Run(() => emailTextEdit.Focus());
+    }
 
     private async Task Submit()
     {

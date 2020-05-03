@@ -50,7 +50,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (!userId.HasValue)
                 return Enumerable.Empty<MyOrder>();
 
-            var orders = await orderService.GetOrders(userId.Value);
+            var orders = await orderService.GetAllOrders(userId.Value);
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
             return orders.Select(order => CreateOrder(order, today)).ToList();
         }

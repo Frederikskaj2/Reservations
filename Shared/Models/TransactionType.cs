@@ -5,12 +5,14 @@
         None,
         Order,
         Deposit,
+        BalanceIn,
+        PayIn,
         OrderCancellation,
         DepositCancellation,
         CancellationFee,
-        SettlementDeposit,
         SettlementDamages,
-        PayIn,
-        PayOut
+        SettlementDeposit,
+        BalanceOut,
+        PayOut,
     }
 }
