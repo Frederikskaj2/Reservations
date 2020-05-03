@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Frederikskaj2.Reservations.Shared;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
@@ -8,6 +9,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         public int Id { get; set; }
         public int? UserId { get; set; }
         public virtual User? User { get; set; }
+        public OrderFlags Flags {get; set;}
         public int? ApartmentId { get; set; }
         public virtual Apartment? Apartment { get; set; }
         public string? AccountNumber { get; set; }

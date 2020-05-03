@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = Roles.Payment)]
 @inject ApiClient ApiClient
 @inject ClientDataProvider ClientDataProvider
+@inject IDateProvider DateProvider
 @inject FormattingService FormattingService
 
 <main>
@@ -58,8 +59,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private PaymentDialog paymentDialog = null!;
     private IReadOnlyDictionary<int, Apartment>? apartments;
     private List<PayOut> payOuts = new List<PayOut>();
@@ -78,12 +79,12 @@
     private void RecordPayOut(PayOut payOut)
     {
         DismissErrorAlert();
-        paymentDialog.Show(new Payment(payOut.OrderId, payOut.Amount, false));
+        paymentDialog.Show(new Payment(payOut.OrderId, DateProvider.Today, payOut.Amount, false));
     }
 
     private async Task OnPaymentConfirm(Payment payment)
     {
-        var request = new PaymentRequest { Amount = payment.Amount };
+        var request = new PaymentRequest { Date = payment.Date, Amount = payment.Amount };
         var requestUri = $"orders/{payment.OrderId}/pay-out";
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)

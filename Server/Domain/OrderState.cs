@@ -4,17 +4,12 @@ using System.Diagnostics;
 using System.Linq;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
-using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Domain
 {
     internal class OrderState
     {
-        public OrderState(int orderId, DateTimeZone dateTimeZone)
-        {
-            this.orderId = orderId;
-            this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
-        }
+        public OrderState(int orderId) => this.orderId = orderId;
 
         private readonly Dictionary<Account, int> accountBalances = new Dictionary<Account, int>
         {
@@ -23,7 +18,6 @@ namespace Frederikskaj2.Reservations.Server.Domain
             { Account.Bank, 0 }
         };
 
-        private readonly DateTimeZone dateTimeZone;
         private readonly int orderId;
         private readonly List<Posting> postings = new List<Posting>();
 
@@ -64,12 +58,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         private void CreatePayInPostings(Transaction transaction)
         {
-            var date = transaction.Timestamp.InZone(dateTimeZone).Date;
-
             var accountAmounts = new List<AccountAmount>();
             var posting = new Posting
             {
-                Date = date,
+                Date = transaction.Date,
                 OrderId = orderId,
                 AccountAmounts = accountAmounts
             };
@@ -116,12 +108,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         private void CreatePayOutPostings(Transaction transaction)
         {
-            var date = transaction.Timestamp.InZone(dateTimeZone).Date;
-
             var accountAmounts = new List<AccountAmount>();
             var posting = new Posting
             {
-                Date = date,
+                Date = transaction.Date,
                 OrderId = orderId,
                 AccountAmounts = accountAmounts
             };

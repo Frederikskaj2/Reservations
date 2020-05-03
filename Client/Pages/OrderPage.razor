@@ -14,6 +14,10 @@
     else if (order != null)
     {
         <Container class="container-min-md">
+            <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
+                Bestillingen er blevet opdateret.
+                <CloseButton Clicked="@DismissSuccessAlert" />
+            </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl, og bestillingen blev ikke opdateret.
                 <CloseButton Clicked="@DismissErrorAlert" />
@@ -32,6 +36,10 @@
     else if (canHandleOrders && ownerOrder != null)
     {
         <Container class="container-min-md">
+            <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
+                Bestillingen er blevet opdateret.
+                <CloseButton Clicked="@DismissSuccessAlert" />
+            </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl, og bestillingen blev ikke opdateret.
                 <CloseButton Clicked="@DismissErrorAlert" />
@@ -39,7 +47,7 @@
             <h1>Bestilling @ownerOrder!.Id</h1>
             <Text>Oprettet @FormattingService.FormatDate(@ownerOrder.CreatedTimestamp)</Text>
             <Text>Oprettet af <a href="mailto:@ownerOrder.CreatedByEmail?subject=Frederikskaj 2 bestilling @ownerOrder.Id">@ownerOrder.CreatedByName</a> på vegne af grundejerforeningen</Text>
-            <OwnerOrderStatement OrderId="@ownerOrder.Id" Reservations="@ownerOrder.Reservations" OnSubmit="@SubmitOwnerOrder" />
+            <OwnerOrderStatement OrderId="@ownerOrder.Id" Reservations="@ownerOrder.Reservations" IsCleaningRequired="@ownerOrder.IsCleaningRequired" OnSubmit="@SubmitOwnerOrder" />
         </Container>
     }
     else
@@ -59,6 +67,7 @@
     private Order? order;
     private OwnerOrder? ownerOrder;
     private bool isInitialized;
+    private bool showSuccessAlert;
     private bool showErrorAlert;
 
     [Parameter]
@@ -97,6 +106,8 @@
 
     private async Task Submit(UpdateOrderRequest request)
     {
+        DismissAllAlerts();
+
         var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"orders/{order!.Id}";
         var maybe = await ApiClient.PatchJsonAsync<OrderResponse<Order>>(url, request);
@@ -105,6 +116,7 @@
             if (isUpdatingCalendar)
                 ClientDataProvider.Refresh();
             order = response.Order;
+            showSuccessAlert = true;
         }
         else
             showErrorAlert = true;
@@ -112,6 +124,8 @@
 
     private async Task SubmitOwnerOrder(UpdateOwnerOrderRequest request)
     {
+        DismissAllAlerts();
+
         var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"owner-orders/{ownerOrder!.Id}";
         var maybe = await ApiClient.PatchJsonAsync<OrderResponse<OwnerOrder>>(url, request);
@@ -120,10 +134,18 @@
             if (isUpdatingCalendar)
                 ClientDataProvider.Refresh();
             ownerOrder = response.Order;
+            showSuccessAlert = true;
         }
         else
             showErrorAlert = true;
     }
 
+    private void DismissSuccessAlert() => showSuccessAlert = false;
     private void DismissErrorAlert() => showErrorAlert = false;
+
+    private void DismissAllAlerts()
+    {
+        DismissSuccessAlert();
+        DismissErrorAlert();
+    }
 }

@@ -307,7 +307,7 @@
     private void RecordPayIn()
     {
         DismissShowGeneralErrorAlert();
-        paymentDialog.Show(new Payment(OrderId, -Totals!.GetBalance(), true));
+        paymentDialog.Show(new Payment(OrderId, DateProvider.Today, -Totals!.GetBalance(), true));
     }
 
     private void RecordSettlement(Reservation reservation)

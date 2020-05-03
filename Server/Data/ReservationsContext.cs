@@ -120,6 +120,9 @@ namespace Frederikskaj2.Reservations.Server.Data
                 .IsUnique();
 
             modelBuilder.Entity<Transaction>()
+                .Property(transaction => transaction.Date)
+                .HasConversion(localDateConverter);
+            modelBuilder.Entity<Transaction>()
                 .Property(transaction => transaction.Timestamp)
                 .HasConversion(instantConverter);
             modelBuilder.Entity<Transaction>()

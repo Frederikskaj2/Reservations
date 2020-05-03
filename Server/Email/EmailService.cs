@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
 using MailKit.Net.Smtp;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -315,35 +316,19 @@ namespace Frederikskaj2.Reservations.Server.Email
             }
         }
 
-        public async Task SendKeyCodesEmail(
-            User user, IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes)
+        public async Task SendPostingsEmail(User user, IEnumerable<Shared.Posting> postings)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
-            if (resources is null)
-                throw new ArgumentNullException(nameof(resources));
-            if (keyCodes is null)
-                throw new ArgumentNullException(nameof(keyCodes));
+            if (postings is null)
+                throw new ArgumentNullException(nameof(postings));
 
-            var resourcesDictionary = resources.ToDictionary(
-                resource => resource.Id,
-                resource => new Resource(resource.Id, resource.Sequence, resource.Name));
-            var weeklyKeyCodes = keyCodes
-                .GroupBy(keyCode => keyCode.Date)
-                .Select(
-                    grouping => new WeeklyKeyCodes(
-                        WeekYearRules.Iso.GetWeekOfWeekYear(grouping.Key),
-                        grouping.Key,
-                        grouping.ToDictionary(keyCode => keyCode.ResourceId, keyCode => keyCode.Code)
-                    ))
-                .OrderBy(keyCode => keyCode.WeekNumber);
-            var model = new KeyCodesModel(
+            var model = new PostingsModel(
                 options.From!.Name!,
                 urlService.GetFromUrl(),
-                user.FullName,
-                resourcesDictionary,
-                weeklyKeyCodes);
-            await SendMessage(model, "KeyCodes", new EmailRecipient { Name = user.FullName, Email = user.Email });
+                user.FullName!,
+                postings.AsQueryable().ProjectToType<Posting>());
+            await SendMessage(model, "Postings", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
         public async Task SendCleaningScheduleEmail(
@@ -382,6 +367,37 @@ namespace Frederikskaj2.Reservations.Server.Email
                             resourceDictionary[task.ResourceId].Sequence))
                     .OrderBy(task => task.Date)
                     .ThenBy(task => task.ResourceName);
+        }
+
+        public async Task SendKeyCodesEmail(
+            User user, IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes)
+        {
+            if (user is null)
+                throw new ArgumentNullException(nameof(user));
+            if (resources is null)
+                throw new ArgumentNullException(nameof(resources));
+            if (keyCodes is null)
+                throw new ArgumentNullException(nameof(keyCodes));
+
+            var resourcesDictionary = resources.ToDictionary(
+                resource => resource.Id,
+                resource => new Resource(resource.Id, resource.Sequence, resource.Name));
+            var weeklyKeyCodes = keyCodes
+                .GroupBy(keyCode => keyCode.Date)
+                .Select(
+                    grouping => new WeeklyKeyCodes(
+                        WeekYearRules.Iso.GetWeekOfWeekYear(grouping.Key),
+                        grouping.Key,
+                        grouping.ToDictionary(keyCode => keyCode.ResourceId, keyCode => keyCode.Code)
+                    ))
+                .OrderBy(keyCode => keyCode.WeekNumber);
+            var model = new KeyCodesModel(
+                options.From!.Name!,
+                urlService.GetFromUrl(),
+                user.FullName,
+                resourcesDictionary,
+                weeklyKeyCodes);
+            await SendMessage(model, "KeyCodes", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
         private async Task SendMessage<TModel>(TModel model, string viewName, EmailRecipient recipient)

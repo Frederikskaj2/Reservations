@@ -1,6 +1,7 @@
 ﻿@page "/posteringer"
 @attribute [Authorize(Roles = Roles.Bookkeeping)]
 @inject ApiClient ApiClient
+@inject ApplicationState ApplicationState
 @inject CultureInfo CultureInfo
 @inject FormattingService FormattingService
 @inject ReservationsOptions ReservationsOptions
@@ -12,12 +13,20 @@
     else
     {
         <Container>
+            <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
+                Posteringerne er blevet send til @email.
+                <CloseButton Clicked="@DismissSuccessAlert" />
+            </Alert>
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+                Der er sket en fejl, og posteringerne blev ikke send til @email.
+                <CloseButton Clicked="@DismissErrorAlert" />
+            </Alert>
             <h1>Posteringer</h1>
             @if (postingsRange != null)
             {
                 <Form>
                     <Row>
-                        <Column ColumnSize="ColumnSize.IsHalf">
+                        <Column ColumnSize="ColumnSize.IsThird">
                             <Field>
                                 <FieldLabel>År</FieldLabel>
                                 <FieldBody>
@@ -30,7 +39,7 @@
                                 </FieldBody>
                             </Field>
                         </Column>
-                        <Column ColumnSize="ColumnSize.IsHalf">
+                        <Column ColumnSize="ColumnSize.IsThird">
                             <Field>
                                 <FieldLabel>Måned</FieldLabel>
                                 <FieldBody>
@@ -40,6 +49,13 @@
                                             <SelectItem Value="@month">@Capitalize(monthPattern!.Format(new LocalDate(currentYear, month, 1)))</SelectItem>
                                         }
                                     </Select>
+                                </FieldBody>
+                            </Field>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.IsThird">
+                            <Field>
+                                <FieldBody>
+                                    <Button Style="margin-top: 2rem;" Color="Color.Secondary" Type="ButtonType.Submit" Block="true" PreventDefaultOnSubmit="true" Clicked="@Send">Send posteringer som mail</Button>
                                 </FieldBody>
                             </Field>
                         </Column>
@@ -102,7 +118,10 @@
     int currentYear;
     int currentMonth;
     private IEnumerable<Posting>? postings;
+    private string? email;
     private bool isInitialized;
+    private bool showSuccessAlert;
+    private bool showErrorAlert;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,6 +129,8 @@
 
         await InitializeCalendar();
         await UpdatePostings();
+
+        email = await ApplicationState.GetUserEmail();
 
         isInitialized = true;
     }
@@ -163,4 +184,25 @@
     }
 
     private string Capitalize(string text) => CultureInfo.TextInfo.ToUpper(text[0]) + text.Substring(1);
+
+    private async Task Send()
+    {
+        DismissAllAlerts();
+
+        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("postings/send", null);
+        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
+            showSuccessAlert = true;
+        else
+            showErrorAlert = true;
+    }
+
+    private void DismissSuccessAlert() => showSuccessAlert = false;
+
+    private void DismissErrorAlert() => showErrorAlert = false;
+
+    private void DismissAllAlerts()
+    {
+        DismissSuccessAlert();
+        DismissErrorAlert();
+    }
 }

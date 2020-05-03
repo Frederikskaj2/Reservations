@@ -54,7 +54,5 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             await keyCodeService.SendKeyCodes(user, today);
             return new OperationResponse { Result = OperationResult.Success };
         }
-
-
     }
 }

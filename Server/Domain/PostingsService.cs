@@ -3,20 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
+using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
+using Posting = Frederikskaj2.Reservations.Shared.Posting;
+using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Domain
 {
     public class PostingsService
     {
+        private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
         private readonly IClock clock;
         private readonly DateTimeZone dateTimeZone;
         private readonly ReservationsContext db;
 
-        public PostingsService(IClock clock, DateTimeZone dateTimeZone, ReservationsContext db)
+        public PostingsService(IBackgroundWorkQueue<EmailService> backgroundWorkQueue, IClock clock,
+            DateTimeZone dateTimeZone, ReservationsContext db)
         {
+            this.backgroundWorkQueue = backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
             this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
             this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
@@ -37,25 +43,24 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 };
             }
 
-            var latestTransaction = await db.Transactions.OrderByDescending(transaction => transaction.Timestamp).FirstOrDefaultAsync();
+            var latestTransaction = await db.Transactions.OrderByDescending(transaction => transaction.Date).FirstOrDefaultAsync();
             return new PostingsRange
             {
-                EarliestMonth = GetMonthStart(earliestTransaction.Timestamp.InZone(dateTimeZone).Date),
-                LatestMonth = GetMonthStart(latestTransaction.Timestamp.InZone(dateTimeZone).Date)
+                EarliestMonth = GetMonthStart(earliestTransaction.Date),
+                LatestMonth = GetMonthStart(latestTransaction.Date)
             };
         }
 
         public async Task<IEnumerable<Posting>> GetPostings(LocalDate month)
         {
             // Unfortunately, getting the required transactions require two round-trips to the database.
-            var monthStart = GetMonthStart(month);
-            var fromTimestamp = monthStart.AtStartOfDayInZone(dateTimeZone).ToInstant();
-            var toTimestamp = monthStart.PlusMonths(1).AtStartOfDayInZone(dateTimeZone).ToInstant();
+            var fromTimestamp = GetMonthStart(month);
+            var toTimestamp = GetMonthStart(month).PlusMonths(1);
             var orderIds = await db.Transactions
                 .Where(
                     transaction
                         => (transaction.Type == TransactionType.PayIn || transaction.Type == TransactionType.PayOut)
-                        && fromTimestamp <= transaction.Timestamp && transaction.Timestamp < toTimestamp)
+                        && fromTimestamp <= transaction.Date && transaction.Date < toTimestamp)
                 .Select(transaction => transaction.OrderId)
                 .Distinct()
                 .ToListAsync();
@@ -70,13 +75,19 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .OrderBy(posting => posting.Date)
                 .ThenBy(posting => posting.OrderId);
 
-            IEnumerable<Posting> CreatePostings(IGrouping<int, Transaction> grouping)
+            static IEnumerable<Posting> CreatePostings(IGrouping<int, Transaction> grouping)
             {
-                var orderState = new OrderState(grouping.Key, dateTimeZone);
+                var orderState = new OrderState(grouping.Key);
                 foreach (var transaction in grouping.OrderBy(t => t.Timestamp))
                     orderState.ApplyTransaction(transaction);
                 return orderState.Postings;
             }
+        }
+
+        public async Task SendPostingsEmail(User user, LocalDate date)
+        {
+            var postings = await GetPostings(date);
+            backgroundWorkQueue.Enqueue((service, _) => service.SendPostingsEmail(user, postings));
         }
 
         private static LocalDate GetMonthStart(LocalDate date) => date.PlusDays(-(date.Day - 1));

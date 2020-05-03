@@ -188,7 +188,7 @@
     private void RecordPayIn(Order order)
     {
         DismissShowGeneralErrorAlert();
-        paymentDialog.Show(new Payment(order.Id, -order.Totals!.GetBalance(), true));
+        paymentDialog.Show(new Payment(order.Id, DateProvider.Today, -order.Totals!.GetBalance(), true));
     }
 
     private void RecordSettlement(Order order, Reservation reservation)
@@ -199,7 +199,7 @@
 
     private async Task OnPaymentConfirm(Payment payment)
     {
-        var request = new PaymentRequest { Amount = payment.Amount };
+        var request = new PaymentRequest { Date = payment.Date, Amount = payment.Amount };
         var requestUri = $"orders/{payment.OrderId}/pay-in";
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)

@@ -58,7 +58,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new PlaceOwnerOrderResponse { Result = PlaceOrderResult.GeneralError };
 
             var now = clock.GetCurrentInstant();
-            var tuple = await orderService.PlaceOwnerOrder(now, userId.Value, request.Reservations);
+            var tuple = await orderService.PlaceOwnerOrder(now, userId.Value, request.Reservations, request.IsCleaningRequired);
 
             var ownerOrder = tuple.Order != null ? CreateOrder(tuple.Order, user) : null;
             return new PlaceOwnerOrderResponse { Result = tuple.Result, Order = ownerOrder };
@@ -67,7 +67,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpPatch("{orderId:int}")]
         public async Task<OrderResponse<OwnerOrder>> Patch(int orderId, UpdateOwnerOrderRequest request)
         {
-            var tuple = await orderService.UpdateOwnerOrder(orderId, request.CancelledReservations);
+            var tuple = await orderService.UpdateOwnerOrder(orderId, request.CancelledReservations, request.IsCleaningRequired);
             if (tuple == default)
                 return new OrderResponse<OwnerOrder>();
             if (tuple.IsOrderDeleted)
@@ -84,6 +84,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Id = order.Id,
                 CreatedTimestamp = order.CreatedTimestamp,
                 Reservations = reservations,
+                IsCleaningRequired = order.Flags.HasFlag(OrderFlags.IsCleaningRequired),
                 CreatedByEmail = user?.Email,
                 CreatedByName = user?.FullName
             };

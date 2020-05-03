@@ -29,7 +29,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         public async Task<IEnumerable<CleaningTask>> GetTasks(LocalDate date)
         {
             var confirmedReservations = await db.Reservations
-                .Where(reservation => reservation.Status == ReservationStatus.Confirmed).ToListAsync();
+                .Where(reservation => reservation.Status == ReservationStatus.Confirmed && reservation.Order!.Flags.HasFlag(OrderFlags.IsCleaningRequired)).ToListAsync();
             return confirmedReservations
                 .Where(reservation => date <= reservation.Date.PlusDays(reservation.DurationInDays))
                 .Select(

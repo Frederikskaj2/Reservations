@@ -61,8 +61,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
-                .FirstOrDefaultAsync(
-                    order => order.Id == orderId && order.ApartmentId != null);
+                .FirstOrDefaultAsync(order => order.Id == orderId && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder));
 
         public async Task<IEnumerable<Order>> GetOrders()
             => await db.Orders
@@ -70,7 +69,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
-                .Where(order => order.ApartmentId != null && order.AccountNumber != null)
+                .Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
@@ -79,7 +78,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
-                .Where(order => order.UserId == userId && order.ApartmentId != null)
+                .Where(order => order.UserId == userId && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
@@ -88,15 +87,14 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Include(order => order.User)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
-                .FirstOrDefaultAsync(
-                    order => order.Id == orderId && order.ApartmentId == null && order.AccountNumber == null);
+                .FirstOrDefaultAsync(order => order.Id == orderId && order.Flags.HasFlag(OrderFlags.IsOwnerOrder));
 
         public async Task<IEnumerable<Order>> GetOwnerOrders()
             => await db.Orders
                 .Include(order => order.User)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
-                .Where(order => order.ApartmentId == null)
+                .Where(order => order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
@@ -104,7 +102,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             => await db.Orders
                 .Include(order => order.User)
                 .Include(order => order.Reservations)
-                .Where(order => order.ApartmentId != null && order.AccountNumber == null)
+                .Where(order => order.Flags.HasFlag(OrderFlags.IsHistoryOrder))
                 .ToListAsync();
 
         public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOrder(
@@ -118,6 +116,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var order = new Order
             {
                 UserId = userId,
+                Flags = OrderFlags.IsCleaningRequired,
                 ApartmentId = apartmentId,
                 AccountNumber = accountNumber,
                 CreatedTimestamp = timestamp,
@@ -134,22 +133,25 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 totalPrice.Accumulate(reservation.Price!);
             }
 
+            var today = timestamp.InZone(dateTimeZone).Date;
             order.Transactions = new List<Transaction>
             {
                 new Transaction
                 {
-                    Timestamp = timestamp,
                     Type = TransactionType.Order,
+                    Date = today,
                     CreatedByUserId = userId,
+                    Timestamp = timestamp,
                     UserId = userId,
                     Order = order,
                     Amount = -(totalPrice.Rent + totalPrice.CleaningFee)
                 },
                 new Transaction
                 {
-                    Timestamp = timestamp,
                     Type = TransactionType.Deposit,
+                    Date = today,
                     CreatedByUserId = userId,
+                    Timestamp = timestamp,
                     UserId = userId,
                     Order = order,
                     Amount = -totalPrice.Deposit
@@ -184,7 +186,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         }
 
         public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOwnerOrder(
-            Instant timestamp, int userId, IEnumerable<ReservationRequest> reservations)
+            Instant timestamp, int userId, IEnumerable<ReservationRequest> reservations, bool isCleaningRequired)
         {
             if (reservations is null)
                 throw new ArgumentNullException(nameof(reservations));
@@ -193,6 +195,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var order = new Order
             {
                 UserId = userId,
+                Flags = OrderFlags.IsOwnerOrder | (isCleaningRequired ? OrderFlags.IsCleaningRequired : OrderFlags.None),
                 CreatedTimestamp = timestamp,
                 Reservations = new List<Reservation>()
             };
@@ -251,9 +254,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 order.Transactions!.Add(
                     new Transaction
                     {
-                        Timestamp = timestamp,
                         Type = TransactionType.DepositCancellation,
+                        Date = today,
                         CreatedByUserId = createdByUserId,
+                        Timestamp = timestamp,
                         UserId = order.UserId,
                         OrderId = order.Id,
                         ResourceId = reservation.ResourceId,
@@ -263,9 +267,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 order.Transactions!.Add(
                     new Transaction
                     {
-                        Timestamp = timestamp,
                         Type = TransactionType.OrderCancellation,
+                        Date = today,
                         CreatedByUserId = createdByUserId,
+                        Timestamp = timestamp,
                         UserId = order.UserId,
                         OrderId = order.Id,
                         ResourceId = reservation.ResourceId,
@@ -279,9 +284,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
                         order.Transactions.Add(
                             new Transaction
                             {
-                                Timestamp = timestamp,
                                 Type = TransactionType.CancellationFee,
+                                Date = today,
                                 CreatedByUserId = createdByUserId,
+                                Timestamp = timestamp,
                                 UserId = order.UserId,
                                 OrderId = order.Id,
                                 ResourceId = reservation.ResourceId,
@@ -343,7 +349,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         }
 
         public async Task<(bool IsOrderDeleted, Order? Order)> UpdateOwnerOrder(
-            int orderId, IEnumerable<int> cancelledReservations)
+            int orderId, IEnumerable<int> cancelledReservations, bool isCleaningRequired)
         {
             if (cancelledReservations is null)
                 throw new ArgumentNullException(nameof(cancelledReservations));
@@ -364,6 +370,11 @@ namespace Frederikskaj2.Reservations.Server.Domain
             if (isOrderDeleted)
                 db.Orders.Remove(order);
 
+            if (isCleaningRequired)
+                order.Flags |= OrderFlags.IsCleaningRequired;
+            else
+                order.Flags &= ~OrderFlags.IsCleaningRequired;
+
             try
             {
                 await db.SaveChangesAsync();
@@ -377,7 +388,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return !isOrderDeleted ? (false, order) : (true, default);
         }
 
-        public async Task<Order?> PayIn(Instant timestamp, int orderId, int userId, int amount)
+        public async Task<Order?> PayIn(Instant timestamp, int orderId, int userId, LocalDate date, int amount)
         {
             var order = await GetOrder(orderId);
             if (order == null)
@@ -396,9 +407,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             var transaction = new Transaction
             {
-                Timestamp = timestamp,
                 Type = TransactionType.PayIn,
+                Date = date,
                 CreatedByUserId = userId,
+                Timestamp = timestamp,
                 UserId = order.UserId,
                 OrderId = orderId,
                 Amount = amount
@@ -439,12 +451,14 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             reservation.Status = ReservationStatus.Settled;
 
+            var today = timestamp.InZone(dateTimeZone).Date;
             await db.Transactions.AddAsync(
                 new Transaction
                 {
-                    Timestamp = timestamp,
                     Type = TransactionType.SettlementDeposit,
+                    Date = today,
                     CreatedByUserId = userId,
+                    Timestamp = timestamp,
                     UserId = order!.UserId,
                     OrderId = orderId,
                     ResourceId = reservation.ResourceId,
@@ -455,9 +469,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 await db.Transactions.AddAsync(
                     new Transaction
                     {
-                        Timestamp = timestamp,
                         Type = TransactionType.SettlementDamages,
+                        Date = today,
                         CreatedByUserId = userId,
+                        Timestamp = timestamp,
                         UserId = order.UserId,
                         OrderId = orderId,
                         ResourceId = reservation.ResourceId,
@@ -489,7 +504,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return order;
         }
 
-        public async Task<Order?> PayOut(Instant timestamp, int orderId, int userId, int amount)
+        public async Task<Order?> PayOut(Instant timestamp, int orderId, int userId, LocalDate date, int amount)
         {
             var order = await GetOrder(orderId);
             if (order == null)
@@ -497,9 +512,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             var transaction = new Transaction
             {
-                Timestamp = timestamp,
                 Type = TransactionType.PayOut,
+                Date = date,
                 CreatedByUserId = userId,
+                Timestamp = timestamp,
                 UserId = order.UserId,
                 OrderId = orderId,
                 Amount = -amount
@@ -530,7 +546,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var orders = await db.Orders
                 .Include(order => order.User)
                 .Include(order => order.Transactions)
-                .Where(order => order.ApartmentId != null && order.AccountNumber != null)
+                .Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
                 .ToListAsync();
 
             var payOuts = orders.Select(
@@ -597,7 +613,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
 
-            var hasOrders = await db.Orders.AnyAsync(order => order.UserId == user.Id && order.AccountNumber != null);
+            var hasOrders = await db.Orders.AnyAsync(order => order.UserId == user.Id && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder));
             if (hasOrders)
             {
                 user.IsPendingDelete = true;
@@ -732,6 +748,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             if (!isHistoryOrder)
                 return;
 
+            order.Flags |= OrderFlags.IsHistoryOrder;
             order.AccountNumber = null;
             foreach (var reservation in order.Reservations!)
                 reservation.Days!.Clear();
@@ -742,7 +759,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             if (!user.IsPendingDelete)
                 return false;
 
-            var hasOrders = await db.Orders.AnyAsync(order => order.UserId == user.Id && order.AccountNumber != null);
+            var hasOrders = await db.Orders.AnyAsync(order => order.UserId == user.Id && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder));
             if (hasOrders)
                 return false;
 

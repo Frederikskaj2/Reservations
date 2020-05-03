@@ -68,7 +68,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new OrderResponse<Order>();
 
             var now = clock.GetCurrentInstant();
-            var order = await orderService.PayIn(now, orderId, userId.Value, request.Amount);
+            var order = await orderService.PayIn(now, orderId, userId.Value, request.Date, request.Amount);
             if (order == null)
                 return new OrderResponse<Order>();
 
@@ -102,7 +102,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 return new OrderResponse<Order>();
 
             var now = clock.GetCurrentInstant();
-            var order = await orderService.PayOut(now, orderId, userId.Value, request.Amount);
+            var order = await orderService.PayOut(now, orderId, userId.Value, request.Date, request.Amount);
             if (order == null)
                 return new OrderResponse<Order>();
 

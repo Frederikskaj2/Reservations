@@ -1,0 +1,3 @@
+﻿@model PostingsModel
+@inject CultureInfo CultureInfo 
+Posteringer for @LocalDatePattern.Create("yyyy-MM", CultureInfo).Format(Model.Postings.First().Date)
