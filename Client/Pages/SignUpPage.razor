@@ -140,7 +140,9 @@
         apartments = await ClientDataProvider.GetApartments();
         isInitialized = true;
 
+#pragma warning disable 4014
         Task.Run(() => emailTextEdit.Focus());
+#pragma warning restore 4014
     }
 
     private void ApartmentChanged(int apartmentId) => ApplicationState.SignUpRequest.ApartmentId = apartmentId > 0 ? (int?) apartmentId : null;
