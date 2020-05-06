@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using SignInResult = Frederikskaj2.Reservations.Shared.SignInResult;
@@ -266,13 +265,14 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (!userId.HasValue)
                 return Enumerable.Empty<MyTransaction>();
 
-            return await db.Transactions
-                .Where(transaction => transaction.UserId == userId.Value && transaction.Type != TransactionType.BalanceIn && transaction.Type != TransactionType.BalanceOut)
-                .OrderBy(transaction => transaction.Date)
-                .ThenBy(transaction => transaction.OrderId)
-                .ThenBy(transaction => transaction.Type)
-                .ProjectToType<MyTransaction>()
-                .ToListAsync();
+            return Enumerable.Empty<MyTransaction>();
+            //return await db.Transactions
+            //    .Where(transaction => transaction.UserId == userId.Value && transaction.Type != TransactionType.BalanceIn && transaction.Type != TransactionType.BalanceOut)
+            //    .OrderBy(transaction => transaction.Date)
+            //    .ThenBy(transaction => transaction.OrderId)
+            //    .ThenBy(transaction => transaction.Type)
+            //    .ProjectToType<MyTransaction>()
+            //    .ToListAsync();
         }
 
         private async Task SendConfirmEmailEmail(User user)
@@ -295,8 +295,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Id = user.Id,
                 Name = user.Email,
                 IsAuthenticated = true,
-                Roles = roles,
-                ApartmentId = user.ApartmentId
+                Roles = roles
             };
         }
 

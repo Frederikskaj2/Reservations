@@ -1,4 +1,4 @@
-﻿@model MissingPaymentModel
+﻿@model PayInModel
 @inject CultureInfo CultureInfo
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="https://www.w3.org/1999/xhtml">
@@ -10,7 +10,9 @@
 </head>
 <body>
     <p>Hej @Model.Name</p>
-    <p>Vi har modtaget din indbetaling af @Model.Amount.ToString("C0", CultureInfo) for <a href="@Model.Url">bestilling @Model.OrderId</a>.</p>
+    <p>Vi har modtaget din indbetaling af @Model.Amount.ToString("C0", CultureInfo) til <a href="@Model.Url">bestilling @Model.OrderId</a>.</p>
+@if (Model.MissingAmount > 0)
+{
     <p>Desværre er din samlede betaling mindre end det krævede beløb. Du mangler stadig at indbetale @Model.MissingAmount.ToString("C0", CultureInfo).</p>
     <p>Din bestilling bliver først godkendt når du har indbetalt det skyldige beløb til grundejerforeningens bankkonto:</p>
     <p>
@@ -32,6 +34,7 @@
         </table>
     </p>
     <p>Du bedes <strong>inden fire dage</strong> indbetale det skyldige beløb. Ellers forbeholder vi os ret til at annullere din bestilling.</p>
+}
     @await Html.PartialAsync("_Signature", Model)
     @await Html.PartialAsync("_Links", Model)
 </body>

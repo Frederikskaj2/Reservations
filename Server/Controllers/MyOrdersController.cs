@@ -163,11 +163,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private MyOrder CreateOrder(Order order, LocalDate today, Dictionary<int, List<DatedKeyCode>>? keyCodes = null)
         {
             var reservations = order.Reservations.Select(CreateReservation).ToList();
-            var canBeEdited = order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && reservations.Any(r => r.CanBeCancelled);
+            var isHistoryOrder = order.Flags.HasFlag(OrderFlags.IsHistoryOrder);
+            var canBeEdited = !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && reservations.Any(r => r.CanBeCancelled);
             var myOrder = new MyOrder
             {
                 Id = order.Id,
-                AccountNumber = order.AccountNumber!,
+                IsHistoryOrder = isHistoryOrder,
                 CreatedTimestamp = order.CreatedTimestamp,
                 Reservations = reservations,
                 CanBeEdited = canBeEdited

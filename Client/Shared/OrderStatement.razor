@@ -7,15 +7,16 @@
 <div class="order-statement">
     @if (price != null)
     {
-        var accountNumberCanBeChanged = Totals!.GetBalance() > 0 || Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
         var someReservationsCanBeCancelled = Reservations.Any(reservation => reservation.CanBeCancelled);
+        var accountNumberCanBeEdited = !IsHistoryOrder && !string.IsNullOrEmpty(AccountNumber);
+        var showPaymentButton = IsPaymentEnabled && Totals!.GetBalance() < 0;
         <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
             Der er sket en fejl, og din ændring blev ikke gemt.
             <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
         </Alert>
         <Form>
             <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@request">
-                @if (!IsHistoryOrder)
+                @if (!IsHistoryOrder && !string.IsNullOrEmpty(request.AccountNumber))
                 {
                     <Row>
                         <Column ColumnSize="ColumnSize.Is9.OnTablet.IsHalf.OnWidescreen">
@@ -23,7 +24,7 @@
                                 <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
                                 <FieldBody>
                                     <Validation>
-                                        <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344" ReadOnly="@(!accountNumberCanBeChanged)">
+                                        <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@request.AccountNumber" placeholder="1111-2222333344">
                                             <Feedback>
                                                 <ValidationError />
                                             </Feedback>
@@ -51,6 +52,8 @@
                         {
                             var isCancelled = request.CancelledReservations.Contains(reservation.Id);
                             var canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && reservation.Date.PlusDays(reservation.DurationInDays) <= today;
+                            // TODO: Remove this unless testing.
+                            canBeSettled = IsSettlementEnabled;
                             var canBeCancelled = reservation.CanBeCancelled || IsCancellationEnabled && (reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
                             var color = reservation.Status == ReservationStatus.Settled ? "text-secondary" : string.Empty;
                             var cancelledClass = isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty;
@@ -60,7 +63,7 @@
                                 <TableRowCell Class="@cancelledClass">@reservation.DurationInDays</TableRowCell>
                                 <TableRowCell Class="@cancelledClass">@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
                                 <TableRowCell Class="@("text-right " + cancelledClass)">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
-                                <TableRowCell Class="@("text-right " + cancelledClass)">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
+                                <TableRowCell Class="@("text-right " + cancelledClass)">@FormattingService.FormatMoneyShort(reservation.Price!.Cleaning)</TableRowCell>
                                 <TableRowCell Class="@("text-right " + cancelledClass)">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
                                 <TableRowCell Class="border-0">
                                     @if (canBeSettled)
@@ -104,7 +107,7 @@
                         <TableRow>
                             <TableRowCell ColumnSpan="5">Leje (inklusiv rengøring)</TableRowCell>
                             <TableRowCell Class="text-right">+</TableRowCell>
-                            <TableRowCell Class="text-right">@FormattingService.FormatMoneyLong(price!.Rent + price!.CleaningFee)</TableRowCell>
+                            <TableRowCell Class="text-right">@FormattingService.FormatMoneyLong(price!.Rent + price!.Cleaning)</TableRowCell>
                         </TableRow>
                         <TableRow>
                             <TableRowCell ColumnSpan="5" Class="border-top-0">Depositum</TableRowCell>
@@ -116,7 +119,7 @@
                             <TableRowCell Class="text-right border-bottom"><strong>=</strong></TableRowCell>
                             <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
                         </TableRow>
-                        @if (Totals!.BalanceIn + Totals!.PayIn > 0)
+                        @if (Totals!.IsPaid())
                         {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-top-0">Pris (inklusiv depositum)</TableRowCell>
@@ -124,15 +127,15 @@
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.GetTotal())</TableRowCell>
                             </TableRow>
                         }
-                        @if (Totals!.BalanceIn > 0)
+                        @if (Totals.FromOtherOrders > 0)
                         {
                             <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Tidligere indbetalt</TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Overført fra andre bestillinger</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">+</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.BalanceIn)</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.FromOtherOrders)</TableRowCell>
                             </TableRow>
                         }
-                        @if (Totals!.PayIn > 0)
+                        @if (Totals.PayIn > 0)
                         {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-top-0">Indbetalt</TableRowCell>
@@ -148,7 +151,7 @@
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(cancellationFee)</TableRowCell>
                             </TableRow>
                         }
-                        @if (Totals.SettledDeposits > 0)
+                        @if (Totals.IsPaid() && Totals.SettledDeposits > 0)
                         {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-top-0">Depositum refundering</TableRowCell>
@@ -164,12 +167,12 @@
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.Damages)</TableRowCell>
                             </TableRow>
                         }
-                        @if (Totals.BalanceOut > 0)
+                        @if (Totals.ToOtherOrders > 0)
                         {
                             <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Anvendt til andre bestillinger</TableRowCell>
+                                <TableRowCell ColumnSpan="5" Class="border-top-0">Udbetalt</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">−</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.BalanceOut)</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.ToOtherOrders)</TableRowCell>
                             </TableRow>
                         }
                         @if (Totals.PayOut > 0)
@@ -180,7 +183,7 @@
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayOut)</TableRowCell>
                             </TableRow>
                         }
-                        @if (Totals!.BalanceIn + Totals!.PayIn > 0)
+                        @if (Totals.IsPaid())
                         {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-bottom"><strong>Saldo</strong></TableRowCell>
@@ -188,11 +191,11 @@
                                 <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(balance)</strong></TableRowCell>
                             </TableRow>
                         }
-                        @if (!IsHistoryOrder && (accountNumberCanBeChanged || someReservationsCanBeCancelled))
+                        @if (accountNumberCanBeEdited || someReservationsCanBeCancelled)
                         {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-top-0 control-row">
-                                    @if (IsPaymentEnabled && Totals!.GetBalance() < 0)
+                                    @if (showPaymentButton)
                                     {
                                         <Button Color="Color.Secondary" Clicked="@RecordPayIn">Registrér indbetaling</Button>
                                     }
@@ -212,7 +215,7 @@
         </Form>
         @if (IsPaymentEnabled)
         {
-            <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+            <PayInDialog @ref="payInDialog" OnConfirm="@OnPaymentConfirm" />
         }
         @if (IsSettlementEnabled)
         {
@@ -225,7 +228,7 @@
 {
     private readonly UpdateOrderRequest request = new UpdateOrderRequest();
     private Validations validations = null!;
-    private PaymentDialog paymentDialog = null!;
+    private PayInDialog payInDialog = null!;
     private SettlementDialog settlementDialog = null!;
     private LocalDate today;
     private IReadOnlyDictionary<int, Resource>? resources;
@@ -242,6 +245,9 @@
 
     [Parameter]
     public bool IsSettlementEnabled { get; set; }
+
+    [Parameter]
+    public int UserId { get; set; }
 
     [Parameter]
     public int OrderId { get; set; }
@@ -261,7 +267,7 @@
     [Parameter]
     public EventCallback<UpdateOrderRequest> OnSubmit { get; set; }
 
-    private bool IsUpdated => AccountNumber != request.AccountNumber.Trim() || request.CancelledReservations.Count > 0;
+    private bool IsUpdated => !string.IsNullOrEmpty(AccountNumber) && AccountNumber != request.AccountNumber.Trim() || request.CancelledReservations.Count > 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -326,7 +332,7 @@
     private void RecordPayIn()
     {
         DismissShowGeneralErrorAlert();
-        paymentDialog.Show(new Payment(OrderId, DateProvider.Today, -Totals!.GetBalance(), true));
+        payInDialog.Show(OrderId, DateProvider.Today, -Totals!.GetBalance());
     }
 
     private void RecordSettlement(Reservation reservation)
@@ -335,14 +341,14 @@
         settlementDialog.Show(OrderId, reservation);
     }
 
-    private async Task OnPaymentConfirm(Payment payment)
+    private async Task OnPaymentConfirm((int OrderId, LocalDate Date, int Amount) tuple)
     {
-        var request = new PaymentRequest { Date = payment.Date, Amount = payment.Amount };
-        var requestUri = $"orders/{payment.OrderId}/pay-in";
+        var request = new PaymentRequest { Date = tuple.Date, Amount = tuple.Amount };
+        var requestUri = $"orders/{tuple.OrderId}/pay-in";
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
         {
-            AccountNumber = response.Order.AccountNumber;
+            AccountNumber = response.Order.AccountNumber!;
             Reservations = response.Order.Reservations;
             Totals = response.Order.Totals;
             UpdatePrice();
@@ -359,7 +365,7 @@
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
         {
-            AccountNumber = response.Order.AccountNumber;
+            AccountNumber = response.Order.AccountNumber!;
             Reservations = response.Order.Reservations;
             Totals = response.Order.Totals;
             UpdatePrice();

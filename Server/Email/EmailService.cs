@@ -86,12 +86,12 @@ namespace Frederikskaj2.Reservations.Server.Email
             await SendMessage(model, "ResetPassword", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
-        public async Task SendOrderReceivedEmail(User user, int orderId, int balance, int amount)
+        public async Task SendOrderReceivedEmail(User user, int orderId, int prepaidAmount, int amount)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
-            if (balance < 0)
-                throw new ArgumentOutOfRangeException(nameof(balance));
+            if (prepaidAmount < 0 || prepaidAmount > amount)
+                throw new ArgumentOutOfRangeException(nameof(prepaidAmount));
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount));
 
@@ -101,7 +101,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 user.FullName,
                 urlService.GetMyOrderUrl(orderId),
                 orderId,
-                balance,
+                prepaidAmount,
                 amount,
                 reservationsOptions.PayInAccountNumber);
             await SendMessage(model, "OrderReceived", new EmailRecipient { Name = user.FullName, Email = user.Email });
@@ -121,36 +121,30 @@ namespace Frederikskaj2.Reservations.Server.Email
             await SendMessage(model, "NewOrder", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
-        public async Task SendOrderConfirmedEmail(User user, int orderId, int amount, int excessAmount)
+        public async Task SendOrderConfirmedEmail(User user, int orderId)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
-            if (amount < 0)
-                throw new ArgumentOutOfRangeException(nameof(amount));
-            if (excessAmount < 0)
-                throw new ArgumentOutOfRangeException(nameof(excessAmount));
 
-            var model = new OrderConfirmedModel(
+            var model = new OrderModel(
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
                 urlService.GetMyOrderUrl(orderId),
-                orderId,
-                amount,
-                excessAmount);
+                orderId);
             await SendMessage(model, "OrderConfirmed", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
-        public async Task SendMissingPaymentEmail(User user, int orderId, int amount, int missingAmount)
+        public async Task SendPayInEmail(User user, int orderId, int amount, int missingAmount)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount));
-            if (missingAmount <= 0)
+            if (missingAmount < 0)
                 throw new ArgumentOutOfRangeException(nameof(missingAmount));
 
-            var model = new MissingPaymentModel(
+            var model = new PayInModel(
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
@@ -159,7 +153,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 amount,
                 missingAmount,
                 reservationsOptions.PayInAccountNumber);
-            await SendMessage(model, "MissingPayment", new EmailRecipient { Name = user.FullName, Email = user.Email });
+            await SendMessage(model, "PayIn", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
         public async Task SendOverduePaymentEmail(User user, int orderId)
@@ -250,7 +244,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 model, "ReservationSettled", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
-        public async Task SendPayOutEmail(User user, int orderId, int amount)
+        public async Task SendPayOutEmail(User user, int amount)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
@@ -261,8 +255,6 @@ namespace Frederikskaj2.Reservations.Server.Email
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
-                urlService.GetMyOrderUrl(orderId),
-                orderId,
                 amount);
             await SendMessage(model, "PayOut", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }

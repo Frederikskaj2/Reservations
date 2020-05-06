@@ -15,9 +15,9 @@
 {
     <p>Vi tilbageholder @Model.Damages.ToString("C0", CultureInfo) af dit despositum på @Model.Deposit.ToString("C0", CultureInfo) til dækning af følgende: @Model.DamagesDescription.</p>
 }
-    @if (Model.Damages < Model.Deposit)
+@if (Model.Damages < Model.Deposit)
 {
-    <p>Du vil få udbetalt@(Model.Damages > 0 ? " resten" : string.Empty) af dit depositum, dvs. @((Model.Deposit - Model.Damages).ToString("C0", CultureInfo)).</p>
+    <p>Du vil få udbetalt@(Model.Damages > 0 ? " resten af" : string.Empty) dit depositum som udgør @((Model.Deposit - Model.Damages).ToString("C0", CultureInfo)).</p>
     <p>Bemærk at der kan gå op til to måneder før det sker.</p>
 }
     @await Html.PartialAsync("_Signature", Model)

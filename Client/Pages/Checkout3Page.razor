@@ -6,16 +6,16 @@
 
 <main>
     <Container>
-        <Paragraph>Tak for din bestilling med <a href="@($"{Urls.MyOrders}/{ApplicationState.MyOrder!.Id}")">bestillingsnummer @ApplicationState.MyOrder.Id</a>.</Paragraph>
+        <Paragraph>Tak for din bestilling med <a href="@($"{Urls.MyOrders}/{ApplicationState.MyOrder!.Id}")">bestillingsnr. @ApplicationState.MyOrder.Id</a>.</Paragraph>
         @if (ApplicationState.MyOrder!.Totals!.GetBalance() == 0)
         {
-            <Paragraph>Da du har et tidligere indbetalt beløb som dækker prisen for denne bestilling er din bestilling godkendt og betalt, og du behøver ikke at foretage dig yderligere.</Paragraph>
+            <Paragraph>Da du tidligere har indbetalt et beløb som dækker prisen for denne bestilling er din bestilling godkendt og betalt, og du behøver ikke at foretage dig yderligere.</Paragraph>
         }
         else
         {
-            if (ApplicationState.MyOrder!.Totals.BalanceIn > 0)
+            if (ApplicationState.MyOrder!.Totals.FromOtherOrders > 0)
             {
-                <Paragraph>Da du afgav din bestilling havde du @FormattingService.FormatMoneyLong(ApplicationState.MyOrder!.Totals.BalanceIn) til gode, og du behøver derfor kun at betale forskellen mellem den fulde pris på @FormattingService.FormatMoneyLong(ApplicationState.MyOrder!.Totals.Price) og beløbet du har til gode.</Paragraph>
+                <Paragraph>Da du afgav din bestilling havde du @FormattingService.FormatMoneyLong(ApplicationState.MyOrder!.Totals.FromOtherOrders) til gode, og du behøver derfor kun at betale forskellen mellem den fulde pris på @FormattingService.FormatMoneyLong(ApplicationState.MyOrder!.Totals.Price) og beløbet du har til gode.</Paragraph>
             }
             <Paragraph>Din bestilling bliver først godkendt når du har indbetalt det skyldige beløb til grundejerforeningens bankkonto:</Paragraph>
             <div class="payment-table">

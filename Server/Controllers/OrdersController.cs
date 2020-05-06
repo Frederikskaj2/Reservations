@@ -94,21 +94,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             return new OrderResponse<Order> { Order = CreateOrder(order) };
         }
 
-        [HttpPost("{orderId:int}/pay-out")]
-        public async Task<OrderResponse<Order>> PayOut(int orderId, PaymentRequest request)
-        {
-            var userId = User.Id();
-            if (!userId.HasValue)
-                return new OrderResponse<Order>();
-
-            var now = clock.GetCurrentInstant();
-            var order = await orderService.PayOut(now, orderId, userId.Value, request.Date, request.Amount);
-            if (order == null)
-                return new OrderResponse<Order>();
-
-            return new OrderResponse<Order> { Order = CreateOrder(order) };
-        }
-
         private Order CreateOrder(Data.Order order)
         {
             return new Order
@@ -118,12 +103,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Email = order.User?.Email,
                 FullName = order.User?.FullName,
                 Phone = order.User?.PhoneNumber,
-                AccountNumber = order.AccountNumber,
                 Reservations = order.Reservations.Select(CreateReservation),
+                IsHistoryOrder = order.Flags.HasFlag(OrderFlags.IsHistoryOrder),
+                AccountNumber = order.User!.AccountNumber,
                 Totals = orderService.GetTotals(order)
             };
 
-            Reservation CreateReservation(Data.Reservation reservation) => new Reservation
+            static Reservation CreateReservation(Data.Reservation reservation) => new Reservation
             {
                 Id = reservation.Id,
                 ResourceId = reservation.ResourceId,
@@ -131,7 +117,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 UpdatedTimestamp = reservation.UpdatedTimestamp,
                 Price = reservation.Price!.Adapt<Price>(),
                 Date = reservation.Date,
-                DurationInDays = reservation.DurationInDays
+                DurationInDays = reservation.DurationInDays,
+                CanBeCancelled = reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed
             };
         }
     }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Shared;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Posting = Frederikskaj2.Reservations.Shared.Posting;
@@ -30,9 +31,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         public async Task<PostingsRange> GetPostingsRange()
         {
-            var earliestTransaction = await db.Transactions.OrderBy(transaction => transaction.Timestamp).FirstOrDefaultAsync();
+            var earliestPosting = await db.Postings.OrderBy(posting => posting.Date).FirstOrDefaultAsync();
 
-            if (earliestTransaction == null)
+            if (earliestPosting == null)
             {
                 var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
                 var monthStart = GetMonthStart(today);
@@ -43,45 +44,22 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 };
             }
 
-            var latestTransaction = await db.Transactions.OrderByDescending(transaction => transaction.Date).FirstOrDefaultAsync();
+            var latestPosting = await db.Postings.OrderByDescending(posting => posting.Date).FirstOrDefaultAsync();
             return new PostingsRange
             {
-                EarliestMonth = GetMonthStart(earliestTransaction.Date),
-                LatestMonth = GetMonthStart(latestTransaction.Date)
+                EarliestMonth = GetMonthStart(earliestPosting.Date),
+                LatestMonth = GetMonthStart(latestPosting.Date)
             };
         }
 
         public async Task<IEnumerable<Posting>> GetPostings(LocalDate month)
         {
-            // Unfortunately, getting the required transactions require two round-trips to the database.
-            var fromTimestamp = GetMonthStart(month);
-            var toTimestamp = GetMonthStart(month).PlusMonths(1);
-            var orderIds = await db.Transactions
-                .Where(
-                    transaction
-                        => (transaction.Type == TransactionType.PayIn || transaction.Type == TransactionType.PayOut)
-                        && fromTimestamp <= transaction.Date && transaction.Date < toTimestamp)
-                .Select(transaction => transaction.OrderId)
-                .Distinct()
+            var fromDate = GetMonthStart(month);
+            var toDate = GetMonthStart(month).PlusMonths(1);
+            return await db.Postings
+                .Where(posting => fromDate <= posting.Date && posting.Date < toDate)
+                .ProjectToType<Posting>()
                 .ToListAsync();
-
-            var transactions = await db.Transactions
-                .Where(transaction => orderIds.Contains(transaction.OrderId))
-                .ToListAsync();
-
-            return transactions
-                .GroupBy(transaction => transaction.OrderId)
-                .SelectMany(CreatePostings)
-                .OrderBy(posting => posting.Date)
-                .ThenBy(posting => posting.OrderId);
-
-            static IEnumerable<Posting> CreatePostings(IGrouping<int, Transaction> grouping)
-            {
-                var orderState = new OrderState(grouping.Key);
-                foreach (var transaction in grouping.OrderBy(t => t.Timestamp))
-                    orderState.ApplyTransaction(transaction);
-                return orderState.Postings;
-            }
         }
 
         public async Task SendPostingsEmail(User user, LocalDate date)

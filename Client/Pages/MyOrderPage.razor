@@ -18,7 +18,7 @@
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <h1>Bestilling @order!.Id</h1>
-            @if (!isHistoryOrder)
+            @if (!order.IsHistoryOrder)
             {
                 <div><a href="@Urls.Terms">Lejebetingelser</a></div>
                 @if (linkBanquetFacilitiesRules)
@@ -30,7 +30,7 @@
                     <div><a href="@Urls.RulesBedrooms">Husorden for soveværelserne</a></div>
                 }
             }
-            <OrderStatement @ref="orderStatement" OrderId="@order.Id" AccountNumber="@order.AccountNumber" Reservations="@order.Reservations" Totals="@order.Totals" IsHistoryOrder="@isHistoryOrder" OnSubmit="@Submit" />
+            <OrderStatement @ref="orderStatement" OrderId="@order.Id" AccountNumber="@accountNumber" Reservations="@order.Reservations" Totals="@order.Totals" IsHistoryOrder="@order.IsHistoryOrder" OnSubmit="@Submit" />
         </Container>
     }
     else
@@ -44,8 +44,8 @@
 @code {
 
     private OrderStatement orderStatement = null!;
+    private string? accountNumber;
     private MyOrder? order;
-    private bool isHistoryOrder;
     private bool linkBanquetFacilitiesRules;
     private bool linkBedroomRules;
     private bool isInitialized;
@@ -56,17 +56,25 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await GetAccountNumber();
+
         var url = $"my-orders/{OrderId}";
         var maybe = await ApiClient.GetJsonAsync<OrderResponse<MyOrder>>(url);
         if (maybe.TryGetValue(out var response) && response.Order != null)
         {
             order = response.Order;
             var resources = await ClientDataProvider.GetResources();
-            isHistoryOrder = order.AccountNumber == null;
             linkBanquetFacilitiesRules = order.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.BanquetFacilities);
             linkBedroomRules = order.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.Bedroom);
         }
         isInitialized = true;
+    }
+
+    private async Task GetAccountNumber()
+    {
+        var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
+        if (maybe.TryGetValue(out var myUser))
+            accountNumber = myUser.AccountNumber;
     }
 
     private async Task Submit(UpdateOrderRequest request)

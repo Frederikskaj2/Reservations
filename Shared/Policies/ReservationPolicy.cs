@@ -55,7 +55,7 @@ namespace Frederikskaj2.Reservations.Shared
             return new Price
             {
                 Rent = rent,
-                CleaningFee = PriceOptions.CleaningFee,
+                Cleaning = PriceOptions.Cleaning,
                 Deposit = deposit
             };
         }

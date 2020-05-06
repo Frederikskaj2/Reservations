@@ -10,6 +10,5 @@ namespace Frederikskaj2.Reservations.Shared
         public string? Name { get; set; }
         public bool IsAuthenticated { get; set; }
         public IEnumerable<string>? Roles { get; set; }
-        public int? ApartmentId { get; set; }
     }
 }

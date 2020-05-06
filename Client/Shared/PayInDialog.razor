@@ -5,23 +5,16 @@
             <ModalContent>
                 <ModalHeader>
                     <ModalTitle>
-                        @if (isPayIn)
-                        {
-                            <text>Indbetaling vedr. bestilling @orderId</text>
-                        }
-                        else
-                        {
-                            <text>Udbetaling vedr. bestilling @orderId</text>
-                        }
+                        Indbetaling vedr. bestilling @orderId
                     </ModalTitle>
-                    <CloseButton Clicked="@Cancel"/>
+                    <CloseButton Clicked="@Cancel" />
                 </ModalHeader>
                 <ModalBody>
                     <Field Horizontal="true">
                         <FieldLabel ColumnSize="ColumnSize.Is4">Dato</FieldLabel>
                         <FieldBody ColumnSize="ColumnSize.Is8">
                             <Validation>
-                                <DateEdit TValue="DateTime" Date="@date" DateChanged="@DateChanged">
+                                <DateEdit TValue="DateTime" Date="@dateTime" DateChanged="@DateChanged">
                                     <Feedback>
                                         <ValidationError />
                                     </Feedback>
@@ -43,16 +36,7 @@
                     </Field>
                 </ModalBody>
                 <ModalFooter>
-                    <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">
-                        @if (isPayIn)
-                        {
-                            <text>Registrér indbetaling</text>
-                        }
-                        else
-                        {
-                            <text>Registrér udbetaling</text>
-                        }
-                    </Button>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">Registrér indbetaling</Button>
                     <Button Color="Color.Secondary" Clicked="@Cancel">Annullér</Button>
                 </ModalFooter>
             </ModalContent>
@@ -67,23 +51,21 @@
     private Validations validations = null!;
     private NumericEdit<int> amountNumericEdit = null!;
     private int orderId;
-    private DateTime date;
-    private bool isPayIn;
+    private DateTime dateTime;
     private bool isConfirming;
 
     [Parameter]
-    public EventCallback<Payment> OnConfirm { get; set; }
+    public EventCallback<(int OrderId, LocalDate Date, int Amount)> OnConfirm { get; set; }
 
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
-    public void Show(Payment payment)
+    public void Show(int orderId, LocalDate date, int amount)
     {
-        orderId = payment.OrderId;
-        request.Amount = payment.Amount;
-        request.Date = payment.Date;
-        date = payment.Date.AtMidnight().ToDateTimeUnspecified();
-        isPayIn = payment.IsPayIn;
+        this.orderId = orderId;
+        request.Date = date;
+        dateTime = date.AtMidnight().ToDateTimeUnspecified();
+        request.Amount = amount;
         isConfirming = false;
         modal.Show();
         Task.Run(() => amountNumericEdit.Focus());
@@ -91,8 +73,8 @@
 
     private void DateChanged(DateTime value)
     {
-        date = value;
-        request.Date = LocalDate.FromDateTime(date);
+        dateTime = value;
+        request.Date = LocalDate.FromDateTime(dateTime);
     }
 
     private void Cancel() => modal.Hide();
@@ -107,5 +89,5 @@
         modal.Hide();
     }
 
-    private Task OnModalClosed() => isConfirming ? OnConfirm.InvokeAsync(new Payment(orderId, request.Date, request.Amount, isPayIn)) : OnCancel.InvokeAsync(null);
+    private Task OnModalClosed() => isConfirming ? OnConfirm.InvokeAsync((orderId, request.Date, request.Amount)) : OnCancel.InvokeAsync(null);
 }

@@ -27,7 +27,6 @@
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHeaderCell>Bestillingsnr.</TableHeaderCell>
                             <TableHeaderCell>Mail</TableHeaderCell>
                             <TableHeaderCell>Navn</TableHeaderCell>
                             <TableHeaderCell>Telefon</TableHeaderCell>
@@ -40,9 +39,8 @@
                     <TableBody>
                         @foreach (var payOut in payOuts)
                         {
-                            <TableRow @key="@payOut.OrderId">
-                                <TableRowCell><a href="/@Urls.Orders/@payOut.OrderId">@payOut.OrderId</a></TableRowCell>
-                                <TableRowCell><a href="mailto:@payOut.Email?subject=Frederikskaj 2 bestilling @payOut.OrderId">@FormattingService.FormatEmail(payOut.Email)</a></TableRowCell>
+                            <TableRow @key="@payOut.UserId">
+                                <TableRowCell><a href="mailto:@payOut.Email?subject=Frederikskaj 2">@FormattingService.FormatEmail(payOut.Email)</a></TableRowCell>
                                 <TableRowCell>@payOut.FullName</TableRowCell>
                                 <TableRowCell>@FormattingService.FormatPhone(payOut.Phone)</TableRowCell>
                                 <TableRowCell>Frederikskaj @apartments![payOut.ApartmentId]</TableRowCell>
@@ -53,7 +51,7 @@
                         }
                     </TableBody>
                 </Table>
-                <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+                <PayOutDialog @ref="payOutDialog" OnConfirm="@OnPaymentConfirm" />
             }
         </Container>
     }
@@ -61,7 +59,7 @@
 
 @code
 {
-    private PaymentDialog paymentDialog = null!;
+    private PayOutDialog payOutDialog = null!;
     private IReadOnlyDictionary<int, Apartment>? apartments;
     private List<PayOut> payOuts = new List<PayOut>();
     private bool isInitialized;
@@ -79,27 +77,27 @@
     private void RecordPayOut(PayOut payOut)
     {
         DismissErrorAlert();
-        paymentDialog.Show(new Payment(payOut.OrderId, DateProvider.Today, payOut.Amount, false));
+        payOutDialog.Show(payOut.UserId, payOut.FullName, DateProvider.Today, payOut.Amount);
     }
 
-    private async Task OnPaymentConfirm(Payment payment)
+    private async Task OnPaymentConfirm((int UserId, LocalDate Date, int Amount) tuple)
     {
-        var request = new PaymentRequest { Date = payment.Date, Amount = payment.Amount };
-        var requestUri = $"orders/{payment.OrderId}/pay-out";
-        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
+        var request = new PaymentRequest { Date = tuple.Date, Amount = tuple.Amount };
+        var requestUri = $"users/{tuple.UserId}/pay-out";
+        var maybe = await ApiClient.PostJsonAsync<PayOutResponse>(requestUri, request);
+        if (maybe.TryGetValue(out var response) && response.PayOut != null)
         {
-            var index = payOuts.FindIndex(payOut => payOut.OrderId == response.Order.Id);
+            var index = payOuts.FindIndex(payOut => payOut.UserId == response.PayOut.UserId);
             if (index >= 0)
             {
-                if (response.Order.Totals!.GetBalance() <= 0)
+                if (response.PayOut.Amount == 0)
                 {
                     payOuts.RemoveAt(index);
                     ClientDataProvider.Refresh();
                 }
                 else
                 {
-                    payOuts[index].Amount = response.Order.Totals.GetBalance();
+                    payOuts[index].Amount = response.PayOut.Amount;
                 }
             }
         }

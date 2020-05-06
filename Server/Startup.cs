@@ -74,6 +74,7 @@ namespace Frederikskaj2.Reservations.Server
 
             services
                 .AddReservationsServices()
+                .AddSingleton<TransactionService>()
                 .AddScoped<IDataProvider, ServerDataProvider>()
                 .AddScoped<OrderService>()
                 .AddScoped<KeyCodeService>()

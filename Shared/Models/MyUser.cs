@@ -12,5 +12,6 @@ namespace Frederikskaj2.Reservations.Shared
         public EmailSubscriptions EmailSubscriptions { get; set; }
         public bool IsPendingDelete { get; set; }
         public int? ApartmentId { get; set; }
+        public string? AccountNumber { get; set; }
     }
 }

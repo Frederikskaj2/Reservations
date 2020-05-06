@@ -1,24 +1,21 @@
 ﻿@inject FormattingService FormattingService
-
 <div class="prices">
     <div class="prices-header">Leje</div>
     <div class="prices-header">Depositum</div>
     <div class="prices-header">Til betaling</div>
-    <div>@GetRentAndCleaningFee()</div>
+    <div>@GetRentAndCleaning()</div>
     <div>@GetDeposit()</div>
     <div>@GetTotal()</div>
 </div>
-
 @code
 {
 
     [Parameter]
     public Price? Price { get; set; }
 
-    private string GetRentAndCleaningFee() => Price != null ? FormattingService.FormatMoneyShort(Price.Rent + Price.CleaningFee) : string.Empty;
+    private string GetRentAndCleaning() => Price != null ? FormattingService.FormatMoneyShort(Price.Rent + Price.Cleaning) : string.Empty;
 
     private string GetDeposit() => Price != null ? FormattingService.FormatMoneyShort(Price.Deposit) : string.Empty;
 
     private string GetTotal() => Price != null ? FormattingService.FormatMoneyShort(Price.GetTotal()) : string.Empty;
-
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
@@ -33,34 +31,39 @@ namespace Frederikskaj2.Reservations.Server.Domain
         private readonly IReservationPolicyProvider reservationPolicyProvider;
         private readonly ReservationsOptions reservationsOptions;
         private readonly SignInManager<User> signInManager;
+        private readonly TransactionService transactionService;
         private readonly UserManager<User> userManager;
 
         public OrderService(
             ILogger<OrderService> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue,
             IDataProvider dataProvider, DateTimeZone dateTimeZone, ReservationsContext db,
             IReservationPolicyProvider reservationPolicyProvider, ReservationsOptions reservationsOptions,
-            SignInManager<User> signInManager, UserManager<User> userManager)
+            SignInManager<User> signInManager, TransactionService transactionService,
+            UserManager<User> userManager)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.backgroundWorkQueue =
-                backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
+            this.backgroundWorkQueue = backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
             this.dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
             this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
-            this.reservationPolicyProvider
-                = reservationPolicyProvider ?? throw new ArgumentNullException(nameof(reservationPolicyProvider));
-            this.reservationsOptions =
-                reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
+            this.reservationPolicyProvider = reservationPolicyProvider ?? throw new ArgumentNullException(nameof(reservationPolicyProvider));
+            this.reservationsOptions = reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
             this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
+            this.transactionService = transactionService ?? throw new ArgumentNullException(nameof(transactionService));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
+
 
         public async Task<Order?> GetOrder(int orderId)
             => await db.Orders
                 .Include(order => order.User)
+                .ThenInclude(user => user!.AccountBalances)
+                .Include(order => order.User)
+                .ThenInclude(user => user!.Postings)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
+                .ThenInclude(transaction => transaction.Amounts)
                 .FirstOrDefaultAsync(order => order.Id == orderId && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder));
 
         public async Task<IEnumerable<Order>> GetOrders()
@@ -69,7 +72,18 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
+                .ThenInclude(transaction => transaction.Amounts)
                 .Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
+                .OrderBy(order => order.CreatedTimestamp)
+                .ToListAsync();
+
+        public async Task<IEnumerable<Order>> GetOrders(int userId)
+            => await db.Orders
+                .Include(order => order.Reservations)
+                .ThenInclude(reservation => reservation.Days)
+                .Include(order => order.Transactions)
+                .ThenInclude(transaction => transaction.Amounts)
+                .Where(order => order.UserId == userId && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
@@ -78,16 +92,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
+                .ThenInclude(transaction => transaction.Amounts)
                 .Where(order => order.UserId == userId && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
-                .OrderBy(order => order.CreatedTimestamp)
-                .ToListAsync();
-
-        public async Task<IEnumerable<Order>> GetOrders(int userId)
-            => await db.Orders
-                .Include(order => order.Transactions)
-                .Include(order => order.Reservations)
-                .ThenInclude(reservation => reservation.Days)
-                .Where(order => order.UserId == userId && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
 
@@ -118,18 +124,26 @@ namespace Frederikskaj2.Reservations.Server.Domain
             Instant timestamp, int userId, int apartmentId, string accountNumber,
             IEnumerable<ReservationRequest> reservations)
         {
+            if (string.IsNullOrEmpty(accountNumber))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(accountNumber));
             if (reservations is null)
                 throw new ArgumentNullException(nameof(reservations));
+
+            var user = await GetUser(userId);
+            if (user == null)
+                return (PlaceOrderResult.GeneralError, null);
+
+            user.AccountNumber = accountNumber;
 
             var resources = await dataProvider.GetResources();
             var order = new Order
             {
-                UserId = userId,
+                User = user,
                 Flags = OrderFlags.IsCleaningRequired,
                 ApartmentId = apartmentId,
-                AccountNumber = accountNumber,
                 CreatedTimestamp = timestamp,
-                Reservations = new List<Reservation>()
+                Reservations = new List<Reservation>(),
+                Transactions = new List<Transaction>()
             };
             var totalPrice = new Price();
             foreach (var reservationRequest in reservations)
@@ -143,33 +157,11 @@ namespace Frederikskaj2.Reservations.Server.Domain
             }
 
             var today = timestamp.InZone(dateTimeZone).Date;
-            order.Transactions = new List<Transaction>
-            {
-                new Transaction
-                {
-                    Type = TransactionType.Order,
-                    Date = today,
-                    CreatedByUserId = userId,
-                    Timestamp = timestamp,
-                    UserId = userId,
-                    Order = order,
-                    Amount = -(totalPrice.Rent + totalPrice.CleaningFee)
-                },
-                new Transaction
-                {
-                    Type = TransactionType.Deposit,
-                    Date = today,
-                    CreatedByUserId = userId,
-                    Timestamp = timestamp,
-                    UserId = userId,
-                    Order = order,
-                    Amount = -totalPrice.Deposit
-                }
-            };
-
-            var balance = await TryApplyBalance(timestamp, today, userId, order, totalPrice.GetTotal());
-
+            transactionService.CreateOrderTransaction(timestamp, today, order, totalPrice);
             db.Orders.Add(order);
+
+            await UpdateOrders(timestamp, today, user.Id, user, order);
+
             try
             {
                 await db.SaveChangesAsync();
@@ -183,9 +175,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return (PlaceOrderResult.GeneralError, null);
             }
 
-            var user = await userManager.FindByIdAsync(userId.ToString(CultureInfo.InvariantCulture));
+            var prepaidAmount = order.Balance(Account.FromPayments);
             backgroundWorkQueue.Enqueue(
-                (service, _) => service.SendOrderReceivedEmail(user, order.Id, balance, totalPrice.GetTotal()));
+                (service, _) => service.SendOrderReceivedEmail(user, order.Id, prepaidAmount, totalPrice.GetTotal()));
 
             var users = await db.Users
                 .Where(u => u.EmailSubscriptions.HasFlag(EmailSubscriptions.NewOrder))
@@ -240,93 +232,45 @@ namespace Frederikskaj2.Reservations.Server.Domain
             Instant timestamp, int orderId, string accountNumber, IEnumerable<int> cancelledReservations,
             int createdByUserId, bool waiveFee, int? userId = null)
         {
+            if (string.IsNullOrEmpty(accountNumber))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(accountNumber));
             if (cancelledReservations is null)
                 throw new ArgumentNullException(nameof(cancelledReservations));
 
             var order = await GetOrder(orderId);
-            if (order == null || userId.HasValue && order.UserId != userId.Value)
+            if (order == null)
                 return default;
 
-            var wasOrderConfirmed = order.Reservations.Any(reservation => reservation.Status == ReservationStatus.Confirmed);
+            var user = await GetUser(order.UserId!.Value);
+            user.AccountNumber = accountNumber;
 
-            var today = timestamp.InZone(dateTimeZone).Date;
-            order.AccountNumber = accountNumber;
-            var cancelledReservedReservations = new List<Reservation>();
-            var cancelledConfirmedReservations = new List<Reservation>();
-            foreach (var reservationId in cancelledReservations)
+            var cancelledReservationsEmailData = new List<(Reservation Reservation, int Total, int CancellationFee)>();
+            var confirmedOrderIds = Enumerable.Empty<int>();
+            if (cancelledReservations.Any())
             {
-                var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
-                if (reservation == null || userId.HasValue && !reservation.CanBeCancelled(today, reservationsOptions))
-                    continue;
-
-                var previousStatus = reservation.Status;
-                reservation.Status = ReservationStatus.Cancelled;
-                reservation.UpdatedTimestamp = timestamp;
-                reservation.Days!.Clear();
-
-                order.Transactions!.Add(
-                    new Transaction
-                    {
-                        Type = TransactionType.DepositCancellation,
-                        Date = today,
-                        CreatedByUserId = createdByUserId,
-                        Timestamp = timestamp,
-                        UserId = order.UserId,
-                        OrderId = order.Id,
-                        ResourceId = reservation.ResourceId,
-                        ReservationDate = reservation.Date,
-                        Amount = reservation.Price!.Deposit
-                    });
-                order.Transactions!.Add(
-                    new Transaction
-                    {
-                        Type = TransactionType.OrderCancellation,
-                        Date = today,
-                        CreatedByUserId = createdByUserId,
-                        Timestamp = timestamp,
-                        UserId = order.UserId,
-                        OrderId = order.Id,
-                        ResourceId = reservation.ResourceId,
-                        ReservationDate = reservation.Date,
-                        Amount = reservation.Price.Rent + reservation.Price.CleaningFee
-                    });
-                if (previousStatus == ReservationStatus.Confirmed)
+                var today = timestamp.InZone(dateTimeZone).Date;
+                foreach (var reservationId in cancelledReservations)
                 {
-                    cancelledConfirmedReservations.Add(reservation);
-                    if (!waiveFee)
-                        order.Transactions.Add(
-                            new Transaction
-                            {
-                                Type = TransactionType.CancellationFee,
-                                Date = today,
-                                CreatedByUserId = createdByUserId,
-                                Timestamp = timestamp,
-                                UserId = order.UserId,
-                                OrderId = order.Id,
-                                ResourceId = reservation.ResourceId,
-                                ReservationDate = reservation.Date,
-                                Amount = -reservationsOptions.CancellationFee
-                            });
+                    var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
+                    if (reservation == null || userId.HasValue && !reservation.CanBeCancelled(today, reservationsOptions))
+                        continue;
+
+                    var fee = reservation.Status == ReservationStatus.Confirmed && !waiveFee ? reservationsOptions.CancellationFee : 0;
+                    transactionService.CreateReservationCancelledTransaction(timestamp, today, createdByUserId, order, reservation, fee);
+
+                    if (reservation.Status == ReservationStatus.Reserved)
+                        cancelledReservationsEmailData.Add((reservation, 0, 0));
+                    else
+                        cancelledReservationsEmailData.Add((reservation, reservation.Price.GetTotal(), fee));
+
+                    reservation.Status = ReservationStatus.Cancelled;
+                    reservation.UpdatedTimestamp = timestamp;
+                    reservation.Days!.Clear();
                 }
-                else
-                {
-                    cancelledReservedReservations.Add(reservation);
-                }
+
+                confirmedOrderIds = await UpdateOrders(timestamp, today, createdByUserId, user);
             }
 
-            var totals = GetTotals(order);
-            var isOrderConfirmed = await GetIsOrderConfirmed();
-
-            async Task<bool> GetIsOrderConfirmed()
-            {
-                if (wasOrderConfirmed)
-                    return false;
-                var amountToPay = -totals.GetBalance();
-                var balance = await TryApplyBalance(timestamp, today, order.UserId!.Value, order, amountToPay);
-                return balance >= amountToPay;
-            }
-
-            TryMakeHistoryOrder(order, totals);
             try
             {
                 await db.SaveChangesAsync();
@@ -338,22 +282,14 @@ namespace Frederikskaj2.Reservations.Server.Domain
             }
 
             var resources = await dataProvider.GetResources();
-            foreach (var reservation in cancelledConfirmedReservations)
-                backgroundWorkQueue.Enqueue(
-                    (service, _) =>
-                    {
-                        var cancellationFee = !waiveFee ? reservationsOptions.CancellationFee : 0;
-                        return service.SendReservationCancelledEmail(
-                            order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
-                            reservation.Price!.GetTotal(), cancellationFee);
-                    });
-            foreach (var reservation in cancelledReservedReservations)
+            foreach (var (reservation, total, fee) in cancelledReservationsEmailData)
                 backgroundWorkQueue.Enqueue(
                     (service, _) => service.SendReservationCancelledEmail(
-                        order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date, 0, 0));
-            if (isOrderConfirmed)
+                        order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date, total, fee));
+            foreach (var confirmedOrderId in confirmedOrderIds)
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendOrderConfirmedEmail(order.User!, order.Id, 0, totals.GetBalance()));
+                    (service, _) => service.SendOrderConfirmedEmail(
+                        order.User!, confirmedOrderId));
 
             var isUserDeleted = await TryDeleteUser(order.User!);
 
@@ -406,23 +342,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
             if (order == null)
                 return null;
 
-            var today = timestamp.InZone(dateTimeZone).Date;
-            var totals = GetTotals(order);
-            var amountToPay = -totals.GetBalance();
-            var balance = await TryApplyBalance(timestamp, today, order.UserId!.Value, order, amountToPay, amount);
-            var orderIsConfirmed = balance >= amountToPay;
-
-            var transaction = new Transaction
-            {
-                Type = TransactionType.PayIn,
-                Date = date,
-                CreatedByUserId = userId,
-                Timestamp = timestamp,
-                UserId = order.UserId,
-                OrderId = orderId,
-                Amount = amount
-            };
-            await db.Transactions.AddAsync(transaction);
+            transactionService.CreatePayInTransaction(timestamp, date, userId, order, amount);
+            var confirmedOrderIds = await UpdateOrders(timestamp, date, userId, order.User!);
 
             try
             {
@@ -434,14 +355,13 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return null;
             }
 
-            if (orderIsConfirmed)
+            var accountsReceivable = order.Balance(Account.AccountsReceivable);
+            backgroundWorkQueue.Enqueue(
+                (service, _) => service.SendPayInEmail(order.User!, order.Id, amount, accountsReceivable));
+
+            foreach (var confirmedOrderId in confirmedOrderIds)
                 backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendOrderConfirmedEmail(
-                        order.User!, order.Id, amount, balance - amountToPay));
-            else
-                backgroundWorkQueue.Enqueue(
-                    (service, _) => service.SendMissingPaymentEmail(
-                        order.User!, order.Id, amount, amountToPay - balance));
+                    (service, _) => service.SendOrderConfirmedEmail(order.User!, confirmedOrderId));
 
             return order;
         }
@@ -450,7 +370,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
             Instant timestamp, int orderId, int userId, int reservationId, int damages, string? description)
         {
             var order = await GetOrder(orderId);
-            var reservation = order?.Reservations.FirstOrDefault(r => r.Id == reservationId);
+            if (order == null)
+                return default;
+            var reservation = order.Reservations.FirstOrDefault(r => r.Id == reservationId);
             if (reservation == null || reservation.Status != ReservationStatus.Confirmed
                 || !(0 <= damages && damages <= reservation.Price!.Deposit)
                 || damages > 0 && string.IsNullOrWhiteSpace(description))
@@ -459,36 +381,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
             reservation.Status = ReservationStatus.Settled;
 
             var today = timestamp.InZone(dateTimeZone).Date;
-            await db.Transactions.AddAsync(
-                new Transaction
-                {
-                    Type = TransactionType.SettlementDeposit,
-                    Date = today,
-                    CreatedByUserId = userId,
-                    Timestamp = timestamp,
-                    UserId = order!.UserId,
-                    OrderId = orderId,
-                    ResourceId = reservation.ResourceId,
-                    ReservationDate = reservation.Date,
-                    Amount = reservation.Price!.Deposit
-                });
-            if (damages > 0)
-                await db.Transactions.AddAsync(
-                    new Transaction
-                    {
-                        Type = TransactionType.SettlementDamages,
-                        Date = today,
-                        CreatedByUserId = userId,
-                        Timestamp = timestamp,
-                        UserId = order.UserId,
-                        OrderId = orderId,
-                        ResourceId = reservation.ResourceId,
-                        ReservationDate = reservation.Date,
-                        Comment = description,
-                        Amount = -damages
-                    });
 
-            TryMakeHistoryOrder(order, GetTotals(order));
+            transactionService.CreateSettlementTransaction(timestamp, today, userId, order, reservation, damages, description);
+            var confirmedOrderIds = await UpdateOrders(timestamp, today, userId, order.User!);
 
             try
             {
@@ -506,30 +401,24 @@ namespace Frederikskaj2.Reservations.Server.Domain
                     order.User!, order.Id, resources[reservation.ResourceId].Name!, reservation.Date,
                     reservation.Price.Deposit, damages, description));
 
+            foreach (var confirmedOrderId in confirmedOrderIds)
+                backgroundWorkQueue.Enqueue(
+                    (service, _) => service.SendOrderConfirmedEmail(order.User!, confirmedOrderId));
+
             await TryDeleteUser(order.User!);
 
             return order;
         }
 
-        public async Task<Order?> PayOut(Instant timestamp, int orderId, int userId, LocalDate date, int amount)
+        public async Task<PayOut?> PayOut(Instant timestamp, int createdByUserId, int userId, LocalDate date, int amount)
         {
-            var order = await GetOrder(orderId);
-            if (order == null)
+            var user = await GetUserWithTransactions(userId);
+            if (user == null)
                 return null;
 
-            var transaction = new Transaction
-            {
-                Type = TransactionType.PayOut,
-                Date = date,
-                CreatedByUserId = userId,
-                Timestamp = timestamp,
-                UserId = order.UserId,
-                OrderId = orderId,
-                Amount = -amount
-            };
-            await db.Transactions.AddAsync(transaction);
-
-            TryMakeHistoryOrder(order, GetTotals(order));
+            await ApplyPayOutToPayments(timestamp, date, createdByUserId, user, amount);
+            await ConvertToHistoryOrders(user);
+            await TryClearAccountNumber(user);
 
             try
             {
@@ -541,38 +430,42 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 return null;
             }
 
-            backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(order.User!, order.Id, amount));
+            backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(user, amount));
 
-            await TryDeleteUser(order.User!);
+            await TryDeleteUser(user);
 
-            return order;
+            var remainingAmount = -user.Balance(Account.Payments);
+            return new PayOut
+            {
+                UserId = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                Phone = user.PhoneNumber,
+                ApartmentId = user.ApartmentId!.Value,
+                AccountNumber = user.AccountNumber ?? string.Empty,
+                Amount = remainingAmount
+            };
         }
 
         public async Task<IEnumerable<PayOut>> GetPayOuts()
         {
-            var orders = await db.Orders
-                .Include(order => order.User)
-                .Include(order => order.Transactions)
-                .Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
+            var payments = await db.AccountBalances
+                .Include(accountBalance => accountBalance.User)
+                .Where(accountBalance => accountBalance.Account == Account.Payments && accountBalance.Amount < 0)
                 .ToListAsync();
 
-            var payOuts = orders.Select(
-                    order =>
-                    {
-                        Debug.Assert(order.ApartmentId != null, "order.ApartmentId != null");
-                        return new PayOut
-                        {
-                            OrderId = order.Id,
-                            Email = order.User!.Email,
-                            FullName = order.User.FullName,
-                            Phone = order.User.PhoneNumber,
-                            ApartmentId = order.ApartmentId.Value,
-                            AccountNumber = order.AccountNumber!,
-                            Amount = GetTotals(order).GetBalance()
-                        };
-                    })
-                .Where(payOut => payOut.Amount > 0);
-            return payOuts;
+            return payments.Select(CreatePayout);
+
+            static PayOut CreatePayout(AccountBalance payment) => new PayOut
+            {
+                UserId = payment.User!.Id,
+                Email = payment.User!.Email,
+                FullName = payment.User.FullName,
+                Phone = payment.User.PhoneNumber,
+                ApartmentId = payment.User.ApartmentId!.Value,
+                AccountNumber = payment.User.AccountNumber!,
+                Amount = -payment.Amount
+            };
         }
 
         [SuppressMessage(
@@ -584,35 +477,38 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 throw new ArgumentNullException(nameof(order));
 
             var totals = new OrderTotals();
-            foreach (var transaction in order.Transactions!)
-                switch (transaction.Type)
+            foreach (var amount in order.Transactions!.SelectMany(transaction => transaction.Amounts!))
+                switch (amount.Account)
                 {
-                    case TransactionType.Order:
-                    case TransactionType.Deposit:
-                    case TransactionType.OrderCancellation:
-                    case TransactionType.DepositCancellation:
-                        totals.Price += -transaction.Amount;
+                    case Account.Rent:
+                    case Account.Cleaning:
+                    case Account.Deposits when amount.Amount < 0:
+                        totals.Price += -amount.Amount;
                         break;
-                    case TransactionType.CancellationFee:
-                        totals.CancellationFee += -transaction.Amount;
+                    case Account.CancellationFees:
+                        totals.CancellationFee += -amount.Amount;
                         break;
-                    case TransactionType.SettlementDeposit:
-                        totals.SettledDeposits += transaction.Amount;
+                    case Account.Damages:
+                        totals.Damages += -amount.Amount;
                         break;
-                    case TransactionType.SettlementDamages:
-                        totals.Damages += -transaction.Amount;
+                    case Account.Bank when amount.Amount > 0:
+                        totals.PayIn += amount.Amount;
                         break;
-                    case TransactionType.PayIn:
-                        totals.PayIn += transaction.Amount;
+                    case Account.Bank when amount.Amount < 0:
+                        totals.PayOut += -amount.Amount;
                         break;
-                    case TransactionType.PayOut:
-                        totals.PayOut += -transaction.Amount;
+                    case Account.AccountsReceivable:
                         break;
-                    case TransactionType.BalanceIn:
-                        totals.BalanceIn += transaction.Amount;
+                    case Account.FromPayments:
+                        totals.FromOtherOrders += amount.Amount;
                         break;
-                    case TransactionType.BalanceOut:
-                        totals.BalanceOut += -transaction.Amount;
+                    case Account.Deposits when amount.Amount > 0:
+                        totals.SettledDeposits = amount.Amount;
+                        break;
+                    case Account.Payments:
+                        break;
+                    case Account.ToAccountsReceivable:
+                        totals.ToOtherOrders += -amount.Amount;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(order), "Unknown transaction type.");
@@ -753,66 +649,125 @@ namespace Frederikskaj2.Reservations.Server.Domain
             }
         }
 
-        private async Task<int> TryApplyBalance(Instant timestamp, LocalDate today, int userId, Order order, int amountToPay, int payIn = 0)
+        private async Task<IEnumerable<int>> UpdateOrders(Instant timestamp, LocalDate date, int createdByUserId, User user, Order? newOrder = null)
         {
-            var orders = await GetOrders(userId);
-            if (order.Id != default)
-                orders = orders.Where(order => order.Id != order.Id);
-            var ordersWithPositiveBalance = orders
-                .Select(order => new { Order = order, Balance = GetTotals(order).GetBalance() })
-                .Where(tuple => tuple.Balance > 0);
-            var balance = ordersWithPositiveBalance.Sum(tuple => tuple.Balance);
-
-            if (balance + payIn >= amountToPay)
-                foreach (var reservation in order.Reservations!.Where(reservation => reservation.Status == ReservationStatus.Reserved))
-                    reservation.Status = ReservationStatus.Confirmed;
-
-            amountToPay -= Math.Min(payIn, amountToPay);
-            if (amountToPay > 0)
-                foreach (var tuple in ordersWithPositiveBalance)
-                {
-                    var balanceToUse = Math.Min(amountToPay, tuple.Balance);
-                    tuple.Order.Transactions!.Add(new Transaction
-                    {
-                        Type = TransactionType.BalanceOut,
-                        Date = today,
-                        CreatedByUserId = userId,
-                        Timestamp = timestamp,
-                        UserId = userId,
-                        Order = tuple.Order,
-                        Amount = -balanceToUse
-                    });
-                    order.Transactions!.Add(new Transaction
-                    {
-                        Type = TransactionType.BalanceIn,
-                        Date = today,
-                        CreatedByUserId = userId,
-                        Timestamp = timestamp,
-                        UserId = userId,
-                        Order = tuple.Order,
-                        Amount = balanceToUse
-                    });
-                    TryMakeHistoryOrder(tuple.Order, GetTotals(tuple.Order));
-                    amountToPay -= balanceToUse;
-                    if (amountToPay == 0)
-                        break;
-                }
-
-            return balance + payIn;
+            await ApplyPaymentsToAccountsRecivables(timestamp, date, createdByUserId, user, newOrder);
+            var confirmedOrderIds = await ConfirmOrders(user);
+            await ConvertToHistoryOrders(user);
+            return confirmedOrderIds;
         }
 
-        private static void TryMakeHistoryOrder(Order order, OrderTotals totals)
+        private async Task ApplyPaymentsToAccountsRecivables(Instant timestamp, LocalDate date, int createdByUserId, User user, Order? newOrder = null)
         {
-            var isHistoryOrder = totals.GetBalance() == 0 && order.Reservations.All(
-                reservation => reservation.Status == ReservationStatus.Cancelled
-                    || reservation.Status == ReservationStatus.Settled);
-            if (!isHistoryOrder)
+            var payments = -user.Balance(Account.Payments);
+            if (payments == 0)
                 return;
 
-            order.Flags |= OrderFlags.IsHistoryOrder;
-            order.AccountNumber = null;
-            foreach (var reservation in order.Reservations!)
-                reservation.Days!.Clear();
+            var orders = await GetOrders(user.Id);
+            if (newOrder != null)
+                orders = orders.Concat(new[] { newOrder });
+            var tuples = orders
+                .Select(order => new
+                {
+                    Order = order,
+                    AccountsReceivable = order.Balance(Account.AccountsReceivable),
+                    Payments = -order.Balance(Account.Payments)
+                })
+                .ToList();
+            var ordersWithPayments = new Queue<Order>(tuples.Where(tuple => tuple.Payments > 0).Select(tuple => tuple.Order));
+            foreach (var tuple in tuples.Where(tuple => tuple.AccountsReceivable > 0))
+            {
+                var nextOrderWithPayments = ordersWithPayments.Peek();
+                transactionService.CreatePaymentsUsedTransaction(timestamp, date, createdByUserId, nextOrderWithPayments, tuple.Order);
+                var paymentsRemaining = -nextOrderWithPayments.Balance(Account.Payments);
+                if (paymentsRemaining == 0)
+                    ordersWithPayments.Dequeue();
+                if (ordersWithPayments.Count == 0)
+                    break;
+            }
+        }
+
+        private async Task<IEnumerable<int>> ConfirmOrders(User user)
+        {
+            var orders = await GetOrders(user.Id);
+            var ordersToConfirm = orders
+                .Where(order => order.Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved))
+                .Select(order => new
+                {
+                    Order = order,
+                    AccountsReceivable = order.Balance(Account.AccountsReceivable)
+                })
+                .Where(tuple => tuple.AccountsReceivable == 0)
+                .Select(tuple => tuple.Order);
+            var confirmedOrderIds = new List<int>();
+            foreach (var order in ordersToConfirm)
+            {
+                ConfirmOrder(order);
+                confirmedOrderIds.Add(order.Id);
+            }
+            return confirmedOrderIds;
+        }
+
+        private async Task ConvertToHistoryOrders(User user)
+        {
+            var orders = await GetOrders(user.Id);
+            var ordersToConvert = orders
+                .Where(order => order.Reservations.All(reservation => reservation.Status == ReservationStatus.Cancelled || reservation.Status == ReservationStatus.Settled))
+                .Select(order => new
+                {
+                    Order = order,
+                    Payments = order.Balance(Account.Payments)
+                })
+                .Where(tuple => tuple.Payments == 0)
+                .Select(tuple => tuple.Order);
+            foreach (var order in ordersToConvert)
+            {
+                order.Flags |= OrderFlags.IsHistoryOrder;
+                foreach (var reservation in order.Reservations!)
+                    reservation.Days!.Clear();
+            }
+        }
+
+        private async Task ApplyPayOutToPayments(Instant timestamp, LocalDate date, int createdByUserId, User user, int amount)
+        {
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
+
+            var payments = -user.Balance(Account.Payments);
+            if (amount > payments)
+                throw new ReservationsException("Amount paid to user exceeds amount we owe them.");
+
+            var orders = await GetOrders(user.Id);
+            var tuples = orders
+                .Select(order => (Order: order, Payments: -order.Balance(Account.Payments)))
+                .Where(tuple => tuple.Payments > 0);
+            var ordersWithPayments = new Queue<(Order Order, int Payments)>(tuples);
+            while (amount > 0 && ordersWithPayments.Count > 0)
+            {
+                var tuple = ordersWithPayments.Peek();
+                var amountToApplyToThisOrder = Math.Min(amount, tuple.Payments);
+                transactionService.CreatePayOutTransaction(timestamp, date, createdByUserId, tuple.Order, amountToApplyToThisOrder);
+                amount -= amountToApplyToThisOrder;
+                if (amountToApplyToThisOrder == tuple.Payments)
+                    ordersWithPayments.Dequeue();
+            }
+
+            transactionService.CreatePosting(date, user, PostingType.PayOut);
+        }
+
+        private async Task TryClearAccountNumber(User user)
+        {
+            var hasOrders = await db.Orders
+                .Where(order => order.UserId == user.Id && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
+                .AnyAsync();
+            if (!hasOrders)
+                user.AccountNumber = null;
+        }
+
+        private static void ConfirmOrder(Order order)
+        {
+            foreach (var reservation in order.Reservations.Where(reservation => reservation.Status == ReservationStatus.Reserved))
+                reservation.Status = ReservationStatus.Confirmed;
         }
 
         private async Task<bool> TryDeleteUser(User user)
@@ -835,5 +790,20 @@ namespace Frederikskaj2.Reservations.Server.Domain
             await signInManager.SignOutAsync();
             backgroundWorkQueue.Enqueue((service, _) => service.SendUserDeletedEmail(user));
         }
+
+        private Task<User> GetUser(int userId)
+            => db.Users
+                .Include(user => user.AccountBalances)
+                .Where(user => user.Id == userId)
+                .FirstOrDefaultAsync();
+
+        private Task<User> GetUserWithTransactions(int userId)
+            => db.Users
+                .Include(user => user.AccountBalances)
+                .Include(user => user.Transactions)
+                .ThenInclude(transaction => transaction.Amounts)
+                .Include(user => user.Postings)
+                .Where(user => user.Id == userId)
+                .FirstOrDefaultAsync();
     }
 }

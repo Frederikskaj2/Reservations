@@ -4,11 +4,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
+using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
+using Order = Frederikskaj2.Reservations.Shared.Order;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
@@ -19,12 +22,16 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
     public class UsersController : Controller
     {
+        private readonly IClock clock;
         private readonly ReservationsContext db;
+        private readonly OrderService orderService;
         private readonly UserManager<User> userManager;
 
-        public UsersController(ReservationsContext db, UserManager<User> userManager)
+        public UsersController(IClock clock, ReservationsContext db, OrderService orderService, UserManager<User> userManager)
         {
+            this.clock=clock ?? throw new ArgumentNullException(nameof(clock));
             this.db = db ?? throw new ArgumentNullException(nameof(db));
+            this.orderService=orderService ?? throw new ArgumentNullException(nameof(orderService));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
@@ -113,6 +120,21 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 if (user.EmailSubscriptions.HasFlag(EmailSubscriptions.CleaningScheduleUpdated) && !roles.Contains(Roles.Cleaning))
                     user.EmailSubscriptions &= ~EmailSubscriptions.CleaningScheduleUpdated;
             }
+        }
+
+        [HttpPost("{userId:int}/pay-out")]
+        public async Task<PayOutResponse> PayOut(int userId, PaymentRequest request)
+        {
+            var createdByUserId = User.Id();
+            if (!createdByUserId.HasValue)
+                return new PayOutResponse { Result = OperationResult.GeneralError };
+
+            var now = clock.GetCurrentInstant();
+            var payOut = await orderService.PayOut(now, createdByUserId.Value, userId, request.Date, request.Amount);
+            if (payOut == null)
+                return new PayOutResponse { Result = OperationResult.GeneralError };
+
+            return new PayOutResponse { Result = OperationResult.Success, PayOut = payOut };
         }
     }
 }

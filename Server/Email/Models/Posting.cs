@@ -1,20 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
+using Frederikskaj2.Reservations.Shared;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
     public class Posting
     {
-        public Posting(LocalDate date, int orderId, IEnumerable<AccountAmount> accountAmounts)
+        public Posting(LocalDate date, PostingType type, string fullName, int? orderId, int income, int bank, int deposits)
         {
+            if (string.IsNullOrEmpty(fullName))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(fullName));
+
             Date = date;
+            Type  =  type;
+            FullName = fullName;
             OrderId = orderId;
-            AccountAmounts = accountAmounts ?? throw new ArgumentNullException(nameof(accountAmounts));
+            Income = income;
+            Bank = bank;
+            Deposits = deposits;
         }
 
         public LocalDate Date { get; }
-        public int OrderId { get; }
-        public IEnumerable<AccountAmount> AccountAmounts { get; }
+        public PostingType Type { get; }
+        public string FullName { get; }
+        public int? OrderId { get; }
+        public int Income { get; }
+        public int Bank { get; }
+        public int Deposits { get; }
     }
 }

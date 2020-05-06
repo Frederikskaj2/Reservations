@@ -2,10 +2,10 @@
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
-    public class PayOutModel : OrderModel
+    public class PayOutModel : EmailWithNameModel
     {
-        public PayOutModel(string from, Uri fromUrl, string name, Uri url, int orderId, int amount)
-            : base(from, fromUrl, name, url, orderId) => Amount = amount;
+        public PayOutModel(string from, Uri fromUrl, string name, int amount)
+            : base(from, fromUrl, name) => Amount = amount;
 
         public int Amount { get; }
     }

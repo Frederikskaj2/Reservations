@@ -1,4 +1,4 @@
-﻿@model OrderConfirmedModel
+﻿@model OrderModel
 @inject CultureInfo CultureInfo
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="https://www.w3.org/1999/xhtml">
@@ -10,19 +10,7 @@
 </head>
 <body>
     <p>Hej @Model.Name</p>
-@if (Model.Amount > 0)
-{
-    <p>Vi har modtaget din indbetaling af @Model.Amount.ToString("C0", CultureInfo) for <a href="@Model.Url">bestilling @Model.OrderId</a>.</p>
-    <p>Din bestilling er nu godkendt.</p>
-}
-else
-{
-    <p>Du har indbetalt det krævede beløb for <a href="@Model.Url">bestilling @Model.OrderId</a>, og din bestilling er nu godkendt.</p>
-}
-@if (Model.ExcessAmount > 0)
-{
-    <p>Det overskydne beløb på @Model.ExcessAmount.ToString("C0", CultureInfo) vil blive udbetalt til den bankkonto du oplyste da du afgav din bestilling.</p>
-}
+    <p>Din bestilling med <a href="@Model.Url">bestillingsnr. @Model.OrderId</a> er nu godkendt.</p>
     @await Html.PartialAsync("_Signature", Model)
     @await Html.PartialAsync("_Links", Model)
 </body>

@@ -53,7 +53,7 @@
                                     <TableRowCell>@reservation.DurationInDays</TableRowCell>
                                     <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
                                     <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
-                                    <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.CleaningFee)</TableRowCell>
+                                    <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Cleaning)</TableRowCell>
                                     <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
                                 </TableRow>
                             }
@@ -61,7 +61,7 @@
                         <TableFooter>
                             <TableRow>
                                 <TableRowCell colspan="6">Leje (inkl. rengøring)</TableRowCell>
-                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyLong(GetTotalRentAndCleaningFee())</TableRowCell>
+                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyLong(GetTotalRentAndCleaning())</TableRowCell>
                             </TableRow>
                             <TableRow>
                                 <TableRowCell colspan="6" Class="border-top-0">Depositum</TableRowCell>
@@ -140,14 +140,14 @@
         isInitialized = true;
     }
 
-    private int GetTotalRentAndCleaningFee()
-        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee);
+    private int GetTotalRentAndCleaning()
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.Cleaning);
 
     private int GetTotalDeposit()
         => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Deposit);
 
     private int GetGrandTotal()
-        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.CleaningFee + reservation.Price!.Deposit);
+        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.Cleaning + reservation.Price!.Deposit);
 
     private async Task Submit()
     {

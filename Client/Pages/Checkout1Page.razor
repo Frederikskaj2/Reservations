@@ -126,6 +126,7 @@
             ClientDataProvider.DraftOrder.Request.FullName = myUser.FullName!;
             ClientDataProvider.DraftOrder.Request.Phone = myUser.Phone!;
             ClientDataProvider.DraftOrder.Request.ApartmentId = myUser.ApartmentId.GetValueOrDefault();
+            ClientDataProvider.DraftOrder.Request.AccountNumber = myUser.AccountNumber ?? string.Empty;
         }
         isInitialized = true;
     }

@@ -123,8 +123,8 @@
         var maybe = await ApiClient.GetJsonAsync<IEnumerable<MyOrder>>("my-orders");
         if (maybe.TryGetValue(out var response))
         {
-            orders = response.Where(order => order.AccountNumber != null).ToList();
-            historyOrders = response.Where(order => order.AccountNumber == null).ToList();
+            orders = response.Where(order => !order.IsHistoryOrder).ToList();
+            historyOrders = response.Where(order => order.IsHistoryOrder).ToList();
         }
         isInitialized = true;
     }

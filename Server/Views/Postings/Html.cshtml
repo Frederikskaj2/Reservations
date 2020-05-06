@@ -1,10 +1,18 @@
 ﻿@model PostingsModel
 @inject CultureInfo CultureInfo
-@inject ReservationsOptions ReservationsOptions
 @{
     var monthPattern = LocalDatePattern.Create("yyyy-MM", CultureInfo);
     var datePattern = LocalDatePattern.Create("yyyy-MM-dd", CultureInfo);
-    var accounts = ReservationsOptions.AccountNames.OrderBy(kvp => kvp.Value).ToList();
+
+    string GetDebitCredit(int amount)
+    {
+        if (amount == 0)
+            return string.Empty;
+        var positiveAmount = Math.Abs(amount);
+        var debitCredit = amount > 0 ? "D" : "K";
+        const char nonBreakingSpace = (char) 0xA0;
+        return positiveAmount.ToString("N0", CultureInfo) + nonBreakingSpace + debitCredit;
+    }
 }
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="https://www.w3.org/1999/xhtml">
@@ -21,37 +29,34 @@
         <thead>
             <tr>
                 <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Dato</th>
-                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Bestilling</th>
-            @foreach (var account in accounts)
-            {
-                <th style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">@account.Value</th>
-            }
+                <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">Beskrivelse</th>
+                <th style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">@AccountNames.Income</th>
+                <th style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">@AccountNames.Bank</th>
+                <th style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-bottom: solid 2px #CCC; border-collapse: collapse">@AccountNames.Deposits</th>
             </tr>
         </thead>
         <tbody>
-            @{
+    @{
         @foreach (var posting in Model.Postings)
         {
             <tr>
                 <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@datePattern.Format(posting.Date)</td>
-                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@posting.OrderId</td>
-        @foreach (var account in accounts)
-        {
-            var accountAmount = posting.AccountAmounts.FirstOrDefault(aa => aa.Account == account.Key);
-            if (accountAmount != null)
-            {
-                var amount = Math.Abs(accountAmount.Amount);
-                var debitCredit = accountAmount.Amount > 0 ? "D" : "K";
-                <td style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-collapse: collapse">@amount.ToString("N0", CultureInfo) @debitCredit</td>
-            }
-            else
-            {
-                <td style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-collapse: collapse"></td>
-            }
-        }
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">
+                @if (posting.Type == PostingType.PayIn)
+                {
+                    <text>Indbetaling fra @posting.FullName (bestillingsnr.&nbsp;@posting.OrderId)</text>
+                }
+                else
+                {
+                    <text>Udbetaling til @posting.FullName</text>
+                }
+                </td>
+                <td style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-collapse: collapse">@GetDebitCredit(posting.Income)</td>
+                <td style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-collapse: collapse">@GetDebitCredit(posting.Bank)</td>
+                <td style="padding: 8px; text-align: right; border-top: solid 1px #CCC; border-collapse: collapse">@GetDebitCredit(posting.Deposits)</td>
             </tr>
         }
-            }
+    }
         </tbody>
     </table>
     @await Html.PartialAsync("_Signature", Model)

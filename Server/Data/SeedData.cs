@@ -57,7 +57,7 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         public async Task Initialize()
         {
-            if (!db.Database.EnsureCreated())
+            if (!await db.Database.EnsureCreatedAsync())
                 return;
 
             CreateApartments();

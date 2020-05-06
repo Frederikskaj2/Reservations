@@ -12,7 +12,7 @@ namespace Frederikskaj2.Reservations.Shared
                 {
                     LowRentPerDay = 500,
                     HighRentPerDay = 1000,
-                    CleaningFee = 500,
+                    Cleaning = 500,
                     LowDeposit = 1000,
                     HighDeposit = 3000
                 }
@@ -22,18 +22,11 @@ namespace Frederikskaj2.Reservations.Shared
                 {
                     LowRentPerDay = 200,
                     HighRentPerDay = 250,
-                    CleaningFee = 200,
+                    Cleaning = 200,
                     LowDeposit = 500,
                     HighDeposit = 500
                 }
             }
-        };
-
-        public IReadOnlyDictionary<Account, string> AccountNames {get; } = new Dictionary<Account, string>
-        {
-            { Account.Income, "1201 - Udlejning af fælleslokale" },
-            { Account.Bank, "4021 - Bank" },
-            { Account.Deposits, "7601 - Depositum" }
         };
 
         public int ReservationIsNotAllowedBeforeDaysFromNow { get; set; } = 1; //5;

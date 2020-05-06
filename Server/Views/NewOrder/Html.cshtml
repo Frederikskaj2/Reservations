@@ -10,7 +10,7 @@
 </head>
 <body>
     <p>Hej @Model.Name</p>
-    <p>Der er oprettet en ny bestilling med <a href="@Model.Url">bestillingsnummer @Model.OrderId</a>.</p>
+    <p>Der er oprettet en ny bestilling med <a href="@Model.Url">bestillingsnr. @Model.OrderId</a>.</p>
     @await Html.PartialAsync("_Signature", Model)
     <p><a href="@($"{Model.FromUrl}/{Urls.Orders}")" />Bestillinger</a> • <a href="@($"{Model.FromUrl}/{Urls.MyAccount}")" />Din konto</a></p>
 </body>

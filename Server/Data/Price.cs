@@ -5,10 +5,10 @@ namespace Frederikskaj2.Reservations.Server.Data
     public class Price
     {
         public int Rent { get; set; }
-        public int CleaningFee { get; set; }
+        public int Cleaning { get; set; }
         public int Deposit { get; set; }
 
-        public int GetTotal() => Rent + CleaningFee + Deposit;
+        public int GetTotal() => Rent + Cleaning + Deposit;
 
         public Price Accumulate(Price price)
         {
@@ -16,7 +16,7 @@ namespace Frederikskaj2.Reservations.Server.Data
                 throw new ArgumentNullException(nameof(price));
 
             Rent += price.Rent;
-            CleaningFee += price.CleaningFee;
+            Cleaning += price.Cleaning;
             Deposit += price.Deposit;
             return this;
         }

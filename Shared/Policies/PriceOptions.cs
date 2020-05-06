@@ -4,7 +4,7 @@
     {
         public int LowRentPerDay { get; set; }
         public int HighRentPerDay { get; set; }
-        public int CleaningFee { get; set; }
+        public int Cleaning { get; set; }
         public int LowDeposit { get; set; }
         public int HighDeposit { get; set; }
     }

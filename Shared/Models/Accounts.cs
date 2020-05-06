@@ -3,8 +3,15 @@
     public enum Account
     {
         None,
-        Income,
+        Rent,
+        Cleaning,
+        CancellationFees,
+        Damages,
         Bank,
+        AccountsReceivable,
+        FromPayments,
         Deposits,
+        Payments,
+        ToAccountsReceivable
     }
 }

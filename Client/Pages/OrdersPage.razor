@@ -143,7 +143,7 @@
 </main>
 @if (canHandlePayments)
 {
-    <PaymentDialog @ref="paymentDialog" OnConfirm="@OnPaymentConfirm" />
+    <PayInDialog @ref="payInDialog" OnConfirm="@OnPaymentConfirm" />
 }
 @if (canHandleSettlements)
 {
@@ -152,7 +152,7 @@
 
 @code {
 
-    private PaymentDialog paymentDialog = null!;
+    private PayInDialog payInDialog = null!;
     private SettlementDialog settlementDialog = null!;
     private bool canHandleOrders;
     private bool canHandlePayments;
@@ -188,7 +188,7 @@
     private void RecordPayIn(Order order)
     {
         DismissShowGeneralErrorAlert();
-        paymentDialog.Show(new Payment(order.Id, DateProvider.Today, -order.Totals!.GetBalance(), true));
+        payInDialog.Show(order.Id, DateProvider.Today, -order.Totals!.GetBalance());
     }
 
     private void RecordSettlement(Order order, Reservation reservation)
@@ -197,10 +197,10 @@
         settlementDialog.Show(order.Id, reservation);
     }
 
-    private async Task OnPaymentConfirm(Payment payment)
+    private async Task OnPaymentConfirm((int OrderId, LocalDate Date, int Amount) tuple)
     {
-        var request = new PaymentRequest { Date = payment.Date, Amount = payment.Amount };
-        var requestUri = $"orders/{payment.OrderId}/pay-in";
+        var request = new PaymentRequest { Date = tuple.Date, Amount = tuple.Amount };
+        var requestUri = $"orders/{tuple.OrderId}/pay-in";
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)
             UpdateOrder(response.Order);
@@ -221,7 +221,7 @@
     private void UpdateOrder(Order order)
     {
         var index = orders!.FindIndex(o => o.Id == order.Id);
-        if (order.AccountNumber != null)
+        if (!order.IsHistoryOrder)
             orders[index] = order;
         else
             orders.RemoveAt(index);

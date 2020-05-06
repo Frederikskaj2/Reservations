@@ -68,16 +68,14 @@
             }
             else
             {
-                var accounts = ReservationsOptions.AccountNames.OrderBy(kvp => kvp.Value).ToList();
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHeaderCell>Dato</TableHeaderCell>
-                            <TableHeaderCell>Bestillingsnr.</TableHeaderCell>
-                            @foreach (var account in accounts)
-                            {
-                                <TableHeaderCell Class="text-right">@account.Value</TableHeaderCell>
-                            }
+                            <TableHeaderCell>Beskrivelse</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">@AccountNames.Income</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">@AccountNames.Bank</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">@AccountNames.Deposits</TableHeaderCell>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -85,21 +83,19 @@
                         {
                             <TableRow>
                                 <TableRowCell>@FormattingService.FormatDate(posting.Date)</TableRowCell>
-                                <TableRowCell><a href="@Urls.Orders/@posting.OrderId">@posting.OrderId</a></TableRowCell>
-                                @foreach (var account in accounts)
-                                {
-                                    var accountAmount = posting.AccountAmounts.FirstOrDefault(aa => aa.Account == account.Key);
-                                    if (accountAmount != null)
+                                <TableRowCell>
+                                    @if (posting.Type == PostingType.PayIn)
                                     {
-                                        var amount = Math.Abs(accountAmount.Amount);
-                                        var debitCredit = accountAmount.Amount > 0 ? "D" : "K";
-                                        <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(amount) @debitCredit</TableRowCell>
+                                        <a href="@Urls.Orders/@posting.OrderId">Indbetaling fra @posting.FullName (bestillingsnr. @posting.OrderId)</a>
                                     }
                                     else
                                     {
-                                        <TableRowCell Class="text-right"></TableRowCell>
+                                        <text>Udbetaling til @posting.FullName</text>
                                     }
-                                }
+                                </TableRowCell>
+                                <TableRowCell Class="text-right"><DebitCredit Amount="@posting.Income" /></TableRowCell>
+                                <TableRowCell Class="text-right"><DebitCredit Amount="@posting.Bank" /></TableRowCell>
+                                <TableRowCell Class="text-right"><DebitCredit Amount="@posting.Deposits" /></TableRowCell>
                             </TableRow>
                         }
                     </TableBody>

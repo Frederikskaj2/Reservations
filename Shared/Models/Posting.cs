@@ -6,7 +6,11 @@ namespace Frederikskaj2.Reservations.Shared
     public class Posting
     {
         public LocalDate Date { get; set; }
-        public int OrderId { get; set; }
-        public IEnumerable<AccountAmount>? AccountAmounts { get; set; }
+        public PostingType Type { get; set; }
+        public string? FullName { get; set; }
+        public int? OrderId { get; set; }
+        public int Income { get; set; }
+        public int Bank { get; set; }
+        public int Deposits { get; set; }
     }
 }

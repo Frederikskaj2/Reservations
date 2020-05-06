@@ -2,16 +2,16 @@
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
-    public class MissingPaymentModel : OrderModel
+    public class PayInModel : OrderModel
     {
-        public MissingPaymentModel(
+        public PayInModel(
             string from, Uri fromUrl, string name, Uri url, int orderId, int amount, int missingAmount,
             string accountNumber)
             : base(from, fromUrl, name, url, orderId)
         {
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount));
-            if (missingAmount <= 0)
+            if (missingAmount < 0)
                 throw new ArgumentOutOfRangeException(nameof(missingAmount));
             if (string.IsNullOrEmpty(accountNumber))
                 throw new ArgumentException("Value cannot be null or empty.", nameof(accountNumber));

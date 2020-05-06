@@ -10,7 +10,7 @@
 </head>
 <body>
     <p>Hej @Model.Name</p>
-    <p>Vi har udbetalt @Model.Amount.ToString("C0", CultureInfo) til den bankkonto du oplyste da du afgav <a href="@Model.Url">bestilling @Model.OrderId</a>.</p>
+    <p>Vi har udbetalt @Model.Amount.ToString("C0", CultureInfo) til den bankkonto oplyste da du afgav din seneste bestilling.</p>
     @await Html.PartialAsync("_Signature", Model)
-    @await Html.PartialAsync("_Links", Model)
+    <p><a href="@($"{Model.FromUrl}/{Urls.MyTransactions}")" />Dit kontoudtog</a> • <a href="@($"{Model.FromUrl}/{Urls.MyAccount}")" />Din konto</a></p>
 </body>

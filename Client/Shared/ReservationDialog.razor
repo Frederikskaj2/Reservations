@@ -123,7 +123,7 @@
         if (Reservation == null || policy == null)
             return;
         Reservation.Price = policy.GetPrice(Reservation.Date, Reservation.DurationInDays);
-        rent = $"{FormattingService.FormatMoneyLong(Reservation.Price.Rent + Reservation.Price.CleaningFee)} (inklusiv rengøring {FormattingService.FormatMoneyLong(Reservation.Price.CleaningFee)})";
+        rent = $"{FormattingService.FormatMoneyLong(Reservation.Price.Rent + Reservation.Price.Cleaning)} (inklusiv rengøring {FormattingService.FormatMoneyLong(Reservation.Price.Cleaning)})";
         deposit = FormattingService.FormatMoneyLong(Reservation.Price.Deposit);
         total = FormattingService.FormatMoneyLong(Reservation.Price.GetTotal());
     }
