@@ -12,48 +12,53 @@
     }
     else
     {
-        <Container>
-            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl, og din ændring blev ikke gemt.
-                <CloseButton Clicked="@DismissErrorAlert" />
-            </Alert>
-            <h1>Til udbetaling</h1>
-            @if (payOuts.Count == 0)
-            {
-                <Paragraph>Der er intet at vise.</Paragraph>
-            }
-            else
-            {
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHeaderCell>Mail</TableHeaderCell>
-                            <TableHeaderCell>Navn</TableHeaderCell>
-                            <TableHeaderCell>Telefon</TableHeaderCell>
-                            <TableHeaderCell>Adresse</TableHeaderCell>
-                            <TableHeaderCell>Kontonummer</TableHeaderCell>
-                            <TableHeaderCell Class="text-right">Beløb</TableHeaderCell>
-                            <TableHeaderCell></TableHeaderCell>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        @foreach (var payOut in payOuts)
-                        {
-                            <TableRow @key="@payOut.UserId">
-                                <TableRowCell><a href="mailto:@payOut.Email?subject=Frederikskaj 2">@FormattingService.FormatEmail(payOut.Email)</a></TableRowCell>
-                                <TableRowCell>@payOut.FullName</TableRowCell>
-                                <TableRowCell>@FormattingService.FormatPhone(payOut.Phone)</TableRowCell>
-                                <TableRowCell>Frederikskaj @apartments![payOut.ApartmentId]</TableRowCell>
-                                <TableRowCell>@payOut.AccountNumber</TableRowCell>
-                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(payOut.Amount)</TableRowCell>
-                                <TableRowCell><Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => RecordPayOut(payOut))">Registrér udbetaling</Button></TableRowCell>
-                            </TableRow>
-                        }
-                    </TableBody>
-                </Table>
-                <PayOutDialog @ref="payOutDialog" OnConfirm="@OnPaymentConfirm" />
-            }
-        </Container>
+<Container>
+    <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
+        Udbetaling af @FormattingService.FormatMoneyLong(amount) til @accountNumber er registreret.
+        <CloseButton Clicked="@DismissSuccessAlert" />
+    </Alert>
+    <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+        Der er sket en fejl, og udbetalingen blev ikke registreret.
+        <CloseButton Clicked="@DismissErrorAlert" />
+    </Alert>
+    <h1>Til udbetaling</h1>
+    @if (payOuts.Count == 0)
+    {
+        <Paragraph>Der er intet at vise.</Paragraph>
+    }
+    else
+    {
+        <Paragraph><strong>Bemærk:</strong> En udbetaling skal først registeres her før den gennemføres for at undgå at brugeren samtidig med at denne oversigt vises laver en ændring som gør at der skal udbetales et mindre beløb. Hvis der opstår en fejl i forbindelse med registreringen her skal udbetalingen <strong>ikke</strong> gennemføres. I stedet skal denne side opdateres.</Paragraph>
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHeaderCell>Mail</TableHeaderCell>
+                    <TableHeaderCell>Navn</TableHeaderCell>
+                    <TableHeaderCell>Telefon</TableHeaderCell>
+                    <TableHeaderCell>Adresse</TableHeaderCell>
+                    <TableHeaderCell>Kontonummer</TableHeaderCell>
+                    <TableHeaderCell Class="text-right">Beløb</TableHeaderCell>
+                    <TableHeaderCell></TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                @foreach (var payOut in payOuts)
+                {
+                    <TableRow @key="@payOut.UserId">
+                        <TableRowCell><a href="mailto:@payOut.Email?subject=Frederikskaj 2">@FormattingService.FormatEmail(payOut.Email)</a></TableRowCell>
+                        <TableRowCell>@payOut.FullName</TableRowCell>
+                        <TableRowCell>@FormattingService.FormatPhone(payOut.Phone)</TableRowCell>
+                        <TableRowCell>Frederikskaj @apartments![payOut.ApartmentId]</TableRowCell>
+                        <TableRowCell>@payOut.AccountNumber</TableRowCell>
+                        <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(payOut.Amount)</TableRowCell>
+                        <TableRowCell><Button Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => RecordPayOut(payOut))">Registrér udbetaling</Button></TableRowCell>
+                    </TableRow>
+                }
+            </TableBody>
+        </Table>
+        <PayOutDialog @ref="payOutDialog" OnConfirm="@OnPaymentConfirm" />
+    }
+</Container>
     }
 </main>
 
@@ -63,7 +68,10 @@
     private IReadOnlyDictionary<int, Apartment>? apartments;
     private List<PayOut> payOuts = new List<PayOut>();
     private bool isInitialized;
+    private bool showSuccessAlert;
     private bool showErrorAlert;
+    private int amount;
+    private string? accountNumber;
 
     protected override async Task OnInitializedAsync()
     {
@@ -76,7 +84,9 @@
 
     private void RecordPayOut(PayOut payOut)
     {
+        DismissSuccessAlert();
         DismissErrorAlert();
+        accountNumber = payOut.AccountNumber;
         payOutDialog.Show(payOut.UserId, payOut.FullName, DateProvider.Today, payOut.Amount);
     }
 
@@ -87,6 +97,7 @@
         var maybe = await ApiClient.PostJsonAsync<PayOutResponse>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.PayOut != null)
         {
+            amount = request.Amount;
             var index = payOuts.FindIndex(payOut => payOut.UserId == response.PayOut.UserId);
             if (index >= 0)
             {
@@ -100,10 +111,12 @@
                     payOuts[index].Amount = response.PayOut.Amount;
                 }
             }
+            showSuccessAlert = true;
         }
         else
             showErrorAlert = true;
     }
 
+    private void DismissSuccessAlert() => showSuccessAlert = false;
     private void DismissErrorAlert() => showErrorAlert = false;
 }

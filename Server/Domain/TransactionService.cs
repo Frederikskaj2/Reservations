@@ -78,14 +78,20 @@ namespace Frederikskaj2.Reservations.Server.Domain
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount));
 
-            var accountsReceivable = order.User!.Balance(Account.AccountsReceivable);
+            var accountsReceivable = Math.Min(amount, order.User!.Balance(Account.AccountsReceivable));
             var amounts = new List<TransactionAmount>()
             {
                 new TransactionAmount { Account = Account.Bank, Amount = amount },
-                new TransactionAmount { Account = Account.AccountsReceivable, Amount = -accountsReceivable }
             };
-            if (amount > accountsReceivable)
-                amounts.Add(new TransactionAmount { Account = Account.Payments, Amount = amount - accountsReceivable });
+            if (amount <= accountsReceivable)
+            {
+                amounts.Add(new TransactionAmount { Account = Account.AccountsReceivable, Amount = -amount });
+            }
+            else
+            {
+                amounts.Add(new TransactionAmount { Account = Account.AccountsReceivable, Amount = -accountsReceivable });
+                amounts.Add(new TransactionAmount { Account = Account.Payments, Amount = -(amount - accountsReceivable) });
+            }
             CreateTransaction(timestamp, date, createdByUserId, order, amounts);
             CreatePosting(date, order.User!, PostingType.PayIn, order.Id);
         }
@@ -186,7 +192,23 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var previousDepositsBalance = previousPosting?.DepositsBalance ?? 0;
             var currentIncomeBalance = user.Balance(Account.Rent) + user.Balance(Account.Cleaning) + user.Balance(Account.CancellationFees) + user.Balance(Account.Damages);
             var currentBankBalance = user.Balance(Account.Bank);
-            var currentDepositsBalance = user.Balance(Account.Deposits);
+            var currentDepositsBalance = user.Balance(Account.AccountsReceivable) + user.Balance(Account.Deposits) + user.Balance(Account.Payments);
+            var incomeChange = currentIncomeBalance - previousIncomeBalance;
+            var bankChange = currentBankBalance - previousBankBalance;
+            var depositsChange = currentDepositsBalance - previousDepositsBalance;
+            // When making a pay-in that is not enough to cover the rent the
+            // deposits change wille be "negative" (being a liability it's
+            // actually positive). The posting has to reduce the income part to
+            // lower the deposits the be 0. Basically, a too small pay-in is
+            // first applied to the rent and then if all rent is covered it's
+            // applied to the deposit.
+            if (bankChange > 0 && depositsChange > 0)
+            {
+                incomeChange += depositsChange;
+                depositsChange = 0;
+                currentIncomeBalance = previousIncomeBalance + incomeChange;
+                currentDepositsBalance = previousDepositsBalance;
+            }
             var posting = new Posting
             {
                 Date = date,
@@ -194,9 +216,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 UserId = user.Id,
                 OrderId = orderId,
                 FullName = user.FullName,
-                Income = currentIncomeBalance - previousIncomeBalance,
-                Bank = currentBankBalance - previousBankBalance,
-                Deposits = currentDepositsBalance - previousDepositsBalance,
+                Income = incomeChange,
+                Bank = bankChange,
+                Deposits = depositsChange,
                 IncomeBalance = currentIncomeBalance,
                 BankBalance = currentBankBalance,
                 DepositsBalance = currentDepositsBalance,

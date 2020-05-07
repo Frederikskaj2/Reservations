@@ -11,6 +11,7 @@
 <body>
     <p>Hej @Model.Name</p>
     <p>Vi har udbetalt @Model.Amount.ToString("C0", CultureInfo) til den bankkonto oplyste da du afgav din seneste bestilling.</p>
+    <p>Bemærk at der kan gå nogle dage før pengene er til rådighed på din konto.</p>
     @await Html.PartialAsync("_Signature", Model)
     <p><a href="@($"{Model.FromUrl}/{Urls.MyTransactions}")" />Dit kontoudtog</a> • <a href="@($"{Model.FromUrl}/{Urls.MyAccount}")" />Din konto</a></p>
 </body>

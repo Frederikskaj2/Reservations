@@ -53,9 +53,9 @@
                             var isCancelled = request.CancelledReservations.Contains(reservation.Id);
                             var canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && reservation.Date.PlusDays(reservation.DurationInDays) <= today;
                             // TODO: Remove this unless testing.
-                            canBeSettled = IsSettlementEnabled;
+                            canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && !IsHistoryOrder;
                             var canBeCancelled = reservation.CanBeCancelled || IsCancellationEnabled && (reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
-                            var color = reservation.Status == ReservationStatus.Settled ? "text-secondary" : string.Empty;
+                            var color = reservation.Status == ReservationStatus.Settled && !IsHistoryOrder ? "text-secondary" : string.Empty;
                             var cancelledClass = isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty;
                             <TableRow Class="@color">
                                 <TableRowCell Class="@cancelledClass">@resources![reservation.ResourceId].Name</TableRowCell>
@@ -126,65 +126,62 @@
                                 <TableRowCell Class="text-right border-top-0">−</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.GetTotal())</TableRowCell>
                             </TableRow>
-                        }
-                        @if (Totals.FromOtherOrders > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Overført fra andre bestillinger</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">+</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.FromOtherOrders)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (Totals.PayIn > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Indbetalt</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">+</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayIn)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (cancellationFee > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Afbestillingsgebyr</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(cancellationFee)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (Totals.IsPaid() && Totals.SettledDeposits > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Depositum refundering</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">+</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.SettledDeposits)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (Totals.Damages > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Skader</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.Damages)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (Totals.ToOtherOrders > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Udbetalt</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.ToOtherOrders)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (Totals.PayOut > 0)
-                        {
-                            <TableRow>
-                                <TableRowCell ColumnSpan="5" Class="border-top-0">Udbetalt</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">−</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayOut)</TableRowCell>
-                            </TableRow>
-                        }
-                        @if (Totals.IsPaid())
-                        {
+                            @if (Totals.FromOtherOrders > 0)
+                            {
+                                <TableRow>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Overført fra andre bestillinger</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">+</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.FromOtherOrders)</TableRowCell>
+                                </TableRow>
+                            }
+                            @if (Totals.PayIn > 0)
+                            {
+                                <TableRow>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Indbetalt</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">+</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayIn)</TableRowCell>
+                                </TableRow>
+                            }
+                            @if (cancellationFee > 0)
+                            {
+                                <TableRow>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Afbestillingsgebyr</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(cancellationFee)</TableRowCell>
+                                </TableRow>
+                            }
+                            @if (refundedDeposits > 0)
+                            {
+                                <TableRow>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Depositum refundering</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">+</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(refundedDeposits)</TableRowCell>
+                                </TableRow>
+                            }
+                            @if (Totals.Damages > 0)
+                            {
+                                <TableRow>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Skader</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.Damages)</TableRowCell>
+                                </TableRow>
+                            }
+                            @if (Totals.ToOtherOrders > 0)
+                            {
+                                <TableRow>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Udbetalt</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.ToOtherOrders)</TableRowCell>
+                                </TableRow>
+                            }
+                            @if (Totals.PayOut > 0)
+                            {
+                                <TableRow>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Udbetalt</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">−</TableRowCell>
+                                    <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.PayOut)</TableRowCell>
+                                </TableRow>
+                            }
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-bottom"><strong>Saldo</strong></TableRowCell>
                                 <TableRowCell Class="text-right border-bottom"><strong>=</strong></TableRowCell>
@@ -235,6 +232,7 @@
     private bool showGeneralErrorAlert;
     private Price? price;
     private int cancellationFee;
+    private int refundedDeposits;
     private int balance;
 
     [Parameter]
@@ -280,6 +278,10 @@
         request.AccountNumber = AccountNumber ?? string.Empty;
         request.CancelledReservations.Clear();
         UpdatePrice();
+        var depositsOnCancelledReservations = Reservations
+            .Where(reservation => reservation.Status == ReservationStatus.Cancelled)
+            .Sum(reservation => reservation.Price!.Deposit);
+        refundedDeposits = Totals!.RefundedDeposits - depositsOnCancelledReservations;
     }
 
     private void ToggleCancelReservation(Reservation reservation)

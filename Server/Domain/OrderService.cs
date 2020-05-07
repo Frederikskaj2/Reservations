@@ -269,6 +269,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 }
 
                 confirmedOrderIds = await UpdateOrders(timestamp, today, createdByUserId, user);
+                await TryClearAccountNumber(user);
             }
 
             try
@@ -503,7 +504,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                         totals.FromOtherOrders += amount.Amount;
                         break;
                     case Account.Deposits when amount.Amount > 0:
-                        totals.SettledDeposits = amount.Amount;
+                        totals.RefundedDeposits += amount.Amount;
                         break;
                     case Account.Payments:
                         break;
@@ -652,7 +653,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         private async Task<IEnumerable<int>> UpdateOrders(Instant timestamp, LocalDate date, int createdByUserId, User user, Order? newOrder = null)
         {
             await ApplyPaymentsToAccountsRecivables(timestamp, date, createdByUserId, user, newOrder);
-            var confirmedOrderIds = await ConfirmOrders(user);
+            var confirmedOrderIds = await ConfirmOrders(user, newOrder);
             await ConvertToHistoryOrders(user);
             return confirmedOrderIds;
         }
@@ -687,9 +688,11 @@ namespace Frederikskaj2.Reservations.Server.Domain
             }
         }
 
-        private async Task<IEnumerable<int>> ConfirmOrders(User user)
+        private async Task<IEnumerable<int>> ConfirmOrders(User user, Order? newOrder = null)
         {
             var orders = await GetOrders(user.Id);
+            if (newOrder != null)
+                orders = orders.Concat(new[] { newOrder });
             var ordersToConfirm = orders
                 .Where(order => order.Reservations.Any(reservation => reservation.Status == ReservationStatus.Reserved))
                 .Select(order => new
@@ -757,10 +760,12 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         private async Task TryClearAccountNumber(User user)
         {
-            var hasOrders = await db.Orders
+            var activeOrders = await db.Orders
                 .Where(order => order.UserId == user.Id && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
-                .AnyAsync();
-            if (!hasOrders)
+                .ToListAsync();
+            var areThereAnyActiveOrdersWhenIncludingTrackedEntities = activeOrders
+                .Any(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder));
+            if (!areThereAnyActiveOrdersWhenIncludingTrackedEntities)
                 user.AccountNumber = null;
         }
 
