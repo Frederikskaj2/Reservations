@@ -17,7 +17,7 @@
                 Der er sket en fejl, og din bruger blev ikke oprettet.
                 @if (errors.HasFlag(SignUpErrorCodes.DuplicateEmail))
                 {
-                    <text>Der findes allerede en bruger med mail @ApplicationState.SignUpRequest.Email. <a href="@Urls.ResetPassword">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a></text>
+                    <text>Der findes allerede en bruger med mail @email. <a href="@Urls.ResetPassword">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a></text>
                 }
                 else
                 {
@@ -130,6 +130,7 @@
     private TextEdit emailTextEdit = null!;
     private IEnumerable<Apartment> apartments = null!;
     private bool isInitialized;
+    private string? email;
     private bool showErrorAlert;
     private SignUpErrorCodes errors;
 
@@ -178,6 +179,7 @@
             }
             errors = response.Errors!.Value;
         }
+        email = ApplicationState.SignUpRequest.Email;
         showErrorAlert = true;
     }
 

@@ -42,8 +42,34 @@
                                 var localBalance = balance;
                                 <TableRow>
                                     <TableRowCell>@FormattingService.FormatDate(transaction.Date)</TableRowCell>
-                                    <TableRowCell><a href="@Urls.MyOrders/@transaction.OrderId">@transaction.OrderId</a></TableRowCell>
-                                    <TableRowCell>@GetTransactionText(transaction)</TableRowCell>
+                                    <TableRowCell>
+                                        @if (transaction.OrderId.HasValue)
+                                        {
+                                            <a href="@Urls.MyOrders/@transaction.OrderId">@transaction.OrderId</a>
+                                        }
+                                    </TableRowCell>
+                                    <TableRowCell>
+                                        @if (transaction.Type == TransactionType.Order)
+                                        {
+                                            <text>Oprettelse af bestilling</text>
+                                        }
+                                        else if (transaction.Type == TransactionType.Cancellation)
+                                        {
+                                            <text>Afbestilling @resources![transaction.ResourceId!.Value].Name @FormattingService.FormatDate(transaction.ReservationDate!.Value)</text>
+                                        }
+                                        else if (transaction.Type == TransactionType.Settlement)
+                                        {
+                                            <text>Opgørelse @resources![transaction.ResourceId!.Value].Name @FormattingService.FormatDate(transaction.ReservationDate!.Value)</text>
+                                        }
+                                        else if (transaction.Type == TransactionType.PayIn)
+                                        {
+                                            <text>Indbetaling</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Udbetaling</text>
+                                        }
+                                    </TableRowCell>
                                     <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(transaction.Amount)</TableRowCell>
                                     <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(localBalance)</TableRowCell>
                                 </TableRow>
@@ -74,21 +100,4 @@
     }
 
     private void DismissErrorAlert() => showErrorAlert = false;
-
-    private string GetTransactionText(MyTransaction transaction) => transaction.Type switch
-    {
-        TransactionType.Order => $"Bestilling - leje",
-        TransactionType.Deposit => $"Bestilling - depositum",
-        TransactionType.OrderCancellation => $"Afbestilling {GetReservationText(transaction)} - leje",
-        TransactionType.DepositCancellation => $"Afbestilling {GetReservationText(transaction)} - depositum",
-        TransactionType.CancellationFee => $"Afbestilling {GetReservationText(transaction)} - gebyr",
-        TransactionType.SettlementDeposit => $"Opgørelse {GetReservationText(transaction)} - depositum",
-        TransactionType.SettlementDamages => $"Opgørelse {GetReservationText(transaction)} - skader: {transaction.Comment}",
-        TransactionType.PayIn => "Indbetaling",
-        TransactionType.PayOut => "Udbetaling",
-        _ => throw new ArgumentOutOfRangeException()
-    };
-
-    private string GetReservationText(MyTransaction transaction)
-        => $"{resources![transaction.ResourceId!.Value].Name} {FormattingService.FormatDate(transaction.ReservationDate!.Value)}";
 }

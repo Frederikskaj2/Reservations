@@ -1,4 +1,6 @@
-﻿using Frederikskaj2.Reservations.Shared;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using Frederikskaj2.Reservations.Shared;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
@@ -11,5 +13,8 @@ namespace Frederikskaj2.Reservations.Server.Data
         // Debit is positive.
         public int Amount { get; set; }
 
+        [Timestamp]
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "This property is only used by the framework.")]
+        public byte[]? Timestamp { get; set; }
     }
 }

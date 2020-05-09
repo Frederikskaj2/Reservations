@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Identity;
 using NodaTime;
@@ -23,5 +25,9 @@ namespace Frederikskaj2.Reservations.Server.Data
         public virtual ICollection<UserToken>? Tokens { get; set; }
         public virtual ICollection<Transaction>? Transactions { get; set; }
         public virtual ICollection<UserRole>? UserRoles { get; set; }
+
+        [Timestamp]
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "This property is only used by the framework.")]
+        public byte[]? Timestamp { get; set; }
     }
 }

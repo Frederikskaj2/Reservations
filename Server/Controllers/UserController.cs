@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Shared;
@@ -29,8 +28,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     {
         private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
         private readonly IClock clock;
-        private readonly ReservationsContext db;
         private readonly ILogger logger;
+        private readonly MyTransactionService myTransactionService;
         private readonly OrderService orderService;
         private readonly Random random = new Random();
         private readonly SignInManager<User> signInManager;
@@ -38,13 +37,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         public UserController(
             ILogger<UserController> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue, IClock clock,
-            ReservationsContext db, OrderService orderService, SignInManager<User> signInManager,
+            MyTransactionService myTransactionService, OrderService orderService, SignInManager<User> signInManager,
             UserManager<User> userManager)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.backgroundWorkQueue = backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));
             this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            this.db = db ?? throw new ArgumentNullException(nameof(db));
+            this.myTransactionService = myTransactionService ?? throw new ArgumentNullException(nameof(myTransactionService));
             this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
             this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
@@ -264,15 +263,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var userId = User.Id();
             if (!userId.HasValue)
                 return Enumerable.Empty<MyTransaction>();
-
-            return Enumerable.Empty<MyTransaction>();
-            //return await db.Transactions
-            //    .Where(transaction => transaction.UserId == userId.Value && transaction.Type != TransactionType.BalanceIn && transaction.Type != TransactionType.BalanceOut)
-            //    .OrderBy(transaction => transaction.Date)
-            //    .ThenBy(transaction => transaction.OrderId)
-            //    .ThenBy(transaction => transaction.Type)
-            //    .ProjectToType<MyTransaction>()
-            //    .ToListAsync();
+            return await myTransactionService.GetMyTransactions(userId.Value);
         }
 
         private async Task SendConfirmEmailEmail(User user)

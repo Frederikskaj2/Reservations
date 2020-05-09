@@ -61,14 +61,14 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("{orderId:int}/pay-in")]
-        public async Task<OrderResponse<Order>> PayIn(int orderId, PaymentRequest request)
+        public async Task<OrderResponse<Order>> PayIn(int orderId, PayInRequest request)
         {
             var userId = User.Id();
             if (!userId.HasValue)
                 return new OrderResponse<Order>();
 
             var now = clock.GetCurrentInstant();
-            var order = await orderService.PayIn(now, orderId, userId.Value, request.Date, request.Amount);
+            var order = await orderService.PayIn(now, orderId, userId.Value, request.Date, request.AccountNumber, request.Amount);
             if (order == null)
                 return new OrderResponse<Order>();
 
@@ -105,7 +105,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Phone = order.User?.PhoneNumber,
                 Reservations = order.Reservations.Select(CreateReservation),
                 IsHistoryOrder = order.Flags.HasFlag(OrderFlags.IsHistoryOrder),
-                AccountNumber = order.User!.AccountNumber,
+                AccountNumber = order.User?.AccountNumber,
                 Totals = orderService.GetTotals(order)
             };
 

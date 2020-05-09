@@ -161,7 +161,7 @@
                             @if (Totals.Damages > 0)
                             {
                                 <TableRow>
-                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Skader</TableRowCell>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Skader: @Totals.DamagesDescription</TableRowCell>
                                     <TableRowCell Class="text-right border-top-0">−</TableRowCell>
                                     <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.Damages)</TableRowCell>
                                 </TableRow>
@@ -169,7 +169,7 @@
                             @if (Totals.ToOtherOrders > 0)
                             {
                                 <TableRow>
-                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Udbetalt</TableRowCell>
+                                    <TableRowCell ColumnSpan="5" Class="border-top-0">Overført til andre bestillinger</TableRowCell>
                                     <TableRowCell Class="text-right border-top-0">−</TableRowCell>
                                     <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(Totals.ToOtherOrders)</TableRowCell>
                                 </TableRow>
@@ -334,7 +334,7 @@
     private void RecordPayIn()
     {
         DismissShowGeneralErrorAlert();
-        payInDialog.Show(OrderId, DateProvider.Today, -Totals!.GetBalance());
+        payInDialog.Show(OrderId, DateProvider.Today, AccountNumber!, -Totals!.GetBalance());
     }
 
     private void RecordSettlement(Reservation reservation)
@@ -343,9 +343,9 @@
         settlementDialog.Show(OrderId, reservation);
     }
 
-    private async Task OnPaymentConfirm((int OrderId, LocalDate Date, int Amount) tuple)
+    private async Task OnPaymentConfirm((int OrderId, LocalDate Date, string AccountNumber, int Amount) tuple)
     {
-        var request = new PaymentRequest { Date = tuple.Date, Amount = tuple.Amount };
+        var request = new PayInRequest { Date = tuple.Date, AccountNumber = tuple.AccountNumber, Amount = tuple.Amount };
         var requestUri = $"orders/{tuple.OrderId}/pay-in";
         var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.Order != null)

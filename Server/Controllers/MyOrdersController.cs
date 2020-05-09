@@ -185,7 +185,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Price = reservation.Price!.Adapt<Price>(),
                 Date = reservation.Date,
                 DurationInDays = reservation.DurationInDays,
-                CanBeCancelled = reservation.CanBeCancelled(today, reservationsOptions),
+                CanBeCancelled = reservation.CanBeCancelledUser(today, reservationsOptions),
                 KeyCodes = keyCodes != null && keyCodes.TryGetValue(reservation.Id, out var datedKeyCodes) ? datedKeyCodes : null
             };
         }

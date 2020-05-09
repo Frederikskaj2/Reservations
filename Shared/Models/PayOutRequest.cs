@@ -4,7 +4,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
 {
-    public class PaymentRequest
+    public class PayOutRequest
     {
         public LocalDate Date { get; set; }
 

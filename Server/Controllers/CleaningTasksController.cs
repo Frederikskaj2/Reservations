@@ -15,7 +15,7 @@ using User = Frederikskaj2.Reservations.Server.Data.User;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("cleaning-tasks")]
-    [Authorize(Roles = Roles.KeyCodes)]
+    [Authorize(Roles = Roles.Cleaning)]
     [ApiController]
     public class CleaningTasksController : Controller
     {

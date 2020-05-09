@@ -12,18 +12,19 @@ Reservation af grundejerforeningens lokaler.
 
 ## Registrerede personer
 
-- Nuværende og tidligere beboere på Frederikskaj 2
-- Administratorer af systemet
+- Nuværende og tidligere beboere på Frederikskaj 2.
+- Systembrugere fx fra grundejerforeningens administrator og fra virksomheden som rengører lokalerne.
 
 ## Oplysninger som behandles
 
-- Identifikationsoplysninger
+- Identifikationsoplysninger:
     - Mail-adresse
-    - Fulde navn og adresse
-    - Telefonnummer
-- Betalingsoplysninger
-    - Bankkontonummer
+    - Fulde navn
+    - Adresse (denne oplysning behandles kun for personer med bopæl på Frederikskaj 2)
+    - Telefonnummer.
+- Betalingsoplysninger:
+    - Bankkontonummer (denne oplysning behandles ikke for systembrugere)
 
 ## Sletning
 
-Betalingsoplysninger slettes når det økonomiske mellemværende i forbindelse med en reservation er endelig opgjort.
+Betalingsoplysninger slettes når der ikke er et økonomiske mellemværende mellem grundejerforeningen og personen.

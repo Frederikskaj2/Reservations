@@ -252,7 +252,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 foreach (var reservationId in cancelledReservations)
                 {
                     var reservation = order.Reservations!.FirstOrDefault(r => r.Id == reservationId);
-                    if (reservation == null || userId.HasValue && !reservation.CanBeCancelled(today, reservationsOptions))
+                    if (reservation == null
+                        || !userId.HasValue && !reservation.CanBeCancelledByAdministrator()
+                        || userId.HasValue && !reservation.CanBeCancelledUser(today, reservationsOptions))
                         continue;
 
                     var fee = reservation.Status == ReservationStatus.Confirmed && !waiveFee ? reservationsOptions.CancellationFee : 0;
@@ -337,7 +339,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return !isOrderDeleted ? (false, order) : (true, default);
         }
 
-        public async Task<Order?> PayIn(Instant timestamp, int orderId, int userId, LocalDate date, int amount)
+        public async Task<Order?> PayIn(Instant timestamp, int orderId, int userId, LocalDate date, string accountNumber, int amount)
         {
             var order = await GetOrder(orderId);
             if (order == null)
@@ -345,6 +347,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             transactionService.CreatePayInTransaction(timestamp, date, userId, order, amount);
             var confirmedOrderIds = await UpdateOrders(timestamp, date, userId, order.User!);
+
+            // This is required to avoid the situation where the account number is deleted just before a pay-in is registered.
+            order.User!.AccountNumber = accountNumber;
 
             try
             {
@@ -478,42 +483,44 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 throw new ArgumentNullException(nameof(order));
 
             var totals = new OrderTotals();
-            foreach (var amount in order.Transactions!.SelectMany(transaction => transaction.Amounts!))
-                switch (amount.Account)
-                {
-                    case Account.Rent:
-                    case Account.Cleaning:
-                    case Account.Deposits when amount.Amount < 0:
-                        totals.Price += -amount.Amount;
-                        break;
-                    case Account.CancellationFees:
-                        totals.CancellationFee += -amount.Amount;
-                        break;
-                    case Account.Damages:
-                        totals.Damages += -amount.Amount;
-                        break;
-                    case Account.Bank when amount.Amount > 0:
-                        totals.PayIn += amount.Amount;
-                        break;
-                    case Account.Bank when amount.Amount < 0:
-                        totals.PayOut += -amount.Amount;
-                        break;
-                    case Account.AccountsReceivable:
-                        break;
-                    case Account.FromPayments:
-                        totals.FromOtherOrders += amount.Amount;
-                        break;
-                    case Account.Deposits when amount.Amount > 0:
-                        totals.RefundedDeposits += amount.Amount;
-                        break;
-                    case Account.Payments:
-                        break;
-                    case Account.ToAccountsReceivable:
-                        totals.ToOtherOrders += -amount.Amount;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(order), "Unknown transaction type.");
-                }
+            foreach (var transaction in order.Transactions!)
+                foreach (var amount in transaction.Amounts!)
+                    switch (amount.Account)
+                    {
+                        case Account.Rent:
+                        case Account.Cleaning:
+                        case Account.Deposits when amount.Amount < 0:
+                            totals.Price += -amount.Amount;
+                            break;
+                        case Account.CancellationFees:
+                            totals.CancellationFee += -amount.Amount;
+                            break;
+                        case Account.Damages:
+                            totals.Damages += -amount.Amount;
+                            totals.DamagesDescription = transaction.Description;
+                            break;
+                        case Account.Bank when amount.Amount > 0:
+                            totals.PayIn += amount.Amount;
+                            break;
+                        case Account.Bank when amount.Amount < 0:
+                            totals.PayOut += -amount.Amount;
+                            break;
+                        case Account.AccountsReceivable:
+                            break;
+                        case Account.FromPayments:
+                            totals.FromOtherOrders += amount.Amount;
+                            break;
+                        case Account.Deposits when amount.Amount > 0:
+                            totals.RefundedDeposits += amount.Amount;
+                            break;
+                        case Account.Payments:
+                            break;
+                        case Account.ToAccountsReceivable:
+                            totals.ToOtherOrders += -amount.Amount;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(order), "Unknown transaction type.");
+                    }
 
             return totals;
         }
@@ -753,6 +760,17 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 amount -= amountToApplyToThisOrder;
                 if (amountToApplyToThisOrder == tuple.Payments)
                     ordersWithPayments.Dequeue();
+            }
+            if (amount > 0)
+            {
+                // Pathological case where a all orders are history orders. This
+                // can happen if a pay-in is registered on an order that was
+                // cancelled while the pay-in was registered.
+                var latestOrder = await db.Orders
+                    .Where(order => order.UserId == user.Id && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
+                    .OrderByDescending(order => order.Reservations.Max(reservation => reservation.UpdatedTimestamp))
+                    .FirstAsync();
+                transactionService.CreatePayOutTransaction(timestamp, date, createdByUserId, latestOrder, amount);
             }
 
             transactionService.CreatePosting(date, user, PostingType.PayOut);

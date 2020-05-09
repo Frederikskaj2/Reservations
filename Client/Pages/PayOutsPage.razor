@@ -92,7 +92,7 @@
 
     private async Task OnPaymentConfirm((int UserId, LocalDate Date, int Amount) tuple)
     {
-        var request = new PaymentRequest { Date = tuple.Date, Amount = tuple.Amount };
+        var request = new PayOutRequest { Date = tuple.Date, Amount = tuple.Amount };
         var requestUri = $"users/{tuple.UserId}/pay-out";
         var maybe = await ApiClient.PostJsonAsync<PayOutResponse>(requestUri, request);
         if (maybe.TryGetValue(out var response) && response.PayOut != null)

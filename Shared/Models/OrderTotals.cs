@@ -7,6 +7,7 @@
         public int PayIn { get; set; }
         public int CancellationFee { get; set; }
         public int Damages { get; set; }
+        public string? DamagesDescription { get; set; }
         public int RefundedDeposits { get; set; }
         public int ToOtherOrders { get; set; }
         public int PayOut { get; set; }

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NodaTime;
 
@@ -60,12 +62,35 @@ namespace Frederikskaj2.Reservations.Server.Data
             if (!await db.Database.EnsureCreatedAsync())
                 return;
 
+            await CreateTriggers();
+
             CreateApartments();
             CreateResources();
             await db.SaveChangesAsync();
 
             await CreateRoles();
             await CreateUsers();
+        }
+
+        private async Task CreateTriggers()
+        {
+            await CreateTrigger(nameof(ReservationsContext.AccountBalances), nameof(AccountBalance.Timestamp));
+            await CreateTrigger(nameof(ReservationsContext.Orders), nameof(Order.Timestamp));
+            await CreateTrigger(nameof(ReservationsContext.Reservations), nameof(Reservation.Timestamp));
+            await CreateTrigger("AspNetUsers", nameof(User.Timestamp));
+        }
+
+        private async Task CreateTrigger(string tableName, string columnName)
+        {
+            const string triggerFormat = @"CREATE TRIGGER Set{0}{1}On{2}
+AFTER {2} ON {0}
+BEGIN
+    UPDATE {0}
+    SET {1} = randomblob(8)
+    WHERE rowid = NEW.rowid;
+END";
+            await db.Database.ExecuteSqlRawAsync(string.Format(CultureInfo.InvariantCulture, triggerFormat, tableName, columnName, "Insert"));
+            await db.Database.ExecuteSqlRawAsync(string.Format(CultureInfo.InvariantCulture, triggerFormat, tableName, columnName, "Update"));
         }
 
         private void CreateApartments()

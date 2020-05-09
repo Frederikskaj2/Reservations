@@ -33,7 +33,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 new TransactionAmount { Account = Account.Deposits, Amount = -price.Deposit },
                 new TransactionAmount { Account = Account.AccountsReceivable, Amount = price.GetTotal() }
             };
-            CreateTransaction(timestamp, date, order.Id, order, amounts);
+            CreateTransaction(timestamp, date, order.User!.Id, order, amounts);
         }
 
         public void CreateReservationCancelledTransaction(Instant timestamp, LocalDate date, int createdByUserId, Order order, Reservation reservation, int cancellationFee)
@@ -68,7 +68,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 amounts.Add(new TransactionAmount { Account = Account.Payments, Amount = -amountToRefund });
             }
 
-            CreateTransaction(timestamp, date, createdByUserId, order, amounts);
+            var transaction = CreateTransaction(timestamp, date, createdByUserId, order, amounts);
+            transaction.ResourceId = reservation.ResourceId;
+            transaction.ReservationDate = reservation.Date;
         }
 
         public void CreatePayInTransaction(Instant timestamp, LocalDate date, int createdByUserId, Order order, int amount)
@@ -89,7 +91,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
             }
             else
             {
-                amounts.Add(new TransactionAmount { Account = Account.AccountsReceivable, Amount = -accountsReceivable });
+                if (accountsReceivable > 0)
+                    amounts.Add(new TransactionAmount { Account = Account.AccountsReceivable, Amount = -accountsReceivable });
                 amounts.Add(new TransactionAmount { Account = Account.Payments, Amount = -(amount - accountsReceivable) });
             }
             CreateTransaction(timestamp, date, createdByUserId, order, amounts);
@@ -118,7 +121,11 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 amounts.Add(new TransactionAmount { Account = Account.Damages, Amount = -damages });
             if (amountToRefund > 0)
                 amounts.Add(new TransactionAmount { Account = Account.Payments, Amount = -amountToRefund });
-            CreateTransaction(timestamp, date, createdByUserId, order, amounts);
+
+            var transaction = CreateTransaction(timestamp, date, createdByUserId, order, amounts);
+            transaction.ResourceId = reservation.ResourceId;
+            transaction.ReservationDate = reservation.Date;
+            transaction.Description = description;
         }
 
         public void CreatePayOutTransaction(Instant timestamp, LocalDate date, int createdByUserId, Order order, int amount)
@@ -130,9 +137,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             var amounts = new[]
             {
-                    new TransactionAmount { Account = Account.Bank, Amount = -amount },
-                    new TransactionAmount { Account = Account.Payments, Amount = amount }
-                };
+                new TransactionAmount { Account = Account.Bank, Amount = -amount },
+                new TransactionAmount { Account = Account.Payments, Amount = amount }
+            };
             CreateTransaction(timestamp, date, createdByUserId, order, amounts);
         }
 
@@ -240,7 +247,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             };
             ValidateTransaction(transaction);
             order.Transactions!.Add(transaction);
-            UpdateAccountBalances(order.User, transaction);
+            UpdateAccountBalances(order.User!, transaction);
             return transaction;
         }
 
@@ -271,6 +278,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         [Conditional("DEBUG")]
         private static void ValidatePosting(Posting posting)
         {
+            Debug.Assert(Math.Abs(posting.Income) + Math.Abs(posting.Bank) + Math.Abs(posting.Deposits) > 0);
             Debug.Assert(posting.IncomeBalance <= 0);
             Debug.Assert(posting.BankBalance >= 0);
             Debug.Assert(posting.DepositsBalance <= 0);

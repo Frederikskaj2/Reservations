@@ -30,7 +30,7 @@
                 <div>@order.FullName</div>
                 <div>@order.Phone</div>
             }
-            <OrderStatement @ref="orderStatement" IsCancellationEnabled="canHandleOrders" IsPaymentEnabled="canHandlePayments" IsSettlementEnabled="canHandleSettlements" OrderId="@order.Id" Reservations="@order.Reservations" Totals="@order.Totals" IsHistoryOrder="@order.IsHistoryOrder" OnSubmit="@Submit" />
+            <OrderStatement @ref="orderStatement" IsCancellationEnabled="canHandleOrders" IsPaymentEnabled="canHandlePayments" IsSettlementEnabled="canHandleSettlements" OrderId="@order.Id" Reservations="@order.Reservations" AccountNumber="@order.AccountNumber" Totals="@order.Totals" IsHistoryOrder="@order.IsHistoryOrder" OnSubmit="@Submit" />
         </Container>
     }
     else if (canHandleOrders && ownerOrder != null)

@@ -46,7 +46,7 @@
 
 @code {
 
-    private readonly PaymentRequest request = new PaymentRequest();
+    private readonly PayInRequest request = new PayInRequest();
     private Modal modal = null!;
     private Validations validations = null!;
     private NumericEdit<int> amountNumericEdit = null!;
@@ -55,16 +55,17 @@
     private bool isConfirming;
 
     [Parameter]
-    public EventCallback<(int OrderId, LocalDate Date, int Amount)> OnConfirm { get; set; }
+    public EventCallback<(int OrderId, LocalDate Date, string AccountNumber, int Amount)> OnConfirm { get; set; }
 
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
-    public void Show(int orderId, LocalDate date, int amount)
+    public void Show(int orderId, LocalDate date, string accountNumber, int amount)
     {
         this.orderId = orderId;
         request.Date = date;
         dateTime = date.AtMidnight().ToDateTimeUnspecified();
+        request.AccountNumber = accountNumber;
         request.Amount = amount;
         isConfirming = false;
         modal.Show();
@@ -89,5 +90,5 @@
         modal.Hide();
     }
 
-    private Task OnModalClosed() => isConfirming ? OnConfirm.InvokeAsync((orderId, request.Date, request.Amount)) : OnCancel.InvokeAsync(null);
+    private Task OnModalClosed() => isConfirming ? OnConfirm.InvokeAsync((orderId, request.Date, request.AccountNumber, request.Amount)) : OnCancel.InvokeAsync(null);
 }

@@ -123,7 +123,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("{userId:int}/pay-out")]
-        public async Task<PayOutResponse> PayOut(int userId, PaymentRequest request)
+        public async Task<PayOutResponse> PayOut(int userId, PayOutRequest request)
         {
             var createdByUserId = User.Id();
             if (!createdByUserId.HasValue)

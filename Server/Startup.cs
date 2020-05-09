@@ -77,8 +77,9 @@ namespace Frederikskaj2.Reservations.Server
                 .AddSingleton<TransactionService>()
                 .AddScoped<IDataProvider, ServerDataProvider>()
                 .AddScoped<OrderService>()
-                .AddScoped<KeyCodeService>()
                 .AddScoped<PostingsService>()
+                .AddScoped<MyTransactionService>()
+                .AddScoped<KeyCodeService>()
                 .AddScoped<CleaningTaskService>()
                 .AddEmail(Configuration);
 
