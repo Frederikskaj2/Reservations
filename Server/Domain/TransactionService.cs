@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
 using NodaTime;
@@ -251,39 +251,45 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return transaction;
         }
 
-        [Conditional("DEBUG")]
         private static void ValidateTransaction(Transaction transaction)
         {
-            Debug.Assert(transaction.Amounts!.Count > 0);
-            Debug.Assert(transaction.Amounts.All(amount => amount.Amount != 0));
-            Debug.Assert(transaction.Amounts.Sum(amount => amount.Amount)== 0);
+            Validate(() => transaction.Amounts!.Count > 0);
+            Validate(() => transaction.Amounts.All(amount => amount.Amount != 0));
+            Validate(() => transaction.Amounts.Sum(amount => amount.Amount) == 0);
         }
 
-        [Conditional("DEBUG")]
         private static void ValidateAccountBalances(User user)
         {
             // Income
-            Debug.Assert((user.AccountBalances.SingleOrDefault(balance => balance.Account == Account.Rent)?.Amount ?? 0) <= 0);
-            Debug.Assert((user.AccountBalances.SingleOrDefault(balance => balance.Account == Account.Cleaning)?.Amount ?? 0) <= 0);
-            Debug.Assert((user.AccountBalances.SingleOrDefault(balance => balance.Account == Account.CancellationFees)?.Amount ?? 0) <= 0);
-            Debug.Assert((user.AccountBalances.SingleOrDefault(balance => balance.Account == Account.Damages)?.Amount ?? 0) <= 0);
+            Validate(() => user.Balance(Account.Rent) <= 0);
+            Validate(() => user.Balance(Account.Cleaning) <= 0);
+            Validate(() => user.Balance(Account.CancellationFees) <= 0);
+            Validate(() => user.Balance(Account.Damages) <= 0);
             // Assets
-            Debug.Assert((user.AccountBalances.SingleOrDefault(balance => balance.Account == Account.Bank)?.Amount ?? 0) >= 0);
-            Debug.Assert((user.AccountBalances.SingleOrDefault(balance => balance.Account == Account.AccountsReceivable)?.Amount ?? 0) >= 0);
+            Validate(() => user.Balance(Account.Bank) >= 0);
+            Validate(() => user.Balance(Account.AccountsReceivable) >= 0);
+            Validate(() => user.Balance(Account.FromPayments) >= 0);
             // Liabilities
-            Debug.Assert((user.AccountBalances.SingleOrDefault(balance => balance.Account == Account.Deposits)?.Amount ?? 0) <= 0);
-            Debug.Assert((user.AccountBalances.SingleOrDefault(balance => balance.Account == Account.Payments)?.Amount ?? 0) <= 0);
+            Validate(() => user.Balance(Account.Deposits) <= 0);
+            Validate(() => user.Balance(Account.Payments) <= 0);
+            Validate(() => user.Balance(Account.ToAccountsReceivable) <= 0);
         }
 
-        [Conditional("DEBUG")]
         private static void ValidatePosting(Posting posting)
         {
-            Debug.Assert(Math.Abs(posting.Income) + Math.Abs(posting.Bank) + Math.Abs(posting.Deposits) > 0);
-            Debug.Assert(posting.IncomeBalance <= 0);
-            Debug.Assert(posting.BankBalance >= 0);
-            Debug.Assert(posting.DepositsBalance <= 0);
-            Debug.Assert(posting.Income + posting.Bank + posting.Deposits == 0);
-            Debug.Assert(posting.IncomeBalance + posting.BankBalance + posting.DepositsBalance == 0);
+            Validate(() => Math.Abs(posting.Income) + Math.Abs(posting.Bank) + Math.Abs(posting.Deposits) > 0);
+            Validate(() => posting.IncomeBalance <= 0);
+            Validate(() => posting.BankBalance >= 0);
+            Validate(() => posting.DepositsBalance <= 0);
+            Validate(() => posting.Income + posting.Bank + posting.Deposits == 0);
+            Validate(() => posting.IncomeBalance + posting.BankBalance + posting.DepositsBalance == 0);
+        }
+
+        private static void Validate(Expression<Func<bool>> predicate)
+        {
+            var func = predicate.Compile();
+            if (!func())
+                throw new ReservationsException("Validation failed: " + predicate.Body.ToString());
         }
     }
 }

@@ -53,7 +53,7 @@
                             var isCancelled = request.CancelledReservations.Contains(reservation.Id);
                             var canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && reservation.Date.PlusDays(reservation.DurationInDays) <= today;
                             // TODO: Remove this unless testing.
-                            canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && !IsHistoryOrder;
+                            // canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && !IsHistoryOrder;
                             var canBeCancelled = reservation.CanBeCancelled || IsCancellationEnabled && (reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
                             var color = reservation.Status == ReservationStatus.Settled && !IsHistoryOrder ? "text-secondary" : string.Empty;
                             var cancelledClass = isCancelled || reservation.Status == ReservationStatus.Cancelled ? "reservation-cancelled" : string.Empty;
