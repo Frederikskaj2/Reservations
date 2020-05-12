@@ -183,7 +183,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Where(u => u.EmailSubscriptions.HasFlag(EmailSubscriptions.NewOrder))
                 .ToListAsync();
             foreach (var u in users)
-                backgroundWorkQueue.Enqueue((service, _) => service.SendNewOrderEmail(user, order.Id));
+                backgroundWorkQueue.Enqueue((service, _) => service.SendNewOrderEmail(u, order.Id));
 
             return (PlaceOrderResult.Success, order);
         }
