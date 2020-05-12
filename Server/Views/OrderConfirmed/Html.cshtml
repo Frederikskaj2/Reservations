@@ -11,6 +11,7 @@
 <body>
     <p>Hej @Model.Name</p>
     <p>Din bestilling med <a href="@Model.Url">bestillingsnr. @Model.OrderId</a> er nu godkendt.</p>
+    <p>Du vil tre dage inden du skal bruge lokalet få tilsendt en nøglebokskode, så du kan låse dig ind på dagen. Den kode vil også blive vist på bestillingssiden.</p>
     @await Html.PartialAsync("_Signature", Model)
     @await Html.PartialAsync("_Links", Model)
 </body>
