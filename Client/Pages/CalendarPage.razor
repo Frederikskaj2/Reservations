@@ -98,7 +98,7 @@ else
                                 </button>
                             </CardTitle>
                             <CardText>
-                                <p>@FormattingService.FormatDate(reservation.Date) / @reservation.DurationInDays dag@(reservation.DurationInDays > 1 ? "e" : string.Empty)</p>
+                                <p>@FormattingService.FormatDate(reservation.Date) / @reservation.DurationInDays @(reservation.DurationInDays > 1 ? "nætter" : "nat")</p>
                                 <Prices Price="@reservation.Price" />
                             </CardText>
                         </CardBody>
