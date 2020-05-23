@@ -36,3 +36,5 @@ jobs:
         passphrase: ${{ secrets.VM_SSH_PASSWORD }}
         source: Server/bin/Release/netcoreapp3.1/publish
         target: ${{ env.VM_DIR_NAME }}
+        strip_components: 4
+        rm: true
