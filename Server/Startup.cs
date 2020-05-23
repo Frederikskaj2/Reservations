@@ -31,7 +31,7 @@ namespace Frederikskaj2.Reservations.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddDbContext<ReservationsContext>(options => options.UseSqlite(@"Data Source=..\Reservations.db"))
+                .AddDbContext<ReservationsContext>(options => options.UseSqlite(@"Data Source=../Reservations.db"))
                 .Configure<SeedDataOptions>(Configuration.GetSection("SeedData"))
                 .AddScoped<SeedData>();
 

@@ -27,6 +27,14 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Publish
       run: dotnet publish Server --configuration Release --no-build
+    - name: Stop
+      uses: appleboy/ssh-action@v0.0.9
+      with:
+        host: ${{ env.VM_HOST_NAME }}
+        username: ${{ secrets.VM_USER_NAME }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+        script: sudo supervisorctl stop lokaler
     - name: Deploy
       uses: appleboy/scp-action@v0.0.11
       with:
@@ -38,3 +46,11 @@ jobs:
         target: ${{ env.VM_DIR_NAME }}
         strip_components: 5
         rm: true
+    - name: Start
+      uses: appleboy/ssh-action@v0.0.9
+      with:
+        host: ${{ env.VM_HOST_NAME }}
+        username: ${{ secrets.VM_USER_NAME }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+        script: sudo supervisorctl start lokaler
