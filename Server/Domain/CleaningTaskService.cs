@@ -86,7 +86,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         private class CleaningTaskEqualityComparer : IEqualityComparer<CleaningTask>
         {
-            public bool Equals(CleaningTask x, CleaningTask y)
+            public bool Equals(CleaningTask? x, CleaningTask? y)
             {
                 if (ReferenceEquals(x, y))
                     return true;

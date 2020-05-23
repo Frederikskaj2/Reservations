@@ -263,7 +263,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                     if (reservation.Status == ReservationStatus.Reserved)
                         cancelledReservationsEmailData.Add((reservation, 0, 0));
                     else
-                        cancelledReservationsEmailData.Add((reservation, reservation.Price.GetTotal(), fee));
+                        cancelledReservationsEmailData.Add((reservation, reservation.Price!.GetTotal(), fee));
 
                     reservation.Status = ReservationStatus.Cancelled;
                     reservation.UpdatedTimestamp = timestamp;
