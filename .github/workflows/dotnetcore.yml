@@ -9,22 +9,30 @@ on:
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+
+    env:
+        VM_HOST_NAME: lokaler.frederikskaj2.dk
+        VM_DIR_NAME: /var/lokaler
 
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.201
+        dotnet-version: 3.1.300
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Publish
       run: dotnet publish Server --configuration Release --no-build
-    - name: Upload
-      uses: actions/upload-artifact@v1
+    - name: Deploy
+      uses: appleboy/scp-action@v0.0.11
       with:
-        name: Website
-        path: Server/bin/Release/netcoreapp3.1/publish
+        host: ${{ env.VM_HOST_NAME }}
+        username: ${{ secrets.VM_USER_NAME }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+        source: Server/bin/Release/netcoreapp3.1/publish
+        target: ${{ env.VM_DIR_NAME }}
