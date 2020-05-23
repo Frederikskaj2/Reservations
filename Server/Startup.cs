@@ -108,7 +108,6 @@ namespace Frederikskaj2.Reservations.Server
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
 
