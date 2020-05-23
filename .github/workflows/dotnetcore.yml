@@ -7,13 +7,13 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  "Build and deploy":
 
     runs-on: ubuntu-latest
 
     env:
         VM_HOST_NAME: lokaler.frederikskaj2.dk
-        VM_DIR_NAME: /var/lokaler
+        VM_DIR_NAME: /var/lokaler/app
 
     steps:
     - uses: actions/checkout@v2
@@ -36,5 +36,5 @@ jobs:
         passphrase: ${{ secrets.VM_SSH_PASSWORD }}
         source: Server/bin/Release/netcoreapp3.1/publish
         target: ${{ env.VM_DIR_NAME }}
-        strip_components: 4
+        strip_components: 5
         rm: true
