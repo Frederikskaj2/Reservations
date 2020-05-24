@@ -105,8 +105,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private Validations validations = null!;
     private IEnumerable<Apartment>? apartments;
     private bool hasConfirmedEmail;
@@ -118,15 +118,15 @@
     protected override async Task OnInitializedAsync()
     {
         apartments = await ClientDataProvider.GetApartments();
-        var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
-        if (maybe.TryGetValue(out var myUser))
+        var (response, problem) = await ApiClient.Get<MyUser>("user");
+        if (problem == null)
         {
-            hasConfirmedEmail = myUser.IsEmailConfirmed;
+            hasConfirmedEmail = response!.IsEmailConfirmed;
             showEmailNotConfirmedAlert = !hasConfirmedEmail;
-            ClientDataProvider.DraftOrder.Request.FullName = myUser.FullName!;
-            ClientDataProvider.DraftOrder.Request.Phone = myUser.Phone!;
-            ClientDataProvider.DraftOrder.Request.ApartmentId = myUser.ApartmentId.GetValueOrDefault();
-            ClientDataProvider.DraftOrder.Request.AccountNumber = myUser.AccountNumber ?? string.Empty;
+            ClientDataProvider.DraftOrder.Request.FullName = response.FullName!;
+            ClientDataProvider.DraftOrder.Request.Phone = response.Phone!;
+            ClientDataProvider.DraftOrder.Request.ApartmentId = response.ApartmentId.GetValueOrDefault();
+            ClientDataProvider.DraftOrder.Request.AccountNumber = response.AccountNumber ?? string.Empty;
         }
         isInitialized = true;
     }
@@ -134,8 +134,8 @@
     private async Task ResendConfirmEmailAlert()
     {
         DismissAllAlerts();
-        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/resend-confirm-email-email", null);
-        if (!maybe.TryGetValue(out var response) || response.Result != OperationResult.Success)
+        var problem = await ApiClient.Post("user/resend-confirm-email-email");
+        if (problem != null)
             showResendConfirmEmailEmailErrorAlert = true;
         else
             showResendConfirmEmailEmailAlert = true;
@@ -144,8 +144,8 @@
     private async Task UpdateEmailConfirmationStatus()
     {
         DismissAllAlerts();
-        var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
-        hasConfirmedEmail = maybe.TryGetValue(out var myUser) && myUser.IsEmailConfirmed;
+        var (response, problem) = await ApiClient.Get<MyUser>("user");
+        hasConfirmedEmail = problem == null && response!.IsEmailConfirmed;
         showEmailNotConfirmedAlert = !hasConfirmedEmail;
     }
 
@@ -165,5 +165,4 @@
         showResendConfirmEmailEmailAlert = false;
         showResendConfirmEmailEmailErrorAlert = false;
     }
-
 }

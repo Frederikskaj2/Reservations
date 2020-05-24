@@ -1,6 +1,6 @@
 ﻿@page "/bruger/bestillinger/{orderId:int}"
-@inherits BasePage
 @attribute [Authorize]
+@inject ApiClient ApiClient 
 @inject IAuthenticationStateProvider AuthenticationStateProvider
 @inject ClientDataProvider ClientDataProvider
 @inject NavigationManager NavigationManager
@@ -59,7 +59,7 @@
         await GetAccountNumber();
 
         var url = $"my-orders/{OrderId}";
-        var (response, problem) = await Get<MyOrder>(url);
+        var (response, problem) = await ApiClient.Get<MyOrder>(url);
         if (problem == null)
         {
             order = response;
@@ -72,16 +72,17 @@
 
     private async Task GetAccountNumber()
     {
-        var (response, problem) = await Get<MyUser>("user");
+        var (response, problem) = await ApiClient.Get<MyUser>("user");
         if (problem == null)
             accountNumber = response!.AccountNumber;
     }
 
     private async Task Submit(UpdateOrderRequest request)
     {
+        var savedAccountNumber = request.AccountNumber;
         var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"my-orders/{order!.Id}";
-        var (response, problem) = await Patch<OrderResponse<MyOrder>>(url, request);
+        var (response, problem) = await ApiClient.Patch<OrderResponse<MyOrder>>(url, request);
         if (problem == null)
         {
             if (isUpdatingCalendar)
@@ -92,6 +93,7 @@
                 NavigationManager.NavigateTo(string.Empty);
             }
             order = response.Order;
+            accountNumber = savedAccountNumber;
         }
         else
         {

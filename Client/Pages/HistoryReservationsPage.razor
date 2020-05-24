@@ -57,8 +57,8 @@
         </Container>
     }
 </main>
-@code {
-
+@code
+{
     private IReadOnlyDictionary<int, Resource>? resources;
     private IReadOnlyDictionary<int, Apartment>? apartments;
     private IEnumerable<HistoryReservation>? reservations;
@@ -68,9 +68,8 @@
     {
         resources = await ClientDataProvider.GetResources();
         apartments = (await ClientDataProvider.GetApartments()).ToDictionary(apartment => apartment.Id);
-        var maybe = await ApiClient.GetJsonAsync<IEnumerable<HistoryReservation>>("reservations");
-        maybe.TryGetValue(out reservations);
+        var (response, problem) = await ApiClient.Get<IEnumerable<HistoryReservation>>("reservations");
+        reservations = problem == null ? response : Enumerable.Empty<HistoryReservation>();
         isInitialized = true;
     }
-
 }

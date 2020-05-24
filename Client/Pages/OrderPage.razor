@@ -1,6 +1,6 @@
 ﻿@page "/bestillinger/{orderId:int}"
 @attribute [Authorize(Roles = Roles.OrderHandling + "," + Roles.Payment + "," + Roles.Settlement)]
-@inject ApiClient ApiClient
+@inject ApiClient ApiClient 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -52,14 +52,18 @@
     }
     else
     {
-        <Container>
-            <Text>Bestilling @OrderId er ikke tilgængelig.</Text>
-        </Container>
+<Container>
+    <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
+        Bestillingen er blevet slettet.
+        <CloseButton Clicked="@DismissSuccessAlert" />
+    </Alert>
+    <Text>Bestilling @OrderId er ikke tilgængelig.</Text>
+</Container>
     }
 </main>
 
-@code {
-
+@code
+{
     private OrderStatement orderStatement = null!;
     private bool canHandleOrders;
     private bool canHandlePayments;
@@ -88,19 +92,15 @@
         async Task<Order?> GetOrder()
         {
             var url = $"orders/{OrderId}";
-            var maybe = await ApiClient.GetJsonAsync<OrderResponse<Order>>(url);
-            if (maybe.TryGetValue(out var response) && response.Order != null)
-                return response.Order;
-            return null;
+            var (response, _) = await ApiClient.Get<Order>(url);
+            return response;
         }
 
         async Task<OwnerOrder?> GetOwnerOrder()
         {
             var url = $"owner-orders/{OrderId}";
-            var maybe = await ApiClient.GetJsonAsync<OrderResponse<OwnerOrder>>(url);
-            if (maybe.TryGetValue(out var response) && response.Order != null)
-                return response.Order;
-            return null;
+            var (response, _) = await ApiClient.Get<OwnerOrder>(url);
+            return response;
         }
     }
 
@@ -110,16 +110,18 @@
 
         var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"orders/{order!.Id}";
-        var maybe = await ApiClient.PatchJsonAsync<OrderResponse<Order>>(url, request);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
+        var (response, problem) = await ApiClient.Patch<Order>(url, request);
+        if (problem == null)
         {
             if (isUpdatingCalendar)
                 ClientDataProvider.Refresh();
-            order = response.Order;
+            order = response;
             showSuccessAlert = true;
         }
         else
+        {
             showErrorAlert = true;
+        }
     }
 
     private async Task SubmitOwnerOrder(UpdateOwnerOrderRequest request)
@@ -128,16 +130,18 @@
 
         var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"owner-orders/{ownerOrder!.Id}";
-        var maybe = await ApiClient.PatchJsonAsync<OrderResponse<OwnerOrder>>(url, request);
-        if (maybe.TryGetValue(out var response) && (response.Order != null || response.IsDeleted))
+        var (response, problem) = await ApiClient.Patch<OrderResponse<OwnerOrder>>(url, request);
+        if (problem == null)
         {
             if (isUpdatingCalendar)
                 ClientDataProvider.Refresh();
-            ownerOrder = response.Order;
+            ownerOrder = response!.Order;
             showSuccessAlert = true;
         }
         else
+        {
             showErrorAlert = true;
+        }
     }
 
     private void DismissSuccessAlert() => showSuccessAlert = false;

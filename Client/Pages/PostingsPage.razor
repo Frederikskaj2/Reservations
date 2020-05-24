@@ -1,6 +1,6 @@
 ﻿@page "/posteringer"
 @attribute [Authorize(Roles = Roles.Bookkeeping)]
-@inject ApiClient ApiClient
+@inject ApiClient ApiClient 
 @inject ApplicationState ApplicationState
 @inject CultureInfo CultureInfo
 @inject FormattingService FormattingService
@@ -105,8 +105,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private LocalDatePattern? monthPattern;
     private PostingsRange? postingsRange;
     private List<int>? years;
@@ -133,11 +133,12 @@
 
     private async Task InitializeCalendar()
     {
-        var maybe = await ApiClient.GetJsonAsync<PostingsRange>("postings/range");
-        if (!maybe.TryGetValue(out postingsRange))
+        var (response, problem) = await ApiClient.Get<PostingsRange>("postings/range");
+        if (problem != null)
             return;
-        var earliestYear = postingsRange.EarliestMonth.Year;
-        var latestYear = postingsRange.LatestMonth.Year;
+        postingsRange = response;
+        var earliestYear = response!.EarliestMonth.Year;
+        var latestYear = response.LatestMonth.Year;
         years = Enumerable.Range(earliestYear, latestYear - earliestYear + 1).ToList();
         currentYear = years[^1];
         UpdateMonths();
@@ -146,9 +147,9 @@
     private async Task UpdatePostings()
     {
         var requestUri = $"postings?month={currentYear}-{currentMonth:00}-01";
-        var maybe = await ApiClient.GetJsonAsync<IEnumerable<Posting>>(requestUri);
-        if (!maybe.TryGetValue(out postings))
-            return;
+        var (response, problem) = await ApiClient.Get<IEnumerable<Posting>>(requestUri);
+        if (problem == null)
+            postings = response;
     }
 
     private void YearChanged(int value)
@@ -185,8 +186,8 @@
     {
         DismissAllAlerts();
 
-        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("postings/send", null);
-        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
+        var problem = await ApiClient.Post("postings/send");
+        if (problem == null)
             showSuccessAlert = true;
         else
             showErrorAlert = true;

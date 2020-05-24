@@ -17,32 +17,31 @@ namespace Frederikskaj2.Reservations.Client
 
         public void UpdateUser(AuthenticatedUser user)
             => NotifyAuthenticationStateChanged(
-                GetAuthenticationState(Task.FromResult((Maybe<AuthenticatedUser>) user)));
+                GetAuthenticationState(Task.FromResult<(AuthenticatedUser? Response, ProblemDetails? Problem)>((user, null))));
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
-            => GetAuthenticationState(apiClient.GetJsonAsync<AuthenticatedUser>("user/authenticated"));
+            => GetAuthenticationState(apiClient.Get<AuthenticatedUser>("user/authenticated"));
 
-        private static async Task<AuthenticationState> GetAuthenticationState(Task<Maybe<AuthenticatedUser>> userTask)
+        private static async Task<AuthenticationState> GetAuthenticationState(Task<(AuthenticatedUser? Response, ProblemDetails? Problem)> userTask)
         {
-            var maybe = await userTask;
-            maybe.TryGetValue(out var user);
+            var (response, _) = await userTask;
             return new AuthenticationState(new ClaimsPrincipal(GetIdentity()));
 
             ClaimsIdentity GetIdentity()
             {
                 const string authenticationType = "serverauth";
-                return user.IsAuthenticated
+                return (response?.IsAuthenticated).GetValueOrDefault()
                     ? new ClaimsIdentity(GetClaims(), authenticationType)
                     : new ClaimsIdentity();
 
                 IEnumerable<Claim> GetClaims()
                 {
-                    yield return new Claim(ClaimTypes.Name, user.Name);
-                    if (user.Id.HasValue)
+                    yield return new Claim(ClaimTypes.Name, response?.Name ?? "?");
+                    if ((response?.Id).HasValue)
                         yield return new Claim(
-                            ClaimTypes.NameIdentifier, user.Id.Value.ToString(CultureInfo.InvariantCulture));
-                    if (user.Roles != null)
-                        foreach (var role in user.Roles)
+                            ClaimTypes.NameIdentifier, response!.Id!.Value.ToString(CultureInfo.InvariantCulture));
+                    if (response?.Roles != null)
+                        foreach (var role in response.Roles)
                             yield return new Claim(ClaimTypes.Role, role);
                 }
             }

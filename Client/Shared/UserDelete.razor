@@ -43,8 +43,8 @@
 </Card>
 <ConfirmDeleteMyUser @ref="confirmModal" OnConfirm="@DeleteUser" />
 
-@code {
-
+@code
+{
     private ConfirmDeleteMyUser confirmModal = null!;
     private bool showErrorAlert;
     private bool showPendingDeleteAlert;
@@ -60,13 +60,13 @@
 
     private async Task DeleteUser()
     {
-        var maybe = await ApiClient.PostJsonAsync<DeleteUserResponse>("user/delete", null);
-        if (!maybe.TryGetValue(out var response) || response.Result == DeleteUserResult.GeneralError)
+        var (response, problem) = await ApiClient.Post<DeleteUserResponse>("user/delete");
+        if (problem != null)
         {
             showErrorAlert = true;
             return;
         }
-        if (response.Result == DeleteUserResult.IsPendingDelete)
+        if (response!.Result == DeleteUserResult.IsPendingDelete)
         {
             showPendingDeleteAlert = true;
             User.IsPendingDelete = true;

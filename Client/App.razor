@@ -35,8 +35,8 @@
     </Router>
 </CascadingAuthenticationState>
 
-@code {
-
+@code
+{
     private void SignIn()
     {
         ApplicationState.RedirectUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
@@ -48,5 +48,4 @@
         ApplicationState.RedirectUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.NavigateTo(Urls.SignUp);
     }
-
 }

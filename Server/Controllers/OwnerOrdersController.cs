@@ -39,12 +39,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpGet("{orderId:int}")]
-        public async Task<OrderResponse<OwnerOrder>> Get(int orderId)
+        public async Task<IActionResult> Get(int orderId)
         {
             var order = await orderService.GetOwnerOrder(orderId);
             if (order == null)
-                return new OrderResponse<OwnerOrder>();
-            return new OrderResponse<OwnerOrder> { Order = CreateOrder(order, order.User!) };
+                return NotFound();
+            return Ok(CreateOrder(order, order.User!));
         }
 
         [HttpPost]
@@ -52,6 +52,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         {
             if (request.Reservations.Count == 0)
                 return BadRequest();
+
             var userId = User.Id();
             var user = await userManager.FindByIdAsync(userId!.Value.ToString(CultureInfo.InvariantCulture));
 
@@ -66,12 +67,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpPatch("{orderId:int}")]
         public async Task<OrderResponse<OwnerOrder>> Patch(int orderId, UpdateOwnerOrderRequest request)
         {
-            var tuple = await orderService.UpdateOwnerOrder(orderId, request.CancelledReservations, request.IsCleaningRequired);
-            if (tuple == default)
-                return new OrderResponse<OwnerOrder>();
-            if (tuple.IsOrderDeleted)
+            var order = await orderService.UpdateOwnerOrder(orderId, request.CancelledReservations, request.IsCleaningRequired);
+            if (order == null)
                 return new OrderResponse<OwnerOrder> { IsDeleted = true };
-            var order = tuple.Order!;
             return new OrderResponse<OwnerOrder> { Order = CreateOrder(order, order.User!) };
         }
 

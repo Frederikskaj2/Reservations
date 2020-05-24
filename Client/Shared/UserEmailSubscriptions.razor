@@ -48,8 +48,8 @@
     </CardBody>
 </Card>
 
-@code {
-
+@code
+{
     private readonly UpdateMyUserRequest request = new UpdateMyUserRequest();
     private bool showSuccessAlert;
     private bool showErrorAlert;
@@ -76,8 +76,8 @@
     {
         DismissAllAlerts();
 
-        var maybe = await ApiClient.PatchJsonAsync<OperationResponse>("user", request);
-        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
+        var problem = await ApiClient.Patch("user", request);
+        if (problem == null)
             showSuccessAlert = true;
         else
             showErrorAlert = true;

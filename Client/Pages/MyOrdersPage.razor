@@ -1,6 +1,6 @@
 ﻿@page "/bruger/bestillinger"
-@inherits BasePage
 @attribute [Authorize]
+@inject ApiClient ApiClient 
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
 @inject NavigationManager NavigationManager
@@ -120,7 +120,7 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        var (response, problem) = await Get<IEnumerable<MyOrder>>("my-orders");
+        var (response, problem) = await ApiClient.Get<IEnumerable<MyOrder>>("my-orders");
         if (problem == null)
         {
             orders = response.Where(order => !order.IsHistoryOrder).ToList();

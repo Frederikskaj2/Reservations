@@ -83,8 +83,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private bool isInitialized;
     private IReadOnlyDictionary<int, Resource>? resources;
     private IEnumerable<MyTransaction>? transactions;
@@ -93,8 +93,10 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        var maybe = await ApiClient.GetJsonAsync<IEnumerable<MyTransaction>>("user/transactions");
-        if (!maybe.TryGetValue(out transactions))
+        var (response, problem) = await ApiClient.Get<IEnumerable<MyTransaction>>("user/transactions");
+        if (problem == null)
+            transactions = response;
+        else
             showErrorAlert = true;
         isInitialized = true;
     }

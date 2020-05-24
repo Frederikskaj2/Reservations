@@ -25,8 +25,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private bool isInitialized;
     private bool showErrorAlert;
 
@@ -41,8 +41,8 @@
                 Email = query["email"].FirstOrDefault(),
                 Token = query["token"].FirstOrDefault()
             };
-            var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/confirm-email", request);
-            if (!maybe.TryGetValue(out var response) || response.Result == OperationResult.GeneralError)
+            var problem = await ApiClient.Post("user/confirm-email", request);
+            if (problem != null)
                 showErrorAlert = true;
         }
         else

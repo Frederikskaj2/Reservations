@@ -65,8 +65,8 @@
     </CardBody>
 </Card>
 
-@code {
-
+@code
+{
     private readonly UpdateMyUserRequest request = new UpdateMyUserRequest();
     private Validations validations = null!;
     private bool showUserUpdatedAlert;
@@ -98,8 +98,8 @@
         validations.ClearAll();
         DismissAllAlerts();
 
-        var maybe = await ApiClient.PatchJsonAsync<OperationResponse>("user", request);
-        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
+        var problem = await ApiClient.Patch("user", request);
+        if (problem == null)
             showUserUpdatedAlert = true;
         else
             showUserUpdatedErrorAlert = true;
@@ -108,8 +108,8 @@
     private async Task SendConfirmEmailEmail()
     {
         DismissAllAlerts();
-        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("user/resend-confirm-email-email", null);
-        if (!maybe.TryGetValue(out var response) || response.Result != OperationResult.Success)
+        var problem = await ApiClient.Post("user/resend-confirm-email-email");
+        if (problem != null)
             showResendConfirmEmailEmailErrorAlert = true;
         else
             showResendConfirmEmailEmailAlert = true;

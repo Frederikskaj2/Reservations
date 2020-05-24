@@ -38,17 +38,17 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private bool isInitialized;
     private MyUser? user;
     private bool showErrorAlert;
 
     protected override async Task OnInitializedAsync()
     {
-        var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
-        if (maybe.TryGetValue(out var myUser) && !string.IsNullOrEmpty(myUser.Email))
-            user = myUser;
+        var (response, problem) = await ApiClient.Get<MyUser>("user");
+        if (problem == null && !string.IsNullOrEmpty(response!.Email))
+            user = response;
         else
             showErrorAlert = true;
         isInitialized = true;

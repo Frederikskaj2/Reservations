@@ -1,6 +1,6 @@
 ﻿@page "/bestil-ejer/1"
-@inherits BasePage
 @attribute [Authorize(Roles = Roles.OrderHandling)]
+@inject ApiClient ApiClient
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
 @inject NavigationManager NavigationManager
@@ -47,10 +47,12 @@
                     </TableBody>
                     <TableFooter>
                         <TableRow>
-                            <TableRowCell colspan="4" Class="border-top-0">
+                            <TableRowCell ColumnSpan="2" Class="border-top-0">
                                 <Field>
                                     <Check @bind-Checked="@isCleainingRequired">Bestil rengøring</Check>
                                 </Field>
+                            </TableRowCell>
+                            <TableRowCell ColumnSpan="2">
                                 <Button Class="float-right" Color="Color.Success" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Submit">Bekræft bestilling</Button>
                             </TableRowCell>
                         </TableRow>
@@ -78,7 +80,7 @@
                 DurationInDays = reservation.DurationInDays
             }));
         request.IsCleaningRequired = isCleainingRequired;
-        var (ownerOrder, problem) = await Post<OwnerOrder>("owner-orders", request);
+        var (response, problem) = await ApiClient.Post<OwnerOrder>("owner-orders", request);
         if (problem == null)
         {
             ClientDataProvider.DraftOrder.Clear();

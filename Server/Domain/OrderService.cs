@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using BlazorApp1.Server.Controllers;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
 using Frederikskaj2.Reservations.Server.ErrorHandling;
@@ -164,10 +163,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             catch (DbUpdateException exception)
             {
                 logger.LogWarning(exception, "Unable to place order");
-                if (exception.InnerException is SqliteException sqliteException
-                    && sqliteException.SqliteErrorCode == 19)
-                    Problems.ReservationConflict.Throw(exception);
-                Problems.DatabaseError.Throw(exception);
+                HandleReservationConflict(exception);
             }
 
             var prepaidAmount = order.Balance(Account.FromPayments);
@@ -211,10 +207,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             catch (DbUpdateException exception)
             {
                 logger.LogWarning(exception, "Unable to place owner order");
-                if (exception.InnerException is SqliteException sqliteException
-                    && sqliteException.SqliteErrorCode == 19)
-                    Problems.ReservationConflict.Throw(exception);
-                Problems.DatabaseError.Throw(exception);
+                HandleReservationConflict(exception);
             }
 
             return order;
@@ -273,9 +266,6 @@ namespace Frederikskaj2.Reservations.Server.Domain
             catch (DbUpdateException exception)
             {
                 logger.LogWarning(exception, "Unable to update order");
-                if (exception.InnerException is SqliteException sqliteException
-                    && sqliteException.SqliteErrorCode == 19)
-                    Problems.ReservationConflict.Throw(exception);
                 Problems.DatabaseError.Throw(exception);
             }
 
@@ -294,7 +284,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return (isUserDeleted, order);
         }
 
-        public async Task<(bool IsOrderDeleted, Order? Order)> UpdateOwnerOrder(
+        public async Task<Order?> UpdateOwnerOrder(
             int orderId, IEnumerable<int> cancelledReservations, bool isCleaningRequired)
         {
             if (cancelledReservations is null)
@@ -302,7 +292,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             var order = await GetOwnerOrder(orderId);
             if (order == null)
-                return default;
+                throw new NotFoundException();
 
             foreach (var reservationId in cancelledReservations)
             {
@@ -328,17 +318,17 @@ namespace Frederikskaj2.Reservations.Server.Domain
             catch (DbUpdateException exception)
             {
                 logger.LogWarning(exception, "Unable to update owner order");
-                return default;
+                HandleReservationConflict(exception);
             }
 
-            return !isOrderDeleted ? (false, order) : (true, default);
+            return !isOrderDeleted ? order : null;
         }
 
-        public async Task<Order?> PayIn(Instant timestamp, int orderId, int userId, LocalDate date, string accountNumber, int amount)
+        public async Task<Order> PayIn(Instant timestamp, int orderId, int userId, LocalDate date, string accountNumber, int amount)
         {
             var order = await GetOrder(orderId);
             if (order == null)
-                return null;
+                throw new NotFoundException();
 
             transactionService.CreatePayInTransaction(timestamp, date, userId, order, amount);
             var confirmedOrderIds = await UpdateOrders(timestamp, date, userId, order.User!);
@@ -353,7 +343,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             catch (DbUpdateException exception)
             {
                 logger.LogWarning(exception, "Unable to pay in");
-                return null;
+                Problems.DatabaseError.Throw(exception);
             }
 
             var accountsReceivable = order.Balance(Account.AccountsReceivable);
@@ -367,17 +357,18 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return order;
         }
 
-        public async Task<Order?> Settle(
+        public async Task<Order> Settle(
             Instant timestamp, int orderId, int userId, int reservationId, int damages, string? description)
         {
             var order = await GetOrder(orderId);
             if (order == null)
-                return default;
+                throw new NotFoundException();
+
             var reservation = order.Reservations.FirstOrDefault(r => r.Id == reservationId);
             if (reservation == null || reservation.Status != ReservationStatus.Confirmed
                 || !(0 <= damages && damages <= reservation.Price!.Deposit)
                 || damages > 0 && string.IsNullOrWhiteSpace(description))
-                return default;
+                throw new BadRequestException();
 
             reservation.Status = ReservationStatus.Settled;
 
@@ -393,7 +384,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             catch (DbUpdateException exception)
             {
                 logger.LogWarning(exception, "Unable to settle order");
-                return default;
+                Problems.DatabaseError.Throw(exception);
             }
 
             var resources = await dataProvider.GetResources();
@@ -411,11 +402,11 @@ namespace Frederikskaj2.Reservations.Server.Domain
             return order;
         }
 
-        public async Task<PayOut?> PayOut(Instant timestamp, int createdByUserId, int userId, LocalDate date, int amount)
+        public async Task<PayOut> PayOut(Instant timestamp, int createdByUserId, int userId, LocalDate date, int amount)
         {
             var user = await GetUserWithTransactions(userId);
             if (user == null)
-                return null;
+                throw new BadRequestException();
 
             await ApplyPayOutToPayments(timestamp, date, createdByUserId, user, amount);
             await ConvertToHistoryOrders(user);
@@ -428,7 +419,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             catch (DbUpdateException exception)
             {
                 logger.LogWarning(exception, "Unable to update pay out");
-                return null;
+                Problems.DatabaseError.Throw(exception);
             }
 
             backgroundWorkQueue.Enqueue((service, _) => service.SendPayOutEmail(user, amount));
@@ -821,5 +812,14 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Include(user => user.Postings)
                 .Where(user => user.Id == userId)
                 .FirstOrDefaultAsync();
+
+        private static void HandleReservationConflict(DbUpdateException exception)
+        {
+            const int constraintErrorCode = 19;
+            if (exception.InnerException is SqliteException sqliteException
+                && sqliteException.SqliteErrorCode == constraintErrorCode)
+                Problems.ReservationConflict.Throw(exception);
+            Problems.DatabaseError.Throw(exception);
+        }
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Server.Email;
+using Frederikskaj2.Reservations.Server.ErrorHandling;
 using Frederikskaj2.Reservations.Shared;
 using Mapster;
 using Microsoft.AspNetCore.Authentication;
@@ -50,16 +51,14 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<MyUser> GetMyUser()
+        public async Task<IActionResult> GetMyUser()
         {
             var user = await FindUser();
-            if (user == null)
-                return new MyUser();
             var myUser = user.Adapt<MyUser>();
             myUser.Phone = user.PhoneNumber;
             myUser.IsEmailConfirmed = user.EmailConfirmed;
             myUser.Roles = await userManager.GetRolesAsync(user);
-            return myUser;
+            return Ok(myUser);
         }
 
         [HttpGet("authenticated")]
@@ -68,8 +67,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (!User.Identity.IsAuthenticated)
                 return AuthenticatedUser.UnknownUser;
             var user = await FindUser();
-            if (user == null)
-                return AuthenticatedUser.UnknownUser;
             return await GetAuthenticatedUser(user);
         }
 
@@ -104,7 +101,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpPost("sign-in")]
         public async Task<SignInResponse> SignIn(SignInRequest request)
         {
-            var user = await FindUser(request.Email);
+            var user = await TryFindUser(request.Email);
             if (user == null)
             {
                 await WaitRandomDelay();
@@ -130,36 +127,28 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         [HttpPost("sign-out-everywhere-else")]
         [Authorize]
-        public async Task<OperationResponse> SignOutEverywhereElse()
+        public async Task<IActionResult> SignOutEverywhereElse()
         {
             var user = await FindUser();
-            if (user == null)
-                return new OperationResponse { Result = OperationResult.GeneralError };
-
             var result = await userManager.UpdateSecurityStampAsync(user);
             if (!result.Succeeded)
-                return new OperationResponse { Result = OperationResult.GeneralError };
+                return new StatusCodeResult(500);
 
             await signInManager.RefreshSignInAsync(user);
-
-            return new OperationResponse { Result = OperationResult.Success };
+            return NoContent();
         }
 
         [HttpPatch("")]
         [Authorize]
-        public async Task<OperationResponse> Update(UpdateMyUserRequest request)
+        public async Task<IActionResult> Update(UpdateMyUserRequest request)
         {
             var user = await FindUser();
-            if (user == null)
-                return new OperationResponse { Result = OperationResult.GeneralError };
-
             user.FullName = request.FullName;
             user.PhoneNumber = request.Phone;
             user.EmailSubscriptions = request.EmailSubscriptions;
 
             var result = await userManager.UpdateAsync(user);
-            return new OperationResponse
-                { Result = result.Succeeded ? OperationResult.Success : OperationResult.GeneralError };
+            return NoContent();
         }
 
         [HttpPost("update-password")]
@@ -167,9 +156,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         public async Task<UpdatePasswordResponse> UpdatePassword(UpdatePasswordRequest request)
         {
             var user = await FindUser();
-            if (user == null)
-                return new UpdatePasswordResponse { Errors = UpdatePasswordErrorCodes.GeneralError };
-
             var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
             if (!result.Succeeded)
                 return new UpdatePasswordResponse { Errors = result.ToUpdatePasswordErrors() };
@@ -181,15 +167,11 @@ namespace Frederikskaj2.Reservations.Server.Controllers
 
         [HttpPost("resend-confirm-email-email")]
         [Authorize]
-        public async Task<OperationResponse> ResendConfirmEmailEmail()
+        public async Task<IActionResult> ResendConfirmEmailEmail()
         {
             var user = await FindUser();
-            if (user == null)
-                return new OperationResponse { Result = OperationResult.GeneralError };
-
             await SendConfirmEmailEmail(user);
-
-            return new OperationResponse { Result = OperationResult.Success };
+            return NoContent();
         }
 
         [HttpPost("delete")]
@@ -197,36 +179,32 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         public async Task<DeleteUserResponse> Delete()
         {
             var user = await FindUser();
-            if (user == null)
-                return new DeleteUserResponse { Result = DeleteUserResult.GeneralError };
-
             logger.LogInformation("Request deletion of user with email {Email}", user.Email.MaskEmail());
-
             var isDeleted = await orderService.DeleteUser(user);
             return new DeleteUserResponse
                 { Result = isDeleted ? DeleteUserResult.Success : DeleteUserResult.IsPendingDelete };
         }
 
         [HttpPost("confirm-email")]
-        public async Task<OperationResponse> ConfirmEmail(ConfirmEmailRequest request)
+        public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest request)
         {
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token))
-                return new OperationResponse { Result = OperationResult.GeneralError };
+                return BadRequest();
 
             logger.LogInformation("Request confirmation of email {Email}", request.Email.MaskEmail());
 
-            var user = await FindUser(request.Email);
+            var user = await TryFindUser(request.Email);
             if (user == null)
-                return new OperationResponse { Result = OperationResult.GeneralError };
+                return BadRequest();
 
             if (user.EmailConfirmed)
-                return new OperationResponse { Result = OperationResult.GeneralError };
+                return NoContent();
 
             var result = await userManager.ConfirmEmailAsync(user, request.Token);
             if (!result.Succeeded)
-                return new OperationResponse { Result = OperationResult.GeneralError };
+                return new StatusCodeResult(500);
 
-            return new OperationResponse { Result = OperationResult.Success };
+            return NoContent();
         }
 
         [HttpPost("new-password")]
@@ -235,7 +213,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token))
                 return new NewPasswordResponse { Errors = NewPasswordErrorCodes.GeneralError };
 
-            var user = await FindUser(request.Email);
+            var user = await TryFindUser(request.Email);
             if (user == null)
                 return new NewPasswordResponse { Errors = NewPasswordErrorCodes.GeneralError };
 
@@ -247,13 +225,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("send-reset-password-email")]
-        public async Task<OperationResponse> SendResetPasswordEmail(SendResetPasswordEmailRequest request)
+        public async Task<IActionResult> SendResetPasswordEmail(SendResetPasswordEmailRequest request)
         {
-            var user = await FindUser(request.Email);
+            var user = await TryFindUser(request.Email);
             if (user != null)
                 await SendPasswordResetEmail(user);
 
-            return new OperationResponse { Result = OperationResult.Success };
+            return NoContent();
         }
 
         [HttpGet("transactions")]
@@ -261,9 +239,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         public async Task<IEnumerable<MyTransaction>> GetTransactions()
         {
             var userId = User.Id();
-            if (!userId.HasValue)
-                return Enumerable.Empty<MyTransaction>();
-            return await myTransactionService.GetMyTransactions(userId.Value);
+            return await myTransactionService.GetMyTransactions(userId!.Value);
         }
 
         private async Task SendConfirmEmailEmail(User user)
@@ -290,14 +266,12 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             };
         }
 
-        private Task<User> FindUser(string email) => userManager.FindByNameAsync(email);
+        private async Task<User?> TryFindUser(string email) => await userManager.FindByNameAsync(email);
 
-        private async Task<User?> FindUser()
+        private Task<User> FindUser()
         {
             var userId = User.Id();
-            return userId.HasValue
-                ? await userManager.FindByIdAsync(userId.Value.ToString(CultureInfo.InvariantCulture))
-                : null;
+            return userManager.FindByIdAsync(userId!.Value.ToString(CultureInfo.InvariantCulture));
         }
 
         private Task WaitRandomDelay()

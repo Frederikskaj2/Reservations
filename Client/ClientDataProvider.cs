@@ -35,9 +35,9 @@ namespace Frederikskaj2.Reservations.Client
         {
             if (cachedResources == null)
             {
-                var maybe = await apiClient.GetJsonAsync<IEnumerable<Resource>>("resources");
-                cachedResources = maybe.TryGetValue(out var resources)
-                    ? resources.ToDictionary(resource => resource.Id)
+                var (response, problem) = await apiClient.Get<IEnumerable<Resource>>("resources");
+                cachedResources = problem == null
+                    ? response.ToDictionary(resource => resource.Id)
                     : new Dictionary<int, Resource>();
             }
 
@@ -68,9 +68,9 @@ namespace Frederikskaj2.Reservations.Client
         {
             if (cachedWeeklyKeyCodes == null)
             {
-                var maybe = await apiClient.GetJsonAsync<IEnumerable<KeyCode>>("key-codes");
-                if (maybe.TryGetValue(out var keyCodes))
-                    cachedWeeklyKeyCodes = keyCodes
+                var (response, problem) = await apiClient.Get<IEnumerable<KeyCode>>("key-codes");
+                if (problem == null)
+                    cachedWeeklyKeyCodes = response
                         .GroupBy(keyCode => keyCode.Date)
                         .Select(
                             grouping => new WeeklyKeyCodes(
@@ -96,9 +96,8 @@ namespace Frederikskaj2.Reservations.Client
         {
             if (cachedApartments is null)
             {
-                var maybe = await apiClient.GetJsonAsync<IEnumerable<Apartment>>("apartments");
-                if (!maybe.TryGetValue(out cachedApartments))
-                    cachedApartments = Enumerable.Empty<Apartment>();
+                var (response, problem) = await apiClient.Get<IEnumerable<Apartment>>("apartments");
+                cachedApartments = problem == null ? response! : Enumerable.Empty<Apartment>();
             }
 
             return cachedApartments;
@@ -113,9 +112,8 @@ namespace Frederikskaj2.Reservations.Client
             if (cachedReservedDays == null)
             {
                 var requestUri = Invariant($"reserved-days");
-                var maybe = await apiClient.GetJsonAsync<IEnumerable<ReservedDay>>(requestUri);
-                if (!maybe.TryGetValue(out cachedReservedDays))
-                    cachedReservedDays = Enumerable.Empty<ReservedDay>();
+                var (response, problem) = await apiClient.Get<IEnumerable<ReservedDay>>(requestUri);
+                cachedReservedDays = problem == null ? response! : Enumerable.Empty<ReservedDay>();
             }
 
             if (!includeOrder)
@@ -141,10 +139,9 @@ namespace Frederikskaj2.Reservations.Client
         {
             if (cachedHolidays == null)
             {
-                var maybe = await apiClient.GetJsonAsync<IEnumerable<LocalDate>>("holidays");
-                cachedHolidays = maybe.TryGetValue(out var holidays) ? holidays.ToHashSet() : new HashSet<LocalDate>();
+                var (response, problem) = await apiClient.Get<IEnumerable<LocalDate>>("holidays");
+                cachedHolidays = problem == null ? response!.ToHashSet() : new HashSet<LocalDate>();
             }
-
             return cachedHolidays;
         }
     }

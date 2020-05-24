@@ -58,8 +58,8 @@
     </Container>
 </main>
 
-@code {
-
+@code
+{
     private readonly SignInRequest request = new SignInRequest();
     private Validations validations = null!;
     private TextEdit emailTextEdit = null!;
@@ -79,10 +79,10 @@
         validations.ClearAll();
         DismissErrorAlert();
 
-        var maybe = await ApiClient.PostJsonAsync<SignInResponse>("user/sign-in", request);
-        if (maybe.TryGetValue(out var response))
+        var (response, problem) = await ApiClient.Post<SignInResponse>("user/sign-in", request);
+        if (problem == null)
         {
-            if (response.Result == SignInResult.Success)
+            if (response!.Result == SignInResult.Success)
             {
                 AuthenticationStateProvider.UpdateUser(response.User!);
                 ApplicationState.ResetStateAfterSignIn();
@@ -105,5 +105,4 @@
     private void DismissErrorAlert() => showErrorAlert = false;
 
     private void SignUp() => NavigationManager.NavigateTo(Urls.SignUp);
-
 }

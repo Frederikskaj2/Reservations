@@ -35,63 +35,45 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpGet("{orderId:int}")]
-        public async Task<OrderResponse<Order>> Get(int orderId)
+        public async Task<IActionResult> Get(int orderId)
         {
             var order = await orderService.GetOrder(orderId);
             if (order == null)
-                return new OrderResponse<Order>();
-            return new OrderResponse<Order> { Order = CreateOrder(order) };
+                return NotFound();
+            return Ok(CreateOrder(order));
         }
 
         [HttpPatch("{orderId:int}")]
-        public async Task<OrderResponse<Order>> Patch(int orderId, UpdateOrderRequest request)
+        public async Task<Order> Patch(int orderId, UpdateOrderRequest request)
         {
             var userId = User.Id();
-            if (!userId.HasValue)
-                return new OrderResponse<Order>();
-
             var now = clock.GetCurrentInstant();
             var accountNumber = request.AccountNumber.Trim().ToUpperInvariant();
             var (_, order) = await orderService.UpdateOrder(
-                now, orderId, accountNumber, request.CancelledReservations, userId.Value, request.WaiveFee);
-            if (order == null)
-                return new OrderResponse<Order>();
-
-            return new OrderResponse<Order> { Order = CreateOrder(order) };
+                now, orderId, accountNumber, request.CancelledReservations, userId!.Value, request.WaiveFee);
+            return CreateOrder(order);
         }
 
         [HttpPost("{orderId:int}/pay-in")]
-        public async Task<OrderResponse<Order>> PayIn(int orderId, PayInRequest request)
+        public async Task<Order> PayIn(int orderId, PayInRequest request)
         {
             var userId = User.Id();
-            if (!userId.HasValue)
-                return new OrderResponse<Order>();
-
             var now = clock.GetCurrentInstant();
-            var order = await orderService.PayIn(now, orderId, userId.Value, request.Date, request.AccountNumber, request.Amount);
-            if (order == null)
-                return new OrderResponse<Order>();
-
-            return new OrderResponse<Order> { Order = CreateOrder(order) };
+            var order = await orderService.PayIn(now, orderId, userId!.Value, request.Date, request.AccountNumber, request.Amount);
+            return CreateOrder(order);
         }
 
         [HttpPost("{orderId:int}/settle")]
-        public async Task<OrderResponse<Order>> Settle(int orderId, SettleReservationRequest request)
+        public async Task<IActionResult> Settle(int orderId, SettleReservationRequest request)
         {
-            var userId = User.Id();
-            if (!userId.HasValue)
-                return new OrderResponse<Order>();
-
             var description = request.Description?.Trim();
             if (description?.Length > 100)
-                return new OrderResponse<Order>();
+                return BadRequest();
 
+            var userId = User.Id();
             var now = clock.GetCurrentInstant();
-            var order = await orderService.Settle(now, orderId, userId.Value, request.ReservationId, request.Damages, description);
-            if (order == null)
-                return new OrderResponse<Order>();
-
-            return new OrderResponse<Order> { Order = CreateOrder(order) };
+            var order = await orderService.Settle(now, orderId, userId!.Value, request.ReservationId, request.Damages, description);
+            return Ok(CreateOrder(order));
         }
 
         private Order CreateOrder(Data.Order order)

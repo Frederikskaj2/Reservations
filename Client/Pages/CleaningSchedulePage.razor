@@ -1,6 +1,6 @@
 ﻿@page "/rengoeringsplan"
-@inherits BasePage
 @attribute [Authorize(Roles = Roles.Cleaning)]
+@inject ApiClient ApiClient 
 @inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -56,8 +56,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private IReadOnlyDictionary<int, Resource>? resources;
     private IEnumerable<CleaningTask>? cleaningTasks;
     private string? email;
@@ -68,8 +68,8 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        var (cleaningTasks, problem) = await Get<IEnumerable<CleaningTask>>("cleaning-tasks");
-        this.cleaningTasks = problem is null ? cleaningTasks : Enumerable.Empty<CleaningTask>();
+        var (resoponse, problem) = await ApiClient.Get<IEnumerable<CleaningTask>>("cleaning-tasks");
+        this.cleaningTasks = problem is null ? resoponse : Enumerable.Empty<CleaningTask>();
         email = await ApplicationState.GetUserEmail();
         isInitialized = true;
     }
@@ -78,7 +78,7 @@
     {
         DismissAllAlerts();
 
-        var problem = await Post("cleaning-tasks/send");
+        var problem = await ApiClient.Post("cleaning-tasks/send");
         if (problem == null)
             showSuccessAlert = true;
         else

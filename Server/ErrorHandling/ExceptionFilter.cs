@@ -9,6 +9,7 @@ namespace Frederikskaj2.Reservations.Server.ErrorHandling
 {
     public class ExceptionFilter : IExceptionFilter
     {
+        private static readonly IActionResult badRequestResult = new StatusCodeResult(400);
         private static readonly IActionResult notFoundResult = new StatusCodeResult(404);
         private readonly ILogger logger;
 
@@ -35,8 +36,9 @@ namespace Frederikskaj2.Reservations.Server.ErrorHandling
             logger.LogWarning(exception, "Exception thrown");
             return exception switch
             {
-                ProblemException problemException => CreateProblemDetailsResult(problemException.Type, problemException.Title, problemException.Status, problemException.Detail, httpContext),
+                BadRequestException _ => badRequestResult,
                 NotFoundException _ => notFoundResult,
+                ProblemException problemException => CreateProblemDetailsResult(problemException.Type, problemException.Title, problemException.Status, problemException.Detail, httpContext),
                 _ => CreateProblemDetailsResult("about:blank", "Internal Server Error", 500, null, httpContext)
             };
         }

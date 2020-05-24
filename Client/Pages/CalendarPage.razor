@@ -124,8 +124,8 @@ else
     <ReservationDialog @ref="@reservationDialog" Reservation="@DataProvider.DraftOrder.DraftReservation" OnReservationChanged="ReservationChanged" OnCancel="@CancelReservation" OnConfirm="@ConfirmReservation" />
 }
 
-@code {
-
+@code
+{
     private static readonly LocalDatePattern MonthPattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM");
     private ReservationDialog reservationDialog = null!;
     private bool isInitialized;

@@ -124,8 +124,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private Validations validations = null!;
     private TextEdit emailTextEdit = null!;
     private IEnumerable<Apartment> apartments = null!;
@@ -159,10 +159,10 @@
         if (ApplicationState.SignUpRequest.ApartmentId == 0)
             ApplicationState.SignUpRequest.ApartmentId = null;
 
-        var maybe = await ApiClient.PostJsonAsync<SignUpResponse>("user/sign-up", ApplicationState.SignUpRequest);
-        if (maybe.TryGetValue(out var response))
+        var (response, problem) = await ApiClient.Post<SignUpResponse>("user/sign-up", ApplicationState.SignUpRequest);
+        if (problem == null)
         {
-            if (response.User != null)
+            if (response!.User != null)
             {
                 AuthenticationStateProvider.UpdateUser(response.User!);
                 ApplicationState.ResetStateAfterSignIn();

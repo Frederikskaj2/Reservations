@@ -1,6 +1,6 @@
 ﻿@page "/bestil/2"
-@inherits BasePage
 @attribute [Authorize]
+@inject ApiClient ApiClient 
 @inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -157,10 +157,10 @@
         DismissErrorAlert();
 
         ClientDataProvider.DraftOrder.PrepareRequest();
-        var (myOrder, problem) = await Post<MyOrder>("my-orders", ClientDataProvider.DraftOrder.Request);
+        var (response, problem) = await ApiClient.Post<MyOrder>("my-orders", ClientDataProvider.DraftOrder.Request);
         if (problem == null)
         {
-            ApplicationState.MyOrder = myOrder;
+            ApplicationState.MyOrder = response;
             ClientDataProvider.DraftOrder.Clear();
             ClientDataProvider.Refresh();
             NavigationManager.NavigateTo(Urls.Checkout3);

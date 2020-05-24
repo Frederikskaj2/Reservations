@@ -1,7 +1,6 @@
-﻿using Frederikskaj2.Reservations.Server.ErrorHandling;
-using Frederikskaj2.Reservations.Shared;
+﻿using Frederikskaj2.Reservations.Shared;
 
-namespace BlazorApp1.Server.Controllers
+namespace Frederikskaj2.Reservations.Server.ErrorHandling
 {
     public static class Problems
     {

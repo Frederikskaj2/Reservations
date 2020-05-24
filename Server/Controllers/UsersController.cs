@@ -123,18 +123,11 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("{userId:int}/pay-out")]
-        public async Task<PayOutResponse> PayOut(int userId, PayOutRequest request)
+        public async Task<PayOut> PayOut(int userId, PayOutRequest request)
         {
             var createdByUserId = User.Id();
-            if (!createdByUserId.HasValue)
-                return new PayOutResponse { Result = OperationResult.GeneralError };
-
             var now = clock.GetCurrentInstant();
-            var payOut = await orderService.PayOut(now, createdByUserId.Value, userId, request.Date, request.Amount);
-            if (payOut == null)
-                return new PayOutResponse { Result = OperationResult.GeneralError };
-
-            return new PayOutResponse { Result = OperationResult.Success, PayOut = payOut };
+            return await orderService.PayOut(now, createdByUserId!.Value, userId, request.Date, request.Amount);
         }
     }
 }

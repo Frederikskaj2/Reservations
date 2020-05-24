@@ -75,8 +75,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private EditUserDialog editUserDialog = null!;
     private ConfirmDeleteUserDialog confirmDeleteUserDialog = null!;
     private bool isInitialized;
@@ -87,8 +87,8 @@
     protected override async Task OnInitializedAsync()
     {
         currentUserId = await ApplicationState.GetUserId();
-        var maybe = await ApiClient.GetJsonAsync<IEnumerable<User>>("users");
-        users = maybe.TryGetValue(out var response) ? response.ToList() : new List<User>();
+        var (response, problem) = await ApiClient.Get<IEnumerable<User>>("users");
+        users = problem == null ? response.ToList() : new List<User>();
         isInitialized = true;
     }
 
@@ -120,10 +120,10 @@
     private async Task PatchUser(int userId, UpdateUserRequest request)
     {
         var requestUri = $"users/{userId}";
-        var maybe = await ApiClient.PatchJsonAsync<UpdateUserResponse>(requestUri, request);
-        if (maybe.TryGetValue(out var response))
+        var (response, problem) = await ApiClient.Patch<UpdateUserResponse>(requestUri, request);
+        if (problem == null)
         {
-            switch (response.Result)
+            switch (response!.Result)
             {
                 case UpdateUserResult.Success:
                     UpdateUser(response.User!);

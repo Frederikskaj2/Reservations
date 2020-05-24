@@ -150,8 +150,8 @@
     <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
 }
 
-@code {
-
+@code
+{
     private PayInDialog payInDialog = null!;
     private SettlementDialog settlementDialog = null!;
     private bool canHandleOrders;
@@ -172,15 +172,22 @@
 
         resources = await ClientDataProvider.GetResources();
 
-        var maybeOrders = await ApiClient.GetJsonAsync<IEnumerable<Order>>("orders");
-        orders = maybeOrders.TryGetValue(out var ordersResponse) ? ordersResponse.ToList() : new List<Order>();
+        await GetOrders();
         if (canHandleOrders)
+            await GetOwnerOrders();
+        isInitialized = true;
+
+        async Task GetOrders()
         {
-            var maybeOwnerOrders = await ApiClient.GetJsonAsync<IEnumerable<OwnerOrder>>("owner-orders");
-            ownerOrders = maybeOwnerOrders.TryGetValue(out var ownerOrdersReponse) ? ownerOrdersReponse.ToList() : new List<OwnerOrder>();
+            var (response, problem) = await ApiClient.Get<IEnumerable<Order>>("orders");
+            orders = problem == null ? response.ToList() : new List<Order>();
         }
 
-        isInitialized = true;
+        async Task GetOwnerOrders()
+        {
+            var (response, problem) = await ApiClient.Get<IEnumerable<OwnerOrder>>("owner-orders");
+            ownerOrders = problem == null ? response.ToList() : new List<OwnerOrder>();
+        }
     }
 
     private void ShowOrder(int orderId) => NavigationManager.NavigateTo($"{Urls.Orders}/{orderId}");
@@ -201,9 +208,9 @@
     {
         var request = new PayInRequest { Date = tuple.Date, AccountNumber = tuple.AccountNumber, Amount = tuple.Amount };
         var requestUri = $"orders/{tuple.OrderId}/pay-in";
-        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, request);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
-            UpdateOrder(response.Order);
+        var (response, problem) = await ApiClient.Post<Order>(requestUri, request);
+        if (problem == null)
+            UpdateOrder(response!);
         else
             showGeneralErrorAlert = true;
     }
@@ -211,9 +218,9 @@
     private async Task OnSettlementConfirm((int OrderId, SettleReservationRequest Request) tuple)
     {
         var requestUri = $"orders/{tuple.OrderId}/settle";
-        var maybe = await ApiClient.PostJsonAsync<OrderResponse<Order>>(requestUri, tuple.Request);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
-            UpdateOrder(response.Order);
+        var (response, problem) = await ApiClient.Post<Order>(requestUri, tuple.Request);
+        if (problem == null)
+            UpdateOrder(response!);
         else
             showGeneralErrorAlert = true;
     }

@@ -23,8 +23,8 @@
     </AuthorizeView>
 </div>
 
-@code {
-
+@code
+{
     private async Task SignOut()
     {
         await HttpClient.PostAsync("user/sign-out", null);

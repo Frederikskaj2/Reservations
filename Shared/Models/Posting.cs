@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using NodaTime;
+﻿using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
 {

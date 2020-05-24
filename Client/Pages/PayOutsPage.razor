@@ -1,6 +1,6 @@
 ﻿@page "/til-udbetaling"
 @attribute [Authorize(Roles = Roles.Payment)]
-@inject ApiClient ApiClient
+@inject ApiClient ApiClient 
 @inject ClientDataProvider ClientDataProvider
 @inject IDateProvider DateProvider
 @inject FormattingService FormattingService
@@ -76,8 +76,8 @@
     protected override async Task OnInitializedAsync()
     {
         apartments = (await ClientDataProvider.GetApartments()).ToDictionary(apartment => apartment.Id);
-        var maybe = await ApiClient.GetJsonAsync<IEnumerable<PayOut>>("pay-outs");
-        if (maybe.TryGetValue(out var response))
+        var (response, problem) = await ApiClient.Get<IEnumerable<PayOut>>("pay-outs");
+        if (problem == null)
             payOuts = response.ToList();
         isInitialized = true;
     }
@@ -94,27 +94,29 @@
     {
         var request = new PayOutRequest { Date = tuple.Date, Amount = tuple.Amount };
         var requestUri = $"users/{tuple.UserId}/pay-out";
-        var maybe = await ApiClient.PostJsonAsync<PayOutResponse>(requestUri, request);
-        if (maybe.TryGetValue(out var response) && response.PayOut != null)
+        var (response, problem) = await ApiClient.Post<PayOut>(requestUri, request);
+        if (problem == null)
         {
             amount = request.Amount;
-            var index = payOuts.FindIndex(payOut => payOut.UserId == response.PayOut.UserId);
+            var index = payOuts.FindIndex(payOut => payOut.UserId == response!.UserId);
             if (index >= 0)
             {
-                if (response.PayOut.Amount == 0)
+                if (response!.Amount == 0)
                 {
                     payOuts.RemoveAt(index);
                     ClientDataProvider.Refresh();
                 }
                 else
                 {
-                    payOuts[index].Amount = response.PayOut.Amount;
+                    payOuts[index].Amount = response.Amount;
                 }
             }
             showSuccessAlert = true;
         }
         else
+        {
             showErrorAlert = true;
+        }
     }
 
     private void DismissSuccessAlert() => showSuccessAlert = false;
