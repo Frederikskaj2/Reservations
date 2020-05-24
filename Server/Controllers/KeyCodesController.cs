@@ -41,18 +41,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("send")]
-        public async Task<OperationResponse> Send()
+        public async Task<ActionResult> Send()
         {
             var userId = User.Id();
-            if (!userId.HasValue)
-                return new OperationResponse { Result = OperationResult.GeneralError };
-            var user = await userManager.FindByIdAsync(userId.Value.ToString(CultureInfo.InvariantCulture));
-            if (user == null)
-                return new OperationResponse { Result = OperationResult.GeneralError };
-
+            var user = await userManager.FindByIdAsync(userId!.Value.ToString(CultureInfo.InvariantCulture));
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
             await keyCodeService.SendKeyCodes(user, today);
-            return new OperationResponse { Result = OperationResult.Success };
+            return NoContent();
         }
     }
 }

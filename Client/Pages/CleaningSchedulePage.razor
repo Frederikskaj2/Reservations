@@ -1,6 +1,6 @@
 ﻿@page "/rengoeringsplan"
+@inherits BasePage
 @attribute [Authorize(Roles = Roles.Cleaning)]
-@inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -19,7 +19,7 @@
                 <CloseButton Clicked="@DismissSuccessAlert" />
             </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl, og rengøringsplane blev ikke send til @email.
+                Der er sket en fejl, og rengøringsplanen blev ikke sendt til @email.
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <h1>Rengøringsplan</h1>
@@ -68,9 +68,8 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        var maybe = await ApiClient.GetJsonAsync<IEnumerable<CleaningTask>>("cleaning-tasks");
-        if (!maybe.TryGetValue(out cleaningTasks))
-            cleaningTasks = Enumerable.Empty<CleaningTask>();
+        var (cleaningTasks, problem) = await Get<IEnumerable<CleaningTask>>("cleaning-tasks");
+        this.cleaningTasks = problem is null ? cleaningTasks : Enumerable.Empty<CleaningTask>();
         email = await ApplicationState.GetUserEmail();
         isInitialized = true;
     }
@@ -79,8 +78,8 @@
     {
         DismissAllAlerts();
 
-        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("cleaning-tasks/send", null);
-        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
+        var problem = await Post("cleaning-tasks/send");
+        if (problem == null)
             showSuccessAlert = true;
         else
             showErrorAlert = true;

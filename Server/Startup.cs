@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Server.Email;
+using Frederikskaj2.Reservations.Server.ErrorHandling;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -31,7 +32,7 @@ namespace Frederikskaj2.Reservations.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddDbContext<ReservationsContext>(options => options.UseSqlite(@"Data Source=../Reservations.db"))
+                .AddDbContext<ReservationsContext>(options => options.UseSqlite("Data Source=../Reservations.db"))
                 .Configure<SeedDataOptions>(Configuration.GetSection("SeedData"))
                 .AddScoped<SeedData>();
 
@@ -84,7 +85,7 @@ namespace Frederikskaj2.Reservations.Server
                 .AddEmail(Configuration);
 
             services
-                .AddControllers()
+                .AddControllers(options => options.Filters.Add(typeof(ExceptionFilter)))
                 .AddNewtonsoftJson(
                     options =>
                     {

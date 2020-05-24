@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Frederikskaj2.Reservations.Server
+namespace Frederikskaj2.Reservations.Server.ErrorHandling
 {
     [Serializable]
     public class ConfigurationException : Exception

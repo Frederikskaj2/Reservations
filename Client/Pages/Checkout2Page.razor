@@ -1,6 +1,6 @@
 ﻿@page "/bestil/2"
+@inherits BasePage
 @attribute [Authorize]
-@inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -78,17 +78,17 @@
                                             <Check @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidAcceptTerms">
                                                 <ChildContent>
                                                     @if (linkBanquetFacilitiesRules && linkBedroomRules)
-                                                    {
+                                                        {
                                                         <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBanquetFacilities">aktivitets-/festlokalet</a> og <a href="@Urls.RulesBedrooms">soveværelserne</a>.</text>
-                                                    }
-                                                    else if (linkBanquetFacilitiesRules)
-                                                    {
+                                                        }
+                                                        else if (linkBanquetFacilitiesRules)
+                                                        {
                                                         <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBanquetFacilities">aktivitets-/festlokalet</a>.</text>
-                                                    }
-                                                    else
-                                                    {
+                                                        }
+                                                        else
+                                                        {
                                                         <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBedrooms">soveværelserne</a>.</text>
-                                                    }
+                                                        }
                                                 </ChildContent>
                                                 <Feedback>
                                                     <ValidationError />
@@ -122,7 +122,6 @@
 
 @code
 {
-
     private Validations validations = null!;
     private IEnumerable<Apartment>? apartments;
     private bool isInitialized;
@@ -158,41 +157,26 @@
         DismissErrorAlert();
 
         ClientDataProvider.DraftOrder.PrepareRequest();
-        var maybe = await ApiClient.PostJsonAsync<PlaceOrderResponse>("my-orders", ClientDataProvider.DraftOrder.Request);
-        if (maybe.TryGetValue(out var response))
+        var (myOrder, problem) = await Post<MyOrder>("my-orders", ClientDataProvider.DraftOrder.Request);
+        if (problem == null)
         {
-            if (response.Result == PlaceOrderResult.Success)
+            ApplicationState.MyOrder = myOrder;
+            ClientDataProvider.DraftOrder.Clear();
+            ClientDataProvider.Refresh();
+            NavigationManager.NavigateTo(Urls.Checkout3);
+        }
+        else if (problem.Type == ProblemTypes.ReservationConflict)
+        {
+            ClientDataProvider.Refresh();
+            var reservations = ClientDataProvider.DraftOrder.Reservations.ToList();
+            foreach (var reservation in reservations)
             {
-                ApplicationState.MyOrder = response.Order;
-                ClientDataProvider.DraftOrder.Clear();
-                ClientDataProvider.Refresh();
-                NavigationManager.NavigateTo(Urls.Checkout3);
+                var policy = ReservationPolicyProvider.GetPolicy(reservation.Resource.Type);
+                var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(reservation.Resource.Id, reservation.Date, false);
+                if (!(minimumDays <= reservation.DurationInDays && reservation.DurationInDays <= maximumDays))
+                    ClientDataProvider.DraftOrder.Reservations.Remove(reservation);
             }
-            if (response.Result == PlaceOrderResult.ReservationConflict)
-            {
-                try
-                {
-                    ClientDataProvider.Refresh();
-                    var reservations = ClientDataProvider.DraftOrder.Reservations.ToList();
-                    foreach (var reservation in reservations)
-                    {
-                        var policy = ReservationPolicyProvider.GetPolicy(reservation.Resource.Type);
-                        var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(reservation.Resource.Id, reservation.Date, false);
-                        Console.WriteLine($"{reservation.Resource.Id} {reservation.Date} {reservation.DurationInDays} {minimumDays}-{maximumDays}");
-                        if (!(minimumDays <= reservation.DurationInDays && reservation.DurationInDays <= maximumDays))
-                        {
-                            ClientDataProvider.DraftOrder.Reservations.Remove(reservation);
-                            Console.WriteLine("Removed");
-                        }
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine(exception);
-                    throw;
-                }
-                NavigationManager.NavigateTo(Urls.CheckoutConflict);
-            }
+            NavigationManager.NavigateTo(Urls.CheckoutConflict);
         }
         showErrorAlert = true;
     }

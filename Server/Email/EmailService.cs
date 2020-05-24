@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Frederikskaj2.Reservations.Server.ErrorHandling;
 using Frederikskaj2.Reservations.Shared;
 using MailKit.Net.Smtp;
 using Mapster;

@@ -1,6 +1,6 @@
 ﻿@page "/noeglebokskoder"
+@inherits BasePage
 @attribute [Authorize(Roles = Roles.KeyCodes)]
-@inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -78,8 +78,8 @@
     {
         DismissAllAlerts();
 
-        var maybe = await ApiClient.PostJsonAsync<OperationResponse>("key-codes/send", null);
-        if (maybe.TryGetValue(out var response) && response.Result == OperationResult.Success)
+        var problem = await Post("key-codes/send");
+        if (problem == null)
             showSuccessAlert = true;
         else
             showErrorAlert = true;

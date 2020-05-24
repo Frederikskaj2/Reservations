@@ -1,6 +1,6 @@
 ﻿@page "/bestil-ejer/1"
+@inherits BasePage
 @attribute [Authorize(Roles = Roles.OrderHandling)]
-@inject ApiClient ApiClient
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
 @inject NavigationManager NavigationManager
@@ -78,22 +78,21 @@
                 DurationInDays = reservation.DurationInDays
             }));
         request.IsCleaningRequired = isCleainingRequired;
-        var maybe = await ApiClient.PostJsonAsync<PlaceOwnerOrderResponse>("owner-orders", request);
-        if (maybe.TryGetValue(out var response))
+        var (ownerOrder, problem) = await Post<OwnerOrder>("owner-orders", request);
+        if (problem == null)
         {
-            if (response.Result == PlaceOrderResult.Success)
-            {
-                ClientDataProvider.DraftOrder.Clear();
-                ClientDataProvider.Refresh();
-                NavigationManager.NavigateTo(Urls.OwnerCheckout2);
-            }
-            if (response.Result == PlaceOrderResult.ReservationConflict)
-            {
-                showReservationConflictAlert = true;
-                return;
-            }
+            ClientDataProvider.DraftOrder.Clear();
+            ClientDataProvider.Refresh();
+            NavigationManager.NavigateTo(Urls.OwnerCheckout2);
         }
-        showErrorAlert = true;
+        else if (problem.Type == ProblemTypes.ReservationConflict)
+        {
+            showReservationConflictAlert = true;
+        }
+        else
+        {
+            showErrorAlert = true;
+        }
     }
 
     private void DismissReservationConflictAlert() => showReservationConflictAlert = false;

@@ -1,6 +1,6 @@
 ﻿@page "/bruger/bestillinger/{orderId:int}"
+@inherits BasePage
 @attribute [Authorize]
-@inject ApiClient ApiClient
 @inject IAuthenticationStateProvider AuthenticationStateProvider
 @inject ClientDataProvider ClientDataProvider
 @inject NavigationManager NavigationManager
@@ -41,8 +41,8 @@
     }
 </main>
 
-@code {
-
+@code
+{
     private OrderStatement orderStatement = null!;
     private string? accountNumber;
     private MyOrder? order;
@@ -59,12 +59,12 @@
         await GetAccountNumber();
 
         var url = $"my-orders/{OrderId}";
-        var maybe = await ApiClient.GetJsonAsync<OrderResponse<MyOrder>>(url);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
+        var (response, problem) = await Get<MyOrder>(url);
+        if (problem == null)
         {
-            order = response.Order;
+            order = response;
             var resources = await ClientDataProvider.GetResources();
-            linkBanquetFacilitiesRules = order.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.BanquetFacilities);
+            linkBanquetFacilitiesRules = order!.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.BanquetFacilities);
             linkBedroomRules = order.Reservations.Any(reservation => resources[reservation.ResourceId].Type == ResourceType.Bedroom);
         }
         isInitialized = true;
@@ -72,21 +72,21 @@
 
     private async Task GetAccountNumber()
     {
-        var maybe = await ApiClient.GetJsonAsync<MyUser>("user");
-        if (maybe.TryGetValue(out var myUser))
-            accountNumber = myUser.AccountNumber;
+        var (response, problem) = await Get<MyUser>("user");
+        if (problem == null)
+            accountNumber = response!.AccountNumber;
     }
 
     private async Task Submit(UpdateOrderRequest request)
     {
         var isUpdatingCalendar = request.CancelledReservations.Count > 0;
         var url = $"my-orders/{order!.Id}";
-        var maybe = await ApiClient.PatchJsonAsync<OrderResponse<MyOrder>>(url, request);
-        if (maybe.TryGetValue(out var response) && response.Order != null)
+        var (response, problem) = await Patch<OrderResponse<MyOrder>>(url, request);
+        if (problem == null)
         {
             if (isUpdatingCalendar)
                 ClientDataProvider.Refresh();
-            if (response.IsDeleted)
+            if (response!.IsDeleted)
             {
                 AuthenticationStateProvider.UpdateUser(AuthenticatedUser.UnknownUser);
                 NavigationManager.NavigateTo(string.Empty);
@@ -94,7 +94,9 @@
             order = response.Order;
         }
         else
+        {
             showErrorAlert = true;
+        }
     }
 
     private void DismissErrorAlert() => showErrorAlert = false;

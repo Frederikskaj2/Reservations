@@ -48,20 +48,19 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<PlaceOwnerOrderResponse> Post(PlaceOwnerOrderRequest request)
+        public async Task<IActionResult> Post(PlaceOwnerOrderRequest request)
         {
+            if (request.Reservations.Count == 0)
+                return BadRequest();
             var userId = User.Id();
-            if (!userId.HasValue || request.Reservations.Count == 0)
-                return new PlaceOwnerOrderResponse { Result = PlaceOrderResult.GeneralError };
-            var user = await userManager.FindByIdAsync(userId.Value.ToString(CultureInfo.InvariantCulture));
-            if (user == null)
-                return new PlaceOwnerOrderResponse { Result = PlaceOrderResult.GeneralError };
+            var user = await userManager.FindByIdAsync(userId!.Value.ToString(CultureInfo.InvariantCulture));
 
             var now = clock.GetCurrentInstant();
-            var tuple = await orderService.PlaceOwnerOrder(now, userId.Value, request.Reservations, request.IsCleaningRequired);
+            var order = await orderService.PlaceOwnerOrder(now, userId.Value, request.Reservations, request.IsCleaningRequired);
 
-            var ownerOrder = tuple.Order != null ? CreateOrder(tuple.Order, user) : null;
-            return new PlaceOwnerOrderResponse { Result = tuple.Result, Order = ownerOrder };
+            var ownerOrder = CreateOrder(order, user);
+            var url = Url.Action(nameof(Get), new { orderId = order.Id });
+            return Created(new Uri(url, UriKind.Relative), ownerOrder);
         }
 
         [HttpPatch("{orderId:int}")]

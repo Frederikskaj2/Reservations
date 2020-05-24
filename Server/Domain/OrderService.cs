@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using BlazorApp1.Server.Controllers;
 using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Server.Email;
+using Frederikskaj2.Reservations.Server.ErrorHandling;
 using Frederikskaj2.Reservations.Shared;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
@@ -52,7 +54,6 @@ namespace Frederikskaj2.Reservations.Server.Domain
             this.transactionService = transactionService ?? throw new ArgumentNullException(nameof(transactionService));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
-
 
         public async Task<Order?> GetOrder(int orderId)
             => await db.Orders
@@ -120,7 +121,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Where(order => order.Flags.HasFlag(OrderFlags.IsHistoryOrder))
                 .ToListAsync();
 
-        public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOrder(
+        public async Task<Order> PlaceOrder(
             Instant timestamp, int userId, int apartmentId, string accountNumber,
             IEnumerable<ReservationRequest> reservations)
         {
@@ -130,9 +131,6 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 throw new ArgumentNullException(nameof(reservations));
 
             var user = await GetUser(userId);
-            if (user == null)
-                return (PlaceOrderResult.GeneralError, null);
-
             user.AccountNumber = accountNumber;
 
             var resources = await dataProvider.GetResources();
@@ -148,10 +146,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var totalPrice = new Price();
             foreach (var reservationRequest in reservations)
             {
-                var (result, reservation) = await CreateReservation(
-                    timestamp, order, reservationRequest, ReservationStatus.Reserved, resources);
-                if (reservation == null)
-                    return (result, null);
+                var reservation = await CreateReservation(timestamp, order, reservationRequest, ReservationStatus.Reserved, resources);
                 order.Reservations.Add(reservation);
                 totalPrice.Accumulate(reservation.Price!);
             }
@@ -171,8 +166,8 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 logger.LogWarning(exception, "Unable to place order");
                 if (exception.InnerException is SqliteException sqliteException
                     && sqliteException.SqliteErrorCode == 19)
-                    return (PlaceOrderResult.ReservationConflict, null);
-                return (PlaceOrderResult.GeneralError, null);
+                    Problems.ReservationConflict.Throw(exception);
+                Problems.DatabaseError.Throw(exception);
             }
 
             var prepaidAmount = order.Balance(Account.FromPayments);
@@ -185,10 +180,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
             foreach (var u in users)
                 backgroundWorkQueue.Enqueue((service, _) => service.SendNewOrderEmail(u, order.Id));
 
-            return (PlaceOrderResult.Success, order);
+            return order;
         }
 
-        public async Task<(PlaceOrderResult Result, Order? Order)> PlaceOwnerOrder(
+        public async Task<Order> PlaceOwnerOrder(
             Instant timestamp, int userId, IEnumerable<ReservationRequest> reservations, bool isCleaningRequired)
         {
             if (reservations is null)
@@ -204,10 +199,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             };
             foreach (var reservationRequest in reservations)
             {
-                var (result, reservation) = await CreateReservation(
-                    timestamp, order, reservationRequest, ReservationStatus.Confirmed, resources);
-                if (reservation == null)
-                    return (result, null);
+                var reservation = await CreateReservation(timestamp, order, reservationRequest, ReservationStatus.Confirmed, resources);
                 order.Reservations.Add(reservation);
             }
 
@@ -221,14 +213,14 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 logger.LogWarning(exception, "Unable to place owner order");
                 if (exception.InnerException is SqliteException sqliteException
                     && sqliteException.SqliteErrorCode == 19)
-                    return (PlaceOrderResult.ReservationConflict, null);
-                return (PlaceOrderResult.GeneralError, null);
+                    Problems.ReservationConflict.Throw(exception);
+                Problems.DatabaseError.Throw(exception);
             }
 
-            return (PlaceOrderResult.Success, order);
+            return order;
         }
 
-        public async Task<(bool IsUserDeleted, Order? Order)> UpdateOrder(
+        public async Task<(bool IsUserDeleted, Order Order)> UpdateOrder(
             Instant timestamp, int orderId, string accountNumber, IEnumerable<int> cancelledReservations,
             int createdByUserId, bool waiveFee, int? userId = null)
         {
@@ -239,7 +231,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             var order = await GetOrder(orderId);
             if (order == null)
-                return default;
+                throw new NotFoundException();
 
             var user = await GetUser(order.UserId!.Value);
             user.AccountNumber = accountNumber;
@@ -281,7 +273,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
             catch (DbUpdateException exception)
             {
                 logger.LogWarning(exception, "Unable to update order");
-                return default;
+                if (exception.InnerException is SqliteException sqliteException
+                    && sqliteException.SqliteErrorCode == 19)
+                    Problems.ReservationConflict.Throw(exception);
+                Problems.DatabaseError.Throw(exception);
             }
 
             var resources = await dataProvider.GetResources();
@@ -615,15 +610,14 @@ namespace Frederikskaj2.Reservations.Server.Domain
             await db.SaveChangesAsync();
         }
 
-        private async Task<(PlaceOrderResult Result, Reservation? Reservation)> CreateReservation(
+        private async Task<Reservation> CreateReservation(
             Instant timestamp, Order order, ReservationRequest request, ReservationStatus status,
             IReadOnlyDictionary<int, Resource> resources)
         {
-            if (!resources.TryGetValue(request.ResourceId, out var resource))
-                return (PlaceOrderResult.GeneralError, null);
+            var resource = resources[request.ResourceId];
             var policy = reservationPolicyProvider.GetPolicy(resource.Type);
             if (!await IsReservationDurationValid(request, policy))
-                return (PlaceOrderResult.ReservationConflict, null);
+                Problems.ReservationConflict.Throw($"Reservation of {resource.Name} at {request.Date} for {request.DurationInDays} conflicts with existing reservations.");
 
             var days = Enumerable
                 .Range(0, request.DurationInDays)
@@ -635,7 +629,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                     })
                 .ToList();
             var price = policy.GetPrice(request.Date, request.DurationInDays).Adapt<Price>();
-            var reservation = new Reservation
+            return new Reservation
             {
                 Order = order,
                 ResourceId = resource.Id,
@@ -646,7 +640,6 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 Days = days,
                 Price = price
             };
-            return (PlaceOrderResult.Success, reservation);
 
             static async Task<bool> IsReservationDurationValid(
                 ReservationRequest reservation, IReservationPolicy policy)
