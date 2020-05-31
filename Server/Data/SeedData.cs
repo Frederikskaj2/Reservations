@@ -141,7 +141,14 @@ END";
         private void CreateResources()
         {
             var resources = options.Resources
-                .Select((resource, i) => new Resource { Sequence = i + 1, Type = resource.Type, Name = resource.Name! });
+                .Select((resource, i) => new Resource {
+                    Sequence = i + 1,
+                    Type = resource.Type,
+                    Name = resource.Name!,
+                    KeyCodes = (resource.KeyCodes ?? Enumerable.Empty<KeyCodeOptions>())
+                        .Select(keyCode => new KeyCode { Date = keyCode.Date, Code = keyCode.Code! })
+                        .ToList()
+                });
             db.Resources.AddRange(resources);
         }
 

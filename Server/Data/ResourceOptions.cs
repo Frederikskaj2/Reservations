@@ -1,4 +1,6 @@
-﻿using Frederikskaj2.Reservations.Shared;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Frederikskaj2.Reservations.Shared;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
@@ -6,5 +8,6 @@ namespace Frederikskaj2.Reservations.Server.Data
     {
         public ResourceType Type { get; set; }
         public string? Name { get; set; }
+        public IEnumerable<KeyCodeOptions>? KeyCodes { get; set; }
     }
 }
