@@ -23,7 +23,9 @@
         public const string PayOuts = "til-udbetaling";
         public const string Postings = "posteringer";
         public const string ResetPassword = "anmod-om-ny-adgangskode";
-        public const string RulesBanquetFacilities = "husorden/aktivitets-festlokalet";
+        public const string RoomsBanquetFacilities = "vaerelser/aktivitets-festlokale";
+        public const string RoomsBedrooms = "vaerelser/sovevaerelser";
+        public const string RulesBanquetFacilities = "husorden/aktivitets-festlokale";
         public const string RulesBedrooms = "husorden/sovevaerelser";
         public const string SignIn = "log-ind";
         public const string SignUp = "opret-bruger";

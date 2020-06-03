@@ -1,0 +1,70 @@
+﻿@inject IJSRuntime JSRuntime;
+@implements IDisposable
+
+<div class="carousel">
+    <div tabindex="1" class="carousel navigate left fa" @onclick="@(() => Navigate(-1))" @onkeyup="@(e => NavigateKeyUp(e, -1))">&#xf0a8;</div>
+    <div tabindex="3" class="carousel navigate right fa" @onclick="@(() => Navigate(1))" @onkeyup="@(e => NavigateKeyUp(e, 1))">&#xf0a9;</div>
+    @for (var i = 1; i <= Count; i += 1)
+    {
+        <img tabindex="2" class="@(i == currentIndex ? "opaque" : string.Empty)" @onclick="@(() => ToggleSlideshow())" @onkeyup="ToggleSlideshowKeyUp" src="/img/@BaseName-@(i).jpg" alt="@Description" />
+    }
+</div>
+
+@code
+{
+    private readonly TimeSpan slideshowInterval = TimeSpan.FromSeconds(5);
+    private readonly Timer timer = new Timer();
+    private int currentIndex = 1;
+
+    public Carousel()
+    {
+        timer.Interval = slideshowInterval.TotalMilliseconds;
+        timer.Elapsed += OnTimerElapsed;
+    }
+
+    public void Dispose() => timer.Dispose();
+
+    [Parameter]
+    public string? BaseName { get; set; }
+
+    [Parameter]
+    public int Count { get; set; }
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    protected override bool ShouldRender() => false;
+
+    protected override void OnInitialized()
+    {
+        timer.Enabled = true;
+    }
+
+    private async Task Navigate(int delta)
+    {
+        currentIndex = ((Count + currentIndex + delta) - 1)%Count + 1;
+        await JSRuntime.InvokeVoidAsync("carouselSelectImage", currentIndex - 1);
+    }
+
+    private async Task NavigateKeyUp(KeyboardEventArgs e, int delta)
+    {
+        if (e.Key == "Enter")
+            await Navigate(delta);
+    }
+
+    private void ToggleSlideshow()
+    {
+        timer.Enabled = !timer.Enabled;
+    }
+
+    private void ToggleSlideshowKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            ToggleSlideshow();
+    }
+
+    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        Navigate(1).RunSynchronously();
+    }
+}
