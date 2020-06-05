@@ -7,7 +7,7 @@ namespace Frederikskaj2.Reservations.Shared
     {
         [Required(AllowEmptyStrings = false, ErrorMessage = "Angiv brugerens fulde navn")]
         [StringLength(100, ErrorMessage = "Teksten er for lang")]
-        [RegularExpression(@"^\s*(?<name>\p{L}+(\s+\p{L}+)+)\s*$", ErrorMessage = "Angiv brugerens fulde navn")]
+        [RegularExpression(@"^\s*(?<name>(?:\p{L}|\p{P})+(?:\s+(?:\p{L}|\p{P})+)+)\s*$", ErrorMessage = "Angiv brugerens fulde navn")]
         public string FullName { get; set; } = string.Empty;
 
         [Required(AllowEmptyStrings = false, ErrorMessage = "Angiv brugerens telefonnummer")]
