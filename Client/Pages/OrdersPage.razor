@@ -109,6 +109,7 @@
                             <TableRow>
                                 <TableHeaderCell>Betillingsnr.</TableHeaderCell>
                                 <TableHeaderCell>Dato</TableHeaderCell>
+                                <TableHeaderCell>Næste reservation</TableHeaderCell>
                                 <TableHeaderCell>Oprettet af</TableHeaderCell>
                                 <TableHeaderCell></TableHeaderCell>
                             </TableRow>
@@ -119,6 +120,7 @@
                                 <TableRow @key="@order.Id">
                                     <TableHeaderCell>@order.Id</TableHeaderCell>
                                     <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
+                                    <TableRowCell>@FormattingService.FormatDate(order.Reservations.OrderBy(reservation => reservation.Date).First().Date)</TableRowCell>
                                     <TableRowCell>
                                         @if (order.CreatedByEmail != null)
                                         {
