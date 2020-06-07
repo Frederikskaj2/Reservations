@@ -11,7 +11,7 @@ namespace Frederikskaj2.Reservations.Shared
                 ResourceType.BanquetFacilities, new PriceOptions
                 {
                     LowRentPerDay = 500,
-                    HighRentPerDay = 1000,
+                    HighRentPerDay = 750,
                     Cleaning = 500,
                     LowDeposit = 1000,
                     HighDeposit = 3000
