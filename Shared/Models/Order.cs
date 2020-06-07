@@ -10,6 +10,7 @@ namespace Frederikskaj2.Reservations.Shared
         public string? Email { get; set; }
         public string? FullName { get; set; }
         public string? Phone { get; set; }
+        public Apartment? Apartment { get; set; }
         public IEnumerable<Reservation>? Reservations { get; set; }
         public bool IsHistoryOrder { get; set; }
         public string? AccountNumber { get; set; }

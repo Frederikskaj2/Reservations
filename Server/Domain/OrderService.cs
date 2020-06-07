@@ -60,6 +60,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .ThenInclude(user => user!.AccountBalances)
                 .Include(order => order.User)
                 .ThenInclude(user => user!.Postings)
+                .Include(order => order.Apartment)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
@@ -69,6 +70,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         public async Task<IEnumerable<Order>> GetOrders()
             => await db.Orders
                 .Include(order => order.User)
+                .Include(order => order.Apartment)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
@@ -79,6 +81,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         public async Task<IEnumerable<Order>> GetOrders(int userId)
             => await db.Orders
+                .Include(order => order.Apartment)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)
@@ -89,6 +92,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         public async Task<IEnumerable<Order>> GetAllOrders(int userId)
             => await db.Orders
+                .Include(order => order.Apartment)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Include(order => order.Transactions)

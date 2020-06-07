@@ -85,6 +85,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 Email = order.User?.Email,
                 FullName = order.User?.FullName,
                 Phone = order.User?.PhoneNumber,
+                Apartment = order.Apartment!.Adapt<Apartment>(),
                 Reservations = order.Reservations.Select(CreateReservation),
                 IsHistoryOrder = order.Flags.HasFlag(OrderFlags.IsHistoryOrder),
                 AccountNumber = order.User?.AccountNumber,

@@ -34,6 +34,7 @@
                             <TableHeaderCell>Dato</TableHeaderCell>
                             <TableHeaderCell>Næste reservation</TableHeaderCell>
                             <TableHeaderCell>Navn</TableHeaderCell>
+                            <TableHeaderCell>Adressse</TableHeaderCell>
                             <TableHeaderCell>Telefon</TableHeaderCell>
                             <TableHeaderCell class="text-center">Mangler betaling</TableHeaderCell>
                             <TableHeaderCell class="text-center">Mangler opgørelse</TableHeaderCell>
@@ -51,6 +52,7 @@
                                 <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
                                 <TableRowCell>@FormattingService.FormatDate(order.Reservations.OrderBy(reservation => reservation.Date).First().Date)</TableRowCell>
                                 <TableRowCell><a href="mailto:@order.Email?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
+                                <TableRowCell>@order.Apartment</TableRowCell>
                                 <TableRowCell>@order.Phone</TableRowCell>
                                 <TableRowCell class="text-center">
                                     @if (order.Totals!.GetBalance() < 0)

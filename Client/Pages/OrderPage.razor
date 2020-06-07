@@ -28,6 +28,7 @@
             {
                 <div><a href="mailto:@order.Email?subject=Frederikskaj 2 bestilling @order.Id">@order.Email</a></div>
                 <div>@order.FullName</div>
+                <div>Frederikskaj @order.Apartment</div>
                 <div>@order.Phone</div>
             }
             <OrderStatement @ref="orderStatement" IsCancellationEnabled="canHandleOrders" IsPaymentEnabled="canHandlePayments" IsSettlementEnabled="canHandleSettlements" OrderId="@order.Id" Reservations="@order.Reservations" AccountNumber="@order.AccountNumber" Totals="@order.Totals" IsHistoryOrder="@order.IsHistoryOrder" OnSubmit="@Submit" />
