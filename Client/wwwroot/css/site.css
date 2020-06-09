@@ -135,7 +135,7 @@ h1 {
 }
 
 h2 {
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: bold;
 }
 
@@ -686,6 +686,10 @@ a.sign-in {
 
 table {
     margin-top: 2rem;
+}
+
+.text table {
+    margin-top: 0;
 }
 
 .extra-border-top {

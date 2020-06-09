@@ -17,68 +17,36 @@
         <h1>Priser</h1>
         <p>Prisen afhænger af hvilken dag det er:</p>
         <ul>
-            <li><strong>Dyr dag:</strong> Lørdag, søndag og helligdag og dage før disse.</li>
+            <li><strong>Dyr dag:</strong> Fredag, lørdag, søndag, helligdag og dagen før en helligdag.</li>
             <li><strong>Billig dag:</strong> Alle andre dage.</li>
         </ul>
-        <h2>Aktivitets-/festlokale</h2>
-        <p>Hvis man reserverer lokalet på en dyr dag skal man mindst reservere det to nætter.</p>
-        <p>
-            <Table Narrow="true">
-                <TableHeader>
-                    <TableRow>
-                        <TableHeaderCell>Pris</TableHeaderCell>
-                        <TableHeaderCell Class="text-right">Dyr dag</TableHeaderCell>
-                        <TableHeaderCell Class="text-right">Billig dag</TableHeaderCell>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow>
-                        <TableRowCell>Per nat</TableRowCell>
-                        <TableRowCell Class="text-right">750</TableRowCell>
-                        <TableRowCell Class="text-right">500</TableRowCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableRowCell>Slutrengøring</TableRowCell>
-                        <TableRowCell Class="text-right">500</TableRowCell>
-                        <TableRowCell Class="text-right">500</TableRowCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableRowCell>Depositum</TableRowCell>
-                        <TableRowCell Class="text-right">3.000</TableRowCell>
-                        <TableRowCell Class="text-right">1.000</TableRowCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-        </p>
-        <h2>Soveværelser</h2>
-        <p>
-            <Table Narrow="true">
-                <TableHeader>
-                    <TableRow>
-                        <TableHeaderCell>Pris</TableHeaderCell>
-                        <TableHeaderCell Class="text-right">Dyr dag</TableHeaderCell>
-                        <TableHeaderCell Class="text-right">Billig dag</TableHeaderCell>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow>
-                        <TableRowCell>Per nat</TableRowCell>
-                        <TableRowCell Class="text-right">250</TableRowCell>
-                        <TableRowCell Class="text-right">200</TableRowCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableRowCell>Slutrengøring</TableRowCell>
-                        <TableRowCell Class="text-right">200</TableRowCell>
-                        <TableRowCell Class="text-right">200</TableRowCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableRowCell>Depositum</TableRowCell>
-                        <TableRowCell Class="text-right">500</TableRowCell>
-                        <TableRowCell Class="text-right">500</TableRowCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-        </p>
+        <p>Hvis du reserverer <strong>aktivitets-/fælleslokalet</strong> på en <strong>dyr dag</strong>, skal du også reservere den efterfølgende dag. Dette giver dig bedre tid til oprydning efter en fest.</p>
+        <Table Narrow="true">
+            <TableHeader>
+                <TableRow>
+                    <TableHeaderCell>Pris</TableHeaderCell>
+                    <TableHeaderCell Class="text-center">Aktivitets-/festlokale</TableHeaderCell>
+                    <TableHeaderCell Class="text-center">Soveværelser</TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                <TableRow>
+                    <TableRowCell>Per nat</TableRowCell>
+                    <TableRowCell Class="text-center">750 / 500</TableRowCell>
+                    <TableRowCell Class="text-center">250 / 200</TableRowCell>
+                </TableRow>
+                <TableRow>
+                    <TableRowCell>Slutrengøring</TableRowCell>
+                    <TableRowCell Class="text-center">500</TableRowCell>
+                    <TableRowCell Class="text-center">200</TableRowCell>
+                </TableRow>
+                <TableRow>
+                    <TableRowCell>Depositum</TableRowCell>
+                    <TableRowCell Class="text-center">3.000 / 1.000</TableRowCell>
+                    <TableRowCell Class="text-center">500</TableRowCell>
+                </TableRow>
+            </TableBody>
+        </Table>
         <h1>Regler</h1>
         <ul>
             <li><a href="@Urls.Terms">Lejebetingelser</a></li>
