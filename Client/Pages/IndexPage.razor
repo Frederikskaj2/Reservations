@@ -1,9 +1,11 @@
 ﻿@page "/"
+@inject FormattingService FormattingService
+@inject ReservationsOptions ReservationsOptions
 
 <main>
     <div class="container text">
         <div class="front-page-image"><img src="/img/faelleshus.jpg" alt="Fælleshus" /></div>
-        <p>Frederikskaj 2 har et fælleshus som består af et <a href="@Urls.RoomsBanquetFacilities">aktivitets-/festlokale</a>, samt to <a href="@Urls.RoomsBedrooms">soveværelser</a> med bad. Soveværelserne kan man leje til overnattende gæster. Det er <strong>kun</strong> beboere på Frederikskaj 2, som kan leje lokaler, og det er ikke tilladt at udleje værelser eller aktivitets-/festlokale til tredjemand, eller leje lokalerne til »andres fest«.</p>
+        <p>Frederikskaj 2 har et fælleshus som består af et <a href="@Urls.RoomsBanquetFacilities">aktivitets-/festlokale</a>, samt to <a href="@Urls.RoomsBedrooms">soveværelser</a> med bad. Soveværelserne kan man leje til overnattende gæster. Det er <strong>kun</strong> beboere på Frederikskaj 2, som kan leje lokaler, og det er ikke tilladt at udleje soveværelserne eller aktivitets-/festlokalet til tredjemand, eller leje lokalerne til »andres fest«.</p>
         <h1>Sådan reserverer du</h1>
         <ul>
             <li>Benyt kalenderen til at vælge lokale og tidspunkt.</li>
@@ -20,7 +22,7 @@
             <li><strong>Dyr dag:</strong> Fredag, lørdag, søndag, helligdag og dagen før en helligdag.</li>
             <li><strong>Billig dag:</strong> Alle andre dage.</li>
         </ul>
-        <p>Hvis du reserverer <strong>aktivitets-/fælleslokalet</strong> på en <strong>dyr dag</strong>, skal du også reservere den efterfølgende dag. Dette giver dig bedre tid til oprydning efter en fest.</p>
+        <p>Hvis du reserverer <strong>aktivitets-/fælleslokalet</strong> på en <strong>dyr dag</strong>, skal du også reservere den efterfølgende dag. Dette giver dig bedre tid til forberedelse og oprydning.</p>
         <Table Narrow="true">
             <TableHeader>
                 <TableRow>
@@ -32,18 +34,18 @@
             <TableBody>
                 <TableRow>
                     <TableRowCell>Per nat</TableRowCell>
-                    <TableRowCell Class="text-center">750 / 500</TableRowCell>
-                    <TableRowCell Class="text-center">250 / 200</TableRowCell>
+                    <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.Prices[ResourceType.BanquetFacilities].HighRentPerDay, ReservationsOptions.Prices[ResourceType.BanquetFacilities].LowRentPerDay)</TableRowCell>
+                    <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.Prices[ResourceType.Bedroom].HighRentPerDay, ReservationsOptions.Prices[ResourceType.Bedroom].LowRentPerDay)</TableRowCell>
                 </TableRow>
                 <TableRow>
                     <TableRowCell>Slutrengøring</TableRowCell>
-                    <TableRowCell Class="text-center">500</TableRowCell>
-                    <TableRowCell Class="text-center">200</TableRowCell>
+                    <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.Prices[ResourceType.BanquetFacilities].Cleaning)</TableRowCell>
+                    <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.Prices[ResourceType.Bedroom].Cleaning)</TableRowCell>
                 </TableRow>
                 <TableRow>
                     <TableRowCell>Depositum</TableRowCell>
-                    <TableRowCell Class="text-center">3.000 / 1.000</TableRowCell>
-                    <TableRowCell Class="text-center">500</TableRowCell>
+                    <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.Prices[ResourceType.BanquetFacilities].HighDeposit, ReservationsOptions.Prices[ResourceType.BanquetFacilities].LowDeposit)</TableRowCell>
+                    <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.Prices[ResourceType.Bedroom].HighDeposit, ReservationsOptions.Prices[ResourceType.Bedroom].LowDeposit)</TableRowCell>
                 </TableRow>
             </TableBody>
         </Table>
@@ -56,3 +58,14 @@
         </ul>
     </div>
 </main>
+
+@code
+{
+    private string FormatPrice(int price)
+        => FormattingService.FormatMoneyShort(price);
+
+    private string FormatPrice(int highPrice, int lowPrice)
+    => highPrice != lowPrice
+        ? $"{FormattingService.FormatMoneyShort(highPrice)} / {FormattingService.FormatMoneyShort(lowPrice)}"
+        : FormattingService.FormatMoneyShort(highPrice);
+}
