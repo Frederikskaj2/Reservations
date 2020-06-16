@@ -16,7 +16,7 @@ namespace Frederikskaj2.Reservations.Tests
         [Fact]
         public async Task WhenAWeekBeforeReservationExpectNoKeyCodeEmailToBeSent()
         {
-            var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<EmailService>>();
+            var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<IEmailService>>();
             await Initialize((serviceProvider, _) => serviceProvider.AddSingleton(backgroundWorkerQueue));
 
             var reservationDate = new LocalDate(2020, 6, 1);
@@ -42,13 +42,13 @@ namespace Frederikskaj2.Reservations.Tests
 
             var aWeekBeforeReservation = reservationDate.PlusWeeks(-1);
             await keyCodeService.SendKeyCodeEmails(aWeekBeforeReservation);
-            A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<EmailService, CancellationToken, Task>>.Ignored)).MustNotHaveHappened();
+            A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<IEmailService, CancellationToken, Task>>.Ignored)).MustNotHaveHappened();
         }
 
         [Fact]
         public async Task WhenADayBeforeReservationExpectKeyCodeEmailToBeSent()
         {
-            var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<EmailService>>();
+            var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<IEmailService>>();
             await Initialize((serviceProvider, _) => serviceProvider.AddSingleton(backgroundWorkerQueue));
 
             var reservationDate = new LocalDate(2020, 6, 1);
@@ -74,13 +74,13 @@ namespace Frederikskaj2.Reservations.Tests
 
             var aDayBeforeReservation = reservationDate.PlusDays(-1);
             await keyCodeService.SendKeyCodeEmails(aDayBeforeReservation);
-            A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<EmailService, CancellationToken, Task>>.Ignored)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<IEmailService, CancellationToken, Task>>.Ignored)).MustHaveHappenedOnceExactly();
         }
 
         [Fact]
         public async Task WhenADayBeforeOwnerReservationExpectNoKeyCodeEmailToBeSent()
         {
-            var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<EmailService>>();
+            var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<IEmailService>>();
             await Initialize((serviceProvider, _) => serviceProvider.AddSingleton(backgroundWorkerQueue));
 
             var reservationDate = new LocalDate(2020, 6, 1);
@@ -106,7 +106,7 @@ namespace Frederikskaj2.Reservations.Tests
 
             var aDayBeforeReservation = reservationDate.PlusDays(-1);
             await keyCodeService.SendKeyCodeEmails(aDayBeforeReservation);
-            A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<EmailService, CancellationToken, Task>>.Ignored)).MustNotHaveHappened();
+            A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<IEmailService, CancellationToken, Task>>.Ignored)).MustNotHaveHappened();
         }
     }
 }

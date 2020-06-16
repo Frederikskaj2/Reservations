@@ -15,11 +15,11 @@ namespace Frederikskaj2.Reservations.Server.Domain
     public class CleaningTaskService
     {
         private static readonly IEqualityComparer<CleaningTask> EqualityComparer = new CleaningTaskEqualityComparer();
-        private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
+        private readonly IBackgroundWorkQueue<IEmailService> backgroundWorkQueue;
         private readonly ReservationsContext db;
 
         public CleaningTaskService(
-            IBackgroundWorkQueue<EmailService> backgroundWorkQueue, ReservationsContext db)
+            IBackgroundWorkQueue<IEmailService> backgroundWorkQueue, ReservationsContext db)
         {
             this.backgroundWorkQueue =
                 backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));

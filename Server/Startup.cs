@@ -29,9 +29,9 @@ namespace Frederikskaj2.Reservations.Server
 
         public IConfiguration Configuration { get; }
 
-        public void ConfigureServices(IServiceCollection services) => ConfigureServices(services, "Data Source=../Reservations.db");
+        public void ConfigureServices(IServiceCollection services) => ConfigureServicesWithConnectionString(services, "Data Source=../Reservations.db");
 
-        public void ConfigureServices(IServiceCollection services, string connectionString)
+        public void ConfigureServicesWithConnectionString(IServiceCollection services, string connectionString)
         {
             services
                 .AddDbContext<ReservationsContext>(options => options.UseSqlite(connectionString))

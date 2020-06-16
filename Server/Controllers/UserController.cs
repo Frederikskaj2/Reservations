@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Domain;
 using Frederikskaj2.Reservations.Server.Email;
-using Frederikskaj2.Reservations.Server.ErrorHandling;
 using Frederikskaj2.Reservations.Shared;
 using Mapster;
 using Microsoft.AspNetCore.Authentication;
@@ -27,7 +25,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         Justification = "The framework ensures that the action arguments are non-null.")]
     public class UserController : Controller
     {
-        private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
+        private readonly IBackgroundWorkQueue<IEmailService> backgroundWorkQueue;
         private readonly IClock clock;
         private readonly ILogger logger;
         private readonly MyTransactionService myTransactionService;
@@ -37,7 +35,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         private readonly UserManager<User> userManager;
 
         public UserController(
-            ILogger<UserController> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue, IClock clock,
+            ILogger<UserController> logger, IBackgroundWorkQueue<IEmailService> backgroundWorkQueue, IClock clock,
             MyTransactionService myTransactionService, OrderService orderService, SignInManager<User> signInManager,
             UserManager<User> userManager)
         {

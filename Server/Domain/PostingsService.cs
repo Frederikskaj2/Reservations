@@ -15,12 +15,12 @@ namespace Frederikskaj2.Reservations.Server.Domain
 {
     public class PostingsService
     {
-        private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
+        private readonly IBackgroundWorkQueue<IEmailService> backgroundWorkQueue;
         private readonly IClock clock;
         private readonly DateTimeZone dateTimeZone;
         private readonly ReservationsContext db;
 
-        public PostingsService(IBackgroundWorkQueue<EmailService> backgroundWorkQueue, IClock clock,
+        public PostingsService(IBackgroundWorkQueue<IEmailService> backgroundWorkQueue, IClock clock,
             DateTimeZone dateTimeZone, ReservationsContext db)
         {
             this.backgroundWorkQueue = backgroundWorkQueue ?? throw new ArgumentNullException(nameof(backgroundWorkQueue));

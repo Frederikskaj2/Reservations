@@ -19,13 +19,13 @@ namespace Frederikskaj2.Reservations.Server.Domain
         private const int KeyCodeLength = 5;
         private const int KeyCodeCount = 14;
         private static readonly Random Random = new Random();
-        private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
+        private readonly IBackgroundWorkQueue<IEmailService> backgroundWorkQueue;
         private readonly ReservationsContext db;
         private readonly ILogger<KeyCodeService> logger;
         private readonly ReservationsOptions reservationsOptions;
 
         public KeyCodeService(
-            ILogger<KeyCodeService> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue,
+            ILogger<KeyCodeService> logger, IBackgroundWorkQueue<IEmailService> backgroundWorkQueue,
             ReservationsContext db, ReservationsOptions reservationsOptions)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));

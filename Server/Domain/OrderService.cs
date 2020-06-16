@@ -24,7 +24,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
 {
     public class OrderService
     {
-        private readonly IBackgroundWorkQueue<EmailService> backgroundWorkQueue;
+        private readonly IBackgroundWorkQueue<IEmailService> backgroundWorkQueue;
         private readonly IDataProvider dataProvider;
         private readonly DateTimeZone dateTimeZone;
         private readonly ReservationsContext db;
@@ -36,7 +36,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         private readonly UserManager<User> userManager;
 
         public OrderService(
-            ILogger<OrderService> logger, IBackgroundWorkQueue<EmailService> backgroundWorkQueue,
+            ILogger<OrderService> logger, IBackgroundWorkQueue<IEmailService> backgroundWorkQueue,
             IDataProvider dataProvider, DateTimeZone dateTimeZone, ReservationsContext db,
             IReservationPolicyProvider reservationPolicyProvider, ReservationsOptions reservationsOptions,
             SignInManager<User> signInManager, TransactionService transactionService,

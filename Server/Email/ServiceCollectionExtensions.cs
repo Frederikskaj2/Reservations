@@ -28,16 +28,15 @@ namespace Frederikskaj2.Reservations.Server.Email
                 }
             };
             services
-                .Configure<MvcRazorRuntimeCompilationOptions>(
-                    options => options.FileProviders.Add(new PhysicalFileProvider(root)))
+                .Configure<MvcRazorRuntimeCompilationOptions>(options => options.FileProviders.Add(new PhysicalFileProvider(root)))
                 .Configure<EmailOptions>(configuration.GetSection("Email"))
                 .AddSingleton<ObjectPoolProvider, DefaultObjectPoolProvider>()
                 .AddSingleton(typeof(IBackgroundWorkQueue<>), typeof(BackgroundWorkQueue<>))
-                .AddHostedService<BackgroundWorkerService<EmailService>>()
+                .AddHostedService<BackgroundWorkerService<IEmailService>>()
                 .AddHostedService<SchedulingService<ScheduledEmailService>>()
                 .AddScoped<RazorViewToStringRenderer>()
                 .AddScoped<UrlService>()
-                .AddScoped<EmailService>()
+                .AddScoped<IEmailService, EmailService>()
                 .AddScoped<ScheduledEmailService>()
                 .AddSingleton(cultureInfo)
                 .AddRazorPages();

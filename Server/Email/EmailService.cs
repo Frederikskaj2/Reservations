@@ -17,7 +17,7 @@ using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
         private readonly ILogger logger;
         private readonly EmailOptions options;

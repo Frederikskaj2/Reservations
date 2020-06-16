@@ -29,7 +29,7 @@ namespace Frederikskaj2.Reservations.Tests
                 .ConfigureServices((context, services) =>
                 {
                     var startup = new Startup(context.Configuration);
-                    startup.ConfigureServices(services, $"Filename={fileName}");
+                    startup.ConfigureServicesWithConnectionString(services, $"Filename={fileName}");
                     configureServices?.Invoke(services, context.Configuration);
                 })
                 .Build();
