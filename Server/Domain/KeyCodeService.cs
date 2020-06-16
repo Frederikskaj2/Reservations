@@ -137,8 +137,10 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Include(reservation => reservation.Order)
                 .ThenInclude(order => order!.User)
                 .Include(reservation => reservation.Resource)
-                .Where(
-                    reservation => reservation.Status == ReservationStatus.Confirmed && !reservation.SentEmails.HasFlag(ReservationEmails.KeyCode))
+                .Where(reservation =>
+                    !reservation.Order!.Flags.HasFlag(OrderFlags.IsOwnerOrder)
+                    && reservation.Status == ReservationStatus.Confirmed
+                    && !reservation.SentEmails.HasFlag(ReservationEmails.KeyCode))
                 .ToListAsync())
                 .Where(
                     reservation => reservation.Date.PlusDays(

@@ -14,7 +14,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
-    internal sealed class SeedData : IDisposable
+    public sealed class SeedData : IDisposable
     {
         private readonly IClock clock;
         private readonly ReservationsContext db;
