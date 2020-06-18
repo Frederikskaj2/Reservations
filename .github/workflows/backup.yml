@@ -28,6 +28,10 @@ jobs:
         run: |
           sudo chmod 700 .ssh
           sudo chmod 600 .ssh/id_rsa
+      - name: Troubleshoot
+        run: |
+          ls -al ~/.ssh
+          cat ~/.ssh/id_rsa
       - name: Copy database
         run: sshpass -p '${{ secrets.VM_SSH_PASSWORD }}' scp -vvv -o StrictHostKeyChecking=no ${{ secrets.VM_USER_NAME }}@${{ env.VM_HOST_NAME }}:${{ env.FILE_PATH }}${{ env.FILE_NAME }} .
       - name: Upload artifact
