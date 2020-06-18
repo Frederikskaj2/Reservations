@@ -21,17 +21,17 @@ jobs:
       - name: Get SSH key
         uses: DamianReeves/write-file-action@v1.0
         with:
-          path: .ssh/id_rsa
+          path: ${{ env.HOME }}/.ssh/id_rsa
           contents: ${{ secrets.VM_SSH_KEY }}
           write-mode: overwrite
       - name: Fix permissions
         run: |
-          sudo chmod 700 .ssh
-          sudo chmod 600 .ssh/id_rsa
+          sudo chmod 700 ~/.ssh
+          sudo chmod 600 ~/.ssh/id_rsa
       - name: Troubleshoot
         run: |
+          pwd
           ls -al ~/.ssh
-          cat ~/.ssh/id_rsa
       - name: Copy database
         run: sshpass -p '${{ secrets.VM_SSH_PASSWORD }}' scp -vvv -o StrictHostKeyChecking=no ${{ secrets.VM_USER_NAME }}@${{ env.VM_HOST_NAME }}:${{ env.FILE_PATH }}${{ env.FILE_NAME }} .
       - name: Upload artifact
