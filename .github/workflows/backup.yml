@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Install sshpass
-        run: sudo apt-get install sshpass
+        run: apt-get install sshpass
       - name: Get SSH key
         uses: DamianReeves/write-file-action@v1.0
         with:
