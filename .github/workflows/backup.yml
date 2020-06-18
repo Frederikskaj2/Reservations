@@ -16,6 +16,8 @@ jobs:
       FILE_NAME: Reservations.db
 
     steps:
+      - name: Troubleshoot
+        run: echo X${{ env.HOME }}X
       - name: Install sshpass
         run: sudo apt-get install sshpass
       - name: Prepare SSH
@@ -23,10 +25,11 @@ jobs:
           mkdir ~/.ssh
           chmod 700 ~/.ssh
       - name: Get SSH key
-        uses: finnp/create-file-action@1.0.0
-        env:
-          FILE_NAME: ${{ env.HOME }}/.ssh/id_rsa
-          FILE_DATA: ${{ secrets.VM_SSH_KEY }}
+        uses: DamianReeves/write-file-action
+        with:
+          path: ${{ env.HOME }}/.ssh/id_rsa
+          contents: ${{ secrets.VM_SSH_KEY }}
+          write-mode: overwrite
       - name: Troubleshoot
         run: ls -al ~/.ssh
       - name: Copy database
