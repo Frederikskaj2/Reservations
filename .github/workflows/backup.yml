@@ -25,7 +25,9 @@ jobs:
           contents: ${{ secrets.VM_SSH_KEY }}
           write-mode: overwrite
       - name: Fix permissions
-        run: sudo chmod 700 .ssh
+        run: |
+          sudo chmod 700 .ssh
+          sudo chmod 600 .ssh/id_rsa
       - name: Troubleshoot
         run: ls -al .ssh
       - name: Copy database
