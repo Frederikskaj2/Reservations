@@ -22,7 +22,7 @@ jobs:
           contents: ${{ secrets.VM_SSH_KEY }}
           write-mode: overwrite
       - name: Copy database
-        run: sshpass -p '$${{ env.VM_SSH_PASSWORD' }} scp frederikskaj2@lokaler.frederikskaj2.dk:/var/lokaler/Reservations.db .
+        run: sshpass -p '$${{ env.VM_SSH_PASSWORD }}' scp frederikskaj2@lokaler.frederikskaj2.dk:/var/lokaler/Reservations.db .
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
