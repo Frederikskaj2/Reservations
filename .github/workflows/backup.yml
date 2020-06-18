@@ -1,0 +1,28 @@
+name: Backup
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    env:
+      VM_HOST_NAME: lokaler.frederikskaj2.dk
+      VM_DIR_NAME: /var/lokaler/app
+
+    steps:
+      - name: Get SSH key
+        uses: DamianReeves/write-file-action@v1.0
+        with:
+          path: $${{ env.home }}/.ssh/id_rsa
+          contents: ${{ secrets.VM_SSH_KEY }}
+          write-mode: overwrite
+      - name: Copy database
+        run: sshpass -p '$${{ env.VM_SSH_PASSWORD' }} scp frederikskaj2@lokaler.frederikskaj2.dk:/var/lokaler/Reservations.db .
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Database
+          path: Reservations.db

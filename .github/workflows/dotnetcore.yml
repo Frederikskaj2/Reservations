@@ -2,55 +2,54 @@ name: .NET Core
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build-and-deploy:
-
     runs-on: ubuntu-latest
 
     env:
-        VM_HOST_NAME: lokaler.frederikskaj2.dk
-        VM_DIR_NAME: /var/lokaler/app
+      VM_HOST_NAME: lokaler.frederikskaj2.dk
+      VM_DIR_NAME: /var/lokaler/app
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.300
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Publish
-      run: dotnet publish Server --configuration Release --no-build
-    - name: Stop
-      uses: appleboy/ssh-action@v0.0.9
-      with:
-        host: ${{ env.VM_HOST_NAME }}
-        username: ${{ secrets.VM_USER_NAME }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        passphrase: ${{ secrets.VM_SSH_PASSWORD }}
-        script: sudo supervisorctl stop lokaler
-    - name: Deploy
-      uses: appleboy/scp-action@v0.0.11
-      with:
-        host: ${{ env.VM_HOST_NAME }}
-        username: ${{ secrets.VM_USER_NAME }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        passphrase: ${{ secrets.VM_SSH_PASSWORD }}
-        source: Server/bin/Release/netcoreapp3.1/publish
-        target: ${{ env.VM_DIR_NAME }}
-        strip_components: 5
-        rm: true
-    - name: Start
-      uses: appleboy/ssh-action@v0.0.9
-      with:
-        host: ${{ env.VM_HOST_NAME }}
-        username: ${{ secrets.VM_USER_NAME }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        passphrase: ${{ secrets.VM_SSH_PASSWORD }}
-        script: sudo supervisorctl start lokaler
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.300
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Publish
+        run: dotnet publish Server --configuration Release --no-build
+      - name: Stop
+        uses: appleboy/ssh-action@v0.0.9
+        with:
+          host: ${{ env.VM_HOST_NAME }}
+          username: ${{ secrets.VM_USER_NAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+          script: sudo supervisorctl stop lokaler
+      - name: Deploy
+        uses: appleboy/scp-action@v0.0.11
+        with:
+          host: ${{ env.VM_HOST_NAME }}
+          username: ${{ secrets.VM_USER_NAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+          source: Server/bin/Release/netcoreapp3.1/publish
+          target: ${{ env.VM_DIR_NAME }}
+          strip_components: 5
+          rm: true
+      - name: Start
+        uses: appleboy/ssh-action@v0.0.9
+        with:
+          host: ${{ env.VM_HOST_NAME }}
+          username: ${{ secrets.VM_USER_NAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+          script: sudo supervisorctl start lokaler
