@@ -16,6 +16,8 @@ jobs:
       FILE_NAME: Reservations.db
 
     steps:
+      - name: Get HOME
+        run: echo "::set-env name=HOME::$(ls -d ~)"
       - name: Troubleshoot
         run: echo X${{ env.HOME }}X
       - name: Install sshpass
