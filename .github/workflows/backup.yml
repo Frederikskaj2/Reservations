@@ -13,12 +13,12 @@ jobs:
     env:
       VM_USER_NAME: frederikskaj2
       VM_HOST_NAME: lokaler.frederikskaj2.dk
-      PATH: /var/lokaler/
+      FILE_PATH: /var/lokaler/
       FILE_NAME: Reservations.db
 
     steps:
       - name: Install sshpass
-        run: apt-get install sshpass
+        run: sudo apt-get install sshpass
       - name: Get SSH key
         uses: DamianReeves/write-file-action@v1.0
         with:
@@ -26,7 +26,7 @@ jobs:
           contents: ${{ secrets.VM_SSH_KEY }}
           write-mode: overwrite
       - name: Copy database
-        run: sshpass -p '${{ env.VM_SSH_PASSWORD }}' scp -o StrictHostKeyChecking=no ${{ env.VM_USER_NAME }}@${{ env.VM_HOST_NAME }}:${{ env.PATH }}${{ env.FILE_NAME }} .
+        run: sshpass -p '${{ env.VM_SSH_PASSWORD }}' scp -o StrictHostKeyChecking=no ${{ env.VM_USER_NAME }}@${{ env.VM_HOST_NAME }}:${{ env.FILE_PATH }}${{ env.FILE_NAME }} .
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
