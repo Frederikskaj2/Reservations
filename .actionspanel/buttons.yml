@@ -1,0 +1,4 @@
+buttons:
+  - title: Backup database
+    action: "backup"
+    description: Backup the database from the server to GitHub

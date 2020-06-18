@@ -3,6 +3,8 @@ name: Backup
 on:
   schedule:
     - cron: "30 2 * * *"
+  repository_dispatch:
+    types: [backup]
 
 jobs:
   backup:
