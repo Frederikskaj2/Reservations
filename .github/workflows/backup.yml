@@ -20,7 +20,7 @@ jobs:
       - name: Get SSH key
         uses: DamianReeves/write-file-action@v1.0
         with:
-          path: ${{ env.home }}/.ssh/id_rsa
+          path: ~/.ssh/id_rsa
           contents: ${{ secrets.VM_SSH_KEY }}
           write-mode: overwrite
       - name: Copy database
