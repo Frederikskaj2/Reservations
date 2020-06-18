@@ -18,20 +18,18 @@ jobs:
     steps:
       - name: Get HOME
         run: echo "::set-env name=HOME::$(ls -d ~)"
-      - name: Troubleshoot
-        run: echo X${{ env.HOME }}X
       - name: Install sshpass
         run: sudo apt-get install sshpass
-      - name: Prepare SSH
-        run: |
-          mkdir ~/.ssh
-          chmod 700 ~/.ssh
       - name: Get SSH key
         uses: DamianReeves/write-file-action@v1.0
         with:
           path: ${{ env.HOME }}/.ssh/id_rsa
           contents: ${{ secrets.VM_SSH_KEY }}
           write-mode: overwrite
+      - name: Fix permissions
+        run: |
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/id_rsa
       - name: Troubleshoot
         run: ls -al ~/.ssh
       - name: Copy database
