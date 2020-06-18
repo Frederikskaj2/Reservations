@@ -18,12 +18,18 @@ jobs:
     steps:
       - name: Install sshpass
         run: sudo apt-get install sshpass
+      - name: Test 1
+        run: ls -al
       - name: Get SSH key
         uses: DamianReeves/write-file-action@v1.0
         with:
           path: ~/.ssh/id_rsa
           contents: ${{ secrets.VM_SSH_KEY }}
           write-mode: overwrite
+      - name: Test 2
+        run: ls -al
+      - name: Test 3
+        run: ls -al .ssh
       - name: Fix permissions
         run: sudo chmod 700 ~/.ssh
       - name: Copy database
