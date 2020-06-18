@@ -26,6 +26,8 @@ jobs:
           write-mode: overwrite
       - name: Fix permissions
         run: sudo chmod 700 .ssh
+      - name: Troubleshoot
+        run: ls -al .ssh
       - name: Copy database
         run: sshpass -p '${{ secrets.VM_SSH_PASSWORD }}' scp -vvv -o StrictHostKeyChecking=no ${{ secrets.VM_USER_NAME }}@${{ env.VM_HOST_NAME }}:${{ env.FILE_PATH }}${{ env.FILE_NAME }} .
       - name: Upload artifact
