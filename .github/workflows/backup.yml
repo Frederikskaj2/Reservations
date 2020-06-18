@@ -23,11 +23,10 @@ jobs:
           mkdir ~/.ssh
           chmod 700 ~/.ssh
       - name: Get SSH key
-        uses: DamianReeves/write-file-action@v1.0
-        with:
-          path: $HOME/.ssh/id_rsa
-          contents: ${{ secrets.VM_SSH_KEY }}
-          write-mode: overwrite
+        uses: finnp/create-file-action@1.0.0
+        env:
+          FILE_NAME: $HOME/.ssh/id_rsa
+          FILE_DATA: ${{ secrets.VM_SSH_KEY }}
       - name: Troubleshoot
         run: ls -al ~/.ssh
       - name: Copy database

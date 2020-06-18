@@ -29,7 +29,7 @@ jobs:
       - name: Stop
         uses: appleboy/ssh-action@v0.0.9
         with:
-          host: ${{ env.VM_HOST_NAME }}
+          host: $VM_HOST_NAME
           username: ${{ secrets.VM_USER_NAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           passphrase: ${{ secrets.VM_SSH_PASSWORD }}
@@ -37,18 +37,18 @@ jobs:
       - name: Deploy
         uses: appleboy/scp-action@v0.0.11
         with:
-          host: ${{ env.VM_HOST_NAME }}
+          host: $VM_HOST_NAME
           username: ${{ secrets.VM_USER_NAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           passphrase: ${{ secrets.VM_SSH_PASSWORD }}
           source: Server/bin/Release/netcoreapp3.1/publish
-          target: ${{ env.VM_DIR_NAME }}
+          target: $VM_DIR_NAME
           strip_components: 5
           rm: true
       - name: Start
         uses: appleboy/ssh-action@v0.0.9
         with:
-          host: ${{ env.VM_HOST_NAME }}
+          host: $VM_HOST_NAME
           username: ${{ secrets.VM_USER_NAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           passphrase: ${{ secrets.VM_SSH_PASSWORD }}
