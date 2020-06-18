@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      VM_USER_NAME: frederikskaj2
       VM_HOST_NAME: lokaler.frederikskaj2.dk
       FILE_PATH: /var/lokaler/
       FILE_NAME: Reservations.db
@@ -26,7 +25,7 @@ jobs:
           contents: ${{ secrets.VM_SSH_KEY }}
           write-mode: overwrite
       - name: Copy database
-        run: sshpass -p '${{ env.VM_SSH_PASSWORD }}' scp -o StrictHostKeyChecking=no ${{ env.VM_USER_NAME }}@${{ env.VM_HOST_NAME }}:${{ env.FILE_PATH }}${{ env.FILE_NAME }} .
+        run: sshpass -p '${{ secrets.VM_SSH_PASSWORD }}' scp -o StrictHostKeyChecking=no ${{ secrets.VM_USER_NAME }}@${{ env.VM_HOST_NAME }}:${{ env.FILE_PATH }}${{ env.FILE_NAME }} .
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
