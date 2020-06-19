@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
-using Order = Frederikskaj2.Reservations.Shared.Order;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
 namespace Frederikskaj2.Reservations.Server.Controllers
@@ -53,7 +52,9 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                         IsPendingDelete = user.IsPendingDelete,
                         OrderCount = user.Orders!.Count(order => !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
                     })
-                .OrderBy(user => user.Email)
+#pragma warning disable CA1304 // Specify CultureInfo
+                .OrderBy(user => user.Email!.ToUpper())
+#pragma warning restore CA1304 // Specify CultureInfo
                 .ToListAsync();
 
         [HttpPatch("{userId:int}")]
