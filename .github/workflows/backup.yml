@@ -14,12 +14,15 @@ jobs:
       VM_HOST_NAME: lokaler.frederikskaj2.dk
       FILE_PATH: /var/lokaler/
       FILE_NAME: Reservations.db
+      ARTIFACT_NAME: Database.7z
 
     steps:
       - name: Get HOME
         run: echo "::set-env name=HOME::$(ls -d ~)"
-      - name: Install sshpass
-        run: sudo apt-get install sshpass
+      - name: Install packages
+        run: |
+          sudo apt-get install sshpass
+          sudo apt-get install p7zip-full
       - name: Get SSH key
         uses: DamianReeves/write-file-action@v1.0
         with:
@@ -32,8 +35,10 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
       - name: Copy database
         run: sshpass -p '${{ secrets.VM_SSH_PASSWORD }}' -P assphrase scp -o StrictHostKeyChecking=no ${{ secrets.VM_USER_NAME }}@$VM_HOST_NAME:$FILE_PATH$FILE_NAME .
+      - name: Protect database
+        run: 7z a -p${{ secrets.DATABASE_PASSWORD }} ${{ env.ARTIFACT_NAME }} ${{ env.FILE_NAME }}
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: Database
-          path: ${{ env.FILE_NAME }}
+          path: ${{ env.ARTIFACT_NAME }}
