@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Frederikskaj2.Reservations.Shared;
-using NodaTime;
+﻿using Frederikskaj2.Reservations.Shared;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {

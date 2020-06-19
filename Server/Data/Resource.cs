@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Frederikskaj2.Reservations.Shared;
 
 namespace Frederikskaj2.Reservations.Server.Data

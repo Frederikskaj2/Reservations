@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Frederikskaj2.Reservations.Server.Data;
 using Frederikskaj2.Reservations.Shared;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
