@@ -9,8 +9,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		.github\workflows\backup.yml = .github\workflows\backup.yml
+		.github\workflows\build.yml = .github\workflows\build.yml
+		.actionspanel\buttons.yml = .actionspanel\buttons.yml
 		Directory.Build.props = Directory.Build.props
-		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
 		LICENSE = LICENSE
 		README.MD = README.MD
 		Reservations.sln.DotSettings = Reservations.sln.DotSettings
@@ -20,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csproj", "{DA93BA76-C230-4281-A4C5-F0D8D555D2A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{0D1C7A75-561B-49D6-B1DC-5D19ABD42CED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{0D1C7A75-561B-49D6-B1DC-5D19ABD42CED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
