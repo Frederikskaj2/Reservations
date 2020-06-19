@@ -23,8 +23,16 @@ Sådan forløber en afbestilling:
 
 Roller:
 
-1. Almindelig bruger: Kan oprette bestillinger med en eller flere reservationer af lokaler. Kan aflyse reservationer såfremt reglerne tillader det.
-2. Bogholder: Kan registrere indbetalinger og udbetalinger.
-3. Lokaleadministrator: Kan foretage opgørelser og annullere ubetalte reservationer.
+En almindelig bruger kan oprette bestillinger med en eller flere reservationer af lokaler og kan aflyse sine reservationer såfremt reglerne tillader det.
 
-For at forenkle systemet skelnes mellem to typer brugere: dem som ikke er administratorer og dem som er. Den første type bruger har rolle 1 ovenfor. Den anden type bruger har alle rollerne ovenfor.
+En bruger kan tildeles en eller flere af følgende administrative roller:
+
+| Rolle | Adgang |
+| - | - | 
+| Bestillinger | Kan se bestillinger af afbestille reservationer. Kan oprette og afbestille reservationer på vegne af grundejerforeningen. |
+| Betaling | Kan registrere ind- og udbetalinger. |
+| Opgørelse | Kan lave en opgørelse når en reservation er slut. |
+| Bogføring | Kan se kassekladden med posteringer. |
+| Rengøring | Kan se rengøringsplanen. |
+| Nøglebokskoder | Kan se nøglebokskoderne. |
+| Brugeradminitration | Kan filføje og fjerne roller fra brugere og slette brugere. |
