@@ -573,10 +573,12 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var orders = await db.Orders
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Resource)
-                .Where(
-                    order => order.Reservations.Any(
+                .Where(order =>
+                    !order.Flags.HasFlag(OrderFlags.IsOwnerOrder)
+                    && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder)
+                    && order.Reservations.Any(
                         reservation => reservation.Status == ReservationStatus.Confirmed && reservation.Date < date
-                            && !reservation.SentEmails.HasFlag(ReservationEmails.NeedsSettlement)))
+                        && !reservation.SentEmails.HasFlag(ReservationEmails.NeedsSettlement)))
                 .ToListAsync();
             // EF Core is not able to convert the NodaTime date arithmetic to SQL so the filtering is done client side instead.
             var reservations = orders.SelectMany(
