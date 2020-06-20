@@ -45,7 +45,7 @@
                         @foreach (var order in orders!)
                         {
                             var reservationsToSettle = order.Reservations
-                                .Where(reservation => reservation.Status == ReservationStatus.Confirmed && DateProvider.GetDaysFromToday(reservation.Date) < 0)
+                                .Where(reservation => reservation.Status == ReservationStatus.Confirmed && reservation.Date.PlusDays(reservation.DurationInDays) <= DateProvider.Today)
                                 .ToList();
                             <TableRow @key="@order.Id">
                                 <TableHeaderCell>@order.Id</TableHeaderCell>

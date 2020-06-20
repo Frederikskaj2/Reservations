@@ -51,7 +51,7 @@
                         @foreach (var reservation in Reservations ?? Enumerable.Empty<Reservation>())
                         {
                             var isCancelled = request.CancelledReservations.Contains(reservation.Id);
-                            var canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && reservation.Date.PlusDays(reservation.DurationInDays) <= today;
+                            var canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && reservation.Date.PlusDays(reservation.DurationInDays) <= DateProvider.Today;
                             // TODO: Remove this unless testing.
                             // canBeSettled = IsSettlementEnabled && reservation.Status == ReservationStatus.Confirmed && !IsHistoryOrder;
                             var canBeCancelled = reservation.CanBeCancelled || IsCancellationEnabled && (reservation.Status == ReservationStatus.Reserved || reservation.Status == ReservationStatus.Confirmed);
@@ -227,7 +227,6 @@
     private Validations validations = null!;
     private PayInDialog payInDialog = null!;
     private SettlementDialog settlementDialog = null!;
-    private LocalDate today;
     private IReadOnlyDictionary<int, Resource>? resources;
     private bool showGeneralErrorAlert;
     private Price? price;
@@ -269,7 +268,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        today = DateProvider.Today;
         resources = await ClientDataProvider.GetResources();
     }
 
