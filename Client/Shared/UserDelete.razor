@@ -41,11 +41,11 @@
         }
     </CardBody>
 </Card>
-<ConfirmDeleteMyUser @ref="confirmModal" OnConfirm="@DeleteUser" />
+<ConfirmDeleteMyUserDialog @ref="confirmModal" OnConfirm="@DeleteUser" />
 
 @code
 {
-    private ConfirmDeleteMyUser confirmModal = null!;
+    private ConfirmDeleteMyUserDialog confirmModal = null!;
     private bool showErrorAlert;
     private bool showPendingDeleteAlert;
 
