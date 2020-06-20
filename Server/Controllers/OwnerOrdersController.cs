@@ -34,7 +34,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpGet]
         public async Task<IEnumerable<OwnerOrder>> Get()
         {
-            var orders = await orderService.GetOwnerOrders();
+            var now = clock.GetCurrentInstant();
+            var orders = await orderService.GetOwnerOrders(now);
             return orders.Select(order => CreateOrder(order, order.User));
         }
 

@@ -13,6 +13,7 @@ namespace Frederikskaj2.Reservations.Tests
     [SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "This implementation is used to integrate with xUnit.")]
     public abstract class IntegrationTests : IDisposable
     {
+        private static readonly object gate = new object();
         private static readonly Random random = new Random();
         private string fileName;
         private IServiceScopeFactory scopeFactory;
@@ -23,7 +24,7 @@ namespace Frederikskaj2.Reservations.Tests
 
         protected Task Initialize(Action<IServiceCollection, IConfiguration> configureServices = null)
         {
-            fileName = $"{random.Next():x8}.db";
+            fileName = GetDatabaseFileName();
             var host = new HostBuilder()
                 .ConfigureHostConfiguration(builder => builder.AddJsonFile("appsettings.json"))
                 .ConfigureServices((context, services) =>
@@ -55,5 +56,11 @@ namespace Frederikskaj2.Reservations.Tests
 
         [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "This implementation is used to integrate with xUnit.")]
         public virtual void Dispose() => File.Delete(fileName);
+
+        private static string GetDatabaseFileName()
+        {
+            lock (gate)
+                return $"{random.Next():x8}.db";
+        }
     }
 }

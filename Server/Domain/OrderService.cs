@@ -108,14 +108,28 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .ThenInclude(reservation => reservation.Days)
                 .FirstOrDefaultAsync(order => order.Id == orderId && order.Flags.HasFlag(OrderFlags.IsOwnerOrder));
 
-        public async Task<IEnumerable<Order>> GetOwnerOrders()
-            => await db.Orders
+        public async Task<IEnumerable<Order>> GetOwnerOrders(Instant timestamp)
+        {
+            var today = timestamp.InZone(dateTimeZone).Date;
+            var ownerOrders = await db.Orders
                 .Include(order => order.User)
                 .Include(order => order.Reservations)
                 .ThenInclude(reservation => reservation.Days)
                 .Where(order => order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
                 .OrderBy(order => order.CreatedTimestamp)
                 .ToListAsync();
+            var oldOwnerOrders = ownerOrders
+                .Where(order => order.Reservations
+                    .All(reservation => reservation.Date.PlusDays(reservation.DurationInDays) < today))
+                .ToList();
+            if (oldOwnerOrders.Count > 0)
+            {
+                ownerOrders = ownerOrders.Except(oldOwnerOrders).ToList();
+                db.Orders.RemoveRange(oldOwnerOrders);
+                await db.SaveChangesAsync();
+            }
+            return ownerOrders;
+        }
 
         public async Task<IEnumerable<Order>> GetHistoryOrders()
             => await db.Orders
