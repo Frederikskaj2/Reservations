@@ -90,7 +90,7 @@
                         <FieldLabel>Kontonummer (til udbetaling af depositum)</FieldLabel>
                         <FieldBody>
                             <Validation>
-                                <TextEdit InputMode="TextInputMode.Numeric" @bind-Text="@ClientDataProvider.DraftOrder.Request.AccountNumber" placeholder="1111-2222333344">
+                                <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@ClientDataProvider.DraftOrder.Request.AccountNumber" placeholder="1111-2222333344">
                                     <Feedback>
                                         <ValidationError />
                                     </Feedback>
