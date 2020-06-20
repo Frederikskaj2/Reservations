@@ -290,8 +290,7 @@ else
         var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(resource.Id, date);
         reservationDialog.MinimumDays = minimumDays;
         reservationDialog.MaximumDays = maximumDays;
-        DataProvider.DraftOrder.AddReservation(resource, date, minimumDays);
-        await UpdateCalendar(currentMonth, currentResourceId);
+        DataProvider.DraftOrder.AddReservation(resource, date, 0);
         reservationDialog.Show();
     }
 

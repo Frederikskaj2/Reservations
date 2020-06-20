@@ -26,7 +26,7 @@
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Mail</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is6">
-                        <TextEdit Plaintext="true" Text="@User.Email" />
+                        <TextEdit Plaintext="true" Text="@User.Email" tabindex="-1" />
                     </FieldBody>
                     @if (!User.IsEmailConfirmed)
                     {

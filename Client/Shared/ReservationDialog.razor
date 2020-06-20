@@ -14,13 +14,14 @@
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Fra</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit Plaintext="true" Text="@GetCheckInTime()" />
+                        <TextEdit Plaintext="true" Text="@GetCheckInTime()" tabindex="-1" />
                     </FieldBody>
                 </Field>
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Antal nætter</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
                         <Select @ref="@select" TValue="int" SelectedValue="@(Reservation?.DurationInDays ?? 0)" SelectedValueChanged="@DurationInDaysChanged">
+                            <SelectItem Value="0">Angiv en værdi</SelectItem>
                             @for (var i = MinimumDays; i <= MaximumDays; i += 1)
                             {
                                 var localI = i;
@@ -32,30 +33,30 @@
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Til</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit Plaintext="true" Text="@GetCheckOutTime()" />
+                        <TextEdit Plaintext="true" Text="@GetCheckOutTime()" tabindex="-1" />
                     </FieldBody>
                 </Field>
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Leje</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit Plaintext="true" Text="@rent" />
+                        <TextEdit Plaintext="true" Text="@rent" tabindex="-1" />
                     </FieldBody>
                 </Field>
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Depositum</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit Plaintext="true" Text="@deposit" />
+                        <TextEdit Plaintext="true" Text="@deposit" tabindex="-1" />
                     </FieldBody>
                 </Field>
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Til betaling</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <TextEdit Plaintext="true" Text="@total" />
+                        <TextEdit Plaintext="true" Text="@total" tabindex="-1" />
                     </FieldBody>
                 </Field>
             </ModalBody>
             <ModalFooter>
-                <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">Reservér</Button>
+                <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm" Disabled="@IsSubmitDisabled">Reservér</Button>
                 <Button Color="Color.Secondary" Clicked="@Cancel">Annullér</Button>
             </ModalFooter>
         </ModalContent>
@@ -71,6 +72,8 @@
     private string deposit = string.Empty;
     private string total = string.Empty;
     private bool isConfirming;
+
+    private bool IsSubmitDisabled => (Reservation?.DurationInDays ?? 0) == 0;
 
     [Parameter]
     public DraftReservation? Reservation { get; set; }
@@ -120,8 +123,13 @@
 
     private void UpdatePrice()
     {
-        if (Reservation == null || policy == null)
+        if (Reservation == null || policy == null || Reservation.DurationInDays == 0)
+        {
+            rent = string.Empty;
+            deposit = string.Empty;
+            total = string.Empty;
             return;
+        }
         Reservation.Price = policy.GetPrice(Reservation.Date, Reservation.DurationInDays);
         rent = $"{FormattingService.FormatMoneyLong(Reservation.Price.Rent + Reservation.Price.Cleaning)} (inklusiv rengøring {FormattingService.FormatMoneyLong(Reservation.Price.Cleaning)})";
         deposit = FormattingService.FormatMoneyLong(Reservation.Price.Deposit);
@@ -132,7 +140,7 @@
         ? FormattingService.FormatCheckInTimeLong(Reservation.Date)
         : string.Empty;
 
-    private string GetCheckOutTime() => Reservation != null
+    private string GetCheckOutTime() => Reservation?.DurationInDays > 0
         ? FormattingService.FormatCheckOutTimeLong(Reservation.Date.PlusDays(Reservation.DurationInDays))
         : string.Empty;
 
