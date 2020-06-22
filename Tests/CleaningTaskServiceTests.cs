@@ -36,7 +36,8 @@ namespace Frederikskaj2.Reservations.Tests
                     .WithReservation(
                         builder => builder
                             .WithResourceId(1)
-                            .WithStatus(ReservationStatus.Confirmed)
+                            // Create it as settled as this was what triggered the problem.
+                            .WithStatus(ReservationStatus.Settled)
                             .WithDateAndDuration(reservationDate, 1))
                     .WithReservation(
                         builder => builder
@@ -57,8 +58,8 @@ namespace Frederikskaj2.Reservations.Tests
             using (var scope = CreateScope())
             {
                 var cleaningTaskService = scope.ServiceProvider.GetRequiredService<CleaningTaskService>();
-                var twoDaysAfterReservation = reservationDate.PlusDays(2);
-                await cleaningTaskService.SendDifferentialCleaningTasksEmail(twoDaysAfterReservation);
+                var theDayTheReservationEnds = reservationDate.PlusDays(1);
+                await cleaningTaskService.SendDifferentialCleaningTasksEmail(theDayTheReservationEnds);
             }
 
             await ModifyDatabase(db =>
