@@ -61,7 +61,10 @@ namespace Frederikskaj2.Reservations.Server.Data
         public async Task Initialize()
         {
             if (!await db.Database.EnsureCreatedAsync())
+            {
+                await UpdateApartments();
                 return;
+            }
 
             await CreateTriggers();
 
@@ -71,6 +74,15 @@ namespace Frederikskaj2.Reservations.Server.Data
 
             await CreateRoles();
             await CreateUsers();
+        }
+
+        private async Task UpdateApartments()
+        {
+            var existingApartments = await db.Apartments.ToListAsync();
+            var apartmentsToAdd = GetApartments().ToHashSet();
+            apartmentsToAdd.ExceptWith(existingApartments);
+            db.Apartments.AddRange(apartmentsToAdd);
+            await db.SaveChangesAsync();
         }
 
         private async Task CreateTriggers()
@@ -115,6 +127,7 @@ END";
                 { 'K', 5 },
                 { 'L', 5 },
                 { 'M', 5 },
+                { 'N', 3 },
                 { 'P', 4 },
                 { 'R', 6 }
             };
