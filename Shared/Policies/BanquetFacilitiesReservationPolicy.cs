@@ -7,7 +7,7 @@ namespace Frederikskaj2.Reservations.Shared
     internal class BanquetFacilitiesReservationPolicy : ReservationPolicy, IReservationPolicy
     {
         private const ResourceType ResourceType = Shared.ResourceType.BanquetFacilities;
-        private const int HighPriceMinimumNumberOfDays = 2;
+        private const int HighPriceMinimumNumberOfDays = 1;
 
         public BanquetFacilitiesReservationPolicy(IDataProvider dataProvider, ReservationsOptions options, IDateProvider dateProvider)
             : base(dataProvider, options, options.Prices[ResourceType], dateProvider)
