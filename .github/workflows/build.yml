@@ -56,7 +56,7 @@ jobs:
           passphrase: ${{ secrets.VM_SSH_PASSWORD }}
           script: sudo supervisorctl start lokaler
       - name: Get timestamp
-        run: echo ::set-env name=TIMESTAMP::`date +"%d-%m-%Y %H:%M"`
+        run: echo ::set-env name=TIMESTAMP::`TZ=Europe/Copenhagen date +"%d-%m-%Y %H:%M"`
       - name: Get short commit SHA
         run: echo ::set-env name=COMMITSHORT::`echo ${{ github.sha }} | cut -c-10`
       - name: Post to Teams
