@@ -55,3 +55,8 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           passphrase: ${{ secrets.VM_SSH_PASSWORD }}
           script: sudo supervisorctl start lokaler
+      - name: Get short commit SHA
+        run: echo ::set-env name=COMMITSHORT::`echo ${{ github.sha }} | cut -c-10`
+      - name: Post to Teams
+        run: >
+          sed -e s/COMMITSHORT/${{ env.COMMITSHORT }}/ -e s/COMMITLONG/${{ github.sha }}/ .github/workflows/build-success.json | curl -d @- -H 'Content-Type: application/json' -X POST $${{ secrets.BUILD_SUCCESS_WEBHOOK }}

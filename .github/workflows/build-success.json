@@ -1,0 +1,87 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "padding": "None",
+                    "width": "stretch",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Lokalereservation",
+                            "wrap": true
+                        }
+                    ],
+                    "verticalContentAlignment": "Center"
+                },
+                {
+                    "type": "Column",
+                    "padding": "None",
+                    "width": "auto",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "url": "https://lokaler.frederikskaj2.dk/img/icon.jpg",
+                            "size": "small",
+                            "altText": "Fælleshus"
+                        }
+                    ],
+                    "horizontalAlignment": "Right"
+                }
+            ],
+            "padding": {
+                "top": "Small",
+                "bottom": "Small",
+                "left": "Default",
+                "right": "Small"
+            },
+            "style": "emphasis"
+        },
+        {
+            "type": "Container",
+            "padding": "Default",
+            "spacing": "None",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "Website startet",
+                    "wrap": true,
+                    "weight": "Bolder",
+                    "size": "Large"
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "Ny version bygget fra [git commit COMMITSHORT](https://github.com/Frederikskaj2/Reservations/tree/COMMITLONG).",
+                    "wrap": true
+                }
+            ]
+        },
+        {
+            "type": "Container",
+            "padding": {
+                "top": "Small",
+                "bottom": "Small",
+                "left": "Small",
+                "right": "Default"
+            },
+            "spacing": "None",
+            "separator": true,
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "[Besøg website](https://lokaler.frederikskaj2.dk/)",
+                    "wrap": true,
+                    "color": "Accent",
+                    "horizontalAlignment": "Right"
+                }
+            ],
+            "horizontalAlignment": "Right"
+        }
+    ],
+    "padding": "None"
+}
