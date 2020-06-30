@@ -92,9 +92,11 @@
 
     private async Task OnPaymentConfirm((int UserId, LocalDate Date, int Amount) tuple)
     {
+        Console.WriteLine("Requesting payout");
         var request = new PayOutRequest { Date = tuple.Date, Amount = tuple.Amount };
         var requestUri = $"users/{tuple.UserId}/pay-out";
         var (response, problem) = await ApiClient.Post<PayOut>(requestUri, request);
+        Console.WriteLine("Payout requested");
         if (problem == null)
         {
             amount = request.Amount;

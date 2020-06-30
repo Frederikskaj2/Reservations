@@ -83,9 +83,16 @@
 
     private void Confirm()
     {
+        Console.WriteLine("Confirming");
+        Console.WriteLine($"Date: {dateTime}");
+        Console.WriteLine($"Amount: {request.Amount}");
         if (!validations.ValidateAll())
+        {
+            Console.WriteLine("Validation failed");
             return;
+        }
 
+        Console.WriteLine("Validation succeeded");
         validations.ClearAll();
         isConfirming = true;
         modal.Hide();

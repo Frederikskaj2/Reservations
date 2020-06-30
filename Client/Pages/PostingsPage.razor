@@ -146,16 +146,17 @@
 
     private async Task UpdatePostings()
     {
-        var requestUri = $"postings?month={currentYear}-{currentMonth:00}-01";
+        var requestUri = $"postings?month={currentYear:0000}-{currentMonth:00}-01";
         var (response, problem) = await ApiClient.Get<IEnumerable<Posting>>(requestUri);
         if (problem == null)
             postings = response;
     }
 
-    private void YearChanged(int value)
+    private Task YearChanged(int value)
     {
         currentYear = value;
         UpdateMonths();
+        return UpdatePostings();
     }
 
     private Task MonthChanged(int value)
