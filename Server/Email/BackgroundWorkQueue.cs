@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
+    [SuppressMessage("Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "This class is instantiated vis dependency injection.")]
     internal sealed class BackgroundWorkQueue<TService> : IBackgroundWorkQueue<TService>, IDisposable
     {
         private readonly SemaphoreSlim signal = new SemaphoreSlim(0);

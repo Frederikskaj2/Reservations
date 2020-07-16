@@ -7,7 +7,7 @@
 <main>
     <Container>
         <Paragraph>Tak for din bestilling med <a href="@($"{Urls.MyOrders}/{ApplicationState.MyOrder!.Id}")">bestillingsnr. @ApplicationState.MyOrder.Id</a>.</Paragraph>
-        @if (ApplicationState.MyOrder!.Totals!.GetBalance() == 0)
+        @if (ApplicationState.MyOrder!.Totals!.Balance == 0)
         {
             <Paragraph>Da du tidligere har indbetalt et beløb som dækker prisen for denne bestilling er din bestilling godkendt og betalt, og du behøver ikke at foretage dig yderligere.</Paragraph>
         }
@@ -20,7 +20,7 @@
             <Paragraph>Din bestilling bliver først godkendt når du har indbetalt det skyldige beløb til grundejerforeningens bankkonto:</Paragraph>
             <div class="payment-table">
                 <span>Beløb:</span>
-                <span><strong>@FormattingService.FormatMoneyLong(-ApplicationState.MyOrder!.Totals!.GetBalance())</strong></span>
+                <span><strong>@FormattingService.FormatMoneyLong(-ApplicationState.MyOrder!.Totals!.Balance)</strong></span>
                 <span>Kontonummer:</span>
                 <span><strong>@ReservationsOptions.PayInAccountNumber</strong></span>
                 <span>Tekst på indbetaling:</span>

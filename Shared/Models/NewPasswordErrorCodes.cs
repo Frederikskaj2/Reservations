@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Frederikskaj2.Reservations.Shared
 {
+    [SuppressMessage("Design", "CA1008:Enums should have zero value", Justification = "Using the name 'None' for the default value would be confusing.")]
     [Flags]
     public enum NewPasswordErrorCodes
     {

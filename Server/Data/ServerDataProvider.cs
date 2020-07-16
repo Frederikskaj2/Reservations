@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
@@ -9,6 +10,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
+    [SuppressMessage("Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "This class is instantiated vis dependency injection.")]
     internal class ServerDataProvider : IDataProvider
     {
         private readonly ReservationsContext db;

@@ -14,5 +14,4 @@ namespace Frederikskaj2.Reservations.Server.Email
         // Debit is positive, credit is negative.
         public int Amount { get; }
     }
-
 }

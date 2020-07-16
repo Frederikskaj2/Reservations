@@ -111,7 +111,8 @@ namespace Frederikskaj2.Reservations.Tests
 
             public IEnumerable<IEmailService> Fakes => fakes;
 
-            Task<Func<IEmailService, CancellationToken, Task>> IBackgroundWorkQueue<IEmailService>.Dequeue(CancellationToken cancellationToken) => throw new NotImplementedException();
+            Task<Func<IEmailService, CancellationToken, Task>> IBackgroundWorkQueue<IEmailService>.Dequeue(CancellationToken cancellationToken)
+                => Task.FromResult<Func<IEmailService, CancellationToken, Task>>(null);
 
             void IBackgroundWorkQueue<IEmailService>.Enqueue(Func<IEmailService, CancellationToken, Task> asyncAction)
             {

@@ -1,5 +1,8 @@
-﻿namespace Frederikskaj2.Reservations.Shared
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Frederikskaj2.Reservations.Shared
 {
+    [SuppressMessage("Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "This class is instantiated vis dependency injection.")]
     internal class BedroomReservationPolicy : ReservationPolicy, IReservationPolicy
     {
         private const ResourceType ResourceType = Shared.ResourceType.Bedroom;

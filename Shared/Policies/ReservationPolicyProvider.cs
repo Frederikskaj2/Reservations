@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Frederikskaj2.Reservations.Shared
 {
+    [SuppressMessage("Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "This class is instantiated vis dependency injection.")]
     internal class ReservationPolicyProvider : IReservationPolicyProvider
     {
         private readonly BanquetFacilitiesReservationPolicy banquetFacilitiesReservationPolicy;

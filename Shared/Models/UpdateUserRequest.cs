@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Frederikskaj2.Reservations.Shared
 {
@@ -15,7 +16,9 @@ namespace Frederikskaj2.Reservations.Shared
         [RegularExpression(@"^\s*\+?[0-9](?:[- ]?[0-9]+)+\s*$", ErrorMessage = "Angiv et korrekt telefonnummer")]
         public string Phone { get; set; } = string.Empty;
 
+        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "A public setter is required for serialization.")]
         public HashSet<string> Roles { get; set; } = new HashSet<string>();
+
         public bool IsPendingDelete { get; set; }
     }
 }

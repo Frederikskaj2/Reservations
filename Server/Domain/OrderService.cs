@@ -138,6 +138,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 .Where(order => order.Flags.HasFlag(OrderFlags.IsHistoryOrder))
                 .ToListAsync();
 
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:Avoid excessive class coupling", Justification = "Refactoring the complexity is left as a future task.")]
         public async Task<Order> PlaceOrder(
             Instant timestamp, int userId, int apartmentId, string accountNumber,
             IEnumerable<ReservationRequest> reservations)
@@ -186,7 +187,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             var prepaidAmount = order.Balance(Account.FromPayments);
             backgroundWorkQueue.Enqueue(
-                (service, _) => service.SendOrderReceivedEmail(user, order.Id, prepaidAmount, totalPrice.GetTotal()));
+                (service, _) => service.SendOrderReceivedEmail(user, order.Id, prepaidAmount, totalPrice.Total));
 
             var users = await db.Users
                 .Where(u => u.EmailSubscriptions.HasFlag(EmailSubscriptions.NewOrder))
@@ -266,7 +267,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                     if (reservation.Status == ReservationStatus.Reserved)
                         cancelledReservationsEmailData.Add((reservation, 0, 0));
                     else
-                        cancelledReservationsEmailData.Add((reservation, reservation.Price!.GetTotal(), fee));
+                        cancelledReservationsEmailData.Add((reservation, reservation.Price!.Total, fee));
 
                     reservation.Status = ReservationStatus.Cancelled;
                     reservation.UpdatedTimestamp = timestamp;
@@ -580,7 +581,6 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
             await db.SaveChangesAsync();
         }
-
 
         public async Task SendSettlementNeededEmails(LocalDate date)
         {

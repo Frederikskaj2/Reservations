@@ -31,7 +31,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 new TransactionAmount { Account = Account.Rent, Amount = -price.Rent },
                 new TransactionAmount { Account = Account.Cleaning, Amount = -price.Cleaning },
                 new TransactionAmount { Account = Account.Deposits, Amount = -price.Deposit },
-                new TransactionAmount { Account = Account.AccountsReceivable, Amount = price.GetTotal() }
+                new TransactionAmount { Account = Account.AccountsReceivable, Amount = price.Total }
             };
             CreateTransaction(timestamp, date, order.User!.Id, order, amounts);
         }
@@ -46,7 +46,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 throw new ArgumentOutOfRangeException(nameof(cancellationFee));
 
             var accountsReceivable = order.User!.Balance(Account.AccountsReceivable);
-            var amountToRefund = reservation.Price!.GetTotal() - cancellationFee;
+            var amountToRefund = reservation.Price!.Total - cancellationFee;
 
             var amounts = new List<TransactionAmount>()
                 {

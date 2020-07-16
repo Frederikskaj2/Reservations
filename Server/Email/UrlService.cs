@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Frederikskaj2.Reservations.Shared;
 using Microsoft.Extensions.Options;
 
@@ -16,6 +17,7 @@ namespace Frederikskaj2.Reservations.Server.Email
             this.options = options.Value;
         }
 
+        [SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification = "This member is a function for consistency with the other members.")]
         public Uri GetFromUrl() => options.BaseUrl!;
 
         public Uri GetConfirmEmailUrl(string email, string token)

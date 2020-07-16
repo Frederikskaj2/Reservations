@@ -145,7 +145,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             user.PhoneNumber = request.Phone;
             user.EmailSubscriptions = request.EmailSubscriptions;
 
-            var result = await userManager.UpdateAsync(user);
+            await userManager.UpdateAsync(user);
             return NoContent();
         }
 

@@ -9,7 +9,7 @@
     {
         var someReservationsCanBeCancelled = Reservations.Any(reservation => reservation.CanBeCancelled);
         var accountNumberCanBeEdited = !IsHistoryOrder && !string.IsNullOrEmpty(AccountNumber);
-        var showPaymentButton = IsPaymentEnabled && Totals!.GetBalance() < 0;
+        var showPaymentButton = IsPaymentEnabled && Totals!.Balance < 0;
         <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
             Der er sket en fejl, og din ændring blev ikke gemt.
             <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
@@ -117,14 +117,14 @@
                         <TableRow>
                             <TableRowCell ColumnSpan="5" Class="border-bottom"><strong>Til betaling</strong></TableRowCell>
                             <TableRowCell Class="text-right border-bottom"><strong>=</strong></TableRowCell>
-                            <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.GetTotal())</strong></TableRowCell>
+                            <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(price!.Total)</strong></TableRowCell>
                         </TableRow>
                         @if (Totals!.IsPaid())
                         {
                             <TableRow>
                                 <TableRowCell ColumnSpan="5" Class="border-top-0">Pris (inklusiv depositum)</TableRowCell>
                                 <TableRowCell Class="text-right border-top-0">−</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.GetTotal())</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(price!.Total)</TableRowCell>
                             </TableRow>
                             @if (Totals.FromOtherOrders > 0)
                             {
@@ -304,10 +304,10 @@
             (accumulator, reservation) => accumulator.Accumulate(GetPrice(reservation)));
 
         cancellationFee = Totals!.CancellationFee;
-        balance = Totals!.GetBalance();
+        balance = Totals!.Balance;
         foreach (var reservation in Reservations.Where(r => request.CancelledReservations.Contains(r.Id)))
         {
-            balance += reservation.Price!.GetTotal();
+            balance += reservation.Price!.Total;
             if (!request.WaiveFee && reservation.Status == ReservationStatus.Confirmed)
             {
                 cancellationFee += ReservationsOptions.CancellationFee;
@@ -332,7 +332,7 @@
     private void RecordPayIn()
     {
         DismissShowGeneralErrorAlert();
-        payInDialog.Show(OrderId, DateProvider.Today, AccountNumber!, -Totals!.GetBalance());
+        payInDialog.Show(OrderId, DateProvider.Today, AccountNumber!, -Totals!.Balance);
     }
 
     private void RecordSettlement(Reservation reservation)

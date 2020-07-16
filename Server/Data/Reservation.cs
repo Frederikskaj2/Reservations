@@ -8,6 +8,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
+    [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Entity Framework require an accesible setter.")]
     public class Reservation
     {
         public int Id { get; set; }

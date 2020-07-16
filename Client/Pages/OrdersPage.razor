@@ -55,7 +55,7 @@
                                 <TableRowCell>@order.Apartment</TableRowCell>
                                 <TableRowCell>@order.Phone</TableRowCell>
                                 <TableRowCell class="text-center">
-                                    @if (order.Totals!.GetBalance() < 0)
+                                    @if (order.Totals!.Balance < 0)
                                     {
                                         if (GetIsUnpaidOrderOld(order))
                                         {
@@ -78,7 +78,7 @@
                                         <DropdownToggle Color="Color.Light" Size="ButtonSize.Small" />
                                         <DropdownMenu>
                                             <DropdownItem Clicked="@(() => ShowOrder(order.Id))">Vis</DropdownItem>
-                                            @if (canHandlePayments && order.Totals!.GetBalance() < 0)
+                                            @if (canHandlePayments && order.Totals!.Balance < 0)
                                             {
                                                 <DropdownItem Clicked="@(() => RecordPayIn(order))">Registrér indbetaling</DropdownItem>
                                             }
@@ -199,7 +199,7 @@
     private void RecordPayIn(Order order)
     {
         DismissShowGeneralErrorAlert();
-        payInDialog.Show(order.Id, DateProvider.Today, order.AccountNumber!, -order.Totals!.GetBalance());
+        payInDialog.Show(order.Id, DateProvider.Today, order.AccountNumber!, -order.Totals!.Balance);
     }
 
     private void RecordSettlement(Order order, Reservation reservation)

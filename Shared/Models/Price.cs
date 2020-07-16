@@ -8,7 +8,7 @@ namespace Frederikskaj2.Reservations.Shared
         public int Cleaning { get; set; }
         public int Deposit { get; set; }
 
-        public int GetTotal() => Rent + Cleaning + Deposit;
+        public int Total => Rent + Cleaning + Deposit;
 
         public Price Accumulate(Price price)
         {

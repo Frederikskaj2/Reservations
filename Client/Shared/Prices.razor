@@ -17,5 +17,5 @@
 
     private string GetDeposit() => Price != null ? FormattingService.FormatMoneyShort(Price.Deposit) : string.Empty;
 
-    private string GetTotal() => Price != null ? FormattingService.FormatMoneyShort(Price.GetTotal()) : string.Empty;
+    private string GetTotal() => Price != null ? FormattingService.FormatMoneyShort(Price.Total) : string.Empty;
 }

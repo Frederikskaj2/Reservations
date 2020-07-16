@@ -7,6 +7,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
+    [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Entity Framework require an accesible setter.")]
     public class User : IdentityUser<int>
     {
         public string FullName { get; set; } = string.Empty;
@@ -18,6 +19,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         public string? AccountNumber { get; set; }
         public List<Order>? Orders { get; set; }
         public EmailSubscriptions EmailSubscriptions { get; set; }
+
         public virtual ICollection<AccountBalance>? AccountBalances { get; set; }
         public virtual ICollection<UserClaim>? Claims { get; set; }
         public virtual ICollection<UserLogin>? Logins { get; set; }

@@ -22,7 +22,6 @@ namespace Frederikskaj2.Reservations.Client
 
         public async Task<string> GetUserEmail() => (await GetAuthenticationState()).User.Identity.Name;
 
-
         public void ResetSignUpState()
         {
             SignUpRequest.Password = string.Empty;

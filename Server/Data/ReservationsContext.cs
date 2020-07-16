@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -28,12 +29,13 @@ namespace Frederikskaj2.Reservations.Server.Data
         public DbSet<Transaction> Transactions { get; set; } = null!;
         public DbSet<TransactionAmount> TransactionAmounts { get; set; } = null!;
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:Avoid excessive class coupling", Justification = "This class is naturally coupled to many different classes.")]
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            if (modelBuilder is null)
-                throw new ArgumentNullException(nameof(modelBuilder));
+            if (builder is null)
+                throw new ArgumentNullException(nameof(builder));
 
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(builder);
 
             var instantConverter = new ValueConverter<Instant, DateTime>(
                 instant => instant.ToDateTimeUtc(),
@@ -42,18 +44,18 @@ namespace Frederikskaj2.Reservations.Server.Data
                 localDate => localDate.ToDateTimeUnspecified(),
                 dateTime => LocalDate.FromDateTime(dateTime));
 
-            modelBuilder.Entity<AccountBalance>()
+            builder.Entity<AccountBalance>()
                 .HasKey(accountBalance => new { accountBalance.UserId, accountBalance.Account });
 
-            modelBuilder.Entity<CleaningTask>()
+            builder.Entity<CleaningTask>()
                 .Property(cleaningTask => cleaningTask.Date)
                 .HasConversion(localDateConverter);
 
-            modelBuilder.Entity<KeyCode>()
+            builder.Entity<KeyCode>()
                 .Property(keyCode => keyCode.Date)
                 .HasConversion(localDateConverter);
 
-            modelBuilder.Entity<Order>(builder =>
+            builder.Entity<Order>(builder =>
             {
                 builder.Property(order => order.CreatedTimestamp)
                     .HasConversion(instantConverter);
@@ -62,27 +64,27 @@ namespace Frederikskaj2.Reservations.Server.Data
                     .WithOne(transaction => transaction.Order!);
             });
 
-            modelBuilder.Entity<Posting>()
+            builder.Entity<Posting>()
                 .Property(transaction => transaction.Date)
                 .HasConversion(localDateConverter);
 
-            modelBuilder.Entity<Reservation>()
+            builder.Entity<Reservation>()
                 .Property(reservation => reservation.UpdatedTimestamp)
                 .HasConversion(instantConverter);
-            modelBuilder.Entity<Reservation>()
+            builder.Entity<Reservation>()
                 .Property(reservation => reservation.Date)
                 .HasConversion(localDateConverter);
-            modelBuilder.Entity<Reservation>()
+            builder.Entity<Reservation>()
                 .OwnsOne(reservation => reservation.Price);
 
-            modelBuilder.Entity<ReservedDay>()
+            builder.Entity<ReservedDay>()
                 .Property(reservedDay => reservedDay.Date)
                 .HasConversion(localDateConverter);
-            modelBuilder.Entity<ReservedDay>()
+            builder.Entity<ReservedDay>()
                 .HasIndex(reservedDay => new { reservedDay.Date, reservedDay.ResourceId })
                 .IsUnique();
 
-            modelBuilder.Entity<Role>(builder =>
+            builder.Entity<Role>(builder =>
             {
                 builder.HasMany(role => role.UserRoles)
                     .WithOne(userRole => userRole.Role!)
@@ -95,7 +97,7 @@ namespace Frederikskaj2.Reservations.Server.Data
                     .IsRequired();
             });
 
-            modelBuilder.Entity<Transaction>(builder =>
+            builder.Entity<Transaction>(builder =>
             {
                 builder.Property(transaction => transaction.Date)
                     .HasConversion(localDateConverter);
@@ -110,10 +112,10 @@ namespace Frederikskaj2.Reservations.Server.Data
                     .IsRequired();
             });
 
-            modelBuilder.Entity<TransactionAmount>()
+            builder.Entity<TransactionAmount>()
                 .HasKey(transactionAmount => new { transactionAmount.TransactionId, transactionAmount.Account });
 
-            modelBuilder.Entity<User>(builder =>
+            builder.Entity<User>(builder =>
             {
                 builder.Property(user => user.Created)
                     .HasConversion(instantConverter);

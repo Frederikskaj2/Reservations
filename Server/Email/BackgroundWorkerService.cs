@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
+    [SuppressMessage("Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "This class is instantiated vis dependency injection.")]
     internal class BackgroundWorkerService<TService> : BackgroundService
     {
         private readonly ILogger logger;

@@ -13,14 +13,11 @@
 @code
 {
     private readonly TimeSpan slideshowInterval = TimeSpan.FromSeconds(5);
-    private readonly Timer timer = new Timer();
+    private readonly Timer timer;
     private int currentIndex = 1;
+    private bool isSlideshowEnabled = true;
 
-    public Carousel()
-    {
-        timer.Interval = slideshowInterval.TotalMilliseconds;
-        timer.Elapsed += OnTimerElapsed;
-    }
+    public Frederikskaj2Carousel() => timer = new Timer(OnTimerElapsed);
 
     public void Dispose() => timer.Dispose();
 
@@ -35,13 +32,12 @@
 
     protected override bool ShouldRender() => false;
 
-    protected override void OnInitialized()
-    {
-        timer.Enabled = true;
-    }
+    protected override void OnInitialized() => ResetTimer();
 
     private async Task Navigate(int delta)
     {
+        if (isSlideshowEnabled)
+            ResetTimer();
         currentIndex = ((Count + currentIndex + delta) - 1)%Count + 1;
         await JSRuntime.InvokeVoidAsync("carouselSelectImage", currentIndex - 1);
     }
@@ -54,7 +50,11 @@
 
     private void ToggleSlideshow()
     {
-        timer.Enabled = !timer.Enabled;
+        isSlideshowEnabled = !isSlideshowEnabled;
+        if (isSlideshowEnabled)
+            ResetTimer();
+        else
+            DisableTimer();
     }
 
     private void ToggleSlideshowKeyUp(KeyboardEventArgs e)
@@ -63,8 +63,9 @@
             ToggleSlideshow();
     }
 
-    private void OnTimerElapsed(object sender, ElapsedEventArgs e)
-    {
-        Navigate(1).RunSynchronously();
-    }
+    private void ResetTimer() => timer.Change(slideshowInterval, slideshowInterval);
+
+    private void DisableTimer() => timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+    private void OnTimerElapsed(object state) => _ = Navigate(1);
 }

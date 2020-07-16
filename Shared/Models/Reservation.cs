@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using NodaTime;
 
 namespace Frederikskaj2.Reservations.Shared
@@ -13,6 +14,8 @@ namespace Frederikskaj2.Reservations.Shared
         public LocalDate Date { get; set; }
         public int DurationInDays { get; set; }
         public bool CanBeCancelled { get; set; }
+
+        [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "A public setter is required for serialization.")]
         public List<DatedKeyCode>? KeyCodes { get; set; }
     }
 }

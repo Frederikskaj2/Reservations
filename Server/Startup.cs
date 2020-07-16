@@ -31,6 +31,7 @@ namespace Frederikskaj2.Reservations.Server
 
         public void ConfigureServices(IServiceCollection services) => ConfigureServicesWithConnectionString(services, "Data Source=../Reservations.db");
 
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:Avoid excessive class coupling", Justification = "This class is naturally coupled to many different classes.")]
         public void ConfigureServicesWithConnectionString(IServiceCollection services, string connectionString)
         {
             services

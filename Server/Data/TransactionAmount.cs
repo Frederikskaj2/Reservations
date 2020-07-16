@@ -10,6 +10,5 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         // Debit is positive.
         public int Amount { get; set; }
-
     }
 }

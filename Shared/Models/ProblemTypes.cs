@@ -9,6 +9,5 @@ namespace Frederikskaj2.Reservations.Shared
 
         public static string ReservationConflict { get; } = typePrefix + nameof(ReservationConflict).ToLowerInvariant();
         public static string DatabaseError { get; } = typePrefix + nameof(DatabaseError).ToLowerInvariant();
-
     }
 }

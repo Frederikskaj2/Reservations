@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
 using NodaTime;
 using NodaTime.Calendars;
-using static System.FormattableString;
 
 namespace Frederikskaj2.Reservations.Client
 {
@@ -13,7 +12,6 @@ namespace Frederikskaj2.Reservations.Client
     {
         private readonly ApiClient apiClient;
         private IEnumerable<Apartment>? cachedApartments;
-        private HashSet<LocalDate>? cachedHolidays;
         private IEnumerable<ReservedDay>? cachedReservedDays;
         private IReadOnlyDictionary<int, Resource>? cachedResources;
         private IEnumerable<WeeklyKeyCodes>? cachedWeeklyKeyCodes;
@@ -58,11 +56,7 @@ namespace Frederikskaj2.Reservations.Client
             => (await GetReservedDays(includeOrder)).Where(
                 day => day.ResourceId == resourceId && fromDate <= day.Date && day.Date <= toDate);
 
-        public void Refresh()
-        {
-            cachedHolidays = null;
-            cachedReservedDays = null;
-        }
+        public void Refresh() => cachedReservedDays = null;
 
         public async Task<IEnumerable<WeeklyKeyCodes>> GetKeyCodes()
         {
@@ -111,7 +105,7 @@ namespace Frederikskaj2.Reservations.Client
         {
             if (cachedReservedDays == null)
             {
-                var requestUri = Invariant($"reserved-days");
+                const string requestUri = "reserved-days";
                 var (response, problem) = await apiClient.Get<IEnumerable<ReservedDay>>(requestUri);
                 cachedReservedDays = problem == null ? response! : Enumerable.Empty<ReservedDay>();
             }
@@ -134,15 +128,5 @@ namespace Frederikskaj2.Reservations.Client
                 {
                     Date = reservation.Date.PlusDays(i), ResourceId = reservation.Resource.Id, IsMyReservation = true
                 });
-
-        private async Task<HashSet<LocalDate>> GetHolidays()
-        {
-            if (cachedHolidays == null)
-            {
-                var (response, problem) = await apiClient.Get<IEnumerable<LocalDate>>("holidays");
-                cachedHolidays = problem == null ? response!.ToHashSet() : new HashSet<LocalDate>();
-            }
-            return cachedHolidays;
-        }
     }
 }

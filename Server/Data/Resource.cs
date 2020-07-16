@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Frederikskaj2.Reservations.Shared;
 
 namespace Frederikskaj2.Reservations.Server.Data
 {
+    [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Entity Framework require an accesible setter.")]
     public class Resource
     {
         public int Id { get; set; }

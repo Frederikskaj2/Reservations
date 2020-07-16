@@ -12,7 +12,7 @@
         public int ToOtherOrders { get; set; }
         public int PayOut { get; set; }
 
-        public int GetBalance() => -Price + FromOtherOrders + PayIn + RefundedDeposits - CancellationFee - Damages - ToOtherOrders - PayOut;
+        public int Balance => -Price + FromOtherOrders + PayIn + RefundedDeposits - CancellationFee - Damages - ToOtherOrders - PayOut;
         public bool IsPaid() => FromOtherOrders + PayIn > 0;
     }
 }

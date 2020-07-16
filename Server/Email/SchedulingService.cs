@@ -13,6 +13,7 @@ namespace Frederikskaj2.Reservations.Server.Email
         protected static readonly TimeSpan StartDelay = TimeSpan.FromMinutes(1);
     }
 
+    [SuppressMessage("Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "This class is instantiated vis dependency injection.")]
     internal sealed class SchedulingService<TService> : SchedulingService, IHostedService, IDisposable where TService : IScheduledService
     {
         private readonly ILogger logger;

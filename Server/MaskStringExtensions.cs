@@ -26,7 +26,7 @@ namespace Frederikskaj2.Reservations.Server
                 if (state.AtIndex > 1)
                 {
                     span[0] = state.Email[0];
-                    span.Slice(1, state.AtIndex - 1).Fill(MaskChar);
+                    span[1..state.AtIndex].Fill(MaskChar);
                 }
                 else
                 {

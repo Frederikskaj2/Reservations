@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.Domain;
 using Microsoft.Extensions.Options;
@@ -6,6 +7,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
+    [SuppressMessage("Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "This class is instantiated vis dependency injection.")]
     internal class ScheduledEmailService : IScheduledService
     {
         private readonly CleaningTaskService cleaningTaskService;
