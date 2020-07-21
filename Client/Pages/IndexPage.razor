@@ -47,6 +47,11 @@
                     <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.Prices[ResourceType.BanquetFacilities].HighDeposit, ReservationsOptions.Prices[ResourceType.BanquetFacilities].LowDeposit)</TableRowCell>
                     <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.Prices[ResourceType.Bedroom].HighDeposit, ReservationsOptions.Prices[ResourceType.Bedroom].LowDeposit)</TableRowCell>
                 </TableRow>
+                <TableRow>
+                    <TableRowCell>Afbestillingsgebyr</TableRowCell>
+                    <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.CancellationFee)</TableRowCell>
+                    <TableRowCell Class="text-center">@FormatPrice(ReservationsOptions.CancellationFee)</TableRowCell>
+                </TableRow>
             </TableBody>
         </Table>
         <h1>Regler</h1>
