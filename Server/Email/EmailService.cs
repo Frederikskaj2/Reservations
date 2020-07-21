@@ -10,8 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using NodaTime;
-using NodaTime.Calendars;
-using KeyCode = Frederikskaj2.Reservations.Server.Data.KeyCode;
+using LockBoxCode = Frederikskaj2.Reservations.Server.Data.LockBoxCode;
 using Reservation = Frederikskaj2.Reservations.Server.Data.Reservation;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
@@ -272,16 +271,16 @@ namespace Frederikskaj2.Reservations.Server.Email
             await SendMessage(model, "UserDeleted", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
-        public async Task SendKeyCodeEmail(User user, Reservation reservation, IEnumerable<KeyCode> keyCodes)
+        public async Task SendLockBoxCodeEmail(User user, Reservation reservation, IEnumerable<LockBoxCode> lockBoxCodes)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
             if (reservation is null)
                 throw new ArgumentNullException(nameof(reservation));
-            if (keyCodes is null)
-                throw new ArgumentNullException(nameof(keyCodes));
+            if (lockBoxCodes is null)
+                throw new ArgumentNullException(nameof(lockBoxCodes));
 
-            var model = new KeyCodeModel(
+            var model = new LockBoxCodeModel(
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
@@ -289,26 +288,26 @@ namespace Frederikskaj2.Reservations.Server.Email
                 reservation.OrderId,
                 reservation.Resource!.Name,
                 reservation.Date,
-                GetDatedKeyCodes().ToList(),
+                GetDatedLockBoxCodes().ToList(),
                 urlService.GetRulesUri(reservation.Resource.Type));
-            await SendMessage(model, "KeyCode", new EmailRecipient { Name = user.FullName, Email = user.Email });
+            await SendMessage(model, "LockBoxCode", new EmailRecipient { Name = user.FullName, Email = user.Email });
 
-            IEnumerable<DatedKeyCode> GetDatedKeyCodes()
+            IEnumerable<DatedLockBoxCode> GetDatedLockBoxCodes()
             {
                 var previousMonday = GetPreviousMonday(reservation.Date);
-                var firstKeyCode = keyCodes.FirstOrDefault(
-                    keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == previousMonday);
-                if (firstKeyCode == null)
+                var firstCode = lockBoxCodes.FirstOrDefault(
+                    code => code.ResourceId == reservation.ResourceId && code.Date == previousMonday);
+                if (firstCode == null)
                     yield break;
-                yield return new DatedKeyCode(reservation.Date, firstKeyCode.Code);
+                yield return new DatedLockBoxCode(reservation.Date, firstCode.Code);
                 var nextMonday = previousMonday.PlusWeeks(1);
                 if (reservation.Date.PlusDays(reservation.DurationInDays) < nextMonday)
                     yield break;
-                var nextKeyCode = keyCodes.FirstOrDefault(
-                    keyCode => keyCode.ResourceId == reservation.ResourceId && keyCode.Date == nextMonday);
-                if (nextKeyCode == null)
+                var nextCode = lockBoxCodes.FirstOrDefault(
+                    code => code.ResourceId == reservation.ResourceId && code.Date == nextMonday);
+                if (nextCode == null)
                     yield break;
-                yield return new DatedKeyCode(nextMonday, nextKeyCode.Code);
+                yield return new DatedLockBoxCode(nextMonday, nextCode.Code);
             }
         }
 
@@ -365,35 +364,26 @@ namespace Frederikskaj2.Reservations.Server.Email
                     .ThenBy(task => task.ResourceName);
         }
 
-        public async Task SendKeyCodesEmail(
-            User user, IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes)
+        public async Task SendWeeklyLockBoxCodesEmail(
+            User user, IEnumerable<Data.Resource> resources, IEnumerable<WeeklyLockBoxCodes> weeklyLockBoxCodes)
         {
             if (user is null)
                 throw new ArgumentNullException(nameof(user));
             if (resources is null)
                 throw new ArgumentNullException(nameof(resources));
-            if (keyCodes is null)
-                throw new ArgumentNullException(nameof(keyCodes));
+            if (weeklyLockBoxCodes is null)
+                throw new ArgumentNullException(nameof(weeklyLockBoxCodes));
 
             var resourcesDictionary = resources.ToDictionary(
                 resource => resource.Id,
                 resource => new Resource(resource.Id, resource.Sequence, resource.Name));
-            var weeklyKeyCodes = keyCodes
-                .GroupBy(keyCode => keyCode.Date)
-                .Select(
-                    grouping => new WeeklyKeyCodes(
-                        WeekYearRules.Iso.GetWeekOfWeekYear(grouping.Key),
-                        grouping.Key,
-                        grouping.ToDictionary(keyCode => keyCode.ResourceId, keyCode => keyCode.Code)
-                    ))
-                .OrderBy(keyCode => keyCode.WeekNumber);
-            var model = new KeyCodesModel(
+            var model = new WeeklyLockBoxCodesModel(
                 options.From!.Name!,
                 urlService.GetFromUrl(),
                 user.FullName,
                 resourcesDictionary,
-                weeklyKeyCodes);
-            await SendMessage(model, "KeyCodes", new EmailRecipient { Name = user.FullName, Email = user.Email });
+                weeklyLockBoxCodes);
+            await SendMessage(model, "WeeklyLockBoxCodes", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
 
         private async Task SendMessage<TModel>(TModel model, string viewName, EmailRecipient recipient)

@@ -87,17 +87,17 @@
                                     }
                                 </TableRowCell>
                             </TableRow>
-                            @if (reservation.KeyCodes != null)
+                            @if (reservation.LockBoxCodes != null)
                             {
                                 <TableRow>
-                                    @if (reservation.KeyCodes.Count == 1)
+                                    @if (reservation.LockBoxCodes.Count == 1)
                                     {
-                                        <TableRowCell ColumnSpan="7" Class="border-top-0">Nøglebokskode: <strong class="text-primary">@reservation.KeyCodes[0].Code</strong></TableRowCell>
+                                        <TableRowCell ColumnSpan="7" Class="border-top-0">Nøglebokskode: <strong class="text-primary">@reservation.LockBoxCodes[0].Code</strong></TableRowCell>
                                     }
                                     else
                                     {
-                                        <TableRowCell ColumnSpan="2" Class="border-top-0">Nøglebokskode (fra @FormattingService.FormatDate(reservation.KeyCodes[0].Date)): <strong class="text-primary">@reservation.KeyCodes[0].Code</strong></TableRowCell>
-                                        <TableRowCell ColumnSpan="5" Class="border-top-0">Nøglebokskode (fra @FormattingService.FormatDate(reservation.KeyCodes[1].Date)): <strong class="text-primary">@reservation.KeyCodes[1].Code</strong></TableRowCell>
+                                        <TableRowCell ColumnSpan="2" Class="border-top-0">Nøglebokskode (fra @FormattingService.FormatDate(reservation.LockBoxCodes[0].Date)): <strong class="text-primary">@reservation.LockBoxCodes[0].Code</strong></TableRowCell>
+                                        <TableRowCell ColumnSpan="5" Class="border-top-0">Nøglebokskode (fra @FormattingService.FormatDate(reservation.LockBoxCodes[1].Date)): <strong class="text-primary">@reservation.LockBoxCodes[1].Code</strong></TableRowCell>
                                     }
                                 </TableRow>
                             }

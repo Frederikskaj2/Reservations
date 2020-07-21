@@ -12,7 +12,7 @@
         public const string Consent = "samtykke";
         public const string HistoryReservations = "historik";
         public const string InventoryBanquetFacilities = "https://docs.google.com/spreadsheets/d/1PvfI1TQgaaYqBeck6hiv-JA0DlpZweeUolyzLH3RQtY";
-        public const string KeyCodes = "noeglebokskoder";
+        public const string LockBoxCodes = "noeglebokskoder";
         public const string MyAccount = "bruger";
         public const string MyOrders = "bruger/bestillinger";
         public const string MyTransactions = "bruger/kontoudtog";

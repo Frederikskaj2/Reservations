@@ -13,13 +13,13 @@ namespace Frederikskaj2.Reservations.Server.Email
         private readonly CleaningTaskService cleaningTaskService;
         private readonly IClock clock;
         private readonly DateTimeZone dateTimeZone;
-        private readonly KeyCodeService keyCodeService;
+        private readonly LockBoxCodeService lockBoxCodeService;
         private readonly EmailOptions options;
         private readonly OrderService orderService;
 
         public ScheduledEmailService(
             IOptions<EmailOptions> options, CleaningTaskService cleaningTaskService, IClock clock,
-            DateTimeZone dateTimeZone, KeyCodeService keyCodeService, OrderService orderService)
+            DateTimeZone dateTimeZone, LockBoxCodeService lockBoxCodeService, OrderService orderService)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
@@ -27,7 +27,7 @@ namespace Frederikskaj2.Reservations.Server.Email
             this.cleaningTaskService = cleaningTaskService ?? throw new ArgumentNullException(nameof(cleaningTaskService));
             this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
             this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
-            this.keyCodeService = keyCodeService ?? throw new ArgumentNullException(nameof(keyCodeService));
+            this.lockBoxCodeService = lockBoxCodeService ?? throw new ArgumentNullException(nameof(lockBoxCodeService));
             this.orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
 
             this.options = options.Value;
@@ -39,7 +39,7 @@ namespace Frederikskaj2.Reservations.Server.Email
         {
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
             return Task.WhenAll(
-                keyCodeService.SendKeyCodeEmails(today),
+                lockBoxCodeService.SendLockBoxCodeEmails(today),
                 cleaningTaskService.SendDifferentialCleaningTasksEmail(today),
                 orderService.SendOverduePaymentEmails(today),
                 orderService.SendSettlementNeededEmails(today));

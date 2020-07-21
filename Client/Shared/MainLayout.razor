@@ -39,9 +39,9 @@
                     <div>Ren­gøring</div>
                 </NavLink>
             }
-            if (user.IsInRole(Roles.Settlement) || user.IsInRole(Roles.KeyCodes))
+            if (user.IsInRole(Roles.Settlement) || user.IsInRole(Roles.LockBoxCodes))
             {
-                <NavLink href="@Urls.KeyCodes" class="nav-tab nav-administrator">
+                <NavLink href="@Urls.LockBoxCodes" class="nav-tab nav-administrator">
                     <div>Nøgleboks­koder</div>
                 </NavLink>
             }

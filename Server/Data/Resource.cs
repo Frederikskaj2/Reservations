@@ -8,7 +8,7 @@ namespace Frederikskaj2.Reservations.Server.Data
     public class Resource
     {
         public int Id { get; set; }
-        public virtual ICollection<KeyCode>? KeyCodes { get; set; }
+        public virtual ICollection<LockBoxCode>? LockBoxCodes { get; set; }
         public int Sequence { get; set; }
         public ResourceType Type { get; set; }
         public string Name { get; set; } = string.Empty;

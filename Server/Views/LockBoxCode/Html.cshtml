@@ -1,4 +1,4 @@
-﻿@model KeyCodeModel
+﻿@model LockBoxCodeModel
 @inject CultureInfo CultureInfo
 @{
     var pattern = LocalDatePattern.Create("d. MMMM yyyy", CultureInfo);
@@ -13,17 +13,17 @@
 </head>
 <body>
     <p>Hej @Model.Name</p>
-@if (Model.DatedKeyCodes.Count == 1)
+@if (Model.DatedLockBoxCodes.Count == 1)
 {
     <p>Her er den nøglebokskode du skal bruge for at få adgang til <strong>@Model.ResourceName</strong> den @pattern.Format(Model.Date):</p>
-    <p><strong>@Model.DatedKeyCodes[0].Code</strong></p>
+    <p><strong>@Model.DatedLockBoxCodes[0].Code</strong></p>
 }
 else
 {
     <p>Her er de nøglebokskoder du skal bruge for at få adgang til <strong>@Model.ResourceName</strong> den @pattern.Format(Model.Date):</p>
-@foreach (var datedKeyCode in Model.DatedKeyCodes)
+@foreach (var dateLockBoxCode in Model.DatedLockBoxCodes)
 {
-    <p>Fra @pattern.Format(datedKeyCode.Date): <strong>@datedKeyCode.Code</strong></p>
+    <p>Fra @pattern.Format(dateLockBoxCode.Date): <strong>@dateLockBoxCode.Code</strong></p>
 }
 }
     <p>Det er <strong>vigtigt</strong> at du overholder den <a href="@Model.RulesUri">husorden</a> der gælder for brug lokalet.</p>

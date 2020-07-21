@@ -11,10 +11,10 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Tests
 {
-    public class KeyCodeServiceTests : IntegrationTests
+    public class LockBoxCodeServiceTests : IntegrationTests
     {
         [Fact]
-        public async Task WhenAWeekBeforeReservationExpectNoKeyCodeEmailToBeSent()
+        public async Task WhenAWeekBeforeReservationExpectNoLockBoxCodeEmailToBeSent()
         {
             var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<IEmailService>>();
             await Initialize((serviceProvider, _) => serviceProvider.AddSingleton(backgroundWorkerQueue));
@@ -38,15 +38,15 @@ namespace Frederikskaj2.Reservations.Tests
             });
 
             using var scope = CreateScope();
-            var keyCodeService = scope.ServiceProvider.GetRequiredService<KeyCodeService>();
+            var lockBoxCodeService = scope.ServiceProvider.GetRequiredService<LockBoxCodeService>();
 
             var aWeekBeforeReservation = reservationDate.PlusWeeks(-1);
-            await keyCodeService.SendKeyCodeEmails(aWeekBeforeReservation);
+            await lockBoxCodeService.SendLockBoxCodeEmails(aWeekBeforeReservation);
             A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<IEmailService, CancellationToken, Task>>.Ignored)).MustNotHaveHappened();
         }
 
         [Fact]
-        public async Task WhenADayBeforeReservationExpectKeyCodeEmailToBeSent()
+        public async Task WhenADayBeforeReservationExpectLockBoxCodeEmailToBeSent()
         {
             var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<IEmailService>>();
             await Initialize((serviceProvider, _) => serviceProvider.AddSingleton(backgroundWorkerQueue));
@@ -70,15 +70,15 @@ namespace Frederikskaj2.Reservations.Tests
             });
 
             using var scope = CreateScope();
-            var keyCodeService = scope.ServiceProvider.GetRequiredService<KeyCodeService>();
+            var lockBoxCodeService = scope.ServiceProvider.GetRequiredService<LockBoxCodeService>();
 
             var aDayBeforeReservation = reservationDate.PlusDays(-1);
-            await keyCodeService.SendKeyCodeEmails(aDayBeforeReservation);
+            await lockBoxCodeService.SendLockBoxCodeEmails(aDayBeforeReservation);
             A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<IEmailService, CancellationToken, Task>>.Ignored)).MustHaveHappenedOnceExactly();
         }
 
         [Fact]
-        public async Task WhenADayBeforeOwnerReservationExpectNoKeyCodeEmailToBeSent()
+        public async Task WhenADayBeforeOwnerReservationExpectNoLockBoxCodeEmailToBeSent()
         {
             var backgroundWorkerQueue = A.Fake<IBackgroundWorkQueue<IEmailService>>();
             await Initialize((serviceProvider, _) => serviceProvider.AddSingleton(backgroundWorkerQueue));
@@ -102,10 +102,10 @@ namespace Frederikskaj2.Reservations.Tests
             });
 
             using var scope = CreateScope();
-            var keyCodeService = scope.ServiceProvider.GetRequiredService<KeyCodeService>();
+            var lockBoxCodeService = scope.ServiceProvider.GetRequiredService<LockBoxCodeService>();
 
             var aDayBeforeReservation = reservationDate.PlusDays(-1);
-            await keyCodeService.SendKeyCodeEmails(aDayBeforeReservation);
+            await lockBoxCodeService.SendLockBoxCodeEmails(aDayBeforeReservation);
             A.CallTo(() => backgroundWorkerQueue.Enqueue(A<Func<IEmailService, CancellationToken, Task>>.Ignored)).MustNotHaveHappened();
         }
     }

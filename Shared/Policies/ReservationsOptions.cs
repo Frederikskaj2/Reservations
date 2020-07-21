@@ -39,6 +39,6 @@ namespace Frederikskaj2.Reservations.Shared
         public int MinimumCancellationNoticeInDays { get; set; } = 14;
         public int PaymentDeadlineInDays { get; set; } = 7;
         public string PayInAccountNumber { get; set; } = "9444-12501110";
-        public int RevealKeyCodeDaysBeforeReservationStart { get; set; } = 3;
+        public int RevealLockBoxCodeDaysBeforeReservationStart { get; set; } = 3;
     }
 }

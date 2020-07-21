@@ -6,8 +6,8 @@ namespace Frederikskaj2.Reservations.Server.Data
     public enum ReservationEmails
     {
         None,
-        KeyCode,
-        OverduePayment = KeyCode << 1,
+        LockBoxCode,
+        OverduePayment = LockBoxCode << 1,
         NeedsSettlement = OverduePayment << 1
     }
 }

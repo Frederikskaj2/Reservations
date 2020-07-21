@@ -17,6 +17,7 @@ namespace Frederikskaj2.Reservations.Server.Data
     public sealed class SeedData : IDisposable
     {
         private readonly IClock clock;
+        private readonly IDateProvider dateProvider;
         private readonly ReservationsContext db;
         private readonly SeedDataOptions options;
         private readonly RandomNumberGenerator randomNumberGenerator = RandomNumberGenerator.Create();
@@ -25,7 +26,7 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         public SeedData(
             IOptions<SeedDataOptions> options, IClock clock, ReservationsContext db,
-            RoleManager<Role> roleManager, UserManager<User> userManager)
+            RoleManager<Role> roleManager, UserManager<User> userManager, IDateProvider dateProvider)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
@@ -34,6 +35,7 @@ namespace Frederikskaj2.Reservations.Server.Data
             this.db = db ?? throw new ArgumentNullException(nameof(db));
             this.roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            this.dateProvider = dateProvider ?? throw new ArgumentNullException(nameof(dateProvider));
 
             this.options = options.Value;
 
@@ -62,7 +64,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         {
             if (!await db.Database.EnsureCreatedAsync())
             {
-                await UpdateApartments();
+                await MigrateLockBoxCodes();
                 return;
             }
 
@@ -74,15 +76,6 @@ namespace Frederikskaj2.Reservations.Server.Data
 
             await CreateRoles();
             await CreateUsers();
-        }
-
-        private async Task UpdateApartments()
-        {
-            var existingApartments = await db.Apartments.ToListAsync();
-            var apartmentsToAdd = GetApartments().ToHashSet();
-            apartmentsToAdd.ExceptWith(existingApartments);
-            db.Apartments.AddRange(apartmentsToAdd);
-            await db.SaveChangesAsync();
         }
 
         private async Task CreateTriggers()
@@ -154,12 +147,13 @@ END";
         private void CreateResources()
         {
             var resources = options.Resources
-                .Select((resource, i) => new Resource {
+                .Select((resource, i) => new Resource
+                {
                     Sequence = i + 1,
                     Type = resource.Type,
                     Name = resource.Name!,
-                    KeyCodes = (resource.KeyCodes ?? Enumerable.Empty<KeyCodeOptions>())
-                        .Select(keyCode => new KeyCode { Date = keyCode.Date, Code = keyCode.Code! })
+                    LockBoxCodes = (resource.LockBoxCodes ?? Enumerable.Empty<LockBoxCodeOptions>())
+                        .Select(code => new LockBoxCode { Date = code.Date, Code = code.Code! })
                         .ToList()
                 });
             db.Resources.AddRange(resources);
@@ -207,6 +201,44 @@ END";
             var bytes = new byte[18];
             randomNumberGenerator.GetBytes(bytes);
             return Convert.ToBase64String(bytes);
+        }
+
+        private async Task MigrateLockBoxCodes()
+        {
+            var keyCodes = await db.KeyCodes.ToListAsync();
+            if (keyCodes.Count == 0)
+                return;
+
+            using var transaction = await db.Database.BeginTransactionAsync();
+
+            await db.Database.ExecuteSqlRawAsync(@"CREATE TABLE IF NOT EXISTS ""LockBoxCodes"" (
+    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_LockBoxCodes"" PRIMARY KEY AUTOINCREMENT,
+    ""ResourceId"" INTEGER NOT NULL,
+    ""Date"" TEXT NOT NULL,
+    ""Code"" TEXT NOT NULL,
+    CONSTRAINT ""FK_LockBoxCodes_Resources_ResourceId"" FOREIGN KEY (""ResourceId"") REFERENCES ""Resources"" (""Id"") ON DELETE CASCADE
+)");
+
+            var hasLockBoxCodes = await db.LockBoxCodes.AnyAsync();
+            if (hasLockBoxCodes)
+            {
+                await transaction.RollbackAsync();
+                return;
+            }
+
+            await db.Database.ExecuteSqlRawAsync(@"UPDATE ""AspNetRoles"" SET Name = ""LockBoxCodes"", NormalizedName = ""LOCKBOXCODES"" WHERE Name = ""KeyCodes""");
+
+            await db.Database.ExecuteSqlRawAsync(@"DELETE FROM ""KeyCodes""");
+
+            var latestDateToRetainCode = dateProvider.Today.PlusWeeks(2);
+            var lockBoxCodes = keyCodes
+                .Where(keyCode => keyCode.Date <= latestDateToRetainCode)
+                .Select(keyCode => new LockBoxCode { ResourceId = keyCode.ResourceId, Date = keyCode.Date, Code = keyCode.Code });
+            await db.LockBoxCodes.AddRangeAsync(lockBoxCodes);
+
+            await db.SaveChangesAsync();
+
+            await transaction.CommitAsync();
         }
     }
 }

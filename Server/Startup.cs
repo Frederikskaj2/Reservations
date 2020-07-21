@@ -83,7 +83,7 @@ namespace Frederikskaj2.Reservations.Server
                 .AddScoped<OrderService>()
                 .AddScoped<PostingsService>()
                 .AddScoped<MyTransactionService>()
-                .AddScoped<KeyCodeService>()
+                .AddScoped<LockBoxCodeService>()
                 .AddScoped<CleaningTaskService>()
                 .AddEmail(Configuration);
 

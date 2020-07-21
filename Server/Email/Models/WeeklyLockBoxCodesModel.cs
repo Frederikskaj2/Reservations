@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using Frederikskaj2.Reservations.Shared;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
-    public class KeyCodesModel : EmailWithNameModel
+    public class WeeklyLockBoxCodesModel : EmailWithNameModel
     {
-        public KeyCodesModel(
+        public WeeklyLockBoxCodesModel(
             string from, Uri fromUrl, string name, IReadOnlyDictionary<int, Resource> resources,
-            IEnumerable<WeeklyKeyCodes> weeklyKeyCodes)
+            IEnumerable<WeeklyLockBoxCodes> weeklyLockBoxCodes)
             : base(from, fromUrl, name)
         {
             Resources = resources ?? throw new ArgumentNullException(nameof(resources));
-            WeeklyKeyCodes = weeklyKeyCodes ?? throw new ArgumentNullException(nameof(weeklyKeyCodes));
+            WeeklyLockBoxCodes = weeklyLockBoxCodes ?? throw new ArgumentNullException(nameof(weeklyLockBoxCodes));
         }
 
         public IReadOnlyDictionary<int, Resource> Resources { get; }
-        public IEnumerable<WeeklyKeyCodes> WeeklyKeyCodes { get; }
+        public IEnumerable<WeeklyLockBoxCodes> WeeklyLockBoxCodes { get; }
     }
 }

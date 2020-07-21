@@ -1,6 +1,6 @@
 ﻿@page "/noeglebokskoder"
-@attribute [Authorize(Roles = Roles.KeyCodes)]
-@inject ApiClient ApiClient 
+@attribute [Authorize(Roles = Roles.LockBoxCodes)]
+@inject ApiClient ApiClient
 @inject ApplicationState ApplicationState
 @inject ClientDataProvider ClientDataProvider
 @inject FormattingService FormattingService
@@ -30,19 +30,28 @@
                         <TableHeaderCell>Dato</TableHeaderCell>
                         @foreach (var resource in orderedResources)
                         {
-                            <TableHeaderCell Class="text-center">@resource.Name</TableHeaderCell>
+                            <TableHeaderCell Class="text-center" ColumnSpan="2">@resource.Name</TableHeaderCell>
                         }
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    @foreach (var weeklyKeyCodes in allWeeklyKeyCodes!)
+                    @foreach (var weeklyLoockBoxCodes in allWeeklyLockBoxCodes!)
                     {
                         <TableRow>
-                            <TableHeaderCell>@weeklyKeyCodes.WeekNumber</TableHeaderCell>
-                            <TableRowCell>@FormattingService.FormatDate(weeklyKeyCodes.Date)</TableRowCell>
+                            <TableHeaderCell>@weeklyLoockBoxCodes.WeekNumber</TableHeaderCell>
+                            <TableRowCell>@FormattingService.FormatDate(weeklyLoockBoxCodes.Date)</TableRowCell>
                             @foreach (var resource in orderedResources)
                             {
-                                <TableRowCell Class="text-center">@(weeklyKeyCodes.Codes!.TryGetValue(resource.Id, out var code) ? code : string.Empty)</TableRowCell>
+                                var code = weeklyLoockBoxCodes.Codes!.FirstOrDefault(c => c.ResourceId == resource.Id);
+                                if (code != null)
+                                {
+                                    <TableRowCell Class="text-right">@(code.Code)</TableRowCell>
+                                    <TableRowCell Class="text-left">@(code.Difference)</TableRowCell>
+                                }
+                                else
+                                {
+                                    <TableRowCell ColumnSpan="2" />
+                                }
                             }
                         </TableRow>
                     }
@@ -60,7 +69,7 @@
 @code
 {
     private IReadOnlyDictionary<int, Resource>? resources;
-    private IEnumerable<WeeklyKeyCodes>? allWeeklyKeyCodes;
+    private IEnumerable<WeeklyLockBoxCodes>? allWeeklyLockBoxCodes;
     private string? email;
     private bool isInitialized;
     private bool showSuccessAlert;
@@ -69,7 +78,7 @@
     protected override async Task OnInitializedAsync()
     {
         resources = await ClientDataProvider.GetResources();
-        allWeeklyKeyCodes = await ClientDataProvider.GetKeyCodes();
+        allWeeklyLockBoxCodes = await ClientDataProvider.GetWeeklyLockBoxCodes();
         email = await ApplicationState.GetUserEmail();
         isInitialized = true;
     }
@@ -78,7 +87,7 @@
     {
         DismissAllAlerts();
 
-        var problem = await ApiClient.Post("key-codes/send");
+        var problem = await ApiClient.Post("lock-box-codes/send");
         if (problem == null)
             showSuccessAlert = true;
         else

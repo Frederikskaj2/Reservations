@@ -20,7 +20,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         public DbSet<AccountBalance> AccountBalances { get; set; } = null!;
         public DbSet<Apartment> Apartments { get; set; } = null!;
         public DbSet<CleaningTask> CleaningTasks { get; set; } = null!;
-        public DbSet<KeyCode> KeyCodes { get; set; } = null!;
+        public DbSet<LockBoxCode> LockBoxCodes { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<Posting> Postings { get; set; } = null!;
         public DbSet<Reservation> Reservations { get; set; } = null!;
@@ -28,6 +28,8 @@ namespace Frederikskaj2.Reservations.Server.Data
         public DbSet<Resource> Resources { get; set; } = null!;
         public DbSet<Transaction> Transactions { get; set; } = null!;
         public DbSet<TransactionAmount> TransactionAmounts { get; set; } = null!;
+
+        public DbSet<KeyCode> KeyCodes { get; set; } = null!;
 
         [SuppressMessage("Microsoft.Maintainability", "CA1506:Avoid excessive class coupling", Justification = "This class is naturally coupled to many different classes.")]
         protected override void OnModelCreating(ModelBuilder builder)
@@ -51,8 +53,8 @@ namespace Frederikskaj2.Reservations.Server.Data
                 .Property(cleaningTask => cleaningTask.Date)
                 .HasConversion(localDateConverter);
 
-            builder.Entity<KeyCode>()
-                .Property(keyCode => keyCode.Date)
+            builder.Entity<LockBoxCode>()
+                .Property(lockBoxCode => lockBoxCode.Date)
                 .HasConversion(localDateConverter);
 
             builder.Entity<Order>(builder =>
@@ -162,6 +164,10 @@ namespace Frederikskaj2.Reservations.Server.Data
                     .HasForeignKey(userRole => userRole.UserId)
                     .IsRequired();
             });
+
+            builder.Entity<KeyCode>()
+                .Property(keyCode => keyCode.Date)
+                .HasConversion(localDateConverter);
         }
     }
 }

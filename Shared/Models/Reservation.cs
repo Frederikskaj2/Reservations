@@ -16,6 +16,6 @@ namespace Frederikskaj2.Reservations.Shared
         public bool CanBeCancelled { get; set; }
 
         [SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "A public setter is required for serialization.")]
-        public List<DatedKeyCode>? KeyCodes { get; set; }
+        public List<DatedLockBoxCode>? LockBoxCodes { get; set; }
     }
 }

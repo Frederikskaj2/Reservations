@@ -9,8 +9,8 @@ namespace Frederikskaj2.Reservations.Server.Email
     {
         Task SendCleaningScheduleEmail(User user, IEnumerable<Data.Resource> resources, IEnumerable<Data.CleaningTask> cancelledTasks, IEnumerable<Data.CleaningTask> newTasks, IEnumerable<Data.CleaningTask> currentTasks);
         Task SendConfirmEmail(User user, string token);
-        Task SendKeyCodeEmail(User user, Reservation reservation, IEnumerable<KeyCode> keyCodes);
-        Task SendKeyCodesEmail(User user, IEnumerable<Data.Resource> resources, IEnumerable<KeyCode> keyCodes);
+        Task SendLockBoxCodeEmail(User user, Reservation reservation, IEnumerable<LockBoxCode> lockBoxCodes);
+        Task SendWeeklyLockBoxCodesEmail(User user, IEnumerable<Data.Resource> resources, IEnumerable<Shared.WeeklyLockBoxCodes> weeklyLockBoxCodes);
         Task SendNewOrderEmail(User user, int orderId);
         Task SendOrderConfirmedEmail(User user, int orderId);
         Task SendOrderReceivedEmail(User user, int orderId, int prepaidAmount, int amount);

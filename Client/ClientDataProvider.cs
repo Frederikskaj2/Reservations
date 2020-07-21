@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Shared;
 using NodaTime;
-using NodaTime.Calendars;
 
 namespace Frederikskaj2.Reservations.Client
 {
@@ -14,7 +13,7 @@ namespace Frederikskaj2.Reservations.Client
         private IEnumerable<Apartment>? cachedApartments;
         private IEnumerable<ReservedDay>? cachedReservedDays;
         private IReadOnlyDictionary<int, Resource>? cachedResources;
-        private IEnumerable<WeeklyKeyCodes>? cachedWeeklyKeyCodes;
+        private IEnumerable<WeeklyLockBoxCodes>? cachedWeeklyLockBoxCodes;
         private readonly Lazy<HashSet<LocalDate>> holidays;
 
         public ClientDataProvider(ApiClient apiClient, HolidaysProvider holidaysProvider)
@@ -58,26 +57,15 @@ namespace Frederikskaj2.Reservations.Client
 
         public void Refresh() => cachedReservedDays = null;
 
-        public async Task<IEnumerable<WeeklyKeyCodes>> GetKeyCodes()
+        public async Task<IEnumerable<WeeklyLockBoxCodes>> GetWeeklyLockBoxCodes()
         {
-            if (cachedWeeklyKeyCodes == null)
+            if (cachedWeeklyLockBoxCodes == null)
             {
-                var (response, problem) = await apiClient.Get<IEnumerable<KeyCode>>("key-codes");
-                if (problem == null)
-                    cachedWeeklyKeyCodes = response
-                        .GroupBy(keyCode => keyCode.Date)
-                        .Select(
-                            grouping => new WeeklyKeyCodes(
-                                WeekYearRules.Iso.GetWeekOfWeekYear(grouping.Key),
-                                grouping.Key,
-                                grouping.ToDictionary(keyCode => keyCode.ResourceId, keyCode => keyCode.Code)
-                            ))
-                        .OrderBy(keyCode => keyCode.WeekNumber);
-                else
-                    cachedWeeklyKeyCodes = Enumerable.Empty<WeeklyKeyCodes>();
+                var (response, problem) = await apiClient.Get<IEnumerable<WeeklyLockBoxCodes>>("lock-box-codes");
+                cachedWeeklyLockBoxCodes = problem == null ? response! : Enumerable.Empty<WeeklyLockBoxCodes>();
             }
 
-            return cachedWeeklyKeyCodes;
+            return cachedWeeklyLockBoxCodes;
         }
 
         public void ResetState()
