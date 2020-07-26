@@ -16,7 +16,6 @@ using User = Frederikskaj2.Reservations.Server.Data.User;
 namespace Frederikskaj2.Reservations.Server.Controllers
 {
     [Route("users")]
-    [Authorize(Roles = Roles.UserAdministration)]
     [ApiController]
     [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "The framework ensures that the action arguments are non-null.")]
     public class UsersController : Controller
@@ -35,6 +34,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = Roles.UserAdministration)]
         public async Task<IEnumerable<Shared.User>> Get()
             => await db.Users
                 .Include(user => user.Orders)
@@ -58,6 +58,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
                 .ToListAsync();
 
         [HttpPatch("{userId:int}")]
+        [Authorize(Roles = Roles.UserAdministration)]
         public async Task<UpdateUserResponse> Patch(int userId, UpdateUserRequest request)
         {
             var user = await db.Users.FindAsync(userId);
@@ -124,6 +125,7 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         }
 
         [HttpPost("{userId:int}/pay-out")]
+        [Authorize(Roles = Roles.Payment)]
         public async Task<PayOut> PayOut(int userId, PayOutRequest request)
         {
             var createdByUserId = User.Id();
