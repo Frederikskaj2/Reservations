@@ -80,7 +80,7 @@
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        @foreach (var posting in postings)
+                        @foreach (var posting in postings!)
                         {
                             <TableRow>
                                 <TableRowCell>@FormattingService.FormatDate(posting.Date)</TableRowCell>

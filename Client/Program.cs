@@ -44,7 +44,7 @@ namespace Frederikskaj2.Reservations.Client
                 .AddSingleton(httpClient);
 
             services
-                .AddBlazorise(options => options.ChangeTextOnKeyPress = true)
+                .AddBlazorise(options => options.ChangeTextOnKeyPress = false)
                 .AddBootstrapProviders()
                 .AddFontAwesomeIcons();
 

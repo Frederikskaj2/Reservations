@@ -64,7 +64,8 @@ namespace Frederikskaj2.Reservations.Server.Data
         {
             if (!await db.Database.EnsureCreatedAsync())
             {
-                await MigrateLockBoxCodes();
+                await DeleteKeyCodes();
+                await UpdateApartments();
                 return;
             }
 
@@ -144,6 +145,7 @@ END";
                 .ThenBy(apartment => apartment.Story)
                 .ThenBy(apartment => apartment.Side);
         }
+
         private void CreateResources()
         {
             var resources = options.Resources
@@ -203,42 +205,29 @@ END";
             return Convert.ToBase64String(bytes);
         }
 
-        private async Task MigrateLockBoxCodes()
+        private Task DeleteKeyCodes() => db.Database.ExecuteSqlRawAsync(@"DROP TABLE IF EXISTS ""KeyCodes""");
+
+        private async Task UpdateApartments()
         {
-            var keyCodes = await db.KeyCodes.ToListAsync();
-            if (keyCodes.Count == 0)
-                return;
-
-            using var transaction = await db.Database.BeginTransactionAsync();
-
-            await db.Database.ExecuteSqlRawAsync(@"CREATE TABLE IF NOT EXISTS ""LockBoxCodes"" (
-    ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_LockBoxCodes"" PRIMARY KEY AUTOINCREMENT,
-    ""ResourceId"" INTEGER NOT NULL,
-    ""Date"" TEXT NOT NULL,
-    ""Code"" TEXT NOT NULL,
-    CONSTRAINT ""FK_LockBoxCodes_Resources_ResourceId"" FOREIGN KEY (""ResourceId"") REFERENCES ""Resources"" (""Id"") ON DELETE CASCADE
-)");
-
-            var hasLockBoxCodes = await db.LockBoxCodes.AnyAsync();
-            if (hasLockBoxCodes)
+            var apartments = await db.Apartments.ToListAsync();
+            var groupings = apartments
+                .GroupBy(apartment => $"{apartment.Letter}{apartment.Story}{apartment.Side}")
+                .Where(grouping => grouping.Count() > 1);
+            foreach (var grouping in groupings)
             {
-                await transaction.RollbackAsync();
-                return;
+                var selectedApartment = grouping.OrderBy(apartment => apartment.Id).First();
+                var apartmentsToReplace = grouping.OrderBy(apartment => apartment.Id).Skip(1).ToList();
+                var apartmentsToReplaceIds = apartmentsToReplace.Select(apartment => apartment.Id).ToHashSet();
+                var users = await db.Users.Where(user => user.ApartmentId.HasValue && apartmentsToReplaceIds.Contains(user.ApartmentId.Value)).ToListAsync();
+                foreach (var user in users)
+                    user.ApartmentId = selectedApartment.Id;
+                var orders = await db.Orders.Where(order => order.ApartmentId.HasValue && apartmentsToReplaceIds.Contains(order.ApartmentId.Value)).ToListAsync();
+                foreach (var order in orders)
+                    order.ApartmentId = selectedApartment.Id;
+                foreach (var apartment in apartmentsToReplace)
+                    db.Apartments.Remove(apartment);
             }
-
-            await db.Database.ExecuteSqlRawAsync(@"UPDATE ""AspNetRoles"" SET Name = ""LockBoxCodes"", NormalizedName = ""LOCKBOXCODES"" WHERE Name = ""KeyCodes""");
-
-            await db.Database.ExecuteSqlRawAsync(@"DELETE FROM ""KeyCodes""");
-
-            var latestDateToRetainCode = dateProvider.Today.PlusWeeks(2);
-            var lockBoxCodes = keyCodes
-                .Where(keyCode => keyCode.Date <= latestDateToRetainCode)
-                .Select(keyCode => new LockBoxCode { ResourceId = keyCode.ResourceId, Date = keyCode.Date, Code = keyCode.Code });
-            await db.LockBoxCodes.AddRangeAsync(lockBoxCodes);
-
             await db.SaveChangesAsync();
-
-            await transaction.CommitAsync();
         }
     }
 }

@@ -51,6 +51,8 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMyUser()
         {
+            if (!User.Id().HasValue)
+                return Ok();
             var user = await FindUser();
             var myUser = user.Adapt<MyUser>();
             myUser.Phone = user.PhoneNumber;

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AspNetCoreVersion>3.1.6</AspNetCoreVersion>
     <BlazorVersion>3.2.1</BlazorVersion>
-    <BlazorizeVersion>0.9.1.1</BlazorizeVersion>
+    <BlazorizeVersion>0.9.1.2</BlazorizeVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0">

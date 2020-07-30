@@ -29,8 +29,6 @@ namespace Frederikskaj2.Reservations.Server.Data
         public DbSet<Transaction> Transactions { get; set; } = null!;
         public DbSet<TransactionAmount> TransactionAmounts { get; set; } = null!;
 
-        public DbSet<KeyCode> KeyCodes { get; set; } = null!;
-
         [SuppressMessage("Microsoft.Maintainability", "CA1506:Avoid excessive class coupling", Justification = "This class is naturally coupled to many different classes.")]
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -164,10 +162,6 @@ namespace Frederikskaj2.Reservations.Server.Data
                     .HasForeignKey(userRole => userRole.UserId)
                     .IsRequired();
             });
-
-            builder.Entity<KeyCode>()
-                .Property(keyCode => keyCode.Date)
-                .HasConversion(localDateConverter);
         }
     }
 }
