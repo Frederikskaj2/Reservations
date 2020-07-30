@@ -12,6 +12,7 @@
     }
     else
     {
+        var hasPostings = postings?.Any() ?? false;
         <Container>
             <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
                 Posteringerne er blevet send til @email.
@@ -55,14 +56,14 @@
                         <Column ColumnSize="ColumnSize.IsThird">
                             <Field>
                                 <FieldBody>
-                                    <Button Style="margin-top: 2rem;" Color="Color.Secondary" Type="ButtonType.Submit" Block="true" PreventDefaultOnSubmit="true" Clicked="@Send">Send posteringer som mail</Button>
+                                    <Button Style="margin-top: 2rem;" Color="Color.Secondary" Type="ButtonType.Submit" Block="true" PreventDefaultOnSubmit="true" Disabled="!hasPostings" Clicked="@Send">Send posteringer som mail</Button>
                                 </FieldBody>
                             </Field>
                         </Column>
                     </Row>
                 </Form>
             }
-            @if (!(postings?.Any() ?? false))
+            @if (!hasPostings)
             {
                 <Paragraph>Der er intet at vise.</Paragraph>
             }
@@ -187,7 +188,7 @@
     {
         DismissAllAlerts();
 
-        var problem = await ApiClient.Post("postings/send");
+        var problem = await ApiClient.Post($"postings/send?month={currentYear:0000}-{currentMonth:00}-01");
         if (problem == null)
             showSuccessAlert = true;
         else

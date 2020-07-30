@@ -43,12 +43,13 @@ namespace Frederikskaj2.Reservations.Server.Controllers
         public Task<PostingsRange> Get() => postingsService.GetPostingsRange();
 
         [HttpPost("send")]
-        public async Task<IActionResult> Send()
+        public async Task<IActionResult> Send(string month)
         {
+            var result = pattern.Parse(month);
             var userId = User.Id();
             var user = await userManager.FindByIdAsync(userId!.Value.ToString(CultureInfo.InvariantCulture));
             var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
-            await postingsService.SendPostingsEmail(user, today);
+            await postingsService.SendPostingsEmail(user, result.Value);
             return NoContent();
         }
     }
