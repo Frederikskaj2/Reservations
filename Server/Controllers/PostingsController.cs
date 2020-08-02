@@ -7,7 +7,6 @@ using Frederikskaj2.Reservations.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using NodaTime;
 using NodaTime.Text;
 using User = Frederikskaj2.Reservations.Server.Data.User;
 
@@ -19,15 +18,11 @@ namespace Frederikskaj2.Reservations.Server.Controllers
     public class PostingsController : Controller
     {
         private static readonly LocalDatePattern pattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM-dd");
-        private readonly IClock clock;
-        private readonly DateTimeZone dateTimeZone;
         private readonly PostingsService postingsService;
         private readonly UserManager<User> userManager;
 
-        public PostingsController(IClock clock, DateTimeZone dateTimeZone, PostingsService postingsService, UserManager<User> userManager)
+        public PostingsController(PostingsService postingsService, UserManager<User> userManager)
         {
-            this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            this.dateTimeZone = dateTimeZone ?? throw new ArgumentNullException(nameof(dateTimeZone));
             this.postingsService = postingsService ?? throw new ArgumentNullException(nameof(postingsService));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
@@ -48,7 +43,6 @@ namespace Frederikskaj2.Reservations.Server.Controllers
             var result = pattern.Parse(month);
             var userId = User.Id();
             var user = await userManager.FindByIdAsync(userId!.Value.ToString(CultureInfo.InvariantCulture));
-            var today = clock.GetCurrentInstant().InZone(dateTimeZone).Date;
             await postingsService.SendPostingsEmail(user, result.Value);
             return NoContent();
         }
