@@ -15,11 +15,11 @@
         var hasPostings = postings?.Any() ?? false;
         <Container>
             <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
-                Posteringerne er blevet send til @email.
+                Posteringerne er blevet sendt til @email.
                 <CloseButton Clicked="@DismissSuccessAlert" />
             </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl, og posteringerne blev ikke send til @email.
+                Der er sket en fejl, og posteringerne blev ikke sendt til @email.
                 <CloseButton Clicked="@DismissErrorAlert" />
             </Alert>
             <h1>Posteringer</h1>
