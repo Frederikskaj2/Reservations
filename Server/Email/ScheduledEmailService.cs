@@ -33,7 +33,9 @@ namespace Frederikskaj2.Reservations.Server.Email
             this.options = options.Value;
         }
 
-        public TimeSpan Interval => options.ScheduleEmailInterval;
+        public TimeSpan StartDelay => options.ScheduleStartDelay;
+
+        public TimeSpan Interval => options.ScheduleInterval;
 
         public Task DoWork()
         {

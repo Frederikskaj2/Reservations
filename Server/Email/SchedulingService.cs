@@ -8,13 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Frederikskaj2.Reservations.Server.Email
 {
-    internal class SchedulingService
-    {
-        protected static readonly TimeSpan StartDelay = TimeSpan.FromMinutes(1);
-    }
-
     [SuppressMessage("Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "This class is instantiated vis dependency injection.")]
-    internal sealed class SchedulingService<TService> : SchedulingService, IHostedService, IDisposable where TService : IScheduledService
+    internal sealed class SchedulingService<TService> : IHostedService, IDisposable where TService : IScheduledService
     {
         private readonly ILogger logger;
         private readonly IServiceProvider serviceProvider;
@@ -34,7 +29,8 @@ namespace Frederikskaj2.Reservations.Server.Email
 
             using var scope = serviceProvider.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<TService>();
-            timer = new Timer(DoWork, null, StartDelay, service.Interval);
+            logger.LogInformation("Creating periodic timer with start delay {StartDelay} and interval {Interval}", service.StartDelay, service.Interval);
+            timer = new Timer(DoWork, null, service.StartDelay, service.Interval);
 
             return Task.CompletedTask;
         }
