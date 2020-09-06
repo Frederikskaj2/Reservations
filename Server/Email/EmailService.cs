@@ -42,9 +42,7 @@ namespace Frederikskaj2.Reservations.Server.Email
             this.options = options.Value;
             if (string.IsNullOrEmpty(this.options.SmtpHostName))
                 throw new ConfigurationException("Missing SMTP host name.");
-            if (string.IsNullOrEmpty(this.options.UserName))
-                throw new ConfigurationException("Missing user name.");
-            if (string.IsNullOrEmpty(this.options.Password))
+            if (!string.IsNullOrEmpty(this.options.UserName) && string.IsNullOrEmpty(this.options.Password))
                 throw new ConfigurationException("Missing password.");
             if (string.IsNullOrEmpty(this.options.From?.Name))
                 throw new ConfigurationException("Missing from name.");
@@ -420,7 +418,8 @@ namespace Frederikskaj2.Reservations.Server.Email
         {
             using var client = new SmtpClient();
             await client.ConnectAsync(options.SmtpHostName, options.SmtpPort, options.SocketOptions);
-            await client.AuthenticateAsync(options.UserName, options.Password);
+            if (!string.IsNullOrEmpty(options.UserName))
+                await client.AuthenticateAsync(options.UserName, options.Password);
             await client.SendAsync(message);
         }
 
