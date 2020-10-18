@@ -5,3 +5,4 @@ Reservations.db*
 appSettings.local.json
 key-*.xml
 *.log
+*.csproj.user

@@ -4,9 +4,11 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Frederikskaj2.Reservations.Server</RootNamespace>
     <Nullable>enable</Nullable>
+    <UserSecretsId>640e5942-68b4-4d42-97d0-e94d48c3e10c</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MailKit" Version="2.9.0" />
     <PackageReference Include="Mapster" Version="5.3.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="$(BlazorVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="$(AspNetCoreVersion)" />
@@ -15,7 +17,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="$(AspNetCoreVersion)" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(AspNetCoreVersion)" />
     <PackageReference Include="NodaTime.Serialization.JsonNet" Version="3.0.0" />
-    <PackageReference Include="SendGrid" Version="9.21.0" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
   </ItemGroup>
 
