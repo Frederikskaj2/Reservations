@@ -31,34 +31,34 @@ jobs:
       - name: Stop
         uses: appleboy/ssh-action@v0.0.9
         with:
-          host: ${{ env.VM_HOST_NAME }}
-          username: ${{ secrets.VM_USER_NAME }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+          host: ${{env.VM_HOST_NAME}}
+          username: ${{secrets.VM_USER_NAME}}
+          key: ${{secrets.VM_SSH_KEY}}
+          passphrase: ${{secrets.VM_SSH_PASSWORD}}
           script: sudo supervisorctl stop lokaler
       - name: Deploy
         uses: appleboy/scp-action@v0.0.11
         with:
-          host: ${{ env.VM_HOST_NAME }}
-          username: ${{ secrets.VM_USER_NAME }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+          host: ${{env.VM_HOST_NAME}}
+          username: ${{secrets.VM_USER_NAME}}
+          key: ${{secrets.VM_SSH_KEY}}
+          passphrase: ${{secrets.VM_SSH_PASSWORD}}
           source: Server/bin/Release/netcoreapp3.1/publish
-          target: ${{ env.VM_DIR_NAME }}
+          target: ${{env.VM_DIR_NAME}}
           strip_components: 5
           rm: true
       - name: Start
         uses: appleboy/ssh-action@v0.0.9
         with:
-          host: ${{ env.VM_HOST_NAME }}
-          username: ${{ secrets.VM_USER_NAME }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          passphrase: ${{ secrets.VM_SSH_PASSWORD }}
+          host: ${{env.VM_HOST_NAME}}
+          username: ${{secrets.VM_USER_NAME}}
+          key: ${{secrets.VM_SSH_KEY}}
+          passphrase: ${{secrets.VM_SSH_PASSWORD}}
           script: sudo supervisorctl start lokaler
       - name: Get timestamp
-        run: echo ::set-env name=TIMESTAMP::`TZ=Europe/Copenhagen date +"%d-%m-%Y %H:%M"`
+        run: echo "TIMESTAMP=`TZ=Europe/Copenhagen date +"%d-%m-%Y %H:%M"`" >> $GITHUB_ENV
       - name: Get short commit SHA
-        run: echo ::set-env name=COMMITSHORT::`echo ${{ github.sha }} | cut -c-10`
+        run: echo "COMMITSHORT=`echo ${{github.sha}} | cut -c-10`" >> $GITHUB_ENV
       - name: Post to Teams
         run: >
-          sed -e 's/TIMESTAMP/${{ env.TIMESTAMP }}/' -e s/COMMITSHORT/${{ env.COMMITSHORT }}/ -e s/COMMITLONG/${{ github.sha }}/ .github/workflows/build-success.json | curl -d @- -H 'Content-Type: application/json' -X POST ${{ secrets.BUILD_SUCCESS_WEBHOOK }}
+          sed -e 's/TIMESTAMP/${{env.TIMESTAMP}}/' -e s/COMMITSHORT/${{env.COMMITSHORT}}/ -e s/COMMITLONG/${{github.sha}}/ .github/workflows/build-success.json | curl -d @- -H 'Content-Type: application/json' -X POST ${{secrets.BUILD_SUCCESS_WEBHOOK}}
