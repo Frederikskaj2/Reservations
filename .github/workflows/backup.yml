@@ -3,8 +3,7 @@ name: Backup
 on:
   schedule:
     - cron: "30 2 * * *"
-  repository_dispatch:
-    types: [backup]
+  workflow_dispatch:
 
 jobs:
   backup:
@@ -18,7 +17,7 @@ jobs:
 
     steps:
       - name: Get HOME
-        run: echo "::set-env name=HOME::$(ls -d ~)"
+        run: echo HOME=`ls -d ~` >> $GITHUB_ENV
       - name: Install packages
         run: |
           sudo apt-get install sshpass
@@ -26,19 +25,19 @@ jobs:
       - name: Get SSH key
         uses: DamianReeves/write-file-action@v1.0
         with:
-          path: ${{ env.HOME }}/.ssh/id_rsa
-          contents: ${{ secrets.VM_SSH_KEY }}
+          path: ${{env.HOME}}/.ssh/id_rsa
+          contents: ${{secrets.VM_SSH_KEY}}
           write-mode: overwrite
       - name: Fix permissions
         run: |
           chmod 700 ~/.ssh
           chmod 600 ~/.ssh/id_rsa
       - name: Copy database
-        run: sshpass -p '${{ secrets.VM_SSH_PASSWORD }}' -P assphrase scp -o StrictHostKeyChecking=no ${{ secrets.VM_USER_NAME }}@$VM_HOST_NAME:$FILE_PATH$FILE_NAME .
+        run: sshpass -p '${{secrets.VM_SSH_PASSWORD}}' -P assphrase scp -o StrictHostKeyChecking=no ${{secrets.VM_USER_NAME}}@$VM_HOST_NAME:$FILE_PATH$FILE_NAME .
       - name: Protect database
-        run: 7z a -p${{ secrets.DATABASE_PASSWORD }} ${{ env.ARTIFACT_NAME }} ${{ env.FILE_NAME }}
+        run: 7z a -p${{secrets.DATABASE_PASSWORD}} ${{env.ARTIFACT_NAME}} ${{env.FILE_NAME}}
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: Database
-          path: ${{ env.ARTIFACT_NAME }}
+          path: ${{env.ARTIFACT_NAME}}
