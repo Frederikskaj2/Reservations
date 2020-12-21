@@ -204,7 +204,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
             var bankChange = currentBankBalance - previousBankBalance;
             var depositsChange = currentDepositsBalance - previousDepositsBalance;
             // When making a pay-in that is not enough to cover the rent the
-            // deposits change wille be "negative" (being a liability it's
+            // deposits change will be "negative" (being a liability it's
             // actually positive). The posting has to reduce the income part to
             // lower the deposits the be 0. Basically, a too small pay-in is
             // first applied to the rent and then if all rent is covered it's
@@ -289,7 +289,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
         {
             var func = predicate.Compile();
             if (!func())
-                throw new ReservationsException("Validation failed: " + predicate.Body.ToString());
+                throw new ReservationsException("Validation failed: " + predicate.Body);
         }
     }
 }

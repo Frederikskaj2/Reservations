@@ -3,13 +3,16 @@
     public enum Account
     {
         None,
+        // Income
         Rent,
         Cleaning,
         CancellationFees,
         Damages,
+        // Assets
         Bank,
         AccountsReceivable,
         FromPayments,
+        // Liabilities
         Deposits,
         Payments,
         ToAccountsReceivable

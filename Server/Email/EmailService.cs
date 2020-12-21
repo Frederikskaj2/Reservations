@@ -18,6 +18,7 @@ namespace Frederikskaj2.Reservations.Server.Email
 {
     public class EmailService : IEmailService
     {
+        private readonly HashSet<string> allowedRecipients;
         private readonly ILogger logger;
         private readonly EmailOptions options;
         private readonly ReservationsOptions reservationsOptions;
@@ -52,6 +53,8 @@ namespace Frederikskaj2.Reservations.Server.Email
                 throw new ConfigurationException("Missing base URL.");
             if (this.options.ConfirmEmailUrlLifetime <= Duration.Zero)
                 throw new ConfigurationException("Invalid confirm email url lifetime.");
+
+            allowedRecipients = new HashSet<string>(options.Value.AllowedRecipients ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
         }
 
         public async Task SendConfirmEmail(User user, string token)
@@ -386,9 +389,17 @@ namespace Frederikskaj2.Reservations.Server.Email
 
         private async Task SendMessage<TModel>(TModel model, string viewName, EmailRecipient recipient)
         {
-            var message = await CreateMessage(model, viewName, recipient);
-            await SendMessage(message);
-            logger.LogInformation("Sent message {Message} to {Email}", viewName, recipient.Email.MaskEmail());
+            var isAllowedRecipient = allowedRecipients.Count == 0 || allowedRecipients.Contains(recipient.Email ?? string.Empty);
+            if (isAllowedRecipient)
+            {
+                var message = await CreateMessage(model, viewName, recipient);
+                await SendMessage(message);
+                logger.LogInformation("Sent message {Message} to {Email}", viewName, recipient.Email.MaskEmail());
+            }
+            else
+            {
+                logger.LogInformation("Message {Message} to {Email} was not allowed", viewName, recipient.Email.MaskEmail());
+            }
         }
 
         private async Task<MimeMessage> CreateMessage<TModel>(

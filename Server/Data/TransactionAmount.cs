@@ -10,5 +10,7 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         // Debit is positive.
         public int Amount { get; set; }
+
+        public override string ToString() => Amount > 0 ? $"{Account}: {Amount} D" : $"{Account}: {-Amount} C";
     }
 }

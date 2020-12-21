@@ -663,13 +663,13 @@ namespace Frederikskaj2.Reservations.Server.Domain
 
         private async Task<IEnumerable<int>> UpdateOrders(Instant timestamp, LocalDate date, int createdByUserId, User user, Order? newOrder = null)
         {
-            await ApplyPaymentsToAccountsRecivables(timestamp, date, createdByUserId, user, newOrder);
+            await ApplyPaymentsToAccountsReceivables(timestamp, date, createdByUserId, user, newOrder);
             var confirmedOrderIds = await ConfirmOrders(user, newOrder);
             await ConvertToHistoryOrders(user);
             return confirmedOrderIds;
         }
 
-        private async Task ApplyPaymentsToAccountsRecivables(Instant timestamp, LocalDate date, int createdByUserId, User user, Order? newOrder = null)
+        private async Task ApplyPaymentsToAccountsReceivables(Instant timestamp, LocalDate date, int createdByUserId, User user, Order? newOrder = null)
         {
             var payments = -user.Balance(Account.Payments);
             if (payments == 0)

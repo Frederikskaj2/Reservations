@@ -16,5 +16,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         [Timestamp]
         [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "This property is only used by the framework.")]
         public byte[]? Timestamp { get; set; }
+        
+        public override string ToString() => Amount > 0 ? $"{Account}: {Amount} D" : $"{Account}: {-Amount} C";
     }
 }

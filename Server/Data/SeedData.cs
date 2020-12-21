@@ -17,7 +17,6 @@ namespace Frederikskaj2.Reservations.Server.Data
     public sealed class SeedData : IDisposable
     {
         private readonly IClock clock;
-        private readonly IDateProvider dateProvider;
         private readonly ReservationsContext db;
         private readonly SeedDataOptions options;
         private readonly RandomNumberGenerator randomNumberGenerator = RandomNumberGenerator.Create();
@@ -26,7 +25,7 @@ namespace Frederikskaj2.Reservations.Server.Data
 
         public SeedData(
             IOptions<SeedDataOptions> options, IClock clock, ReservationsContext db,
-            RoleManager<Role> roleManager, UserManager<User> userManager, IDateProvider dateProvider)
+            RoleManager<Role> roleManager, UserManager<User> userManager)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
@@ -35,7 +34,6 @@ namespace Frederikskaj2.Reservations.Server.Data
             this.db = db ?? throw new ArgumentNullException(nameof(db));
             this.roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-            this.dateProvider = dateProvider ?? throw new ArgumentNullException(nameof(dateProvider));
 
             this.options = options.Value;
 
@@ -64,8 +62,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         {
             if (!await db.Database.EnsureCreatedAsync())
             {
-                await DeleteKeyCodes();
-                await UpdateApartments();
+                await UpdateOrder76();
                 return;
             }
 
@@ -205,28 +202,24 @@ END";
             return Convert.ToBase64String(bytes);
         }
 
-        private Task DeleteKeyCodes() => db.Database.ExecuteSqlRawAsync(@"DROP TABLE IF EXISTS ""KeyCodes""");
-
-        private async Task UpdateApartments()
+        private async Task UpdateOrder76()
         {
-            var apartments = await db.Apartments.ToListAsync();
-            var groupings = apartments
-                .GroupBy(apartment => $"{apartment.Letter}{apartment.Story}{apartment.Side}")
-                .Where(grouping => grouping.Count() > 1);
-            foreach (var grouping in groupings)
-            {
-                var selectedApartment = grouping.OrderBy(apartment => apartment.Id).First();
-                var apartmentsToReplace = grouping.OrderBy(apartment => apartment.Id).Skip(1).ToList();
-                var apartmentsToReplaceIds = apartmentsToReplace.Select(apartment => apartment.Id).ToHashSet();
-                var users = await db.Users.Where(user => user.ApartmentId.HasValue && apartmentsToReplaceIds.Contains(user.ApartmentId.Value)).ToListAsync();
-                foreach (var user in users)
-                    user.ApartmentId = selectedApartment.Id;
-                var orders = await db.Orders.Where(order => order.ApartmentId.HasValue && apartmentsToReplaceIds.Contains(order.ApartmentId.Value)).ToListAsync();
-                foreach (var order in orders)
-                    order.ApartmentId = selectedApartment.Id;
-                foreach (var apartment in apartmentsToReplace)
-                    db.Apartments.Remove(apartment);
-            }
+            const int userId = 56;
+            const int orderId = 76;
+            const int transactionId = 245;
+
+            var transactionAmount = await db.TransactionAmounts.FirstOrDefaultAsync(amount => amount.TransactionId == transactionId && amount.Account == Account.AccountsReceivable);
+            if (transactionAmount is null)
+                return;
+
+            var amount = transactionAmount.Amount;
+            db.Remove(transactionAmount);
+            db.TransactionAmounts.Add(new TransactionAmount { Account = Account.Payments, Amount = amount, TransactionId = transactionId });
+            var order = await db.Orders.FindAsync(orderId);
+            order.Flags &= ~OrderFlags.IsHistoryOrder;
+            var accountBalanceAccountReceivable = await db.AccountBalances.SingleAsync(balance => balance.Account == Account.AccountsReceivable && balance.UserId == userId);
+            accountBalanceAccountReceivable.Amount -= amount;
+            db.AccountBalances.Add(new AccountBalance { Account = Account.Payments, Amount = amount, UserId = userId });
             await db.SaveChangesAsync();
         }
     }
