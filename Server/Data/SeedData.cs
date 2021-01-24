@@ -62,7 +62,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         {
             if (!await db.Database.EnsureCreatedAsync())
             {
-                await UpdateOrder76();
+                await UpdateUsers();
                 return;
             }
 
@@ -202,25 +202,36 @@ END";
             return Convert.ToBase64String(bytes);
         }
 
-        private async Task UpdateOrder76()
+        private async Task UpdateUsers()
         {
-            const int userId = 56;
-            const int orderId = 76;
-            const int transactionId = 245;
+            var now = clock.GetCurrentInstant();
 
-            var transactionAmount = await db.TransactionAmounts.FirstOrDefaultAsync(amount => amount.TransactionId == transactionId && amount.Account == Account.AccountsReceivable);
-            if (transactionAmount is null)
-                return;
+            await CreateUser("hb@sjeldani.dk", "Helle Bending", "33 24 21 11", EmailSubscriptions.NewOrder | EmailSubscriptions.OverduePayment, "Bookkeeping", "OrderHandling", "Payment");
+            await CreateUser("tt@sjeldani.dk", "Trine Toftau", "33 24 21 11", EmailSubscriptions.NewOrder | EmailSubscriptions.OverduePayment, "Bookkeeping", "OrderHandling", "Payment");
+            await CreateUser("uss@sst-partner.dk", "Umar Sandhou", "27 83 93 04", EmailSubscriptions.CleaningScheduleUpdated, "Cleaning");
 
-            var amount = transactionAmount.Amount;
-            db.Remove(transactionAmount);
-            db.TransactionAmounts.Add(new TransactionAmount { Account = Account.Payments, Amount = amount, TransactionId = transactionId });
-            var order = await db.Orders.FindAsync(orderId);
-            order.Flags &= ~OrderFlags.IsHistoryOrder;
-            var accountBalanceAccountReceivable = await db.AccountBalances.SingleAsync(balance => balance.Account == Account.AccountsReceivable && balance.UserId == userId);
-            accountBalanceAccountReceivable.Amount -= amount;
-            db.AccountBalances.Add(new AccountBalance { Account = Account.Payments, Amount = amount, UserId = userId });
-            await db.SaveChangesAsync();
+            async Task CreateUser(string email, string fullName, string phone, EmailSubscriptions emailSubscriptions, params string[] roles)
+            {
+                var existingUser = await userManager.FindByEmailAsync(email);
+                if (existingUser != null)
+                    return;
+
+                var user = new User
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true,
+                    FullName = fullName,
+                    PhoneNumber = phone,
+                    EmailSubscriptions = emailSubscriptions,
+                    Created = now,
+                    LatestSignIn = now,
+                };
+                var password = CreateRandomPassword();
+                await userManager.CreateAsync(user, password);
+                foreach (var role in roles)
+                    await userManager.AddToRoleAsync(user, role);
+            }
         }
     }
 }
