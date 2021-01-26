@@ -206,9 +206,7 @@ END";
         {
             var now = clock.GetCurrentInstant();
 
-            await CreateUser("hb@sjeldani.dk", "Helle Bending", "33 24 21 11", EmailSubscriptions.NewOrder | EmailSubscriptions.OverduePayment, "Bookkeeping", "OrderHandling", "Payment");
-            await CreateUser("tt@sjeldani.dk", "Trine Toftau", "33 24 21 11", EmailSubscriptions.NewOrder | EmailSubscriptions.OverduePayment, "Bookkeeping", "OrderHandling", "Payment");
-            await CreateUser("uss@sst-partner.dk", "Umar Sandhou", "27 83 93 04", EmailSubscriptions.CleaningScheduleUpdated, "Cleaning");
+            await CreateUser("hn@sjeldani.dk", "Helle Nikolajsen ", "33 24 21 11", EmailSubscriptions.NewOrder | EmailSubscriptions.OverduePayment, "Bookkeeping", "OrderHandling", "Payment");
 
             async Task CreateUser(string email, string fullName, string phone, EmailSubscriptions emailSubscriptions, params string[] roles)
             {
