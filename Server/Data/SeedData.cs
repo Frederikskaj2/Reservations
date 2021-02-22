@@ -61,10 +61,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         public async Task Initialize()
         {
             if (!await db.Database.EnsureCreatedAsync())
-            {
-                await UpdateUsers();
                 return;
-            }
 
             await CreateTriggers();
 
@@ -200,36 +197,6 @@ END";
             var bytes = new byte[18];
             randomNumberGenerator.GetBytes(bytes);
             return Convert.ToBase64String(bytes);
-        }
-
-        private async Task UpdateUsers()
-        {
-            var now = clock.GetCurrentInstant();
-
-            await CreateUser("us@sst-partner.dk", "Umar Sandhou ", "27 83 93 04", EmailSubscriptions.CleaningScheduleUpdated, Roles.Cleaning);
-
-            async Task CreateUser(string email, string fullName, string phone, EmailSubscriptions emailSubscriptions, params string[] roles)
-            {
-                var existingUser = await userManager.FindByEmailAsync(email);
-                if (existingUser != null)
-                    return;
-
-                var user = new User
-                {
-                    UserName = email,
-                    Email = email,
-                    EmailConfirmed = true,
-                    FullName = fullName,
-                    PhoneNumber = phone,
-                    EmailSubscriptions = emailSubscriptions,
-                    Created = now,
-                    LatestSignIn = now,
-                };
-                var password = CreateRandomPassword();
-                await userManager.CreateAsync(user, password);
-                foreach (var role in roles)
-                    await userManager.AddToRoleAsync(user, role);
-            }
         }
     }
 }

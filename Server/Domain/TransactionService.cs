@@ -267,7 +267,6 @@ namespace Frederikskaj2.Reservations.Server.Domain
             Validate(() => user.Balance(Account.Damages) <= 0);
             // Assets
             Validate(() => user.Balance(Account.Bank) >= 0);
-            Validate(() => user.Balance(Account.AccountsReceivable) >= 0);
             Validate(() => user.Balance(Account.FromPayments) >= 0);
             // Liabilities
             Validate(() => user.Balance(Account.Deposits) <= 0);
