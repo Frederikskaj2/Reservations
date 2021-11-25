@@ -56,17 +56,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                 };
             if (cancellationFee > 0)
                 amounts.Add(new TransactionAmount { Account = Account.CancellationFees, Amount = -cancellationFee });
-            if (accountsReceivable > 0)
-            {
-                var amount = Math.Min(accountsReceivable, amountToRefund);
-                amounts.Add(new TransactionAmount { Account = Account.AccountsReceivable, Amount = -amount });
-                if (amountToRefund > accountsReceivable)
-                    amounts.Add(new TransactionAmount { Account = Account.Payments, Amount = -(amountToRefund - accountsReceivable) });
-            }
-            else
-            {
-                amounts.Add(new TransactionAmount { Account = Account.Payments, Amount = -amountToRefund });
-            }
+            amounts.Add(new TransactionAmount { Account = Account.Payments, Amount = -amountToRefund });
 
             var transaction = CreateTransaction(timestamp, date, createdByUserId, order, amounts);
             transaction.ResourceId = reservation.ResourceId;
