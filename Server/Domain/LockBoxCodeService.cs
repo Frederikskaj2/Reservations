@@ -197,7 +197,7 @@ namespace Frederikskaj2.Reservations.Server.Domain
                             .Select(code => new Shared.LockBoxCode { ResourceId = code.ResourceId, Code = code.Code })
                             .ToList()
                     })
-                .OrderBy(code => code.WeekNumber)
+                .OrderBy(code => code.Date)
                 .ToList();
 
             for (var i = 1; i < weeklyLockBoxCodes.Count; i += 1)
