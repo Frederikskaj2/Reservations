@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Frederikskaj2.Reservations.Server.ErrorHandling;
 using Frederikskaj2.Reservations.Shared;
-using MailKit.Net.Smtp;
 using Mapster;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MimeKit;
 using NodaTime;
 using LockBoxCode = Frederikskaj2.Reservations.Server.Data.LockBoxCode;
 using Reservation = Frederikskaj2.Reservations.Server.Data.Reservation;
@@ -18,7 +19,13 @@ namespace Frederikskaj2.Reservations.Server.Email
 {
     public class EmailService : IEmailService
     {
+        static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         private readonly HashSet<string> allowedRecipients;
+        private readonly HttpClient httpClient;
         private readonly ILogger logger;
         private readonly EmailOptions options;
         private readonly ReservationsOptions reservationsOptions;
@@ -28,23 +35,20 @@ namespace Frederikskaj2.Reservations.Server.Email
         public EmailService(
             ILogger<EmailService> logger, IOptions<EmailOptions> options,
             RazorViewToStringRenderer viewToStringRenderer, UrlService urlService,
-            ReservationsOptions reservationsOptions)
+            ReservationsOptions reservationsOptions, HttpClient httpClient)
         {
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
 
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.viewToStringRenderer =
-                viewToStringRenderer ?? throw new ArgumentNullException(nameof(viewToStringRenderer));
+            this.viewToStringRenderer = viewToStringRenderer ?? throw new ArgumentNullException(nameof(viewToStringRenderer));
             this.urlService = urlService ?? throw new ArgumentNullException(nameof(urlService));
-            this.reservationsOptions =
-                reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
+            this.reservationsOptions = reservationsOptions ?? throw new ArgumentNullException(nameof(reservationsOptions));
+            this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
             this.options = options.Value;
-            if (string.IsNullOrEmpty(this.options.SmtpHostName))
-                throw new ConfigurationException("Missing SMTP host name.");
-            if (!string.IsNullOrEmpty(this.options.UserName) && string.IsNullOrEmpty(this.options.Password))
-                throw new ConfigurationException("Missing password.");
+            if (this.options.ApiUrl == null)
+                throw new ConfigurationException("Missing API URL.");
             if (string.IsNullOrEmpty(this.options.From?.Name))
                 throw new ConfigurationException("Missing from name.");
             if (string.IsNullOrEmpty(this.options.From?.Email))
@@ -402,36 +406,23 @@ namespace Frederikskaj2.Reservations.Server.Email
             }
         }
 
-        private async Task<MimeMessage> CreateMessage<TModel>(
+        private async Task<EmailMessage> CreateMessage<TModel>(
             TModel model, string viewName, EmailRecipient recipient)
         {
-            var message = CreateEmptyMessage(recipient);
-            message.Subject = await viewToStringRenderer.RenderViewToStringAsync($@"{viewName}\Subject", model);
-            var bodyBuilder = new BodyBuilder
-            {
-                HtmlBody = await viewToStringRenderer.RenderViewToStringAsync($@"{viewName}\Html", model)
-            };
-            message.Body = bodyBuilder.ToMessageBody();
-            return message;
+            var subject = await viewToStringRenderer.RenderViewToStringAsync($@"{viewName}\Subject", model);
+            var body = await viewToStringRenderer.RenderViewToStringAsync($@"{viewName}\Html", model);
+            return new EmailMessage(options.From!.Email!, options.ReplyTo?.Email, new[] { recipient.Email! }, subject, body);
         }
 
-        private MimeMessage CreateEmptyMessage(EmailRecipient recipient)
+        private async Task SendMessage(EmailMessage message)
         {
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(options.From!.Name, options.From.Email));
-            message.To.Add(new MailboxAddress(recipient.Name, recipient.Email));
-            if (!string.IsNullOrEmpty(options.ReplyTo?.Name) && !string.IsNullOrEmpty(options.ReplyTo?.Email))
-                message.ReplyTo.Add(new MailboxAddress(options.ReplyTo.Name, options.ReplyTo.Email));
-            return message;
-        }
-
-        private async Task SendMessage(MimeMessage message)
-        {
-            using var client = new SmtpClient();
-            await client.ConnectAsync(options.SmtpHostName, options.SmtpPort, options.SocketOptions);
-            if (!string.IsNullOrEmpty(options.UserName))
-                await client.AuthenticateAsync(options.UserName, options.Password);
-            await client.SendAsync(message);
+            // Don't try to stream the JSON by using PostAsJsonAsync. This will
+            // set Content-Length to 0 and the Azure request gateway will strip
+            // the body resulting in an invalid request.
+            using var content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, jsonSerializerOptions)));
+            content.Headers.Add("Content-Type", "application/json; charset=utf-8");
+            var response = await httpClient.PostAsync(options.ApiUrl, content);
+            response.EnsureSuccessStatusCode();
         }
 
         private static LocalDate GetPreviousMonday(LocalDate date)

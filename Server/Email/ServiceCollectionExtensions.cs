@@ -36,10 +36,10 @@ namespace Frederikskaj2.Reservations.Server.Email
                 .AddHostedService<SchedulingService<ScheduledEmailService>>()
                 .AddScoped<RazorViewToStringRenderer>()
                 .AddScoped<UrlService>()
-                .AddScoped<IEmailService, EmailService>()
                 .AddScoped<ScheduledEmailService>()
                 .AddSingleton(cultureInfo)
                 .AddRazorPages();
+            services.AddHttpClient<IEmailService, EmailService>(options => options.DefaultRequestHeaders.Add("Accept", "application/json"));
             return services;
         }
     }
