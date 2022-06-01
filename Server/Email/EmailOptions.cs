@@ -6,7 +6,8 @@ namespace Frederikskaj2.Reservations.Server.Email
 {
     public class EmailOptions
     {
-        public Uri? ApiUrl { get; set; }
+        public string? ApiUrlTemplate { get; set; }
+        public string? ApiToken { get; set;  }
         public EmailRecipient? From { get; set; }
         public EmailRecipient? ReplyTo { get; set; }
         public Uri? BaseUrl { get; set; }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -25,6 +26,7 @@ namespace Frederikskaj2.Reservations.Server.Email
         };
 
         private readonly HashSet<string> allowedRecipients;
+        private readonly Uri apiUrl;
         private readonly HttpClient httpClient;
         private readonly ILogger logger;
         private readonly EmailOptions options;
@@ -47,8 +49,10 @@ namespace Frederikskaj2.Reservations.Server.Email
             this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
             this.options = options.Value;
-            if (this.options.ApiUrl == null)
-                throw new ConfigurationException("Missing API URL.");
+            if (this.options.ApiUrlTemplate == null)
+                throw new ConfigurationException("Missing API URL template.");
+            if (this.options.ApiToken == null)
+                throw new ConfigurationException("Missing API token.");
             if (string.IsNullOrEmpty(this.options.From?.Name))
                 throw new ConfigurationException("Missing from name.");
             if (string.IsNullOrEmpty(this.options.From?.Email))
@@ -59,6 +63,7 @@ namespace Frederikskaj2.Reservations.Server.Email
                 throw new ConfigurationException("Invalid confirm email url lifetime.");
 
             allowedRecipients = new HashSet<string>(options.Value.AllowedRecipients ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            apiUrl = new Uri(string.Format(CultureInfo.InvariantCulture, this.options.ApiUrlTemplate, this.options.ApiToken));
         }
 
         public async Task SendConfirmEmail(User user, string token)
@@ -326,7 +331,7 @@ namespace Frederikskaj2.Reservations.Server.Email
             var model = new PostingsModel(
                 options.From!.Name!,
                 urlService.GetFromUrl(),
-                user.FullName!,
+                user.FullName,
                 postings.AsQueryable().ProjectToType<Posting>());
             await SendMessage(model, "Postings", new EmailRecipient { Name = user.FullName, Email = user.Email });
         }
@@ -353,7 +358,7 @@ namespace Frederikskaj2.Reservations.Server.Email
             var model = new CleaningScheduleModel(
                 options.From!.Name!,
                 urlService.GetFromUrl(),
-                user.FullName!,
+                user.FullName,
                 cancelledCleaningTasks,
                 newCleaningTasks,
                 currentCleaningTasks);
@@ -421,7 +426,7 @@ namespace Frederikskaj2.Reservations.Server.Email
             // the body resulting in an invalid request.
             using var content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, jsonSerializerOptions)));
             content.Headers.Add("Content-Type", "application/json; charset=utf-8");
-            var response = await httpClient.PostAsync(options.ApiUrl, content);
+            var response = await httpClient.PostAsync(apiUrl, content);
             response.EnsureSuccessStatusCode();
         }
 
