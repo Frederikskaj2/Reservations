@@ -116,6 +116,9 @@ namespace Frederikskaj2.Reservations.Server.Domain
             transaction.ResourceId = reservation.ResourceId;
             transaction.ReservationDate = reservation.Date;
             transaction.Description = description;
+
+            if (amountToRefund == 0)
+                CreatePosting(date, order.User!, PostingType.PayOut, order.Id);
         }
 
         public void CreatePayOutTransaction(Instant timestamp, LocalDate date, int createdByUserId, Order order, int amount)

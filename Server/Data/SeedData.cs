@@ -62,7 +62,7 @@ namespace Frederikskaj2.Reservations.Server.Data
         {
             if (!await db.Database.EnsureCreatedAsync())
             {
-                await FixTransaction782();
+                await CreateMissingPostingForOrder268();
 #if false
                 await UpdateUsers();
 #endif
@@ -205,96 +205,36 @@ END";
             return Convert.ToBase64String(bytes);
         }
 
-        private async Task FixTransaction782()
+        private async Task CreateMissingPostingForOrder268()
         {
-            // The user created a new order but didn't pay it (255).
-            //
-            // Then the user asked to cancel a previously paid order (205). The
-            // refunded amount (1400) got "stuck" because the accounts
-            // receivable of the user at that point was 2400 which resulted in
-            // the 1400 being subtracted ending in a balance of 1000.
-            //
-            // However, the 1400 wasn't transferred from order 205 to 255 but as
-            // the 1400 was applied to accounts receivable instead of payments
-            // they were not scheduled for pay out.
-            //
-            // From the user's point of view they only owe 1000 so that should
-            // be enough to confirm order 255. Even if they paid the entire 2400
-            // on 255 the 1400 from 205 was still "stuck" and would not get
-            // scheduled for pay out.
-            //
-            // To fix this the 205 cancel transaction is changed to apply the
-            // refunded amount to the Payments account instead of the
-            // AccountsReceivable account.
-            //
-            // Then two transactions are created to transfer the payment from
-            // 205 to 255.
-            //
-            // That this can happen is a bug in the system. Cancelling paid
-            // orders while there are unpaid orders doesn't work correctly. The
-            // logic in this method should be implemented more generally.
-            const int transactionId = 782;
-            const int orderId = 255;
-
-            var oldTransactionAmount = await db.TransactionAmounts.SingleOrDefaultAsync(ta => ta.TransactionId == transactionId && ta.Account == Account.AccountsReceivable);
-            if (oldTransactionAmount == null)
+            const int orderId = 268;
+            var existingPosting = await db.Postings.FirstOrDefaultAsync(posting => posting.OrderId == orderId && posting.Type == PostingType.PayOut);
+            if (existingPosting != null)
                 return;
-            var transaction = await db.Transactions.SingleOrDefaultAsync(t => t.Id == transactionId);
-            var order = await db.Orders.SingleAsync(o => o.Id == orderId);
-            var accountBalances = await db.AccountBalances.Where(ab => ab.UserId == order.UserId).ToListAsync();
-
-            var newTransactionAmount = new TransactionAmount
-            {
-                TransactionId = transactionId,
-                Account = Account.Payments,
-                Amount = oldTransactionAmount.Amount
-            };
-            db.TransactionAmounts.Remove(oldTransactionAmount);
-            RemoveTransactionAmount(oldTransactionAmount);
-            db.TransactionAmounts.Add(newTransactionAmount);
-            AddTransactionAmount(newTransactionAmount);
-
-            var newTransaction1 = new Transaction
+            var transaction = await db.Transactions
+                .Include(t => t.User)
+                .Include(t => t.Amounts)
+                .SingleAsync(t => t.OrderId == orderId && t.ResourceId != null);
+            var damages = transaction.Amounts!.Single(a => a.Account == Account.Damages).Amount;
+            var deposits = transaction.Amounts!.Single(a => a.Account == Account.Deposits).Amount;
+            if (-damages != deposits)
+                throw new InvalidOperationException();
+            var amount = deposits;
+            var previousPosting = await db.Postings.SingleAsync(p => p.OrderId == orderId);
+            var posting = new Posting
             {
                 Date = transaction.Date,
-                CreatedByUserId = transaction.CreatedByUserId,
-                Timestamp = transaction.Timestamp,
-                UserId = transaction.UserId,
-                OrderId = transaction.OrderId,
-                Amounts = new List<TransactionAmount>
-                {
-                    new TransactionAmount { Account = Account.Payments, Amount = -oldTransactionAmount.Amount },
-                    new TransactionAmount { Account = Account.ToAccountsReceivable, Amount = oldTransactionAmount.Amount },
-                }
-            };
-            db.Transactions.Add(newTransaction1);
-            AddTransactionAmount(newTransaction1.Amounts.First());
-            AddTransactionAmount(newTransaction1.Amounts.ElementAt(1));
-
-            var newTransaction2 = new Transaction
-            {
-                Date = transaction.Date,
-                CreatedByUserId = transaction.CreatedByUserId,
-                Timestamp = transaction.Timestamp,
+                Type = PostingType.PayOut,
                 UserId = transaction.UserId,
                 OrderId = orderId,
-                Amounts = new List<TransactionAmount>
-                {
-                    new TransactionAmount { Account = Account.AccountsReceivable, Amount = oldTransactionAmount.Amount },
-                    new TransactionAmount { Account = Account.FromPayments, Amount = -oldTransactionAmount.Amount },
-                }
+                FullName = transaction.User!.FullName,
+                Income = -amount,
+                Deposits = amount,
+                IncomeBalance = -amount + previousPosting.IncomeBalance,
+                BankBalance = previousPosting.BankBalance
             };
-            db.Transactions.Add(newTransaction2);
-            AddTransactionAmount(newTransaction2.Amounts.First());
-            AddTransactionAmount(newTransaction2.Amounts.ElementAt(1));
-
+            db.Postings.Add(posting);
             await db.SaveChangesAsync();
-
-            void RemoveTransactionAmount(TransactionAmount transactionAmount) =>
-                accountBalances.Single(ab => ab.Account == transactionAmount.Account).Amount -= transactionAmount.Amount;
-
-            void AddTransactionAmount(TransactionAmount transactionAmount) =>
-                accountBalances.Single(ab => ab.Account == transactionAmount.Account).Amount += transactionAmount.Amount;
         }
 
 #if false
