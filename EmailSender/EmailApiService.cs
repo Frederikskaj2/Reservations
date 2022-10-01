@@ -1,5 +1,4 @@
 using Frederikskaj2.Reservations.Shared.Core;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
 using System.Net.Http;
@@ -14,13 +13,11 @@ class EmailApiService
 {
     static readonly JsonSerializerOptions serializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     readonly HttpClient httpClient;
-    readonly ILogger logger;
     readonly IOptionsMonitor<EmailApiOptions> options;
 
-    public EmailApiService(HttpClient httpClient, ILogger<EmailApiService> logger, IOptionsMonitor<EmailApiOptions> options)
+    public EmailApiService(HttpClient httpClient, IOptionsMonitor<EmailApiOptions> options)
     {
         this.httpClient = httpClient;
-        this.logger = logger;
         this.options = options;
     }
 
@@ -34,6 +31,5 @@ class EmailApiService
         var url = options.CurrentValue.Url ?? throw new ConfigurationException("Missing URL value.");
         var response = await httpClient.PostAsync(url, content, cancellationToken);
         response.EnsureSuccessStatusCode();
-        logger.LogInformation("Sent email '{Subject}' to {Recipients}", message.Subject, message.To.Select(email => email.MaskEmail()));
     }
 }

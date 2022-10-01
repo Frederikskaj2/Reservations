@@ -82,7 +82,10 @@ class EmailService : BackgroundService
         var message = await messageFactory.CreateEmailAsync(email, cancellationToken);
         var (allowed, blocked) = FilterRecipients(options.CurrentValue.AllowedRecipients ?? Enumerable.Empty<string>(), message.To);
         if (allowed.Any())
+        {
             await emailApiService.SendAsync(message with { To = allowed }, cancellationToken);
+            logger.LogDebug("Sent email '{Subject}' to {Recipients}", message.Subject, allowed.Select(recipient => recipient.MaskEmail()));
+        }
         if (blocked.Any())
             logger.LogDebug("Email '{Subject}' to {Recipients} was blocked", message.Subject, blocked.Select(recipient => recipient.MaskEmail()));
     }

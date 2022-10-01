@@ -15,7 +15,7 @@
             <Paragraph>Tak for din bestilling med <a href="@($"{Urls.MyOrders}/{DataProvider.CurrentOrder!.OrderId}")">bestillingsnr. @DataProvider.CurrentOrder.OrderId</a>.</Paragraph>
             @if (DataProvider.CurrentOrder.Payment is null)
             {
-                <Paragraph>Da du tidligere har indbetalt et beløb som dækker prisen for denne bestilling er din bestilling godkendt og betalt, og du behøver ikke at foretage dig yderligere.</Paragraph>
+                <Paragraph>Da du tidligere har indbetalt et beløb som dækker prisen for denne bestilling, er din bestilling godkendt og betalt, og du behøver ikke at foretage dig yderligere.</Paragraph>
             }
             else
             {

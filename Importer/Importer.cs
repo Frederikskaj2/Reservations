@@ -25,6 +25,7 @@ using Account = Frederikskaj2.Reservations.Importer.Input.Account;
 using Apartment = Frederikskaj2.Reservations.Importer.Input.Apartment;
 using CancellationFee = Frederikskaj2.Reservations.Application.CancellationFee;
 using Damages = Frederikskaj2.Reservations.Application.Damages;
+using EmailSubscriptions = Frederikskaj2.Reservations.Importer.Input.EmailSubscriptions;
 using LineItem = Frederikskaj2.Reservations.Application.LineItem;
 using LockBoxCode = Frederikskaj2.Reservations.Application.LockBoxCode;
 using Order = Frederikskaj2.Reservations.Application.Order;
@@ -212,7 +213,7 @@ class Importer : IHostedService
             {
                 LatestSignIn = input.LatestSignIn,
                 AccountNumber = input.AccountNumber,
-                EmailSubscriptions = input.EmailSubscriptions,
+                EmailSubscriptions = GetEmailSubscriptions(input.EmailSubscriptions),
                 Audits = GetAudits(timestamp, input).ToSeq()
             };
 
@@ -282,6 +283,20 @@ class Importer : IHostedService
                 roles &= ~Roles.Resident;
             return roles;
         }
+
+        static Frederikskaj2.Reservations.Shared.Core.EmailSubscriptions GetEmailSubscriptions(EmailSubscriptions subscriptions) =>
+            Enum.GetValues<EmailSubscriptions>().Aggregate(
+                Frederikskaj2.Reservations.Shared.Core.EmailSubscriptions.None,
+                (accumulator, value) => accumulator | (subscriptions.HasFlag(value) ? GetEmailSubscription(value) : default));
+
+        static Frederikskaj2.Reservations.Shared.Core.EmailSubscriptions GetEmailSubscription(EmailSubscriptions subscriptions) =>
+            subscriptions switch
+            {
+                EmailSubscriptions.NewOrder => Frederikskaj2.Reservations.Shared.Core.EmailSubscriptions.NewOrder,
+                EmailSubscriptions.SettlementRequired => Frederikskaj2.Reservations.Shared.Core.EmailSubscriptions.SettlementRequired,
+                EmailSubscriptions.CleaningScheduleUpdated => Frederikskaj2.Reservations.Shared.Core.EmailSubscriptions.CleaningScheduleUpdated,
+                _ => default
+            };
 
         static IEnumerable<UserAudit> GetAudits(Instant timestamp, Input.User user)
         {

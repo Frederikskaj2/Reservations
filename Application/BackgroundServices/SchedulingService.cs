@@ -50,11 +50,11 @@ sealed class SchedulingService<TService> : IHostedService, IDisposable where TSe
     [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "This method should not pass exceptions to callers.")]
     void DoWork(object? state)
     {
-        logger.LogInformation("Scheduling service is doing work");
-        using var scope = serviceProvider.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<TService>();
         try
         {
+            logger.LogInformation("Scheduling service is doing work");
+            using var scope = serviceProvider.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<TService>();
             service.DoWork(cancellationTokenSource.Token).GetAwaiter().GetResult();
         }
         catch (Exception exception)
