@@ -38,13 +38,13 @@ jobs:
           retention-days: 7
 
   deploy-to-test:
-    name: Deploy to production
+    name: Deploy to test
     
     needs: build
 
     runs-on: ubuntu-latest
 
-    environment: Production
+    environment: Test
 
     steps:
       - name: Download artifact
@@ -78,7 +78,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    environment: Test
+    environment: Production
 
     steps:
       - name: Download artifact
