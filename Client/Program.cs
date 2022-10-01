@@ -1,86 +1,101 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using Blazored.LocalStorage;
 using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
-using Frederikskaj2.Reservations.Shared;
+using Frederikskaj2.Reservations.Shared.Core;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using NodaTime;
-using NodaTime.Serialization.SystemTextJson;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 
-namespace Frederikskaj2.Reservations.Client
+namespace Frederikskaj2.Reservations.Client;
+
+public static class Program
 {
-    [SuppressMessage(
-        "Design", "RCS1102:Make class static.",
-        Justification = "Blazor client side app cannot be hosted in ASP.NET Core website if it is static.")]
-    [SuppressMessage(
-        "Design", "CA1052:Static holder types should be Static or NotInheritable",
-        Justification = "Blazor client side app cannot be hosted in ASP.NET Core website if it is static.")]
-    public class Program
+    const string apiHttpClientName = "Api";
+
+    public static async Task Main(string[] args)
     {
-        public static async Task Main(string[] args)
-        {
-            var builder = WebAssemblyHostBuilder.CreateDefault(args);
-            builder.RootComponents.Add<App>("app");
-            ConfigureServices(builder.Services, builder.HostEnvironment);
-            var host = builder.Build();
-            host.Services
-                .UseBootstrapProviders()
-                .UseFontAwesomeIcons();
-            await host.RunAsync();
-        }
+        var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "The HttpClient should never be disposed.")]
-        private static void ConfigureServices(IServiceCollection services, IWebAssemblyHostEnvironment hostEnvironment)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(hostEnvironment.BaseAddress) };
-            services
-                .AddSingleton(httpClient);
+        builder.Logging.SetMinimumLevel(LogLevel.Trace);
+        builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
 
-            services
-                .AddBlazorise(options => options.ChangeTextOnKeyPress = false)
-                .AddBootstrapProviders()
-                .AddFontAwesomeIcons();
+        builder.RootComponents.Add<HeadOutlet>("head::after");;
+        builder.RootComponents.Add<App>("#app");
 
-            services
-                .AddAuthorizationCore()
-                .AddScoped<ServerAuthenticationStateProvider>()
-                .AddScoped<AuthenticationStateProvider>(
-                    sp => sp.GetRequiredService<ServerAuthenticationStateProvider>())
-                .AddScoped<IAuthenticationStateProvider>(
-                    sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
+        builder.Services
+            .AddBlazorise(options => options.Immediate = true)
+            .AddBootstrapProviders()
+            .AddFontAwesomeIcons();
 
-            var jsonSerializerOptions = new JsonSerializerOptions
+        ConfigureServices(builder.Services, new Uri(builder.HostEnvironment.BaseAddress));
+
+        var host = builder.Build();
+
+        await host.RunAsync();
+    }
+
+    static void ConfigureServices(IServiceCollection services, Uri baseAddress)
+    {
+        services
+            .AddHttpClient(apiHttpClientName, client => client.BaseAddress = baseAddress);
+
+        services
+            .AddSingleton(serviceProvider =>
             {
-                IgnoreNullValues = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }
-                .ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
-            services
-                .AddSingleton(jsonSerializerOptions)
-                .AddSingleton<ApiClient>();
+                var configureOptions = serviceProvider.GetRequiredService<IConfigureOptions<JsonSerializerOptions>>();
+                var options = new JsonSerializerOptions();
+                configureOptions.Configure(options);
+                return options;
+            })
+            .AddSerialization()
+            .AddOptions<JsonSerializerOptions>();
 
-            var cultureInfo = new CultureInfo("da-DK")
+        services
+            .AddScoped(serviceProvider => serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(apiHttpClientName))
+            .AddScoped<ApiClient>()
+            .AddScoped<AuthenticatedApiClient>();
+
+        services
+            .AddBlazoredLocalStorage()
+            .AddAuthorizationCore(options =>
             {
-                NumberFormat =
-                {
-                    CurrencyPositivePattern = 2,
-                    CurrencyNegativePattern = 12
-                }
-            };
-            services
-                .AddSingleton(cultureInfo)
-                .AddSingleton<FormattingService>()
-                .AddReservationsServices()
-                .AddSingleton<ClientDataProvider>()
-                .AddSingleton<IDataProvider>(sp => sp.GetRequiredService<ClientDataProvider>())
-                .AddScoped<ApplicationState>();
-        }
+                options.AddPolicy(
+                    Policies.ViewOrders,
+                    policy => policy.RequireRole(nameof(Roles.OrderHandling), nameof(Roles.Bookkeeping), nameof(Roles.UserAdministration)));
+                options.AddPolicy(
+                    Policies.ViewUsers,
+                    policy => policy.RequireRole(nameof(Roles.OrderHandling), nameof(Roles.Bookkeeping), nameof(Roles.UserAdministration)));
+            })
+            .AddScoped<AuthenticationService>()
+            .AddScoped<TokenAuthenticationStateProvider>()
+            .AddScoped<AuthenticationStateProvider>(serviceProvider => serviceProvider.GetRequiredService<TokenAuthenticationStateProvider>());
+
+        services
+            .AddBlazorise(options => options.Immediate = true)
+            .AddBootstrapProviders()
+            .AddFontAwesomeIcons();
+
+        services
+            .AddShared();
+
+        services
+            .AddSingleton<AsyncEventAggregator>()
+            .AddSingleton<DraftOrder>()
+            .AddSingleton<EventAggregator>()
+            .AddSingleton<UserOrderInformation>()
+            .AddScoped<ClientDataProvider>()
+            .AddScoped<Formatter>()
+            .AddScoped<RedirectState>()
+            .AddScoped<SignOutService>()
+            .AddScoped<SignUpState>()
+            .AddScoped<SignInState>();
     }
 }

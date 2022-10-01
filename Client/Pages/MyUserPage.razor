@@ -1,27 +1,29 @@
-﻿@page "/bruger"
-@attribute [Authorize]
-@inject ApiClient ApiClient
-
+﻿@page "/bruger/konto"
+<PageTitle>Konto - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
-        <Spinner />
+        <Spinner/>
+    }
+    else if (user is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
     }
     else
     {
         <Container>
-            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl.
-                <CloseButton Clicked="@DismissErrorAlert" />
-            </Alert>
-            @if (user != null)
+            <MyUserInformation User="@user"/>
+            <MyUserUpdatePassword User="@user"/>
+            @if (user.Roles.HasFlag(Roles.OrderHandling) || user.Roles.HasFlag(Roles.Bookkeeping) || user.Roles.HasFlag(Roles.Cleaning))
             {
-                <UserInformation User="@user" />
-                <UserUpdatePassword />
-                @if (user.Roles.Contains(Roles.OrderHandling) || user.Roles.Contains(Roles.Payment) || user.Roles.Contains(Roles.Settlement) || user.Roles.Contains(Roles.Cleaning))
-                {
-                    <UserEmailSubscriptions User="@user" />
-                }
+                <MyUserEmailSubscriptions User="@user"/>
+            }
+            @if (user.Roles.HasFlag(Roles.Resident))
+            {
                 <Card Background="Background.Light">
                     <CardHeader>
                         <CardTitle Size="1">Kontoudtog</CardTitle>
@@ -32,27 +34,8 @@
                         </div>
                     </CardBody>
                 </Card>
-                <UserDelete User="@user" />
             }
+            <MyUserDelete User="@user"/>
         </Container>
     }
 </main>
-
-@code
-{
-    private bool isInitialized;
-    private MyUser? user;
-    private bool showErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var (response, problem) = await ApiClient.Get<MyUser>("user");
-        if (problem == null && !string.IsNullOrEmpty(response!.Email))
-            user = response;
-        else
-            showErrorAlert = true;
-        isInitialized = true;
-    }
-
-    private void DismissErrorAlert() => showErrorAlert = false;
-}

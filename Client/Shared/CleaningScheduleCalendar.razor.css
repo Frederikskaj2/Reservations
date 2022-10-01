@@ -1,0 +1,142 @@
+﻿::deep .month-select {
+    margin-top: 1rem;
+}
+
+.calendar {
+    margin: 1rem 0;
+    display: grid;
+    grid-template-columns: repeat(7, 6rem);
+    grid-template-rows: auto;
+    grid-auto-rows: 6rem;
+    border-top: 1px solid rgba(0, 0, 0, .2);
+    border-left: 1px solid rgba(0, 0, 0, .2);
+    user-select: none;
+}
+
+.calendar > div {
+    background-color: hsl(240, 50%, 90%);
+    border-bottom: 1px solid rgba(0, 0, 0, .2);
+    border-right: 1px solid rgba(0, 0, 0, .2);
+}
+
+.calendar .calendar-holiday {
+    background-color: hsl(240, 50%, 80%);
+}
+
+.calendar .calendar-today {
+    background-color: hsl(60, 50%, 90%);
+}
+
+.calendar .calendar-other-month {
+    background-color: hsl(240, 0%, 80%);
+}
+
+.calendar-day-of-week-1 {
+    grid-column: 1;
+}
+
+.calendar-day-of-week-2 {
+    grid-column: 2;
+}
+
+.calendar-day-of-week-3 {
+    grid-column: 3;
+}
+
+.calendar-day-of-week-4 {
+    grid-column: 4;
+}
+
+.calendar-day-of-week-5 {
+    grid-column: 5;
+}
+
+.calendar-day-of-week-6 {
+    grid-column: 6;
+}
+
+.calendar-day-of-week-7 {
+    grid-column: 7;
+}
+
+.calendar-header {
+    background-color: transparent;
+    font-weight: bold;
+    padding: 0.75rem;
+}
+
+.calendar-day {
+    margin: 0.1rem;
+    font-size: 0.67rem;
+    height: 1rem;
+}
+
+.resource {
+    width: 6rem;
+    height: 1.2rem;
+}
+
+.resource > span {
+    display: inline-block;
+    height: 1.2rem;
+}
+
+.morning {
+    width: 1.5rem;
+}
+
+.noon {
+    width: 1.5rem;
+}
+
+.morning-noon, .afternoon {
+    width: 3rem;
+}
+
+.noon-afternoon {
+    width: 4.5rem;
+}
+
+.morning-noon-afternoon {
+    width: 6rem;
+}
+
+.cleaning {
+    background-color: hsl(120, 67%, 40%);
+}
+
+.reserved {
+    display: inline-block;
+    background-color: hsl(0, 50%, 67%);
+}
+
+.resource-1 {
+    background-image: radial-gradient(rgba(255, 255, 255, .5) 1px, transparent 25%), radial-gradient(rgba(255, 255, 255, .5) 1px, transparent 25%);
+    background-size: 0.6rem 0.6rem, 0.6rem 0.6rem;
+    background-position: 0.5rem 0.3rem, 0.8rem 0.6rem;
+    background-repeat: repeat-x, repeat;
+}
+
+.resource-2 {
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 15%, rgba(255, 255, 255, .5) 25%, transparent 35%, transparent 50%);
+    background-size: 0.6rem 0.6rem;
+}
+
+.resource-3 {
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 15%, rgba(255, 255, 255, .5) 25%, transparent 35%, transparent 50%);
+    background-size: 0.6rem 0.6rem;
+}
+
+::deep .legend {
+    display: flex;
+    justify-content: space-between;
+}
+
+::deep .legend span {
+    display: inline-block;
+    width: 10rem;
+    margin: 0.5rem;
+    padding: 0.25rem;
+    text-align: center;
+    color: #FFF;
+}

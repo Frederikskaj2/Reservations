@@ -1,15 +1,11 @@
-﻿@page "/bestil-ejer/1"
-@attribute [Authorize(Roles = Roles.OrderHandling)]
-@inject ApiClient ApiClient
-@inject ClientDataProvider ClientDataProvider
-@inject FormattingService FormattingService
-@inject NavigationManager NavigationManager
-
+﻿@page "/ejer/bestil/1"
+@using Frederikskaj2.Reservations.Shared.Web
+<PageTitle>Ejerbestil - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
-    @if (ClientDataProvider.DraftOrder.Reservations!.Count == 0)
+    @if (!DraftOrder.Reservations.Any())
     {
         <Container>
-            <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
+            <Paragraph>Gå til <a href="@Urls.OwnerCalendar">kalenderen</a> for at reservere et lokale.</Paragraph>
         </Container>
     }
     else
@@ -17,14 +13,31 @@
         <Container Class="container-min-md">
             <Alert Color="Color.Danger" Visible="@showReservationConflictAlert" Dismisable="true">
                 Din bestilling blev ikke gennemført da den overlapper med andre reservationer. Opdatér kalenderen og prøv igen.
-                <CloseButton Clicked="@DismissReservationConflictAlert" />
+                <CloseButton Clicked="@DismissReservationConflictAlert"/>
             </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl, og din bestilling blev ikke gennemført.
-                <CloseButton Clicked="@DismissErrorAlert" />
+                <CloseButton Clicked="@DismissErrorAlert"/>
             </Alert>
             <h1>Din bestilling på vegne af grundejerforeningen</h1>
             <Form>
+                <Validations @ref="validations" Mode="ValidationMode.Manual">
+                    <Field>
+                        <FieldLabel>Formål</FieldLabel>
+                        <FieldBody>
+                            <Validation Validator="@Validator.ValidateOwnerOrderDescription">
+                                <TextEdit
+                                    @bind-Text="description"
+                                    Placeholder="Oplys formålet med bestillingen"
+                                    MaxLength="@ValidationRules.MaximumOwnerOrderDescriptionLength">
+                                    <Feedback>
+                                        <ValidationError/>
+                                    </Feedback>
+                                </TextEdit>
+                            </Validation>
+                        </FieldBody>
+                    </Field>
+                </Validations>
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -35,25 +48,33 @@
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        @foreach (var reservation in ClientDataProvider.DraftOrder.Reservations)
+                        @foreach (var reservation in DraftOrder.Reservations)
                         {
                             <TableRow>
                                 <TableRowCell>@reservation.Resource!.Name</TableRowCell>
-                                <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
-                                <TableRowCell Class="text-right">@reservation.DurationInDays</TableRowCell>
-                                <TableRowCell Class="text-right">@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
+                                <TableRowCell>@Formatter.FormatCheckInTimeShort(options!, reservation.Extent.Date)</TableRowCell>
+                                <TableRowCell Class="text-right">@reservation.Extent.Nights</TableRowCell>
+                                <TableRowCell Class="text-right">@Formatter.FormatCheckOutTimeShort(options!, reservation.Extent.Date.PlusDays(reservation.Extent.Nights))</TableRowCell>
                             </TableRow>
                         }
                     </TableBody>
                     <TableFooter>
                         <TableRow>
-                            <TableRowCell ColumnSpan="2" Class="border-top-0">
+                            <TableRowCell ColumnSpan="2">
                                 <Field>
-                                    <Check @bind-Checked="@isCleainingRequired">Bestil rengøring</Check>
+                                    <Check @bind-Checked="@isCleaningRequired">Bestil rengøring</Check>
                                 </Field>
                             </TableRowCell>
                             <TableRowCell ColumnSpan="2">
-                                <Button Class="float-right" Color="Color.Success" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Submit">Bekræft bestilling</Button>
+                                <Button
+                                    Class="float-right"
+                                    Color="Color.Success"
+                                    Type="ButtonType.Submit"
+                                    PreventDefaultOnSubmit="true"
+                                    Disabled="@string.IsNullOrWhiteSpace(description)"
+                                    Clicked="@SubmitAsync">
+                                    Bekræft bestilling
+                                </Button>
                             </TableRowCell>
                         </TableRow>
                     </TableFooter>
@@ -62,42 +83,3 @@
         </Container>
     }
 </main>
-
-@code
-{
-    private bool isCleainingRequired = true;
-    private bool showReservationConflictAlert;
-    private bool showErrorAlert;
-
-    private async Task Submit()
-    {
-        var request = new PlaceOwnerOrderRequest();
-        request.Reservations.AddRange(
-            ClientDataProvider.DraftOrder.Reservations.Select(reservation => new ReservationRequest
-            {
-                ResourceId = reservation.Resource.Id,
-                Date = reservation.Date,
-                DurationInDays = reservation.DurationInDays
-            }));
-        request.IsCleaningRequired = isCleainingRequired;
-        var (response, problem) = await ApiClient.Post<OwnerOrder>("owner-orders", request);
-        if (problem == null)
-        {
-            ClientDataProvider.DraftOrder.Clear();
-            ClientDataProvider.Refresh();
-            NavigationManager.NavigateTo(Urls.OwnerCheckout2);
-        }
-        else if (problem.Type == ProblemTypes.ReservationConflict)
-        {
-            showReservationConflictAlert = true;
-        }
-        else
-        {
-            showErrorAlert = true;
-        }
-    }
-
-    private void DismissReservationConflictAlert() => showReservationConflictAlert = false;
-
-    private void DismissErrorAlert() => showErrorAlert = false;
-}

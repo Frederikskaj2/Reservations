@@ -1,0 +1,19 @@
+﻿<Modal @ref="@modal">
+    <Form>
+        <ModalContent>
+            <ModalHeader>
+                <ModalTitle>Bekræft sletning af din bruger</ModalTitle>
+                <CloseButton Clicked="@Cancel" />
+            </ModalHeader>
+            <ModalBody>
+                <Paragraph>
+                    <strong>Advarsel</strong>: Du kan ikke fortryde denne handling.
+                </Paragraph>
+            </ModalBody>
+            <ModalFooter>
+                <Button @ref="@submitButton" Color="Color.Danger" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Confirm">Slet min bruger</Button>
+                <Button Color="Color.Secondary" Clicked="@Cancel">Fortryd</Button>
+            </ModalFooter>
+        </ModalContent>
+    </Form>
+</Modal>

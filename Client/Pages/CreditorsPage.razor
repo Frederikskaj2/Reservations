@@ -1,0 +1,69 @@
+﻿@page "/til-udbetaling"
+<PageTitle>Udbetaling - Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner/>
+    }
+    else if (apartments is null || creditors is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
+                Udbetaling af @Formatter.FormatMoneyLong(amount) til @accountNumber er registreret.
+                <CloseButton Clicked="@DismissSuccessAlert"/>
+            </Alert>
+            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
+                Der er sket en fejl, og udbetalingen blev ikke registreret.
+                <CloseButton Clicked="@DismissErrorAlert"/>
+            </Alert>
+            <h1>Til udbetaling</h1>
+            @if (creditors.Count is 0)
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Navn</TableHeaderCell>
+                            <TableHeaderCell>Adresse</TableHeaderCell>
+                            <TableHeaderCell>Mail</TableHeaderCell>
+                            <TableHeaderCell>Telefon</TableHeaderCell>
+                            <TableHeaderCell>Kontonummer</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Beløb</TableHeaderCell>
+                            <TableHeaderCell></TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var creditor in creditors)
+                        {
+                            <TableRow @key="@creditor.UserInformation.UserId">
+                                <TableRowCell><a href="@string.Format(Urls.UsersTransactions, creditor.UserInformation.UserId)">@creditor.UserInformation.FullName</a></TableRowCell>
+                                <TableRowCell>@(creditor.UserInformation.ApartmentId.HasValue ? apartments![creditor.UserInformation.ApartmentId.Value] : "")</TableRowCell>
+                                <TableRowCell>
+                                    <a href="mailto:@creditor.UserInformation.Email?subject=Frederikskaj 2 lokaler">@Formatter.FormatEmail(creditor.UserInformation.Email)</a>
+                                </TableRowCell>
+                                <TableRowCell>@Formatter.FormatPhone(creditor.UserInformation.Phone)</TableRowCell>
+                                <TableRowCell>@creditor.AccountNumber</TableRowCell>
+                                <TableRowCell Class="text-right">@Formatter.FormatMoneyShort(creditor.Amount)</TableRowCell>
+                                <TableRowCell>
+                                    <Button Color="Color.Light" Size="Size.Small" Clicked="@(() => RecordPayOut(creditor))">Registrér udbetaling</Button>
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+                <PayOutDialog @ref="payOutDialog" OnConfirm="@OnPaymentConfirmAsync"/>
+            }
+        </Container>
+    }
+</main>

@@ -1,19 +1,39 @@
 ﻿@page "/bekraeft-mail"
-@inject ApiClient ApiClient
-@inject NavigationManager NavigationManager
-
+<PageTitle>Bekræft mail - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
-        <Spinner />
+        <Spinner/>
     }
     else
     {
         <Container>
-            @if (showErrorAlert)
+            @if (showConfirmErrorAlert)
             {
+                <Alert Color="Color.Danger" Visible="@showResendErrorAlert" Dismisable="true">
+                    Der er sket en fejl, og der blev ikke sendt en ny bekræftelses-mail.
+                    <CloseButton Clicked="@DismissResendAlerts"/>
+                </Alert>
+                <Alert Color="Color.Success" Visible="@showResendSuccessAlert" Dismisable="true">
+                    Du har fået tilsendt en ny bekræftelses-mail til @email.
+                    <CloseButton Clicked="@DismissResendAlerts"/>
+                </Alert>
                 <Alert Color="Color.Danger" Visible="true">
-                    Der er sket en fejl, og din mail blev ikke bekræftet.
+                    @if (error == ConfirmEmailError.TokenExpired)
+                    {
+                        <text>Din bekræftelses-mail er for gammel, så din mail kan ikke bekræftes.</text>
+                    }
+                    else
+                    {
+                        <text>Der er sket en fejl, og din mail blev ikke bekræftet.</text>
+                    }
+                    @if (!string.IsNullOrEmpty(email))
+                    {
+                        <text>Vi kan sende en ny bekræftelses-mail til @email.</text>
+                        <div class="alert-button-container">
+                            <Button Color="Color.Primary" Class="btn-fixed" Clicked="@ResendConfirmEmail">Bekræft mail</Button>
+                        </div>
+                    }
                 </Alert>
             }
             else
@@ -24,31 +44,3 @@
         </Container>
     }
 </main>
-
-@code
-{
-    private bool isInitialized;
-    private bool showErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-        var query = QueryParser.GetQuery(NavigationManager.Uri);
-        if (query.Contains("email") && query.Contains("token"))
-        {
-            var request = new ConfirmEmailRequest
-            {
-                Email = query["email"].FirstOrDefault(),
-                Token = query["token"].FirstOrDefault()
-            };
-            var problem = await ApiClient.Post("user/confirm-email", request);
-            if (problem != null)
-                showErrorAlert = true;
-        }
-        else
-        {
-            showErrorAlert = true;
-        }
-        isInitialized = true;
-    }
-}

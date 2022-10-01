@@ -1,0 +1,64 @@
+﻿<Alert Color="Color.Success" Visible="@showUserUpdatedAlert" Dismisable="true">
+    Dine oplysninger er blevet gemt.
+    <CloseButton Clicked="@DismissUserUpdatedAlert" />
+</Alert>
+<Alert Color="Color.Danger" Visible="@showUserUpdatedErrorAlert" Dismisable="true">
+    Der er sket en fejl, og dine oplysninger blev ikke gemt.
+    <CloseButton Clicked="@DismissUserUpdatedErrorAlert" />
+</Alert>
+<Alert Color="Color.Success" Visible="@showResendConfirmEmailEmailAlert" Dismisable="true">
+    Du har fået tilsendt en ny bekræftelses-mail.
+    <CloseButton Clicked="@DismissResendConfirmEmailEmailAlert" />
+</Alert>
+<Alert Color="Color.Danger" Visible="@showResendConfirmEmailEmailErrorAlert" Dismisable="true">
+    Der er sket en fejl, og der blev ikke sendt en ny bekræftelses-mail.
+    <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
+</Alert>
+<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Oplysninger</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Form>
+            <Validations @ref="validations">
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Mail</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <TextEdit Plaintext="true" Text="@user.Information.Email.ToString()" TabIndex="-1" />
+                    </FieldBody>
+                    @if (!user.IsEmailConfirmed)
+                    {
+                        <Column ColumnSize="ColumnSize.Is2">
+                            <Button Color="Color.Secondary" Class="btn-fixed float-right" Clicked="@SendConfirmEmailEmail">Bekræft mail</Button>
+                        </Column>
+                    }
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Fulde navn</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <Validation Validator="@Validator.ValidateFullName">
+                            <TextEdit @bind-Text="@request.FullName">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Telefonnummer</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <Validation Validator="@Validator.ValidatePhone">
+                            <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@request.Phone">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Class="btn-fixed float-right" Clicked="@UpdateMyUserAsync">Opdatér</Button>
+            </Validations>
+        </Form>
+    </CardBody>
+</Card>

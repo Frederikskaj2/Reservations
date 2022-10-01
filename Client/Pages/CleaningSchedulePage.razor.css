@@ -1,0 +1,7 @@
+﻿::deep .calendar-width {
+    width: calc(42rem + 1px);
+}
+
+::deep table {
+    margin-top: 1rem;
+}

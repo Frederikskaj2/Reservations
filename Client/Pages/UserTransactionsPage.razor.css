@@ -1,0 +1,7 @@
+::deep table {
+    margin-top: 1rem;
+}
+
+::deep .highlight {
+    background-color: hsl(120, 50%, 90%);
+}

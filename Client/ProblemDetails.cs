@@ -1,10 +1,20 @@
-﻿namespace Frederikskaj2.Reservations.Client
+﻿using System;
+using System.Net;
+
+namespace Frederikskaj2.Reservations.Client;
+
+public record ProblemDetails
 {
-    public class ProblemDetails
+    public string? Type { get; init; }
+    public string? Title { get; init; }
+    public HttpStatusCode Status { get; init; }
+    public string? Detail { get; init; }
+    public string? Error { get; init; }
+
+    public T GetError<T>() where T : struct, Enum
     {
-        public string? Type { get; set; }
-        public string? Title { get; set; }
-        public int Status { get; set; }
-        public string? Detail { get; set; }
+        if (Error is null || !int.TryParse(Error, out var value))
+            return default;
+        return EnumConverter<T>.Convert(value);
     }
 }

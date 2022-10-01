@@ -1,6 +1,7 @@
-﻿@page "/bestil-ejer/2"
-@attribute [Authorize(Roles = Roles.OrderHandling)]
-
+﻿@page "/ejer/bestil/2"
+@using Frederikskaj2.Reservations.Shared.Core
+@attribute [Authorize(Roles = nameof(Roles.OrderHandling))]
+<PageTitle>Ejerbestilling modtaget - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     <Container>
         <Paragraph>Din bestilling på vegne af grundejerforeningen er nu reserveret i kalenderen.</Paragraph>

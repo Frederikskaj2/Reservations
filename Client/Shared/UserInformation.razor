@@ -1,47 +1,34 @@
-﻿@inject ApiClient ApiClient
-
-<Alert Color="Color.Success" Visible="@showUserUpdatedAlert" Dismisable="true">
-    Dine oplysninger er blevet gemt.
-    <CloseButton Clicked="@DismissUserUpdatedAlert" />
-</Alert>
-<Alert Color="Color.Danger" Visible="@showUserUpdatedErrorAlert" Dismisable="true">
-    Der er sket en fejl, og dine oplysninger blev ikke gemt.
-    <CloseButton Clicked="@DismissUserUpdatedErrorAlert" />
-</Alert>
-<Alert Color="Color.Success" Visible="@showResendConfirmEmailEmailAlert" Dismisable="true">
-    Du har fået tilsendt en ny bekræftelses-mail.
-    <CloseButton Clicked="@DismissResendConfirmEmailEmailAlert" />
-</Alert>
-<Alert Color="Color.Danger" Visible="@showResendConfirmEmailEmailErrorAlert" Dismisable="true">
-    Der er sket en fejl, og der blev ikke sendt en ny bekræftelses-mail.
-    <CloseButton Clicked="@DismissResendConfirmEmailEmailErrorAlert" />
-</Alert>
+@using Frederikskaj2.Reservations.Shared.Core
 <Card Background="Background.Light">
     <CardHeader>
         <CardTitle Size="1">Oplysninger</CardTitle>
     </CardHeader>
     <CardBody>
         <Form>
-            <Validations @ref="validations" Model="@request">
+            <Validations @ref="validations">
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Mail</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is6">
-                        <TextEdit Plaintext="true" Text="@User.Email" tabindex="-1" />
+                        <div class="field-text">
+                            <a href="mailto:@User.Information.Email?subject=Frederikskaj 2 lokaler">@User.Information.Email</a>
+                        </div>
                     </FieldBody>
                     @if (!User.IsEmailConfirmed)
                     {
                         <Column ColumnSize="ColumnSize.Is2">
-                            <Button Color="Color.Secondary" class="btn-fixed float-right" Clicked="@SendConfirmEmailEmail">Bekræft mail</Button>
+                        <div class="field-text align-right">
+                            (Ubekræftet)
+                        </div>
                         </Column>
                     }
                 </Field>
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Fulde navn</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <Validation>
-                            <TextEdit @bind-Text="@request.FullName">
+                        <Validation Validator="@Validator.ValidateFullName">
+                            <TextEdit @bind-Text="@fullName" Disabled="@isDisabled">
                                 <Feedback>
-                                    <ValidationError />
+                                    <ValidationError/>
                                 </Feedback>
                             </TextEdit>
                         </Validation>
@@ -50,81 +37,97 @@
                 <Field Horizontal="true">
                     <FieldLabel ColumnSize="ColumnSize.Is4">Telefonnummer</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is8">
-                        <Validation>
-                            <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@request.Phone">
+                        <Validation Validator="@Validator.ValidatePhone">
+                            <TextEdit InputMode="TextInputMode.Tel" @bind-Text="@phone" Disabled="@isDisabled">
                                 <Feedback>
-                                    <ValidationError />
+                                    <ValidationError/>
                                 </Feedback>
                             </TextEdit>
                         </Validation>
                     </FieldBody>
                 </Field>
-                <Button Color="Color.Primary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" class="btn-fixed float-right" Clicked="@UpdateMyUser">Opdatér</Button>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Adresse</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            @(address ?? "(Ikke oplyst)")
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Saldo</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            <a href="@string.Format(Urls.UsersTransactions, User.Information.UserId)">@Formatter.FormatMoneyLong(User.Balance)</a>
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Sidst logget på</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text" title="@(User.LatestSignIn.HasValue ? Formatter.FormatTimeLong(DateProvider.GetTime(User.LatestSignIn.Value)) : null)">
+                            @(User.LatestSignIn.HasValue ? Formatter.FormatHumanizedPastTime(DateProvider.Now, User.LatestSignIn.Value) : "Aldrig")
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Aktuelle bestillinger</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            @{
+                                if (User.Orders.Any())
+                                {
+                                    var delimiter = string.Empty;
+                                    foreach (var orderId in User.Orders)
+                                    {
+                                        var url = $"{Urls.Orders}/{orderId}";
+                                        <text>@delimiter</text>
+                                        <a href="@url">@orderId</a>
+                                        delimiter = ", ";
+                                    }
+                                }
+                                else
+                                {
+                                    <text>(Ingen aktuelle bestillinger)</text>
+                                }
+                            }
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Tidligere bestillinger</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            @{
+                                if (User.HistoryOrders.Any())
+                                {
+                                    var delimiter = string.Empty;
+                                    foreach (var orderId in User.HistoryOrders)
+                                    {
+                                        var url = $"{Urls.Orders}/{orderId}";
+                                        <text>@delimiter</text>
+                                        <a href="@url">@orderId</a>
+                                        delimiter = ", ";
+                                    }
+                                }
+                                else
+                                {
+                                    <text>(Ingen tidligere bestillinger)</text>
+                                }
+                            }
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Button
+                    Color="Color.Primary"
+                    Type="ButtonType.Submit"
+                    PreventDefaultOnSubmit="true"
+                    Class="btn-fixed float-right"
+                    Clicked="@UpdateUserAsync"
+                    Disabled="@isDisabled">
+                    Opdatér
+                </Button>
             </Validations>
         </Form>
     </CardBody>
 </Card>
-
-@code
-{
-    private readonly UpdateMyUserRequest request = new UpdateMyUserRequest();
-    private Validations validations = null!;
-    private bool showUserUpdatedAlert;
-    private bool showUserUpdatedErrorAlert;
-    private bool showResendConfirmEmailEmailAlert;
-    private bool showResendConfirmEmailEmailErrorAlert;
-
-    [Parameter]
-    public MyUser User { get; set; } = null!;
-
-    protected override void OnParametersSet()
-    {
-        request.FullName = User.FullName!;
-        request.Phone = User.Phone!;
-        request.EmailSubscriptions = User.EmailSubscriptions;
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-            validations.ClearAll();
-    }
-
-    private async Task UpdateMyUser()
-    {
-        if (!validations.ValidateAll())
-            return;
-
-        validations.ClearAll();
-        DismissAllAlerts();
-
-        var problem = await ApiClient.Patch("user", request);
-        if (problem == null)
-            showUserUpdatedAlert = true;
-        else
-            showUserUpdatedErrorAlert = true;
-    }
-
-    private async Task SendConfirmEmailEmail()
-    {
-        DismissAllAlerts();
-        var problem = await ApiClient.Post("user/resend-confirm-email-email");
-        if (problem != null)
-            showResendConfirmEmailEmailErrorAlert = true;
-        else
-            showResendConfirmEmailEmailAlert = true;
-    }
-
-    private void DismissUserUpdatedAlert() => showUserUpdatedAlert = false;
-    private void DismissUserUpdatedErrorAlert() => showUserUpdatedErrorAlert = false;
-    private void DismissResendConfirmEmailEmailAlert() => showResendConfirmEmailEmailAlert = false;
-    private void DismissResendConfirmEmailEmailErrorAlert() => showResendConfirmEmailEmailErrorAlert = false;
-
-    private void DismissAllAlerts()
-    {
-        showUserUpdatedAlert = false;
-        showUserUpdatedErrorAlert = false;
-        showResendConfirmEmailEmailAlert = false;
-        showResendConfirmEmailEmailErrorAlert = false;
-    }
-}

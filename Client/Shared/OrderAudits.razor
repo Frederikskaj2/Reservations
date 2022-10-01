@@ -1,0 +1,48 @@
+@using System.Globalization
+@using Frederikskaj2.Reservations.Shared.Core
+<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Historik</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHeaderCell>Tidspunkt</TableHeaderCell>
+                    <TableHeaderCell>Begivenhed</TableHeaderCell>
+                    <TableHeaderCell>Hvem</TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                @{
+                    var now = DateProvider.Now;
+                    foreach (var audit in Order!.Audits.Reverse())
+                    {
+                        var transactionUrl = audit.TransactionId is not null ? string.Format(CultureInfo.InvariantCulture, Urls.UsersTransactionsSpecific, Order.UserInformation.UserId, audit.TransactionId.Value) : null;
+                        <TableRow>
+                            <TableRowCell title="@Formatter.FormatTimeLong(DateProvider.GetTime(audit.Timestamp))">@Formatter.FormatHumanizedPastTime(now, audit.Timestamp)</TableRowCell>
+                            <TableRowCell>
+                                @if (transactionUrl is not null)
+                                {
+                                    <a href="@transactionUrl">@GetAuditName(audit.Type)</a>
+                                }
+                                else
+                                {
+                                    <text>@GetAuditName(audit.Type)</text>
+                                }
+                            </TableRowCell>
+                            <TableRowCell>
+                                @if (audit.UserId.HasValue)
+                                {
+                                    var userUrl = $"{Urls.Users}/{audit.UserId}";
+                                    <a href="@userUrl">@audit.FullName</a>
+                                }
+                            </TableRowCell>
+                            <TableRowCell Class="border-0" />
+                        </TableRow>
+                    }
+                }
+            </TableBody>
+        </Table>
+    </CardBody>
+</Card>

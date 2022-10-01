@@ -1,0 +1,23 @@
+@using Frederikskaj2.Reservations.Shared.Core
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>
+    <title>Bestilling @Model.Data.OrderId</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 " />
+</head>
+<body>
+    <p>Hej @Model.Data.FullName</p>
+    <p>Vi har nu opgjort din reservation af @Model.Data.Reservation.ResourceName @Model.FormatLongDate(Model.Data.Reservation.Date) hørende til <a href="@Model.Data.OrderUrl">bestilling @Model.Data.OrderId</a>.</p>
+@if (Model.Data.Damages > Amount.Zero)
+{
+    <p>Vi tilbageholder @Model.FormatAmount(Model.Data.Damages) af dit despositum på @Model.FormatAmount(Model.Data.Deposit) til dækning af følgende: @Model.Data.Description.</p>
+}
+@if (Model.Data.Damages < Model.Data.Deposit)
+{
+    <p>Du vil få udbetalt@(Model.Data.Damages > Amount.Zero ? " resten af" : "") dit depositum som udgør @Model.FormatAmount(Model.Data.Deposit - Model.Data.Damages).</p>
+}
+    <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
+    <p><a href="@Model.Data.OrderUrl">Din bestilling</a> • <a href="@Model.GetUrl(Urls.MyTransactions)">Dit kontoudtog</a> • <a href="@Model.GetUrl(Urls.MyAccount)">Din konto</a></p>
+</body>

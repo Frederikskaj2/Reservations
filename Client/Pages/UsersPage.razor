@@ -1,175 +1,37 @@
-﻿@page "/brugere"
-@attribute [Authorize(Roles = Roles.UserAdministration)]
-@inject ApiClient ApiClient
-@inject ApplicationState ApplicationState
-@inject FormattingService FormattingService
-
+@page "/brugere"
+<PageTitle>Brugere - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
         <Spinner />
     }
+    else if (residents!.Count + superUsers!.Count + other!.Count is 0)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
+    }
     else
     {
         <Container>
-            <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
-                Der er sket en fejl, og din ændring blev ikke gemt.
-                <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
-            </Alert>
             <h1>Brugere</h1>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHeaderCell>Mail</TableHeaderCell>
-                        <TableHeaderCell>Navn</TableHeaderCell>
-                        <TableHeaderCell>Telefon</TableHeaderCell>
-                        <TableHeaderCell class="text-center">Bestillinger</TableHeaderCell>
-                        <TableHeaderCell class="text-center">Email bekræftet</TableHeaderCell>
-                        <TableHeaderCell>Administrative adgange</TableHeaderCell>
-                        <TableHeaderCell class="text-center">Sletning ønsket</TableHeaderCell>
-                        <TableHeaderCell></TableHeaderCell>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    @foreach (var user in users!)
-                    {
-                        <TableRow @key="@user.Id">
-                            <TableRowCell><a href="mailto:@user.Email?subject=Frederikskaj 2">@FormattingService.FormatEmail(user.Email)</a></TableRowCell>
-                            <TableRowCell>@user.FullName</TableRowCell>
-                            <TableRowCell>@FormattingService.FormatPhone(user.Phone)</TableRowCell>
-                            <TableRowCell class="text-center">@(user.OrderCount > 0 ? user.OrderCount.ToString() : string.Empty)</TableRowCell>
-                            <TableRowCell class="text-center">
-                                @if (@user.IsEmailConfirmed)
-                                {
-                                    <Icon class="fa-check" />
-                                }
-                            </TableRowCell>
-                            <TableRowCell>
-                                @((MarkupString) string.Join("<br/>", user.Roles.OrderBy(GetLogicalRoleOrder).Select(GetRoleName)))
-                            </TableRowCell>
-                            <TableRowCell class="text-center">
-                                @if (@user.IsPendingDelete)
-                                {
-                                    <Icon class="fa-check" />
-                                }
-                            </TableRowCell>
-                            <TableRowCell>
-                                <Dropdown>
-                                    <DropdownToggle Color="Color.Light" />
-                                    <DropdownMenu>
-                                        <DropdownItem Clicked="@(() => Edit(user))">Redigér</DropdownItem>
-                                        @if (!user.IsPendingDelete && user.Id != currentUserId)
-                                        {
-                                            <DropdownItem Clicked="@(() => Delete(user))">Slet</DropdownItem>
-                                        }
-                                    </DropdownMenu>
-                                </Dropdown>
-                            </TableRowCell>
-                        </TableRow>
-                    }
-                </TableBody>
-            </Table>
-            <EditUserDialog @ref="editUserDialog" OnConfirm="OnEditUser" />
-            <ConfirmDeleteUserDialog @ref="confirmDeleteUserDialog" OnConfirm="OnConfirmDeleteUser" />
+            @if (residents.Count > 0)
+            {
+                <h2>Beboere</h2>
+                <UsersList Users="@residents" />
+            }
+            @if (superUsers.Count > 0)
+            {
+                <h2>Superbrugere</h2>
+                <UsersList Users="@superUsers" />
+            }
+            @if (other.Count > 0)
+            {
+                <h2>Øvrige</h2>
+                <UsersList Users="@other" />
+            }
         </Container>
     }
 </main>
-
-@code
-{
-    private EditUserDialog editUserDialog = null!;
-    private ConfirmDeleteUserDialog confirmDeleteUserDialog = null!;
-    private bool isInitialized;
-    private int? currentUserId;
-    private List<User>? users;
-    private bool showGeneralErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        currentUserId = await ApplicationState.GetUserId();
-        var (response, problem) = await ApiClient.Get<IEnumerable<User>>("users");
-        users = problem == null ? response.ToList() : new List<User>();
-        isInitialized = true;
-    }
-
-    private void Edit(User user) => editUserDialog.Show(user, user.Id == currentUserId);
-
-    private Task MakeAdministrator(User user) => PatchUser(user, true, null);
-
-    private Task MakeNormalUser(User user) => PatchUser(user, false, null);
-
-    private void Delete(User user) => confirmDeleteUserDialog.Show(user);
-
-    private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
-
-    private Task OnEditUser((int UserId, UpdateUserRequest Request) tuple) => PatchUser(tuple.UserId, tuple.Request);
-
-    private Task OnConfirmDeleteUser(User user) => PatchUser(user, null, true);
-
-    private async Task PatchUser(User user, bool? isAdministrator, bool? isPendingDelete)
-    {
-        var request = new UpdateUserRequest
-        {
-            FullName = user.FullName!,
-            Phone = user.Phone!,
-            IsPendingDelete = isPendingDelete ?? user.IsPendingDelete
-        };
-        await PatchUser(user.Id, request);
-    }
-
-    private async Task PatchUser(int userId, UpdateUserRequest request)
-    {
-        var requestUri = $"users/{userId}";
-        var (response, problem) = await ApiClient.Patch<UpdateUserResponse>(requestUri, request);
-        if (problem == null)
-        {
-            switch (response!.Result)
-            {
-                case UpdateUserResult.Success:
-                    UpdateUser(response.User!);
-                    return;
-                case UpdateUserResult.UserWasDeleted:
-                    RemoveUser(userId);
-                    return;
-            }
-        }
-
-        showGeneralErrorAlert = true;
-    }
-
-    private void UpdateUser(User user)
-    {
-        var index = users!.FindIndex(u => u.Id == user.Id);
-        users[index] = user;
-    }
-
-    private void RemoveUser(int userId)
-    {
-        var index = users!.FindIndex(u => u.Id == userId);
-        users.RemoveAt(index);
-    }
-
-    private string GetRoleName(string role) => role switch
-    {
-        Roles.OrderHandling => "Bestillinger",
-        Roles.Payment => "Betaling",
-        Roles.Settlement => "Opgørelse",
-        Roles.Bookkeeping => "Bogføring",
-        Roles.Cleaning => "Rengøring",
-        Roles.LockBoxCodes => "Nøglebokskoder",
-        Roles.UserAdministration => "Brugeradministration",
-        _ => "?"
-    };
-
-    private int GetLogicalRoleOrder(string role) => role switch
-    {
-        Roles.OrderHandling => 1,
-        Roles.Payment => 2,
-        Roles.Settlement => 3,
-        Roles.Bookkeeping => 4,
-        Roles.Cleaning => 5,
-        Roles.LockBoxCodes => 6,
-        Roles.UserAdministration => 7,
-        _ => 8,
-    };
-}

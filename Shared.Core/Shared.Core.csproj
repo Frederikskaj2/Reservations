@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Shared.Core</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Liversage.Primitives" Version="4.2.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(ExtensionsVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="$(ExtensionsVersion)" />
+        <PackageReference Include="NodaTime" Version="$(NodaTimeVersion)" />
+    </ItemGroup>
+
+</Project>

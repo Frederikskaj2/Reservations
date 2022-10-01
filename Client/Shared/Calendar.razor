@@ -1,0 +1,82 @@
+﻿@if (calendar is not null)
+{
+    <div class="row calendar-container">
+        <Form>
+            <Buttons>
+                @{
+                    var resourceCounter = 1;
+                    foreach (var (resourceId, _, _, name) in orderedResources!)
+                    {
+                        var isSelected = resourceId == currentResourceId;
+                        <Button Color="Color.Secondary" Outline="true" Class="@(isSelected ? "legend-selected-resource" : string.Empty)" Clicked="@(() => SelectResource(resourceId))">
+                            <span class="legend-icon resource resource-reserved-other resource-@(resourceCounter++)"></span>
+                            <span>@name</span>
+                        </Button>
+                    }
+                }
+            </Buttons>
+            <Select TValue="string" SelectedValue="@currentMonthValue" SelectedValueChanged="@MonthChanged">
+                @foreach (var (_, value, text) in months!)
+                {
+                    <SelectItem Value="@value">@text</SelectItem>
+                }
+            </Select>
+        </Form>
+        <div class="calendar">
+            <div class="calendar-day-of-week-1 calendar-header">Mandag</div>
+            <div class="calendar-day-of-week-2 calendar-header">Tirsdag</div>
+            <div class="calendar-day-of-week-3 calendar-header">Onsdag</div>
+            <div class="calendar-day-of-week-4 calendar-header">Torsdag</div>
+            <div class="calendar-day-of-week-5 calendar-header">Fredag</div>
+            <div class="calendar-day-of-week-6 calendar-header">Lørdag</div>
+            <div class="calendar-day-of-week-7 calendar-header">Søndag</div>
+            @{
+                var dayOfWeek = 1;
+                var date = firstCalendarDate;
+                while (date <= lastCalendarDate)
+                {
+                    var day = calendar![date];
+                    var localDate = date;
+                    <div class="@GetCalendarDayClasses(day, dayOfWeek)" @onclick="@(_ => MakeReservationAsync(localDate))" tabindex="@(day.IsResourceAvailable ? "0" : string.Empty)" @onkeyup="@(e => KeyUpAsync(e, localDate))">
+                        <div class="calendar-day">@day.Date.Day</div>
+                        @{
+                            for (var i = 0; i < 3; i += 1)
+                            {
+                                var resource = orderedResources![i];
+                                var classes = GetResourceClasses(calendar![date.PlusDays(-1)], day, calendar[date.PlusDays(1)], resource.ResourceId, i + 1);
+                                if (!LinkToOrders)
+                                {
+                                    <div class="@classes"></div>
+                                }
+                                else
+                                {
+                                    var orderId = day.ReservedResources.TryGetValue(resource.ResourceId, out var tuple) ? tuple.OrderId : null;
+                                    if (orderId.HasValue)
+                                    {
+                                        <div class="@classes" @onclick="@(_ => NavigateToOrder(orderId.Value))" title="@GetTooltip(orderId.Value)"></div>
+                                    }
+                                    else
+                                    {
+                                        <div class="@classes"></div>
+                                    }
+                                }
+                            }
+                        }
+                    </div>
+                    date = date.PlusDays(1);
+                    dayOfWeek = dayOfWeek%7 + 1;
+                }
+            }
+        </div>
+        <Form Class="legend">
+            <Button Color="Color.Light" Clicked="@(() => SelectMonth(previousMonth ?? currentMonth))" style="@(!previousMonth.HasValue ? "visibility: hidden;" : string.Empty)">
+                <Icon Class="fa-arrow-circle-left"/>
+            </Button>
+            <span class="resource-reserved-other">@LegendTheirReservations</span>
+            <span class="resource-reserved-me">@LegendOurReservations</span>
+            <Button Color="Color.Light" Clicked="@(() => SelectMonth(nextMonth ?? currentMonth))" style="@(!nextMonth.HasValue ? "visibility: hidden;" : string.Empty)">
+                <Icon Class="fa-arrow-circle-right"/>
+            </Button>
+        </Form>
+    </div>
+}

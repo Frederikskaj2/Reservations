@@ -1,0 +1,7 @@
+﻿::deep table {
+    margin-top: 1rem;
+}
+
+::deep .extra-border-top {
+    border-top-width: 2px !important;
+}

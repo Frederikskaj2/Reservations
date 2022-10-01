@@ -1,131 +1,83 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Threading.Tasks;
-using Frederikskaj2.Reservations.Server.Data;
-using Frederikskaj2.Reservations.Server.Domain;
-using Frederikskaj2.Reservations.Server.Email;
-using Frederikskaj2.Reservations.Server.ErrorHandling;
-using Frederikskaj2.Reservations.Shared;
+using Frederikskaj2.Reservations.Application;
+using Frederikskaj2.Reservations.EmailSender;
+using Frederikskaj2.Reservations.Infrastructure;
+using Frederikskaj2.Reservations.Infrastructure.Persistence;
+using Frederikskaj2.Reservations.Shared.Core;
+using Frederikskaj2.Reservations.Shared.Email;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using NodaTime;
-using NodaTime.Serialization.JsonNet;
-using User = Frederikskaj2.Reservations.Server.Data.User;
+using Microsoft.Extensions.Options;
 
-namespace Frederikskaj2.Reservations.Server
+namespace Frederikskaj2.Reservations.Server;
+
+public class Startup
 {
-    public class Startup
+    public Startup(IConfiguration configuration) => Configuration = configuration;
+
+    public IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
     {
-        public Startup(IConfiguration configuration) => Configuration = configuration;
+        services
+            .AddTransient<IConfigureOptions<JsonOptions>, ConfigureJsonOptions>()
+            .AddTransient<DatabaseInitializer>()
+            .AddTransient<SeedData>()
+            .AddShared()
+            .AddSerialization()
+            .AddInfrastructure()
+            .AddCosmos()
+            .AddApplication(Configuration)
+            .AddEmail();
 
-        public IConfiguration Configuration { get; }
+        services
+            .AddOption<AuthenticationOptions>()
+            .AddOption<CookieOptions>()
+            .AddOption<CosmosOptions>()
+            .AddOption<EmailApiOptions>()
+            .AddOption<EmailQueueOptions>()
+            .AddOption<EmailMessageOptions>()
+            .AddOption<EmailSenderOptions>()
+            .AddOption<TestingOptions>()
+            .AddTransient<IOptionsFactory<OrderingOptions>, OrderingOptionsFactory>();
 
-        public void ConfigureServices(IServiceCollection services) => ConfigureServicesWithConnectionString(services, "Data Source=../Reservations.db");
+        services
+            .AddJwtAuthentication()
+            .AddCookie();
 
-        [SuppressMessage("Microsoft.Maintainability", "CA1506:Avoid excessive class coupling", Justification = "This class is naturally coupled to many different classes.")]
-        public void ConfigureServicesWithConnectionString(IServiceCollection services, string connectionString)
+        services
+            .AddControllers(options => options.Filters.Add(typeof(ExceptionFilter)));
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
         {
-            services
-                .AddDbContext<ReservationsContext>(options => options.UseSqlite(connectionString))
-                .Configure<SeedDataOptions>(Configuration.GetSection("SeedData"))
-                .AddScoped<SeedData>();
-
-            services
-                .AddDataProtection()
-                .PersistKeysToFileSystem(new DirectoryInfo(".."));
-
-            services
-                .Configure<IdentityOptions>(
-                    options =>
-                    {
-                        options.Lockout.MaxFailedAccessAttempts = 10;
-
-                        options.Password.RequireDigit = false;
-                        options.Password.RequireLowercase = false;
-                        options.Password.RequireNonAlphanumeric = false;
-                        options.Password.RequireUppercase = false;
-                        options.Password.RequiredLength = 4;
-                        options.Password.RequiredUniqueChars = 3;
-
-                        options.User.RequireUniqueEmail = true;
-                    })
-                .Configure<SecurityStampValidatorOptions>(
-                    options => options.ValidationInterval = TimeSpan.FromMinutes(10))
-                .Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromDays(1))
-                .AddIdentity<User, Role>()
-                .AddEntityFrameworkStores<ReservationsContext>()
-                .AddDefaultTokenProviders();
-
-            services.ConfigureApplicationCookie(
-                options =>
-                {
-                    options.Cookie.HttpOnly = false;
-                    options.Events.OnRedirectToLogin = context =>
-                    {
-                        context.Response.StatusCode = 401;
-                        return Task.CompletedTask;
-                    };
-                });
-
-            services
-                .AddReservationsServices()
-                .AddSingleton<TransactionService>()
-                .AddScoped<IDataProvider, ServerDataProvider>()
-                .AddScoped<OrderService>()
-                .AddScoped<PostingsService>()
-                .AddScoped<MyTransactionService>()
-                .AddScoped<LockBoxCodeService>()
-                .AddScoped<CleaningTaskService>()
-                .AddEmail(Configuration);
-
-            services
-                .AddControllers(options => options.Filters.Add(typeof(ExceptionFilter)))
-                .AddNewtonsoftJson(
-                    options =>
-                    {
-                        options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-                        options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                        options.SerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
-                    });
+            app.UseDeveloperExceptionPage();
+            app.UseWebAssemblyDebugging();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Error");
+            app.UseHsts();
         }
 
-        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is called by convention and cannot be static.")]
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        app.UseHttpsRedirection();
+        app.UseBlazorFrameworkFiles();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseWebAssemblyDebugging();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
-
-            app.UseBlazorFrameworkFiles();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.UseEndpoints(
-                endpoints =>
-                {
-                    endpoints.MapControllers();
-                    endpoints.MapFallbackToFile("index.html");
-                });
-        }
+            endpoints.MapControllers();
+            endpoints.MapFallbackToFile("index.html");
+        });
     }
 }

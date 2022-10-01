@@ -1,47 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>Frederikskaj2.Reservations.Server</RootNamespace>
-    <Nullable>enable</Nullable>
-    <UserSecretsId>640e5942-68b4-4d42-97d0-e94d48c3e10c</UserSecretsId>
-  </PropertyGroup>
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Server</RootNamespace>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Mapster" Version="5.3.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="$(BlazorVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="$(AspNetCoreVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="$(AspNetCoreVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(AspNetCoreVersion)" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="$(AspNetCoreVersion)" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(AspNetCoreVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="$(AspNetCoreVersion)" />
-    <PackageReference Include="NodaTime.Serialization.JsonNet" Version="3.0.0" />
-    <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Ardalis.ApiEndpoints" Version="4.0.1" />
+        <PackageReference Include="libphonenumber-csharp" Version="8.12.56" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="$(AspNetCoreVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="$(AspNetCoreVersion)" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Client\Client.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Client\Client.csproj" />
+        <ProjectReference Include="..\EmailSender\EmailSender.csproj" />
+        <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Content Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="appsettings.local.json">
-      <DependentUpon>appsettings.json</DependentUpon>
-      <CopyToOutputDirectory>None</CopyToOutputDirectory>
-    </Content>
-    <Content Update="appsettings.Development.json">
-      <DependentUpon>appsettings.json</DependentUpon>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Logs\**" />
-    <None Remove="key-*.xml" />
-    <None Remove="Reservations.db" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="appsettings.Development.json">
+            <DependentUpon>appsettings.json</DependentUpon>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="appsettings.local.json">
+            <DependentUpon>appsettings.json</DependentUpon>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="appsettings.Production.json">
+            <DependentUpon>appsettings.json</DependentUpon>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="appsettings.Test.json">
+            <DependentUpon>appsettings.json</DependentUpon>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
 
 </Project>

@@ -1,0 +1,81 @@
+@page  "/brugere/{userId:int}/kontoudtog"
+<PageTitle>@(transactions is not null ? $"Kontoudtog {transactions.FullName} - " : "")Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner />
+    }
+    else if (transactions is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <h1>Kontoudtog</h1>
+            <Paragraph><a href="@Urls.Users/@transactions.UserId">@transactions.FullName</a></Paragraph>
+            @if (!transactions.Transactions.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                var balance = Amount.Zero;
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Dato</TableHeaderCell>
+                            <TableHeaderCell>Tekst</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Beløb</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Saldo</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @{
+                            foreach (var transaction in transactions!.Transactions)
+                            {
+                                balance += transaction.Amount;
+                                var localBalance = balance;
+                                <TableRow Class="@(transaction.TransactionId == selectedTransactionId ? "highlight": "")">
+                                    <TableRowCell>
+                                        <a id="t-@transaction.TransactionId">@Formatter.FormatDate(transaction.Date)</a>
+                                    </TableRowCell>
+                                    <TableRowCell>
+                                        @if (transaction.Activity == Activity.PlaceOrder)
+                                        {
+                                            <a href="@Urls.Orders/@transaction.OrderId">Oprettelse af bestilling @transaction.OrderId</a>
+                                        }
+                                        else if (transaction.Activity is Activity.UpdateOrder or Activity.SettleReservation)
+                                        {
+                                            <a href="@Urls.Orders/@transaction.OrderId">@transaction.Description</a>
+                                        }
+                                        else if (transaction.Activity == Activity.PayIn)
+                                        {
+                                            <text>Indbetaling</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Udbetaling</text>
+                                        }
+                                    </TableRowCell>
+                                    <TableRowCell class="text-right">@Formatter.FormatMoneyShort(transaction.Amount)</TableRowCell>
+                                    <TableRowCell class="text-right">@Formatter.FormatMoneyShort(localBalance)</TableRowCell>
+                                </TableRow>
+                            }
+                        }
+                    </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableRowCell ColumnSpan="4" Class="text-right"><a id="total"><strong>@Formatter.FormatMoneyShort(balance)</strong></a></TableRowCell>
+                        </TableRow>
+                    </TableFooter>
+                </Table>
+                <Paragraph>Alle beløb er i kr. En positiv saldo betyder at beboeren har penge til gode. En negativ saldo betyder at beboeren skylder penge.</Paragraph>
+            }
+        </Container>
+    }
+</main>

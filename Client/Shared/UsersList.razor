@@ -1,0 +1,39 @@
+<Table>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>Navn</TableHeaderCell>
+            <TableHeaderCell>Adresse</TableHeaderCell>
+            <TableHeaderCell>Telefon</TableHeaderCell>
+            <TableHeaderCell class="text-center">Bestillinger</TableHeaderCell>
+            <TableHeaderCell class="text-center">Email bekræftet</TableHeaderCell>
+            <TableHeaderCell>Roller</TableHeaderCell>
+            <TableHeaderCell class="text-center">Sletning ønsket</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @foreach (var user in Users!)
+        {
+            <TableRow @key="@user.Information.UserId">
+                <TableRowCell><a href="@Urls.Users/@user.Information.UserId">@user.Information.FullName</a></TableRowCell>
+                <TableRowCell>@(GetApartment(user.Information.ApartmentId)?.ToString() ?? "")</TableRowCell>
+                <TableRowCell>@Formatter.FormatPhone(user.Information.Phone)</TableRowCell>
+                <TableRowCell class="text-center">@(user.Orders.Count() + user.HistoryOrders.Count() > 0 ? (user.Orders.Count() + user.HistoryOrders.Count()).ToString() : string.Empty)</TableRowCell>
+                <TableRowCell class="text-center">
+                    @if (user.IsEmailConfirmed)
+                    {
+                        <Icon class="fa-check" />
+                    }
+                </TableRowCell>
+                <TableRowCell>
+                    @((MarkupString) string.Join("<br/>", GetRoleNames(user.Roles)))
+                </TableRowCell>
+                <TableRowCell class="text-center">
+                    @if (user.IsPendingDelete)
+                    {
+                        <Icon class="fa-check" />
+                    }
+                </TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>

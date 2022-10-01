@@ -1,0 +1,16 @@
+﻿.parent {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+::deep .child {
+    flex: 1 1 calc(50% - 0.5rem);
+}
+
+    ::deep .child:first-child {
+        margin-right: 0.5rem;
+    }
+
+    ::deep .child:last-child {
+        margin-left: 0.5rem;
+    }

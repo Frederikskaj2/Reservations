@@ -1,0 +1,55 @@
+@using Frederikskaj2.Reservations.Shared.Core
+<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Historik</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHeaderCell>Tidspunkt</TableHeaderCell>
+                    <TableHeaderCell>Begivenhed</TableHeaderCell>
+                    <TableHeaderCell>Hvem</TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                @{
+                    var now = DateProvider.Now;
+                    foreach (var audit in User!.Audits.Reverse())
+                    {
+                        var userUrl = $"{Urls.Users}/{audit.UserId}";
+                        var orderUrl = audit.OrderId is not null ? $"{Urls.Orders}/{audit.OrderId.Value}" : null;
+                        var transactionUrl = audit.TransactionId is not null ? string.Format(Urls.UsersTransactionsSpecific, User.Information.UserId, audit.TransactionId) : null;
+                        var url = orderUrl ?? transactionUrl;
+                        <TableRow>
+                            <TableRowCell title="@Formatter.FormatTimeLong(DateProvider.GetTime(audit.Timestamp))">@Formatter.FormatHumanizedPastTime(now, audit.Timestamp)</TableRowCell>
+                            <TableRowCell>
+                                @if (url is not null)
+                                {
+                                    <a href="@url">@GetAuditName(audit)</a>
+                                }
+                                else
+                                {
+                                    <text>@GetAuditName(audit)</text>
+                                }
+                            </TableRowCell>
+                            <TableRowCell>
+                                @if (audit.UserId.HasValue)
+                                {
+                                    if (audit.UserId != User.Information.UserId)
+                                    {
+                                        <a href="@userUrl">@audit.FullName</a>
+                                    }
+                                    else
+                                    {
+                                        <text>@audit.FullName</text>
+                                    }
+                                }
+                            </TableRowCell>
+                        </TableRow>
+                    }
+                }
+            </TableBody>
+        </Table>
+    </CardBody>
+</Card>

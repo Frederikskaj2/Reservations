@@ -1,71 +1,8 @@
-﻿@inject IJSRuntime JSRuntime;
-@implements IDisposable
-
-<div class="carousel">
-    <div tabindex="1" class="carousel navigate left fa" @onclick="@(() => Navigate(-1))" @onkeyup="@(e => NavigateKeyUp(e, -1))">&#xf0a8;</div>
-    <div tabindex="3" class="carousel navigate right fa" @onclick="@(() => Navigate(1))" @onkeyup="@(e => NavigateKeyUp(e, 1))">&#xf0a9;</div>
+﻿<div class="carousel">
+    <div tabindex="1" class="carousel navigate left fa" @onclick="@(() => NavigateAsync(-1))" @onkeyup="@(e => NavigateKeyUpAsync(e, -1))">&#xf0a8;</div>
+    <div tabindex="3" class="carousel navigate right fa" @onclick="@(() => NavigateAsync(1))" @onkeyup="@(e => NavigateKeyUpAsync(e, 1))">&#xf0a9;</div>
     @for (var i = 1; i <= Count; i += 1)
     {
-        <img tabindex="2" class="@(i == currentIndex ? "opaque" : string.Empty)" @onclick="@(() => ToggleSlideshow())" @onkeyup="ToggleSlideshowKeyUp" src="/img/@BaseName-@(i).jpg" alt="@Description" />
+        <img tabindex="2" class="@(i == currentIndex ? "opaque" : string.Empty)" @onclick="@ToggleSlideshow" @onkeyup="ToggleSlideshowKeyUp" src="/img/@BaseName-@(i).jpg" alt="@Description" />
     }
 </div>
-
-@code
-{
-    private readonly TimeSpan slideshowInterval = TimeSpan.FromSeconds(5);
-    private readonly Timer timer;
-    private int currentIndex = 1;
-    private bool isSlideshowEnabled = true;
-
-    public Frederikskaj2Carousel() => timer = new Timer(OnTimerElapsed);
-
-    public void Dispose() => timer.Dispose();
-
-    [Parameter]
-    public string? BaseName { get; set; }
-
-    [Parameter]
-    public int Count { get; set; }
-
-    [Parameter]
-    public string? Description { get; set; }
-
-    protected override bool ShouldRender() => false;
-
-    protected override void OnInitialized() => ResetTimer();
-
-    private async Task Navigate(int delta)
-    {
-        if (isSlideshowEnabled)
-            ResetTimer();
-        currentIndex = ((Count + currentIndex + delta) - 1)%Count + 1;
-        await JSRuntime.InvokeVoidAsync("carouselSelectImage", currentIndex - 1);
-    }
-
-    private async Task NavigateKeyUp(KeyboardEventArgs e, int delta)
-    {
-        if (e.Key == "Enter")
-            await Navigate(delta);
-    }
-
-    private void ToggleSlideshow()
-    {
-        isSlideshowEnabled = !isSlideshowEnabled;
-        if (isSlideshowEnabled)
-            ResetTimer();
-        else
-            DisableTimer();
-    }
-
-    private void ToggleSlideshowKeyUp(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-            ToggleSlideshow();
-    }
-
-    private void ResetTimer() => timer.Change(slideshowInterval, slideshowInterval);
-
-    private void DisableTimer() => timer.Change(Timeout.Infinite, Timeout.Infinite);
-
-    private void OnTimerElapsed(object state) => _ = Navigate(1);
-}

@@ -1,21 +1,5 @@
-﻿using System;
-using Frederikskaj2.Reservations.Shared;
-using NodaTime;
+﻿using Frederikskaj2.Reservations.Shared.Core;
 
-namespace Frederikskaj2.Reservations.Client
-{
-    public class DraftReservation
-    {
-        public DraftReservation(Resource resource, LocalDate date, int durationInDays)
-        {
-            Resource = resource ?? throw new ArgumentNullException(nameof(resource));
-            Date = date;
-            DurationInDays = durationInDays;
-        }
+namespace Frederikskaj2.Reservations.Client;
 
-        public Resource Resource { get; }
-        public LocalDate Date { get; }
-        public int DurationInDays { get; set; }
-        public Price? Price { get; set; }
-    }
-}
+public record DraftReservation(Resource Resource, Extent Extent);

@@ -1,51 +1,56 @@
 ﻿@page "/rengoeringsplan"
-@attribute [Authorize(Roles = Roles.Cleaning)]
-@inject ApiClient ApiClient 
-@inject ApplicationState ApplicationState
-@inject ClientDataProvider ClientDataProvider
-@inject FormattingService FormattingService
-
+<PageTitle>Rengøringsplan - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
-        <Spinner />
+        <Spinner/>
+    }
+    else if (cleaningTasks is null || reservedDays is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
     }
     else
     {
-        var orderedResources = resources!.Values.OrderBy(resource => resource.Sequence);
         <Container>
             <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
                 Rengøringsplanen er blevet send til @email.
-                <CloseButton Clicked="@DismissSuccessAlert" />
+                <CloseButton Clicked="@DismissSuccessAlert"/>
             </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl, og rengøringsplanen blev ikke sendt til @email.
-                <CloseButton Clicked="@DismissErrorAlert" />
+                Der er sket en fejl, og rengøringsplanen blev ikke sendt.
+                <CloseButton Clicked="@DismissErrorAlert"/>
             </Alert>
             <h1>Rengøringsplan</h1>
-            @if (cleaningTasks.Any())
+            @if (cleaningTasks!.Any())
             {
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHeaderCell>Dato</TableHeaderCell>
-                            <TableHeaderCell>Lokale</TableHeaderCell>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        @foreach (var cleaningTask in cleaningTasks!)
-                        {
-                            <TableRow>
-                                <TableRowCell>@FormattingService.FormatDate(cleaningTask.Date)</TableRowCell>
-                                <TableRowCell>@resources[cleaningTask.ResourceId].Name</TableRowCell>
-                            </TableRow>
-                        }
-                    </TableBody>
-                </Table>
                 <Form>
                     <Paragraph>
-                        <Button Color="Color.Secondary" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@SendList">Send liste som mail</Button>
+                        <Button
+                            Color="Color.Secondary"
+                            Type="ButtonType.Submit"
+                            PreventDefaultOnSubmit="true"
+                            Clicked="@SendList">
+                            Send rengøringsplan som mail
+                        </Button>
                     </Paragraph>
+                    <Select Class="calendar-width" TValue="string" @bind-SelectedValue="@currentDisplay">
+                        <SelectItem Value="@calendar">Vis som kalender</SelectItem>
+                        <SelectItem Value="@list">Vis som liste</SelectItem>
+                    </Select>
+                    @if (currentDisplay == calendar)
+                    {
+                        <div class="calendar-width">
+                            <CleaningScheduleCalendar CleaningTasks="@cleaningTasks" Resources="@resources" ReservedDays="@reservedDays"/>
+                        </div>
+                    }
+                    else
+                    {
+                        <CleaningScheduleTable CleaningTasks="@cleaningTasks" Resources="@resources"/>
+                    }
                 </Form>
             }
             else
@@ -55,43 +60,3 @@
         </Container>
     }
 </main>
-
-@code
-{
-    private IReadOnlyDictionary<int, Resource>? resources;
-    private IEnumerable<CleaningTask>? cleaningTasks;
-    private string? email;
-    private bool isInitialized;
-    private bool showSuccessAlert;
-    private bool showErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        resources = await ClientDataProvider.GetResources();
-        var (resoponse, problem) = await ApiClient.Get<IEnumerable<CleaningTask>>("cleaning-tasks");
-        this.cleaningTasks = problem is null ? resoponse : Enumerable.Empty<CleaningTask>();
-        email = await ApplicationState.GetUserEmail();
-        isInitialized = true;
-    }
-
-    private async Task SendList()
-    {
-        DismissAllAlerts();
-
-        var problem = await ApiClient.Post("cleaning-tasks/send");
-        if (problem == null)
-            showSuccessAlert = true;
-        else
-            showErrorAlert = true;
-    }
-
-    private void DismissSuccessAlert() => showSuccessAlert = false;
-
-    private void DismissErrorAlert() => showErrorAlert = false;
-
-    private void DismissAllAlerts()
-    {
-        DismissSuccessAlert();
-        DismissErrorAlert();
-    }
-}

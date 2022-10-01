@@ -1,0 +1,13 @@
+﻿@using Frederikskaj2.Reservations.Shared.Web
+<Field>
+    <FieldLabel>Mail</FieldLabel>
+    <FieldBody>
+        <Validation Validator="@Validator.ValidateEmail">
+            <TextEdit @ref="textEdit" Role="TextRole.Email" Text="@Value" TextChanged="@ValueChanged" Disabled="@Disabled" MaxLength="@ValidationRules.MaximumEmailLength" autocomplete="username">
+                <Feedback>
+                    <ValidationError />
+                </Feedback>
+            </TextEdit>
+        </Validation>
+    </FieldBody>
+</Field>

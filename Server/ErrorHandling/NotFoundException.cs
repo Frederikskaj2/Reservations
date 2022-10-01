@@ -1,25 +1,24 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Frederikskaj2.Reservations.Server.ErrorHandling
+namespace Frederikskaj2.Reservations.Server;
+
+[Serializable]
+public class NotFoundException : Exception
 {
-    [Serializable]
-    public class NotFoundException : Exception
+    public NotFoundException()
     {
-        public NotFoundException()
-        {
-        }
+    }
 
-        public NotFoundException(string message) : base(message)
-        {
-        }
+    public NotFoundException(string message) : base(message)
+    {
+    }
 
-        public NotFoundException(string message, Exception inner) : base(message, inner)
-        {
-        }
+    public NotFoundException(string message, Exception inner) : base(message, inner)
+    {
+    }
 
-        protected NotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
+    protected NotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
     }
 }

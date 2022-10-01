@@ -1,0 +1,61 @@
+﻿.sidebar {
+    background-color: #333;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 25rem;
+}
+
+::deep .draft-order {
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+    ::deep .draft-order .draft-order-get-started {
+        font-size: 2rem;
+        text-align: center;
+        color: #888;
+    }
+
+    ::deep .draft-order h1 {
+        font-weight: normal;
+    }
+
+    ::deep .draft-order .card {
+        margin-top: 0;
+        background-color: #444;
+    }
+
+        ::deep .draft-order .card .card-title {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+            ::deep .draft-order .card .card-title h2 {
+                font-size: 1rem;
+                font-weight: bold;
+                color: hsl(210, 100%, 65%)
+            }
+
+            ::deep .draft-order .card .card-title .close {
+                margin: -2rem 0 0 auto;
+                text-shadow: none;
+                color: #CCC;
+            }
+
+::deep .draft-order-total {
+    background-color: hsl(210, 100%, 35%);
+    padding: 1rem 2.75rem 2rem;
+    margin-bottom: -1rem;
+    transition: all 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+    ::deep .draft-order-total.hidden {
+        transform: translate3d(0, 8.5rem, 0);
+    }
+
+    ::deep .draft-order-total button {
+        margin-top: 0.5rem;
+    }

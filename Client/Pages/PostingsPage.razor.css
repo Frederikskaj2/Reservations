@@ -1,0 +1,7 @@
+::deep table {
+    margin-top: 1rem;
+}
+
+::deep .border-bottom {
+    border-bottom-width: 2px !important;
+}

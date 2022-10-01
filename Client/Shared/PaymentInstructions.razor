@@ -1,0 +1,19 @@
+@using Frederikskaj2.Reservations.Shared.Core
+@if (PaymentInformation is not null)
+{
+    <div class="payment-table">
+        <span>Beløb:</span>
+        @if (ShowLinkToTransactions)
+        {
+            <span><a href="@Urls.MyTransactions#total"><strong>@Formatter.FormatMoneyLong(PaymentInformation.Amount)</strong></a></span>
+        }
+        else
+        {
+            <span><strong>@Formatter.FormatMoneyLong(PaymentInformation.Amount)</strong></span>
+        }
+        <span>Kontonummer:</span>
+        <span><strong>@PaymentInformation.AccountNumber</strong></span>
+        <span>Tekst på indbetaling:</span>
+        <span><strong>@PaymentInformation.PaymentId</strong></span>
+    </div>
+}

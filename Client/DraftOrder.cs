@@ -1,48 +1,59 @@
-﻿using System.Collections.Generic;
-using Frederikskaj2.Reservations.Shared;
-using NodaTime;
+﻿using Frederikskaj2.Reservations.Shared.Core;
+using Frederikskaj2.Reservations.Shared.Web;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Frederikskaj2.Reservations.Client
+namespace Frederikskaj2.Reservations.Client;
+
+public class DraftOrder
 {
-    public class DraftOrder
+    readonly EventAggregator eventAggregator;
+    readonly List<DraftReservation> reservations = new();
+
+    public DraftOrder(EventAggregator eventAggregator) => this.eventAggregator = eventAggregator;
+
+    public IEnumerable<DraftReservation> Reservations => reservations;
+
+    public DraftReservation? DraftReservation { get; private set; }
+
+    public void AddReservation(Resource resource, Extent extent) => DraftReservation = new DraftReservation(resource, extent);
+
+    public void UpdateReservation(Extent extent)
     {
-        public PlaceOrderRequest Request { get; } = new PlaceOrderRequest();
-        public List<DraftReservation> Reservations { get; } = new List<DraftReservation>();
-        public DraftReservation? DraftReservation { get; private set; }
-
-        public void AddReservation(Resource resource, LocalDate date, int durationInDays)
-            => DraftReservation = new DraftReservation(resource, date, durationInDays);
-
-        public void ClearDraftReservation() => DraftReservation = null;
-
-        public void AddDraftReservationToOrder()
-        {
-            Reservations.Add(DraftReservation!);
-            ClearDraftReservation();
-        }
-
-        public void RemoveReservation(DraftReservation reservation) => Reservations.Remove(reservation);
-
-        public void Clear()
-        {
-            Request.Reservations.Clear();
-            Reservations.Clear();
-            DraftReservation = null;
-        }
-
-        public void PrepareRequest()
-        {
-            Request.Reservations.Clear();
-            foreach (var reservation in Reservations)
-            {
-                var reservationRequest = new ReservationRequest
-                {
-                    ResourceId = reservation.Resource.Id,
-                    Date = reservation.Date,
-                    DurationInDays = reservation.DurationInDays
-                };
-                Request.Reservations.Add(reservationRequest);
-            }
-        }
+        DraftReservation = DraftReservation! with { Extent = extent };
+        eventAggregator.Publish(DraftOrderUpdatedMessage.Instance);
     }
+
+    public void ClearReservation()
+    {
+        DraftReservation = null;
+        eventAggregator.Publish(DraftOrderUpdatedMessage.Instance);
+    }
+
+    public void AddReservationToOrder()
+    {
+        reservations.Add(DraftReservation!);
+        ClearReservation();
+        eventAggregator.Publish(DraftOrderUpdatedMessage.Instance);
+    }
+
+    public void RemoveReservation(DraftReservation reservation)
+    {
+        reservations.Remove(reservation);
+        eventAggregator.Publish(DraftOrderUpdatedMessage.Instance);
+    }
+
+    public void Clear()
+    {
+        reservations.Clear();
+        DraftReservation = null;
+        eventAggregator.Publish(DraftOrderUpdatedMessage.Instance);
+    }
+
+    public IEnumerable<ReservationRequest> GetReservationRequests() =>
+        reservations.Select(reservation => new ReservationRequest
+        {
+            ResourceId = reservation.Resource.ResourceId,
+            Extent = reservation.Extent
+        });
 }

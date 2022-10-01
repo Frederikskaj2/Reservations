@@ -1,12 +1,4 @@
-﻿@inject FormattingService FormattingService
-@if (Amount != 0)
+﻿@if (Amount > 0)
 {
-    var amount = Math.Abs(Amount);
-    var debitCredit = Amount > 0 ? "D" : "K";
-    <text>@FormattingService.FormatMoneyShort(amount) @debitCredit</text>
-}
-@code
-{
-    [Parameter]
-    public int Amount { get; set; }
+    <text>@Formatter.FormatMoneyShort(Amount)</text>
 }

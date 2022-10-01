@@ -1,248 +1,38 @@
 ﻿@page "/bestillinger"
-@attribute [Authorize(Roles = Roles.OrderHandling + "," + Roles.Payment + "," + Roles.Settlement)]
-@inject ApiClient ApiClient
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject ClientDataProvider ClientDataProvider
-@inject IDateProvider DateProvider
-@inject FormattingService FormattingService
-@inject NavigationManager NavigationManager
-@inject ReservationsOptions ReservationsOptions
-
+<PageTitle>Bestillinger - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
-        <Spinner />
+        <Container Class="container-fluid">
+            <Spinner/>
+        </Container>
     }
     else
     {
         <Container>
-            <Alert Color="Color.Danger" Visible="@showGeneralErrorAlert" Dismisable="true">
-                Der er sket en fejl, og din ændring blev ikke gemt.
-                <CloseButton Clicked="@DismissShowGeneralErrorAlert" />
-            </Alert>
             <h1>Bestillinger</h1>
-            @if (!orders!.Any())
+            @if (reservedOrders!.Count + confirmedOrders!.Count + unsettledOrders!.Count is 0)
             {
                 <Paragraph>Der er intet at vise.</Paragraph>
             }
             else
             {
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHeaderCell>Betillingsnr.</TableHeaderCell>
-                            <TableHeaderCell>Dato</TableHeaderCell>
-                            <TableHeaderCell>Næste reservation</TableHeaderCell>
-                            <TableHeaderCell>Navn</TableHeaderCell>
-                            <TableHeaderCell>Adressse</TableHeaderCell>
-                            <TableHeaderCell>Telefon</TableHeaderCell>
-                            <TableHeaderCell class="text-center">Mangler betaling</TableHeaderCell>
-                            <TableHeaderCell class="text-center">Mangler opgørelse</TableHeaderCell>
-                            <TableHeaderCell></TableHeaderCell>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        @foreach (var order in orders!)
-                        {
-                            var reservationsToSettle = order.Reservations
-                                .Where(reservation => reservation.Status == ReservationStatus.Confirmed && reservation.Date.PlusDays(reservation.DurationInDays) <= DateProvider.Today)
-                                .ToList();
-                            <TableRow @key="@order.Id">
-                                <TableHeaderCell>@order.Id</TableHeaderCell>
-                                <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
-                                <TableRowCell>@FormattingService.FormatDate(order.Reservations.OrderBy(reservation => reservation.Date).First().Date)</TableRowCell>
-                                <TableRowCell><a href="mailto:@order.Email?subject=Frederikskaj 2 bestilling @order.Id">@order.FullName</a></TableRowCell>
-                                <TableRowCell>@order.Apartment</TableRowCell>
-                                <TableRowCell>@order.Phone</TableRowCell>
-                                <TableRowCell class="text-center">
-                                    @if (order.Totals!.Balance < 0)
-                                    {
-                                        if (GetIsUnpaidOrderOld(order))
-                                        {
-                                            <Icon class="fa-exclamation-triangle text-danger" />
-                                        }
-                                        else
-                                        {
-                                            <Icon class="fa-exclamation-triangle" />
-                                        }
-                                    }
-                                </TableRowCell>
-                                <TableRowCell class="text-center">
-                                    @if (reservationsToSettle.Count > 0)
-                                    {
-                                        <Icon class="fa-exclamation-triangle" />
-                                    }
-                                </TableRowCell>
-                                <TableRowCell>
-                                    <Dropdown class="float-right">
-                                        <DropdownToggle Color="Color.Light" Size="ButtonSize.Small" />
-                                        <DropdownMenu>
-                                            <DropdownItem Clicked="@(() => ShowOrder(order.Id))">Vis</DropdownItem>
-                                            @if (canHandlePayments && order.Totals!.Balance < 0)
-                                            {
-                                                <DropdownItem Clicked="@(() => RecordPayIn(order))">Registrér indbetaling</DropdownItem>
-                                            }
-                                            @if (canHandleSettlements)
-                                            {
-                                                foreach (var reservation in reservationsToSettle)
-                                                {
-                                                    <DropdownItem Clicked="@(() => RecordSettlement(order, reservation))">Lav opgørelse @resources![reservation.ResourceId].Name @FormattingService.FormatDate(reservation.Date)</DropdownItem>
-                                                }
-                                            }
-                                        </DropdownMenu>
-                                    </Dropdown>
-                                </TableRowCell>
-                            </TableRow>
-                        }
-                    </TableBody>
-                </Table>
-            }
-            @if (canHandleOrders)
-            {
-                <h1>Bestillinger til grundejerforeningen</h1>
-                @if (!ownerOrders!.Any())
+                @if (reservedOrders!.Count > 0)
                 {
-                    <Paragraph>Der er intet at vise.</Paragraph>
+                    <h2>Mangler betaling</h2>
+                    <OrdersList Orders="@reservedOrders" />
                 }
-                else
+                @if (confirmedOrders!.Count > 0)
                 {
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Betillingsnr.</TableHeaderCell>
-                                <TableHeaderCell>Dato</TableHeaderCell>
-                                <TableHeaderCell>Næste reservation</TableHeaderCell>
-                                <TableHeaderCell>Oprettet af</TableHeaderCell>
-                                <TableHeaderCell></TableHeaderCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            @foreach (var order in ownerOrders!)
-                            {
-                                <TableRow @key="@order.Id">
-                                    <TableHeaderCell>@order.Id</TableHeaderCell>
-                                    <TableRowCell>@FormattingService.FormatDate(order.CreatedTimestamp)</TableRowCell>
-                                    <TableRowCell>@FormattingService.FormatDate(order.Reservations.OrderBy(reservation => reservation.Date).First().Date)</TableRowCell>
-                                    <TableRowCell>
-                                        @if (order.CreatedByEmail != null)
-                                        {
-                                            <a href="mailto:@order.CreatedByEmail?subject=Frederikskaj 2 bestilling @order.Id">@order.CreatedByName</a>
-                                        }
-                                        else
-                                        {
-                                            <text>(Slettet)</text>
-                                        }
-                                    </TableRowCell>
-                                    <TableRowCell>
-                                        <Button class="float-right" Color="Color.Light" Size="ButtonSize.Small" Clicked="@(() => ShowOrder(order.Id))">Vis</Button>
-                                    </TableRowCell>
-                                </TableRow>
-                            }
-                        </TableBody>
-                    </Table>
+                    <h2>Betalt</h2>
+                    <OrdersList Orders="@confirmedOrders" />
+                }
+                @if (unsettledOrders!.Count > 0)
+                {
+                    <h2>Mangler opgørelse</h2>
+                    <OrdersList Orders="@unsettledOrders" />
                 }
             }
         </Container>
     }
 </main>
-@if (canHandlePayments)
-{
-    <PayInDialog @ref="payInDialog" OnConfirm="@OnPaymentConfirm" />
-}
-@if (canHandleSettlements)
-{
-    <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettlementConfirm" />
-}
-
-@code
-{
-    private PayInDialog payInDialog = null!;
-    private SettlementDialog settlementDialog = null!;
-    private bool canHandleOrders;
-    private bool canHandlePayments;
-    private bool canHandleSettlements;
-    private IReadOnlyDictionary<int, Resource>? resources;
-    private bool isInitialized;
-    private List<Order>? orders;
-    private List<OwnerOrder>? ownerOrders;
-    private bool showGeneralErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        canHandleOrders = authenticationState.User.IsInRole(Roles.OrderHandling);
-        canHandlePayments = authenticationState.User.IsInRole(Roles.Payment);
-        canHandleSettlements = authenticationState.User.IsInRole(Roles.Settlement);
-
-        resources = await ClientDataProvider.GetResources();
-
-        await GetOrders();
-        if (canHandleOrders)
-            await GetOwnerOrders();
-        isInitialized = true;
-
-        async Task GetOrders()
-        {
-            var (response, problem) = await ApiClient.Get<IEnumerable<Order>>("orders");
-            orders = problem == null ? response.ToList() : new List<Order>();
-        }
-
-        async Task GetOwnerOrders()
-        {
-            var (response, problem) = await ApiClient.Get<IEnumerable<OwnerOrder>>("owner-orders");
-            ownerOrders = problem == null ? response.ToList() : new List<OwnerOrder>();
-        }
-    }
-
-    private void ShowOrder(int orderId) => NavigationManager.NavigateTo($"{Urls.Orders}/{orderId}");
-
-    private void RecordPayIn(Order order)
-    {
-        DismissShowGeneralErrorAlert();
-        payInDialog.Show(order.Id, DateProvider.Today, order.AccountNumber!, -order.Totals!.Balance);
-    }
-
-    private void RecordSettlement(Order order, Reservation reservation)
-    {
-        DismissShowGeneralErrorAlert();
-        settlementDialog.Show(order.Id, reservation);
-    }
-
-    private async Task OnPaymentConfirm((int OrderId, LocalDate Date, string AccountNumber, int Amount) tuple)
-    {
-        var request = new PayInRequest { Date = tuple.Date, AccountNumber = tuple.AccountNumber, Amount = tuple.Amount };
-        var requestUri = $"orders/{tuple.OrderId}/pay-in";
-        var (response, problem) = await ApiClient.Post<Order>(requestUri, request);
-        if (problem == null)
-            UpdateOrder(response!);
-        else
-            showGeneralErrorAlert = true;
-    }
-
-    private async Task OnSettlementConfirm((int OrderId, SettleReservationRequest Request) tuple)
-    {
-        var requestUri = $"orders/{tuple.OrderId}/settle";
-        var (response, problem) = await ApiClient.Post<Order>(requestUri, tuple.Request);
-        if (problem == null)
-            UpdateOrder(response!);
-        else
-            showGeneralErrorAlert = true;
-    }
-
-    private void UpdateOrder(Order order)
-    {
-        var index = orders!.FindIndex(o => o.Id == order.Id);
-        if (!order.IsHistoryOrder)
-            orders[index] = order;
-        else
-            orders.RemoveAt(index);
-    }
-
-    private void DismissShowGeneralErrorAlert() => showGeneralErrorAlert = false;
-
-    private bool GetIsUnpaidOrderOld(Order order)
-    {
-        var daysSinceOrderWasPlaced = -DateProvider.GetDaysFromToday(order.CreatedTimestamp);
-        return daysSinceOrderWasPlaced >= ReservationsOptions.PaymentDeadlineInDays;
-    }
-}

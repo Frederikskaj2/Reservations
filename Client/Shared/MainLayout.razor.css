@@ -1,0 +1,131 @@
+﻿nav {
+    align-items: stretch;
+    background-color: hsl(210, 100%, 35%);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.25) 25%, transparent 70%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    color: white;
+    display: flex;
+    height: 5rem;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1030;
+}
+
+.logo {
+    align-items: center;
+    color: white;
+    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    font-size: 1.25rem;
+    justify-content: center;
+    margin: 0;
+    padding: 0.3rem 1rem;
+    position: relative;
+    text-transform: none;
+}
+
+::deep .nav-tab {
+    align-items: center;
+    background: rgba(0, 0, 0, 0.1);
+    color: white;
+    display: flex;
+    font-size: 0.9rem;
+    justify-content: center;
+    padding: 0.3rem 1rem;
+    text-transform: uppercase;
+    min-width: 5rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+    ::deep .nav-tab:hover {
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3) 2rem, rgba(0, 0, 0, 0.3) calc(100% - 2rem), rgba(0, 0, 0, 0.1));
+        text-decoration: none;
+    }
+
+    ::deep .nav-tab.open:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    ::deep .nav-tab.active, ::deep .nav-tab.active:hover {
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1) 2rem, rgba(255, 255, 255, 0.1) calc(100% - 2rem), rgba(0, 0, 0, 0.1));
+        color: #fff2cc;
+    }
+
+        ::deep .nav-tab.active:after {
+            border-left: 0.6rem solid transparent;
+            border-right: 0.6rem solid transparent;
+            border-top: 1rem solid rgb(51, 51, 205);
+            bottom: -1rem;
+            content: "";
+            height: 0px;
+            position: absolute;
+            width: 0px;
+            z-index: 1;
+        }
+
+.spacer {
+    flex-grow: 1;
+    background: linear-gradient(to right, rgba(0,0,0,0.1), transparent 2rem, transparent calc(100% - 2rem), rgba(0,0,0,0.1));
+    min-width: 5rem;
+}
+
+::deep .user-icon {
+    padding: 0;
+}
+
+.menu {
+    height: 5rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+
+::deep .admin {
+    color: hsl(48, 100%, 75%);
+}
+
+.current-menu {
+    color: white;
+}
+
+.open .menu-choices {
+    display: block;
+}
+
+.menu-choices {
+    display: none;
+    position: absolute;
+    top: 5rem;
+    background: hsl(210, 100%, 35%);
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.5);
+}
+
+    .menu-choices ul {
+        margin: 0;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+        .menu-choices ul li {
+            list-style-type: none;
+            text-align: center;
+        }
+
+            .menu-choices ul li ::deep a {
+                display: inline-block;
+                width: 100%;
+                padding: 0.25rem 0.5rem;
+                color: white;
+                text-decoration: none;
+            }
+
+            .menu-choices ul li:hover {
+                background: radial-gradient(rgba(0, 0, 0, 0.3), transparent);
+            }

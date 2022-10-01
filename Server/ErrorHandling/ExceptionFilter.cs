@@ -1,69 +1,65 @@
-﻿using System;
-using System.Diagnostics;
+﻿using Azure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http;
+using System.Security.Authentication;
 
-namespace Frederikskaj2.Reservations.Server.ErrorHandling
+namespace Frederikskaj2.Reservations.Server;
+
+class ExceptionFilter : IExceptionFilter
 {
-    public class ExceptionFilter : IExceptionFilter
+    static readonly IActionResult badRequestResult = new StatusCodeResult(StatusCodes.Status400BadRequest);
+    static readonly IActionResult unauthorizedResult = new StatusCodeResult(StatusCodes.Status401Unauthorized);
+    static readonly IActionResult forbiddenResult = new StatusCodeResult(StatusCodes.Status403Forbidden);
+    static readonly IActionResult notFoundResult = new StatusCodeResult(StatusCodes.Status404NotFound);
+    static readonly IActionResult serviceUnavailableResult = new StatusCodeResult(StatusCodes.Status503ServiceUnavailable);
+    readonly ILogger logger;
+
+    public ExceptionFilter(ILogger<ExceptionFilter> logger) => this.logger = logger;
+
+    public void OnException(ExceptionContext context)
     {
-        private static readonly IActionResult badRequestResult = new StatusCodeResult(400);
-        private static readonly IActionResult notFoundResult = new StatusCodeResult(404);
-        private readonly ILogger logger;
+        var exception = context.Exception is AggregateException aggregateException ? aggregateException.InnerException! : context.Exception;
+        var result = GetExceptionResult(exception, context.HttpContext);
+        context.Result = result;
+        context.ExceptionHandled = true;
+    }
 
-        public ExceptionFilter(ILogger<ExceptionFilter> logger) => this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-        public void OnException(ExceptionContext context)
+    IActionResult GetExceptionResult(Exception exception, HttpContext httpContext)
+    {
+        logger.LogError(exception, "Exception thrown");
+        return exception switch
         {
-            if (context is null)
-                throw new ArgumentNullException(nameof(context));
+            BadRequestException _ => badRequestResult,
+            AuthenticationException _ => unauthorizedResult,
+            UnauthorizedAccessException _ => forbiddenResult,
+            NotFoundException _ => notFoundResult,
+            HttpRequestException _ => serviceUnavailableResult,
+            RequestFailedException _ => serviceUnavailableResult,
+            ProblemException problemException => CreateProblemDetailsResult(problemException, httpContext),
+            _ => CreateProblemDetailsResult("about:blank", "Internal Server Error", HttpStatusCode.InternalServerError, null, httpContext)
+        };
+    }
 
-            var result = GetExceptionResult(context.Exception, context.HttpContext);
-            if (result != null)
-            {
-                context.Result = result;
-                context.ExceptionHandled = true;
-            }
-        }
+    static ObjectResult CreateProblemDetailsResult(ProblemException problemException, HttpContext httpContext) =>
+        CreateProblemDetailsResult(problemException.Type, problemException.Title, problemException.Status, problemException.Detail, httpContext);
 
-        private IActionResult GetExceptionResult(Exception exception, HttpContext httpContext)
-        {
-            if (exception is null)
-                throw new ArgumentNullException(nameof(exception));
+    static ObjectResult CreateProblemDetailsResult(string? type, string? title, HttpStatusCode status, string? detail, HttpContext httpContext)
+    {
+        var problemDetails = new ProblemDetails { Type = type, Title = title, Status = (int) status, Detail = detail };
 
-            logger.LogWarning(exception, "Exception thrown");
-            return exception switch
-            {
-                BadRequestException _ => badRequestResult,
-                NotFoundException _ => notFoundResult,
-                ProblemException problemException => CreateProblemDetailsResult(problemException.Type, problemException.Title, problemException.Status, problemException.Detail, httpContext),
-                _ => CreateProblemDetailsResult("about:blank", "Internal Server Error", 500, null, httpContext)
-            };
-        }
+        var traceId = Activity.Current?.Id ?? httpContext?.TraceIdentifier;
+        if (traceId is not null)
+            problemDetails.Extensions["traceId"] = traceId;
 
-        private static ObjectResult CreateProblemDetailsResult(string? type, string? title, int status, string? detail, HttpContext httpContext)
-        {
-            var problemDetails = new ProblemDetails
-            {
-                Type = type,
-                Title = title,
-                Status = status,
-                Detail = detail
-            };
-
-            var traceId = Activity.Current?.Id ?? httpContext?.TraceIdentifier;
-            if (traceId != null)
-                problemDetails.Extensions["traceId"] = traceId;
-
-            var result = new ObjectResult(problemDetails)
-            {
-                StatusCode = status
-            };
-            result.ContentTypes.Add("application/problem+json");
-            result.ContentTypes.Add("application/problem+xml");
-            return result;
-        }
+        var result = new ObjectResult(problemDetails) { StatusCode = (int) status };
+        result.ContentTypes.Add("application/problem+json");
+        result.ContentTypes.Add("application/problem+xml");
+        return result;
     }
 }

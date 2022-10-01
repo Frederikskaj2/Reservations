@@ -1,14 +1,17 @@
 ﻿@page "/bruger/bestillinger"
-@attribute [Authorize]
-@inject ApiClient ApiClient 
-@inject ClientDataProvider ClientDataProvider
-@inject FormattingService FormattingService
-@inject NavigationManager NavigationManager
-
+<PageTitle>Bestillinger - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
-        <Spinner />
+        <Spinner/>
+    }
+    else if (resources is null || orders is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
     }
     else
     {
@@ -36,15 +39,15 @@
                                 var isFirstReservation = i == 0;
                                 var reservation = reservations[i];
                                 <TableRow>
-                                    <TableRowHeader Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">@(isFirstReservation ? @order.Id.ToString() : string.Empty)</TableRowHeader>
+                                    <TableRowHeader Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">@(isFirstReservation ? @order.OrderId.ToString() : string.Empty)</TableRowHeader>
                                     <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@resources![reservation.ResourceId].Name</TableRowCell>
-                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@FormattingService.FormatDate(reservation.Date)</TableRowCell>
-                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@reservation.DurationInDays</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@Formatter.FormatDate(reservation.Extent.Date)</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@reservation.Extent.Nights</TableRowCell>
                                     <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@GetReservationStatus(reservation)</TableRowCell>
                                     <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">
                                         @if (isFirstReservation)
                                         {
-                                            <Button Color="Color.Light" Size="ButtonSize.Small" Class="btn-fixed float-right" Clicked="@(() => EditOrder(order))">
+                                            <Button Color="Color.Light" Size="Size.Small" Class="btn-fixed float-right" Clicked="@(() => EditOrder(order))">
                                                 @if (order.CanBeEdited)
                                                 {
                                                     <text>Redigér</text>
@@ -85,15 +88,15 @@
                                 var isFirstReservation = i == 0;
                                 var reservation = reservations[i];
                                 <TableRow>
-                                    <TableRowHeader Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">@(isFirstReservation ? @order.Id.ToString() : string.Empty)</TableRowHeader>
+                                    <TableRowHeader Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">@(isFirstReservation ? @order.OrderId.ToString() : string.Empty)</TableRowHeader>
                                     <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@resources![reservation.ResourceId].Name</TableRowCell>
-                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@FormattingService.FormatDate(reservation.Date)</TableRowCell>
-                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@reservation.DurationInDays</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@Formatter.FormatDate(reservation.Extent.Date)</TableRowCell>
+                                    <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@reservation.Extent.Nights</TableRowCell>
                                     <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : string.Empty)">@GetReservationStatus(reservation)</TableRowCell>
                                     <TableRowCell Class="@(isFirstReservation ? "extra-border-top" : "border-top-0")">
                                         @if (isFirstReservation)
                                         {
-                                            <Button Color="Color.Light" Size="ButtonSize.Small" Class="btn-fixed float-right" Clicked="@(() => EditOrder(order))">Vis</Button>
+                                            <Button Color="Color.Light" Size="Size.Small" Class="btn-fixed float-right" Clicked="@(() => EditOrder(order))">Vis</Button>
                                         }
                                     </TableRowCell>
                                 </TableRow>
@@ -109,38 +112,3 @@
         </Container>
     }
 </main>
-
-@code
-{
-    private bool isInitialized;
-    private IReadOnlyDictionary<int, Resource>? resources;
-    private IEnumerable<MyOrder>? orders;
-    private IEnumerable<MyOrder>? historyOrders;
-
-    protected override async Task OnInitializedAsync()
-    {
-        resources = await ClientDataProvider.GetResources();
-        var (response, problem) = await ApiClient.Get<IEnumerable<MyOrder>>("my-orders");
-        if (problem == null)
-        {
-            orders = response.Where(order => !order.IsHistoryOrder).ToList();
-            historyOrders = response.Where(order => order.IsHistoryOrder).ToList();
-        }
-        isInitialized = true;
-    }
-
-    private void EditOrder(MyOrder order)
-    {
-        var url = $"{Urls.MyOrders}/{order.Id}";
-        NavigationManager.NavigateTo(url);
-    }
-
-    private static string GetReservationStatus(Reservation reservation) => reservation.Status switch
-    {
-        ReservationStatus.Reserved => "Afventer betaling",
-        ReservationStatus.Confirmed => "Betalt",
-        ReservationStatus.Cancelled => "Aflyst",
-        ReservationStatus.Settled => "Opgjort",
-        _ => "Ukendt"
-    };
-}

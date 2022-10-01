@@ -1,14 +1,17 @@
-﻿@page "/noeglebokskoder"
-@attribute [Authorize(Roles = Roles.LockBoxCodes)]
-@inject ApiClient ApiClient
-@inject ApplicationState ApplicationState
-@inject ClientDataProvider ClientDataProvider
-@inject FormattingService FormattingService
-
+@page "/noeglebokskoder"
+<PageTitle>Nøglebokskoder - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
         <Spinner />
+    }
+    else if (allWeeklyLockBoxCodes is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
     }
     else
     {
@@ -39,10 +42,10 @@
                     {
                         <TableRow>
                             <TableHeaderCell>@weeklyLoockBoxCodes.WeekNumber</TableHeaderCell>
-                            <TableRowCell>@FormattingService.FormatDate(weeklyLoockBoxCodes.Date)</TableRowCell>
+                            <TableRowCell>@Formatter.FormatDate(weeklyLoockBoxCodes.Date)</TableRowCell>
                             @foreach (var resource in orderedResources)
                             {
-                                var code = weeklyLoockBoxCodes.Codes!.FirstOrDefault(c => c.ResourceId == resource.Id);
+                                var code = weeklyLoockBoxCodes.Codes!.FirstOrDefault(c => c.ResourceId == resource.ResourceId);
                                 if (code != null)
                                 {
                                     <TableRowCell Class="text-right">@(code.Code)</TableRowCell>
@@ -65,42 +68,3 @@
         </Container>
     }
 </main>
-
-@code
-{
-    private IReadOnlyDictionary<int, Resource>? resources;
-    private IEnumerable<WeeklyLockBoxCodes>? allWeeklyLockBoxCodes;
-    private string? email;
-    private bool isInitialized;
-    private bool showSuccessAlert;
-    private bool showErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        resources = await ClientDataProvider.GetResources();
-        allWeeklyLockBoxCodes = await ClientDataProvider.GetWeeklyLockBoxCodes();
-        email = await ApplicationState.GetUserEmail();
-        isInitialized = true;
-    }
-
-    private async Task SendList()
-    {
-        DismissAllAlerts();
-
-        var problem = await ApiClient.Post("lock-box-codes/send");
-        if (problem == null)
-            showSuccessAlert = true;
-        else
-            showErrorAlert = true;
-    }
-
-    private void DismissSuccessAlert() => showSuccessAlert = false;
-
-    private void DismissErrorAlert() => showErrorAlert = false;
-
-    private void DismissAllAlerts()
-    {
-        DismissSuccessAlert();
-        DismissErrorAlert();
-    }
-}

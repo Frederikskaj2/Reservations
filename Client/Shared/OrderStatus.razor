@@ -1,0 +1,19 @@
+@using Frederikskaj2.Reservations.Shared.Core
+<div>
+    @if (Reservations.Any(reservation => reservation.Status is ReservationStatus.Reserved))
+    {
+        <Badge Pill="true" Color="Color.Warning">Afventer betaling</Badge>
+    }
+    else if (Reservations.Any(reservation => reservation.Status is ReservationStatus.Confirmed))
+    {
+        <Badge Pill="true" Color="Color.Success">Betalt</Badge>
+    }
+    else if (Reservations.All(reservation => reservation.Status is ReservationStatus.Abandoned or ReservationStatus.Cancelled))
+    {
+        <Badge Pill="true" Color="Color.Secondary">Aflyst</Badge>
+    }
+    else
+    {
+        <Badge Pill="true" Color="Color.Info">Afsluttet</Badge>
+    }
+</div>

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Infrastructure</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Azure.Storage.Queues" Version="$(AzureStorageQueuesVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="$(AspNetCoreVersion)" />
+        <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.30.1" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="$(ExtensionsVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="$(ExtensionsVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Application\Application.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="WeakPasswords.bin" />
+        <EmbeddedResource Include="WeakPasswords.bin" />
+    </ItemGroup>
+
+</Project>

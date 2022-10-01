@@ -1,17 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using Frederikskaj2.Reservations.Shared.Core;
 using NodaTime;
+using System.Collections.Generic;
 
-namespace Frederikskaj2.Reservations.Client
+namespace Frederikskaj2.Reservations.Client;
+
+public record Day(
+    LocalDate Date,
+    bool IsToday,
+    bool IsCurrentMonth,
+    bool IsHighPriceDay,
+    bool IsResourceAvailable,
+    IReadOnlyDictionary<ResourceId, (bool IsMyReservation, OrderId? OrderId)> ReservedResources)
 {
-    public class Day
-    {
-        private static readonly IReadOnlyDictionary<int, bool> Empty = new Dictionary<int, bool>();
-
-        public LocalDate Date { get; set; }
-        public bool IsToday { get; set; }
-        public bool IsCurrentMonth { get; set; }
-        public bool IsHighPriceDay { get; set; }
-        public bool IsResourceAvailable { get; set; }
-        public IReadOnlyDictionary<int, bool> ReservedResources { get; set; } = Empty;
-    }
+    public static readonly IReadOnlyDictionary<ResourceId, (bool IsMyReservation, OrderId? OrderId)> EmptyReservedResources =
+        new Dictionary<ResourceId, (bool IsMyReservation, OrderId? OrderId)>();
 }

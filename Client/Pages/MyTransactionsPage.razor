@@ -1,33 +1,42 @@
 ﻿@page  "/bruger/kontoudtog"
-@attribute [Authorize]
-@inject ApiClient ApiClient
-@inject ClientDataProvider ClientDataProvider
-@inject FormattingService FormattingService
-
+<PageTitle>Kontoudtog - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
         <Spinner />
     }
+    else if (transactions is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
+    }
     else
     {
         <Container>
-            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl.
-                <CloseButton Clicked="@DismissErrorAlert" />
-            </Alert>
             <h1>Kontoudtog</h1>
-            @if (!transactions!.Any())
+            @if (!transactions.Transactions.Any())
             {
                 <Paragraph>Der er intet at vise.</Paragraph>
             }
             else
             {
+                if (balance < Amount.Zero)
+                {
+                    <Paragraph>Du mangler at indbetale. Bemærk at der går noget tid fra du indbetaler til beløbet bliver registeret. Hvis du allerede har indbetalt kan du se bort fra denne besked.</Paragraph>
+                    <PaymentInstructions PaymentInformation="transactions.Payment" UserId="@userId" />
+                }
+                else if (balance > Amount.Zero)
+                {
+                    <Paragraph>Du har @Formatter.FormatMoneyLong(balance) til gode. Beløbet vil blive udbetalt til din bankkonto næste gang vi udbetaler. Bemærk at det typisk kun sker en gang om måneden.</Paragraph>
+                }
+                var currentBalance = Amount.Zero;
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHeaderCell>Dato</TableHeaderCell>
-                            <TableHeaderCell>Bestillingsnr.</TableHeaderCell>
                             <TableHeaderCell>Tekst</TableHeaderCell>
                             <TableHeaderCell class="text-right">Beløb</TableHeaderCell>
                             <TableHeaderCell class="text-right">Saldo</TableHeaderCell>
@@ -35,33 +44,22 @@
                     </TableHeader>
                     <TableBody>
                         @{
-                            var balance = 0;
-                            foreach (var transaction in transactions!)
+                            foreach (var transaction in transactions!.Transactions)
                             {
-                                balance += transaction.Amount;
-                                var localBalance = balance;
+                                currentBalance += transaction.Amount;
+                                var localBalance = currentBalance;
                                 <TableRow>
-                                    <TableRowCell>@FormattingService.FormatDate(transaction.Date)</TableRowCell>
+                                    <TableRowCell>@Formatter.FormatDate(transaction.Date)</TableRowCell>
                                     <TableRowCell>
-                                        @if (transaction.OrderId.HasValue)
+                                        @if (transaction.Activity == Activity.PlaceOrder)
                                         {
-                                            <a href="@Urls.MyOrders/@transaction.OrderId">@transaction.OrderId</a>
+                                            <a href="@Urls.MyOrders/@transaction.OrderId">Oprettelse af bestilling @transaction.OrderId</a>
                                         }
-                                    </TableRowCell>
-                                    <TableRowCell>
-                                        @if (transaction.Type == TransactionType.Order)
+                                        else if (transaction.Activity is Activity.UpdateOrder or Activity.SettleReservation)
                                         {
-                                            <text>Oprettelse af bestilling</text>
+                                            <a href="@Urls.MyOrders/@transaction.OrderId">@transaction.Description</a>
                                         }
-                                        else if (transaction.Type == TransactionType.Cancellation)
-                                        {
-                                            <text>Afbestilling @resources![transaction.ResourceId!.Value].Name @FormattingService.FormatDate(transaction.ReservationDate!.Value)</text>
-                                        }
-                                        else if (transaction.Type == TransactionType.Settlement)
-                                        {
-                                            <text>Opgørelse @resources![transaction.ResourceId!.Value].Name @FormattingService.FormatDate(transaction.ReservationDate!.Value)</text>
-                                        }
-                                        else if (transaction.Type == TransactionType.PayIn)
+                                        else if (transaction.Activity == Activity.PayIn)
                                         {
                                             <text>Indbetaling</text>
                                         }
@@ -70,36 +68,20 @@
                                             <text>Udbetaling</text>
                                         }
                                     </TableRowCell>
-                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(transaction.Amount)</TableRowCell>
-                                    <TableRowCell class="text-right">@FormattingService.FormatMoneyShort(localBalance)</TableRowCell>
+                                    <TableRowCell class="text-right">@Formatter.FormatMoneyShort(transaction.Amount)</TableRowCell>
+                                    <TableRowCell class="text-right">@Formatter.FormatMoneyShort(localBalance)</TableRowCell>
                                 </TableRow>
                             }
                         }
                     </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableRowCell ColumnSpan="4" Class="text-right"><a id="total"><strong>@Formatter.FormatMoneyShort(currentBalance)</strong></a></TableRowCell>
+                        </TableRow>
+                    </TableFooter>
                 </Table>
-                <Paragraph>Alle beløb er i kr. En positiv saldo betyder at du har penge til gode som vil blive udbetalt. En negativ saldo betyder at du mangler at indbetale.</Paragraph>
+                <Paragraph class="text-right">Alle beløb er i kr.</Paragraph>
             }
         </Container>
     }
 </main>
-
-@code
-{
-    private bool isInitialized;
-    private IReadOnlyDictionary<int, Resource>? resources;
-    private IEnumerable<MyTransaction>? transactions;
-    private bool showErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        resources = await ClientDataProvider.GetResources();
-        var (response, problem) = await ApiClient.Get<IEnumerable<MyTransaction>>("user/transactions");
-        if (problem == null)
-            transactions = response;
-        else
-            showErrorAlert = true;
-        isInitialized = true;
-    }
-
-    private void DismissErrorAlert() => showErrorAlert = false;
-}

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Application</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="LanguageExt.Core" Version="$(LanguageExtVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(ExtensionsVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(ExtensionsVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(ExtensionsVersion)" />
+        <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Shared.Email\Shared.Email.csproj" />
+    </ItemGroup>
+
+</Project>

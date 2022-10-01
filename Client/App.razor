@@ -1,51 +1,27 @@
-﻿@inject ApplicationState ApplicationState
-@inject NavigationManager NavigationManager
-
-<CascadingAuthenticationState>
-    <Router AppAssembly="typeof(Program).Assembly" Context="routeData">
-        <Found>
-            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <NotAuthorized>
                     <main>
-                        <div class="container not-authorized">
-                            <h1>Du er ikke logget ind</h1>
-                            <Paragraph>Log ind for at fortsætte.</Paragraph>
-                            <Paragraph><Button Color="Color.Primary" Class="btn-fixed" Clicked="@SignIn">Log ind</Button></Paragraph>
-                            <Paragraph>Hvis du ikke har en bruger kan du oprette dig.</Paragraph>
-                            <Paragraph><Button Color="Color.Secondary" Class="btn-fixed" Clicked="@SignUp">Opret bruger</Button></Paragraph>
-                        </div>
+                        <SignInOrSignUp />
                     </main>
                 </NotAuthorized>
                 <Authorizing>
                     <main>
-                        <Spinner />
+                        <Spinner/>
                     </main>
                 </Authorizing>
             </AuthorizeRouteView>
         </Found>
         <NotFound>
-            <LayoutView Layout="typeof(MainLayout)">
+            <LayoutView Layout="@typeof(MainLayout)">
                 <main>
                     <div class="container">
-                        <Paragraph>Der er intet at vise.</Paragraph>
+                        <p>Der er intet at vise.</p>
                     </div>
                 </main>
             </LayoutView>
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
-
-@code
-{
-    private void SignIn()
-    {
-        ApplicationState.RedirectUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.NavigateTo(Urls.SignIn);
-    }
-
-    private void SignUp()
-    {
-        ApplicationState.RedirectUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.NavigateTo(Urls.SignUp);
-    }
-}

@@ -1,0 +1,13 @@
+﻿@using Frederikskaj2.Reservations.Shared.Web
+<Field>
+    <FieldLabel>Fulde navn</FieldLabel>
+    <FieldBody>
+        <Validation Validator="@Validator.ValidateFullName">
+            <TextEdit @ref="textEdit" Text="@Value" TextChanged="@ValueChanged" Disabled="@Disabled" MaxLength="@ValidationRules.MaximumFullNameLength">
+                <Feedback>
+                    <ValidationError/>
+                </Feedback>
+            </TextEdit>
+        </Validation>
+    </FieldBody>
+</Field>

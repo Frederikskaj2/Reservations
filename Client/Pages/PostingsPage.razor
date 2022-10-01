@@ -1,26 +1,29 @@
 ﻿@page "/posteringer"
-@attribute [Authorize(Roles = Roles.Bookkeeping)]
-@inject ApiClient ApiClient 
-@inject ApplicationState ApplicationState
-@inject CultureInfo CultureInfo
-@inject FormattingService FormattingService
-@inject ReservationsOptions ReservationsOptions
+<PageTitle>Bogføring @(currentYear is not 0 ? $"{currentYear:0000}-{currentMonth:00} " : "")- Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
-        <Spinner />
+        <Spinner/>
+    }
+    else if (postings is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
     }
     else
     {
-        var hasPostings = postings?.Any() ?? false;
+        var hasPostings = postings.Any();
         <Container>
             <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
                 Posteringerne er blevet sendt til @email.
-                <CloseButton Clicked="@DismissSuccessAlert" />
+                <CloseButton Clicked="@DismissSuccessAlert"/>
             </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl, og posteringerne blev ikke sendt til @email.
-                <CloseButton Clicked="@DismissErrorAlert" />
+                <CloseButton Clicked="@DismissErrorAlert"/>
             </Alert>
             <h1>Posteringer</h1>
             @if (postingsRange != null)
@@ -74,30 +77,60 @@
                         <TableRow>
                             <TableHeaderCell>Dato</TableHeaderCell>
                             <TableHeaderCell>Beskrivelse</TableHeaderCell>
-                            <TableHeaderCell Class="text-right">@AccountNames.Income</TableHeaderCell>
-                            <TableHeaderCell Class="text-right">@AccountNames.Bank</TableHeaderCell>
-                            <TableHeaderCell Class="text-right">@AccountNames.Deposits</TableHeaderCell>
+                            <TableHeaderCell>Konto</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Debet</TableHeaderCell>
+                            <TableHeaderCell Class="text-right">Kredit</TableHeaderCell>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         @foreach (var posting in postings!)
                         {
-                            <TableRow>
-                                <TableRowCell>@FormattingService.FormatDate(posting.Date)</TableRowCell>
-                                <TableRowCell>
-                                    @if (posting.Type == PostingType.PayIn)
+                            var amounts = posting.Amounts.ToArray();
+                            for (var i = 0; i < amounts.Length; i += 1)
+                            {
+                                var (account, amount) = amounts[i];
+                                var isFirstRow = i == 0;
+                                var isLastRow = i == amounts.Length - 1;
+                                <TableRow Class="@(isLastRow ? "border-bottom" : "")">
+                                    @if (isFirstRow)
                                     {
-                                        <a href="@Urls.Orders/@posting.OrderId">Indbetaling fra @posting.FullName (bestillingsnr. @posting.OrderId)</a>
+                                        <TableRowCell>@Formatter.FormatDate(posting.Date)</TableRowCell>
+                                        <TableRowCell>
+                                            @if (posting.Activity is Activity.PlaceOrder || posting.Activity is Activity.PayIn && posting.OrderId.HasValue)
+                                            {
+                                                <a href="@Urls.Orders/@posting.OrderId">Oprettelse af bestilling @posting.OrderId (@posting.FullName)</a>
+                                            }
+                                            else if (posting.Activity is Activity.UpdateOrder)
+                                            {
+                                                <a href="@Urls.Orders/@posting.OrderId">Ændring af bestilling @posting.OrderId (@posting.FullName)</a>
+                                            }
+                                            else if (posting.Activity is Activity.SettleReservation)
+                                            {
+                                                <a href="@Urls.Orders/@posting.OrderId">Opgørelse af reservation på bestilling @posting.OrderId (@posting.FullName)</a>
+                                            }
+                                            else if (posting.Activity is Activity.PayIn)
+                                            {
+                                                <a href="@string.Format(Urls.UsersTransactionsSpecific, posting.UserId, posting.TransactionId)">Indbetaling fra @posting.FullName</a>
+                                            }
+                                            else
+                                            {
+                                                <a href="@string.Format(Urls.UsersTransactionsSpecific, posting.UserId, posting.TransactionId)">Udbetaling til @posting.FullName</a>
+                                            }
+                                        </TableRowCell>
                                     }
                                     else
                                     {
-                                        <text>Udbetaling til @posting.FullName</text>
+                                        <TableRowCell Class="border-top-0" ColumnSpan="2"/>
                                     }
-                                </TableRowCell>
-                                <TableRowCell Class="text-right"><DebitCredit Amount="@posting.Income" /></TableRowCell>
-                                <TableRowCell Class="text-right"><DebitCredit Amount="@posting.Bank" /></TableRowCell>
-                                <TableRowCell Class="text-right"><DebitCredit Amount="@posting.Deposits" /></TableRowCell>
-                            </TableRow>
+                                    <TableRowCell>@accountNames![account]</TableRowCell>
+                                    <TableRowCell Class="text-right">
+                                        <DebitCredit Amount="@amount"/>
+                                    </TableRowCell>
+                                    <TableRowCell Class="text-right">
+                                        <DebitCredit Amount="@(-amount)"/>
+                                    </TableRowCell>
+                                </TableRow>
+                            }
                         }
                     </TableBody>
                 </Table>
@@ -105,103 +138,3 @@
         </Container>
     }
 </main>
-
-@code
-{
-    private LocalDatePattern? monthPattern;
-    private PostingsRange? postingsRange;
-    private List<int>? years;
-    private List<int>? months;
-    int currentYear;
-    int currentMonth;
-    private IEnumerable<Posting>? postings;
-    private string? email;
-    private bool isInitialized;
-    private bool showSuccessAlert;
-    private bool showErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        monthPattern = LocalDatePattern.Create("MMMM", CultureInfo);
-
-        await InitializeCalendar();
-        await UpdatePostings();
-
-        email = await ApplicationState.GetUserEmail();
-
-        isInitialized = true;
-    }
-
-    private async Task InitializeCalendar()
-    {
-        var (response, problem) = await ApiClient.Get<PostingsRange>("postings/range");
-        if (problem != null)
-            return;
-        postingsRange = response;
-        var earliestYear = response!.EarliestMonth.Year;
-        var latestYear = response.LatestMonth.Year;
-        years = Enumerable.Range(earliestYear, latestYear - earliestYear + 1).ToList();
-        currentYear = years[^1];
-        UpdateMonths();
-    }
-
-    private async Task UpdatePostings()
-    {
-        var requestUri = $"postings?month={currentYear:0000}-{currentMonth:00}-01";
-        var (response, problem) = await ApiClient.Get<IEnumerable<Posting>>(requestUri);
-        if (problem == null)
-            postings = response;
-    }
-
-    private Task YearChanged(int value)
-    {
-        currentYear = value;
-        UpdateMonths();
-        return UpdatePostings();
-    }
-
-    private Task MonthChanged(int value)
-    {
-        currentMonth = value;
-        return UpdatePostings();
-    }
-
-    private void UpdateMonths()
-    {
-        months = GetMonths(currentYear).ToList();
-        currentMonth = months[^1];
-    }
-
-    private IEnumerable<int> GetMonths(int year)
-    {
-        for (var month = 1; month <= 12; month += 1)
-        {
-            var date = new LocalDate(year, month, 1);
-            if (postingsRange!.EarliestMonth <= date && date <= postingsRange.LatestMonth)
-                yield return month;
-        }
-    }
-
-    private string Capitalize(string text) => CultureInfo.TextInfo.ToUpper(text[0]) + text.Substring(1);
-
-    private async Task Send()
-    {
-        DismissAllAlerts();
-
-        var problem = await ApiClient.Post($"postings/send?month={currentYear:0000}-{currentMonth:00}-01");
-        if (problem == null)
-            showSuccessAlert = true;
-        else
-            showErrorAlert = true;
-    }
-
-    private void DismissSuccessAlert() => showSuccessAlert = false;
-
-    private void DismissErrorAlert() => showErrorAlert = false;
-
-    private void DismissAllAlerts()
-    {
-        DismissSuccessAlert();
-        DismissErrorAlert();
-    }
-}

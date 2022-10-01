@@ -1,0 +1,26 @@
+{
+    "@type": "MessageCard",
+    "@context": "https://schema.org/extensions",
+    "title": "Website startet",
+    "summary": "Ny version",
+    "sections": [
+        {
+            "activityTitle": "Lokalereservation",
+            "activitySubtitle": "TIMESTAMP",
+            "activityImage": "https://lokaler.frederikskaj2.dk/img/icon.jpg",
+            "text": "Ny version bygget fra [git commit COMMITSHORT](https://github.com/Frederikskaj2/Reservations/tree/COMMITLONG)."
+        }
+    ],
+    "potentialAction": [
+        {
+            "@type": "OpenUri",
+            "name": "Besøg website",
+            "targets": [
+                {
+                    "os": "default",
+                    "uri": "https://lokaler.frederikskaj2.dk/"
+                }
+            ]
+        }
+    ]
+}

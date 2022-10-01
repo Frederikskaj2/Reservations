@@ -1,156 +1,110 @@
 ﻿@page "/bestillinger/{orderId:int}"
-@attribute [Authorize(Roles = Roles.OrderHandling + "," + Roles.Payment + "," + Roles.Settlement)]
-@inject ApiClient ApiClient 
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject ClientDataProvider ClientDataProvider
-@inject FormattingService FormattingService
-@inject NavigationManager NavigationManager
-
+<PageTitle>@(order is not null ? $"Bestilling {order.OrderId} - " : "")Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
-        <Spinner />
+        <Spinner/>
     }
-    else if (order != null)
+    else if (order?.Type is OrderType.User)
     {
-        <Container class="container-min-md">
+        <Container class="container-min-lg">
             <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
                 Bestillingen er blevet opdateret.
-                <CloseButton Clicked="@DismissSuccessAlert" />
+                <CloseButton Clicked="@DismissSuccessAlert"/>
             </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl, og bestillingen blev ikke opdateret.
-                <CloseButton Clicked="@DismissErrorAlert" />
+                <CloseButton Clicked="@DismissErrorAlert"/>
             </Alert>
-            <h1>Bestilling @order!.Id</h1>
-            <Text>Oprettet @FormattingService.FormatDate(@order.CreatedTimestamp)</Text>
-            @if (order.Email != null)
-            {
-                <div><a href="mailto:@order.Email?subject=Frederikskaj 2 bestilling @order.Id">@order.Email</a></div>
-                <div>@order.FullName</div>
-                <div>Frederikskaj @order.Apartment</div>
-                <div>@order.Phone</div>
-            }
-            <OrderStatement @ref="orderStatement" IsCancellationEnabled="canHandleOrders" IsPaymentEnabled="canHandlePayments" IsSettlementEnabled="canHandleSettlements" OrderId="@order.Id" Reservations="@order.Reservations" AccountNumber="@order.AccountNumber" Totals="@order.Totals" IsHistoryOrder="@order.IsHistoryOrder" OnSubmit="@Submit" />
+            <Card Background="Background.Light">
+                <CardHeader>
+                    <CardTitle Size="1">Bestilling @order.OrderId</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <div class="flex-container">
+                        <div>
+                            <div>
+                                <a href="mailto:@order.UserInformation.Email?subject=Frederikskaj 2 bestilling @order.OrderId">@order.UserInformation.Email</a>
+                            </div>
+                            <div><a href="@Urls.Users/@order.UserInformation.UserId">@order.UserInformation.FullName</a></div>
+                            @if (order.UserInformation.ApartmentId.HasValue && order.UserInformation.ApartmentId != Apartment.Deleted.ApartmentId)
+                            {
+                                <div>Frederikskaj @GetApartment(order.UserInformation.ApartmentId.Value)</div>
+                            }
+                            <div>@order.UserInformation.Phone</div>
+                        </div>
+                        <OrderStatus Reservations="order.Reservations"/>
+                    </div>
+                </CardBody>
+            </Card>
+            <Card Background="Background.Light">
+                <CardHeader>
+                    <CardTitle Size="1">Reservationer</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <OrderStatement
+                        IsHistoryOrder="@order.IsHistoryOrder"
+                        AccountNumber="@order.User!.AccountNumber"
+                        Reservations="@order.Reservations"
+                        NoFeeCancellationIsAllowedBefore="@order.User.NoFeeCancellationIsAllowedBefore"
+                        CanEditOrder="@canHandleOrders"
+                        CanWaiveFee="@canWaiveFee"
+                        OnSettleReservation="@SettleReservation"
+                        OnSubmit="@SubmitAsync"/>
+                </CardBody>
+            </Card>
+            <AdditionalLineItems Items="@order.User!.AdditionalLineItems" Reservations="@order.Reservations"/>
+            <OrderAudits Order="@order"/>
         </Container>
+        @if (canHandleOrders)
+        {
+            <SettlementDialog @ref="settlementDialog" OnConfirm="@OnSettleConfirmAsync"/>
+        }
     }
-    else if (canHandleOrders && ownerOrder != null)
+    else if (canHandleOrders && order?.Type is OrderType.Owner)
     {
         <Container class="container-min-md">
             <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
                 Bestillingen er blevet opdateret.
-                <CloseButton Clicked="@DismissSuccessAlert" />
+                <CloseButton Clicked="@DismissSuccessAlert"/>
             </Alert>
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl, og bestillingen blev ikke opdateret.
-                <CloseButton Clicked="@DismissErrorAlert" />
+                <CloseButton Clicked="@DismissErrorAlert"/>
             </Alert>
-            <h1>Bestilling @ownerOrder!.Id</h1>
-            <Text>Oprettet @FormattingService.FormatDate(@ownerOrder.CreatedTimestamp)</Text>
-            <Text>Oprettet af <a href="mailto:@ownerOrder.CreatedByEmail?subject=Frederikskaj 2 bestilling @ownerOrder.Id">@ownerOrder.CreatedByName</a> på vegne af grundejerforeningen</Text>
-            <OwnerOrderStatement OrderId="@ownerOrder.Id" Reservations="@ownerOrder.Reservations" IsCleaningRequired="@ownerOrder.IsCleaningRequired" OnSubmit="@SubmitOwnerOrder" />
+            <Card Background="Background.Light">
+                <CardHeader>
+                    <CardTitle Size="1">Bestilling @order.OrderId</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Text>Oprettet af <a href="@Urls.Users/@order.UserInformation.UserId">@order.UserInformation.FullName</a> på vegne af grundejerforeningen</Text>
+                </CardBody>
+            </Card>
+            <Card Background="Background.Light">
+                <CardHeader>
+                    <CardTitle Size="1">Detaljer</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <OwnerOrderStatement
+                        OrderId="@order.OrderId"
+                        IsHistoryOrder="@order.IsHistoryOrder"
+                        Description="@order.Owner!.Description"
+                        Reservations="@order.Reservations"
+                        IsCleaningRequired="@order.Owner.IsCleaningRequired"
+                        OnSubmit="@SubmitOwnerOrderAsync"/>
+                </CardBody>
+            </Card>
+            <OrderAudits Order="@order"/>
         </Container>
     }
     else
     {
-<Container>
-    <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
-        Bestillingen er blevet slettet.
-        <CloseButton Clicked="@DismissSuccessAlert" />
-    </Alert>
-    <Text>Bestilling @OrderId er ikke tilgængelig.</Text>
-</Container>
+        <Container>
+            <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
+                Bestillingen er blevet slettet.
+                <CloseButton Clicked="@DismissSuccessAlert"/>
+            </Alert>
+            <Text>Bestilling @OrderId er ikke tilgængelig.</Text>
+        </Container>
     }
 </main>
-
-@code
-{
-    private OrderStatement orderStatement = null!;
-    private bool canHandleOrders;
-    private bool canHandlePayments;
-    private bool canHandleSettlements;
-    private Order? order;
-    private OwnerOrder? ownerOrder;
-    private bool isInitialized;
-    private bool showSuccessAlert;
-    private bool showErrorAlert;
-
-    [Parameter]
-    public int OrderId { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        canHandleOrders = authenticationState.User.IsInRole(Roles.OrderHandling);
-        canHandlePayments = authenticationState.User.IsInRole(Roles.Payment);
-        canHandleSettlements = authenticationState.User.IsInRole(Roles.Settlement);
-
-        order = await GetOrder();
-        if (order == null)
-            ownerOrder = await GetOwnerOrder();
-        isInitialized = true;
-
-        async Task<Order?> GetOrder()
-        {
-            var url = $"orders/{OrderId}";
-            var (response, _) = await ApiClient.Get<Order>(url);
-            return response;
-        }
-
-        async Task<OwnerOrder?> GetOwnerOrder()
-        {
-            var url = $"owner-orders/{OrderId}";
-            var (response, _) = await ApiClient.Get<OwnerOrder>(url);
-            return response;
-        }
-    }
-
-    private async Task Submit(UpdateOrderRequest request)
-    {
-        DismissAllAlerts();
-
-        var isUpdatingCalendar = request.CancelledReservations.Count > 0;
-        var url = $"orders/{order!.Id}";
-        var (response, problem) = await ApiClient.Patch<Order>(url, request);
-        if (problem == null)
-        {
-            if (isUpdatingCalendar)
-                ClientDataProvider.Refresh();
-            order = response;
-            showSuccessAlert = true;
-        }
-        else
-        {
-            showErrorAlert = true;
-        }
-    }
-
-    private async Task SubmitOwnerOrder(UpdateOwnerOrderRequest request)
-    {
-        DismissAllAlerts();
-
-        var isUpdatingCalendar = request.CancelledReservations.Count > 0;
-        var url = $"owner-orders/{ownerOrder!.Id}";
-        var (response, problem) = await ApiClient.Patch<OrderResponse<OwnerOrder>>(url, request);
-        if (problem == null)
-        {
-            if (isUpdatingCalendar)
-                ClientDataProvider.Refresh();
-            ownerOrder = response!.Order;
-            showSuccessAlert = true;
-        }
-        else
-        {
-            showErrorAlert = true;
-        }
-    }
-
-    private void DismissSuccessAlert() => showSuccessAlert = false;
-    private void DismissErrorAlert() => showErrorAlert = false;
-
-    private void DismissAllAlerts()
-    {
-        DismissSuccessAlert();
-        DismissErrorAlert();
-    }
-}

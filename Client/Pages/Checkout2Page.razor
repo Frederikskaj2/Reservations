@@ -1,14 +1,7 @@
 ﻿@page "/bestil/2"
-@attribute [Authorize]
-@inject ApiClient ApiClient 
-@inject ApplicationState ApplicationState
-@inject ClientDataProvider ClientDataProvider
-@inject FormattingService FormattingService
-@inject NavigationManager NavigationManager
-@inject IReservationPolicyProvider ReservationPolicyProvider
-
+<PageTitle>Gennemse bestilling - Frederikskaj 2 lokalereservation</PageTitle>
 <main>
-    @if (ClientDataProvider.DraftOrder.Reservations!.Count == 0)
+    @if (!DraftOrder.Reservations.Any())
     {
         <Container>
             <Paragraph>Gå til <a href="@Urls.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
@@ -16,22 +9,23 @@
     }
     else if (!isInitialized)
     {
-        <Spinner />
+        <Spinner/>
     }
     else
     {
         <Container Class="container-min-md">
             <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
                 Der er sket en fejl, og din bestilling blev ikke gennemført.
-                <CloseButton Clicked="@DismissErrorAlert" />
+                <CloseButton Clicked="@DismissErrorAlert"/>
             </Alert>
+            <IndefiniteProgressBar @ref="progressBar" />
             <h1>Din bestilling</h1>
             <Form>
-                <Validations @ref="validations" Mode="ValidationMode.Manual" Model="@ClientDataProvider.DraftOrder">
-                    <Text>@ClientDataProvider.DraftOrder.Request.FullName</Text>
-                    <Text>Frederikskaj @apartments.First(a => a.Id == ClientDataProvider.DraftOrder.Request.ApartmentId)</Text>
-                    <Text>Telefon: @ClientDataProvider.DraftOrder.Request.Phone</Text>
-                    <Text>Kontonummer: @ClientDataProvider.DraftOrder.Request.AccountNumber</Text>
+                <Validations @ref="validations" Mode="ValidationMode.Manual">
+                    <Text>@OrderInformation.FullName</Text><br/>
+                    <Text>Frederikskaj @apartments!.First(a => a.ApartmentId == OrderInformation.ApartmentId)</Text><br/>
+                    <Text>Telefon: @OrderInformation.Phone</Text><br/>
+                    <Text>Kontonummer: @OrderInformation.AccountNumber</Text>
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -45,141 +39,81 @@
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            @foreach (var reservation in ClientDataProvider.DraftOrder.Reservations)
+                            @foreach (var reservation in DraftOrder.Reservations)
                             {
+                                var price = GetPrice(reservation);
                                 <TableRow>
                                     <TableRowCell>@reservation.Resource!.Name</TableRowCell>
-                                    <TableRowCell>@FormattingService.FormatCheckInTimeShort(reservation.Date)</TableRowCell>
-                                    <TableRowCell>@reservation.DurationInDays</TableRowCell>
-                                    <TableRowCell>@FormattingService.FormatCheckOutTimeShort(reservation.Date.PlusDays(reservation.DurationInDays))</TableRowCell>
-                                    <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Rent)</TableRowCell>
-                                    <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Cleaning)</TableRowCell>
-                                    <TableRowCell Class="text-right">@FormattingService.FormatMoneyShort(reservation.Price!.Deposit)</TableRowCell>
+                                    <TableRowCell>@Formatter.FormatCheckInTimeShort(options!, reservation.Extent.Date)</TableRowCell>
+                                    <TableRowCell>@reservation.Extent.Nights</TableRowCell>
+                                    <TableRowCell>@Formatter.FormatCheckOutTimeShort(options!, reservation.Extent.Date.PlusDays(reservation.Extent.Nights))</TableRowCell>
+                                    <TableRowCell Class="text-right">@Formatter.FormatMoneyShort(price.Rent)</TableRowCell>
+                                    <TableRowCell Class="text-right">@Formatter.FormatMoneyShort(price.Cleaning)</TableRowCell>
+                                    <TableRowCell Class="text-right">@Formatter.FormatMoneyShort(price.Deposit)</TableRowCell>
                                 </TableRow>
                             }
                         </TableBody>
                         <TableFooter>
                             <TableRow>
-                                <TableRowCell colspan="6">Leje (inkl. rengøring)</TableRowCell>
-                                <TableRowCell Class="text-right">@FormattingService.FormatMoneyLong(GetTotalRentAndCleaning())</TableRowCell>
+                                <TableRowCell ColumnSpan="6">Leje (inkl. rengøring)</TableRowCell>
+                                <TableRowCell Class="text-right">@Formatter.FormatMoneyLong(totalRentAndCleaning)</TableRowCell>
                             </TableRow>
                             <TableRow>
-                                <TableRowCell colspan="6" Class="border-top-0">Depositum</TableRowCell>
-                                <TableRowCell Class="text-right border-top-0">@FormattingService.FormatMoneyLong(GetTotalDeposit())</TableRowCell>
+                                <TableRowCell ColumnSpan="6" Class="border-top-0">Depositum</TableRowCell>
+                                <TableRowCell Class="text-right border-top-0">@Formatter.FormatMoneyLong(totalDeposit)</TableRowCell>
                             </TableRow>
                             <TableRow>
-                                <TableRowCell colspan="6" Class="border-bottom"><strong>Til betaling</strong></TableRowCell>
-                                <TableRowCell Class="text-right border-bottom"><strong>@FormattingService.FormatMoneyLong(GetGrandTotal())</strong></TableRowCell>
+                                <TableRowCell ColumnSpan="6" Class="border-bottom">
+                                    <strong>Til betaling</strong>
+                                </TableRowCell>
+                                <TableRowCell Class="text-right border-bottom">
+                                    <strong>@Formatter.FormatMoneyLong(totalRentAndCleaning + totalDeposit)</strong>
+                                </TableRowCell>
                             </TableRow>
                             <TableRow>
-                                <TableRowCell colspan="7" Class="border-top-0">
+                                <TableRowCell ColumnSpan="7" Class="border-top-0">
                                     <Field>
-                                        <Validation>
-                                            <Check @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidAcceptTerms">
+                                        <Validation Validator="@Validator.ValidateAcceptTerms">
+                                            <Check TValue="bool">
                                                 <ChildContent>
                                                     @if (linkBanquetFacilitiesRules && linkBedroomRules)
-                                                        {
+                                                    {
                                                         <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBanquetFacilities">aktivitets-/festlokalet</a> og <a href="@Urls.RulesBedrooms">soveværelserne</a>.</text>
-                                                        }
-                                                        else if (linkBanquetFacilitiesRules)
-                                                        {
+                                                    }
+                                                    else if (linkBanquetFacilitiesRules)
+                                                    {
                                                         <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBanquetFacilities">aktivitets-/festlokalet</a>.</text>
-                                                        }
-                                                        else
-                                                        {
+                                                    }
+                                                    else
+                                                    {
                                                         <text>Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for <a href="@Urls.RulesBedrooms">soveværelserne</a>.</text>
-                                                        }
+                                                    }
                                                 </ChildContent>
                                                 <Feedback>
-                                                    <ValidationError />
+                                                    <ValidationError>Du skal acceptere betingelserne</ValidationError>
                                                 </Feedback>
                                             </Check>
                                         </Validation>
                                     </Field>
                                     <Field>
-                                        <Validation>
-                                            <Check @bind-Checked="@ClientDataProvider.DraftOrder.Request.DidConsent">
+                                        <Validation Validator="@Validator.ValidateAcceptTerms">
+                                            <Check TValue="bool">
                                                 <ChildContent>
                                                     Jeg <a href="@Urls.Consent">samtykker</a> til at ovenstående oplysninger behandles af Grundejerforeningen Frederikskaj 2 med henblik på reservation af lokaler.
                                                 </ChildContent>
                                                 <Feedback>
-                                                    <ValidationError />
+                                                    <ValidationError>Du skal samtykke til at vi behandler dine personoplysninger</ValidationError>
                                                 </Feedback>
                                             </Check>
                                         </Validation>
                                     </Field>
                                     <a Class="btn btn-secondary" href="javascript:history.back()">Tilbage</a>
-                                    <Button Class="float-right" Color="Color.Success" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@Submit">Bekræft bestilling</Button>
+                                    <Button Class="float-right" Color="Color.Success" Type="ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="@SubmitAsync">Bekræft bestilling</Button>
                                 </TableRowCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
                 </Validations>
             </Form>
-        </Container>
-    }
+        </Container>    }
 </main>
-
-@code
-{
-    private Validations validations = null!;
-    private IEnumerable<Apartment>? apartments;
-    private bool isInitialized;
-    private bool linkBanquetFacilitiesRules;
-    private bool linkBedroomRules;
-    private bool showErrorAlert;
-
-    protected override async Task OnInitializedAsync()
-    {
-        apartments = await ClientDataProvider.GetApartments();
-        linkBanquetFacilitiesRules = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.BanquetFacilities);
-        linkBedroomRules = ClientDataProvider.DraftOrder.Reservations.Any(reservation => reservation.Resource.Type == ResourceType.Bedroom);
-        ClientDataProvider.DraftOrder.Request.DidAcceptTerms = false;
-        ClientDataProvider.DraftOrder.Request.DidConsent = false;
-        isInitialized = true;
-    }
-
-    private int GetTotalRentAndCleaning()
-        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.Cleaning);
-
-    private int GetTotalDeposit()
-        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Deposit);
-
-    private int GetGrandTotal()
-        => ClientDataProvider.DraftOrder.Reservations.Aggregate(0, (sum, reservation) => sum + reservation.Price!.Rent + reservation.Price!.Cleaning + reservation.Price!.Deposit);
-
-    private async Task Submit()
-    {
-        if (!validations.ValidateAll())
-            return;
-
-        validations.ClearAll();
-        DismissErrorAlert();
-
-        ClientDataProvider.DraftOrder.PrepareRequest();
-        var (response, problem) = await ApiClient.Post<MyOrder>("my-orders", ClientDataProvider.DraftOrder.Request);
-        if (problem == null)
-        {
-            ApplicationState.MyOrder = response;
-            ClientDataProvider.DraftOrder.Clear();
-            ClientDataProvider.Refresh();
-            NavigationManager.NavigateTo(Urls.Checkout3);
-        }
-        else if (problem.Type == ProblemTypes.ReservationConflict)
-        {
-            ClientDataProvider.Refresh();
-            var reservations = ClientDataProvider.DraftOrder.Reservations.ToList();
-            foreach (var reservation in reservations)
-            {
-                var policy = ReservationPolicyProvider.GetPolicy(reservation.Resource.Type);
-                var (minimumDays, maximumDays) = await policy.GetReservationAllowedNumberOfDays(reservation.Resource.Id, reservation.Date, false);
-                if (!(minimumDays <= reservation.DurationInDays && reservation.DurationInDays <= maximumDays))
-                    ClientDataProvider.DraftOrder.Reservations.Remove(reservation);
-            }
-            NavigationManager.NavigateTo(Urls.CheckoutConflict);
-        }
-        showErrorAlert = true;
-    }
-
-    private void DismissErrorAlert() => showErrorAlert = false;
-}

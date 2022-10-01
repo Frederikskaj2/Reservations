@@ -1,9 +1,13 @@
+__blobstorage__/
+__queuestorage__/
+.idea/
 .ionide/
+.run/
 .vs/
 bin/
 obj/
-Reservations.db*
-appSettings.local.json
-key-*.xml
 *.log
 *.csproj.user
+*.DotSettings.user
+__azurite_db_*.json
+appsettings.local.json
