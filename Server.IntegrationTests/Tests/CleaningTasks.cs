@@ -190,6 +190,54 @@ public class CleaningTasks : IClassFixture<SessionFixture>
         cleaningTask.End.Date.Should().Be(ownerReservation2.Extent.Date);
     }
 
+    [Fact]
+    public async Task OneConfirmedReservationInThePastWithCleaningInThePast()
+    {
+        await Session.SignUpAndSignInAsync();
+        var userOrder = await Session.UserPlaceAndPayOrderAsync(new TestReservation(TestData.Frederik.ResourceId));
+        var reservation = userOrder.Reservations!.Single();
+        Session.NowOffset += reservation.Extent.Ends().PlusDays(additionalDaysWhereCleaningCanBeDone + 1) - Session.CurrentDate;
+        var cleaningSchedule = await Session.GetCleaningScheduleAsync();
+        var cleaningTask = GetCleaningTaskForReservation(cleaningSchedule.CleaningTasks, reservation);
+        cleaningTask.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task OneConfirmedReservationInThePastWithCleaningInTheFuture()
+    {
+        await Session.SignUpAndSignInAsync();
+        var userOrder = await Session.UserPlaceAndPayOrderAsync(new TestReservation(TestData.Frederik.ResourceId));
+        var reservation = userOrder.Reservations!.Single();
+        Session.NowOffset += reservation.Extent.Ends().PlusDays(additionalDaysWhereCleaningCanBeDone) - Session.CurrentDate;
+        var cleaningSchedule = await Session.GetCleaningScheduleAsync();
+        var cleaningTask = GetCleaningTaskForReservation(cleaningSchedule.CleaningTasks, reservation);
+        cleaningTask.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task OneOwnerReservationInThePastWithCleaningInThePast()
+    {
+        var ownerOrder = await Session.PlaceOwnerOrderAsync(new TestReservation(TestData.Kaj.ResourceId));
+        var reservation = ownerOrder.Reservations.Single();
+        Session.NowOffset += reservation.Extent.Ends().PlusDays(additionalDaysWhereCleaningCanBeDone + 1) - Session.CurrentDate;
+        await Session.AdministratorGetAsync("orders/owner");
+        var cleaningSchedule = await Session.GetCleaningScheduleAsync();
+        var cleaningTask = GetCleaningTaskForReservation(cleaningSchedule.CleaningTasks, reservation);
+        cleaningTask.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task OneOwnerReservationInThePastWithCleaningInTheFuture()
+    {
+        var ownerOrder = await Session.PlaceOwnerOrderAsync(new TestReservation(TestData.Kaj.ResourceId));
+        var reservation = ownerOrder.Reservations.Single();
+        Session.NowOffset += reservation.Extent.Ends().PlusDays(additionalDaysWhereCleaningCanBeDone) - Session.CurrentDate;
+        await Session.AdministratorGetAsync("orders/owner");
+        var cleaningSchedule = await Session.GetCleaningScheduleAsync();
+        var cleaningTask = GetCleaningTaskForReservation(cleaningSchedule.CleaningTasks, reservation);
+        cleaningTask.Should().NotBeNull();
+    }
+
     static CleaningTask? GetCleaningTaskForReservation(IEnumerable<CleaningTask> cleaningTasks, Reservation reservation) =>
         cleaningTasks.FirstOrDefault(task => task.ResourceId == reservation.ResourceId && task.Begin == reservation.Extent.Ends().At(checkoutTime));
 }

@@ -20,7 +20,7 @@ public static class UpdateOwnerOrderHandler
         let today = dateProvider.GetDate(command.Timestamp)
         from context3 in TryCancelOwnerReservations(options, command.Timestamp, command.UserId, command.CancelledReservations, today, context2, order)
         let context4 = ScheduleCleaning(options, context3)
-        let context5 = TryMakeHistoryOwnerOrders(dateProvider, command.Timestamp, today, GetCancelledOrderId(command), context4)
+        let context5 = TryMakeHistoryOwnerOrders(dateProvider, options, command.Timestamp, today, GetCancelledOrderId(command), context4)
         from result in CreateOrderDetails(options, today, context5, command.OrderId)
         from _ in WriteContext(context5)
         select result;

@@ -9,6 +9,8 @@ namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests;
 
 public class OwnerHistoryOrder : IClassFixture<SessionFixture>
 {
+    const int additionalDaysWhereCleaningCanBeDone = 3;
+
     public OwnerHistoryOrder(SessionFixture session) => Session = session;
 
     SessionFixture Session { get; }
@@ -18,7 +20,7 @@ public class OwnerHistoryOrder : IClassFixture<SessionFixture>
     public async Task OwnerOrderBecomesHistoryOrder()
     {
         var ownerOrder = await Session.PlaceOwnerOrderAsync(new TestReservation(TestData.BanquetFacilities.ResourceId, 2));
-        var days = (ownerOrder.Reservations!.Single().Extent.Ends() - Session.CurrentDate).Days + 1;
+        var days = (ownerOrder.Reservations!.Single().Extent.Ends() - Session.CurrentDate).Days + 1 + additionalDaysWhereCleaningCanBeDone;
         Session.NowOffset += Period.FromDays(days);
         var order = await Session.GetOrderAsync(ownerOrder.OrderId);
         order.IsHistoryOrder.Should().BeTrue();
@@ -30,7 +32,7 @@ public class OwnerHistoryOrder : IClassFixture<SessionFixture>
         var ownerOrder = await Session.PlaceOwnerOrderAsync(
             new TestReservation(TestData.BanquetFacilities.ResourceId, 2),
             new TestReservation(TestData.BanquetFacilities.ResourceId, 2));
-        var days = (ownerOrder.Reservations!.First().Extent.Ends() - Session.CurrentDate).Days + 1;
+        var days = (ownerOrder.Reservations!.First().Extent.Ends() - Session.CurrentDate).Days + 1 + additionalDaysWhereCleaningCanBeDone;
         Session.NowOffset += Period.FromDays(days);
         var order = await Session.GetOrderAsync(ownerOrder.OrderId);
         order.IsHistoryOrder.Should().BeFalse();
@@ -42,7 +44,7 @@ public class OwnerHistoryOrder : IClassFixture<SessionFixture>
         var ownerOrder = await Session.PlaceOwnerOrderAsync(
             new TestReservation(TestData.BanquetFacilities.ResourceId, 2),
             new TestReservation(TestData.BanquetFacilities.ResourceId, 2));
-        var days = (ownerOrder.Reservations!.Last().Extent.Ends() - Session.CurrentDate).Days + 1;
+        var days = (ownerOrder.Reservations!.Last().Extent.Ends() - Session.CurrentDate).Days + 1 + additionalDaysWhereCleaningCanBeDone;
         Session.NowOffset += Period.FromDays(days);
         var order = await Session.GetOrderAsync(ownerOrder.OrderId);
         order.IsHistoryOrder.Should().BeTrue();

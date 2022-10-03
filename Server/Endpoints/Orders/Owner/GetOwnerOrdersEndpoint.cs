@@ -5,6 +5,7 @@ using LanguageExt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NodaTime;
 using System;
 using System.Collections.Generic;
@@ -20,11 +21,13 @@ public class GetOwnerOrdersEndpoint : EndpointBaseAsync.WithoutRequest.WithActio
     readonly Func<Instant> getTimestamp;
     readonly ILogger logger;
 
-    public GetOwnerOrdersEndpoint(IPersistenceContextFactory contextFactory, IDateProvider dateProvider, ILogger<GetOwnerOrdersEndpoint> logger)
+    public GetOwnerOrdersEndpoint(
+        IPersistenceContextFactory contextFactory, IDateProvider dateProvider, ILogger<GetOwnerOrdersEndpoint> logger,
+        IOptionsSnapshot<OrderingOptions> options)
     {
         this.logger = logger;
         getTimestamp = () => dateProvider.Now;
-        getOwnerOrders = timestamp => GetOwnerOrdersHandler.Handle(contextFactory, dateProvider, timestamp);
+        getOwnerOrders = timestamp => GetOwnerOrdersHandler.Handle(contextFactory, dateProvider, options.Value, timestamp);
     }
 
     [HttpGet("orders/owner")]

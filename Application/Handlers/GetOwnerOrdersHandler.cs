@@ -11,10 +11,10 @@ namespace Frederikskaj2.Reservations.Application;
 public static class GetOwnerOrdersHandler
 {
     public static EitherAsync<Failure, IEnumerable<Shared.Core.Order>> Handle(
-        IPersistenceContextFactory contextFactory, IDateProvider dateProvider, Instant timestamp) =>
+        IPersistenceContextFactory contextFactory, IDateProvider dateProvider, OrderingOptions options, Instant timestamp) =>
         from context1 in ReadOwnerOrdersContext(CreateContext(contextFactory))
         let today = dateProvider.GetDate(timestamp)
-        from context2 in MakeHistoryOwnerOrders(dateProvider, today, context1)
+        from context2 in MakeHistoryOwnerOrders(dateProvider, options, today, context1)
         let orders = context2.Items<Order>()
         from users in ReadUsers(context2, orders.Map(order => order.UserId).Distinct())
         select OwnerOrderFactory.CreateOwnerOrders(today, orders, users);

@@ -42,17 +42,17 @@ static class CleaningScheduleFunctions
     static EitherAsync<Failure, IEnumerable<ReservationWithOrder>> GetCleaningReservations(
         IPersistenceContext context, OrderingOptions options, LocalDate date) =>
         from orders in ReadOrders(context)
-        let confirmedReservations = GetConfirmedReservations(orders, date)
+        let confirmedReservations = GetConfirmedReservations(options, orders, date)
         let endDate = date.PlusDays(options.CleaningSchedulePeriodInDays)
         select confirmedReservations.Filter(reservation => reservation.Reservation.Extent.Ends() <= endDate);
 
-    static IEnumerable<ReservationWithOrder> GetConfirmedReservations(IEnumerable<Order> orders, LocalDate date) =>
+    static IEnumerable<ReservationWithOrder> GetConfirmedReservations(OrderingOptions options, IEnumerable<Order> orders, LocalDate date) =>
         orders
             .Bind(order => order.Reservations
                 .Map((index, reservation) => new ReservationWithOrder(reservation, order, index))
                 .Filter(reservationWithOrder =>
                     reservationWithOrder.Reservation.Status is ReservationStatus.Confirmed or ReservationStatus.Settled &&
-                    reservationWithOrder.Reservation.Extent.Ends() >= date));
+                    reservationWithOrder.Reservation.Extent.Ends().PlusDays(options.AdditionalDaysWhereCleaningCanBeDone) >= date));
 
     static IEnumerable<CleaningTask> GetCleaningTasks(IEnumerable<ReservationWithOrder> reservations) =>
         reservations

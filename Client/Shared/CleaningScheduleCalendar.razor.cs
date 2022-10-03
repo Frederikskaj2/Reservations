@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Client.Shared;
 
@@ -19,16 +20,20 @@ public partial class CleaningScheduleCalendar
     LocalDate lastCalendarDate;
     List<(LocalDate Date, string Value, string Text)>? months;
     LocalDate? nextMonth;
+    OrderingOptions? options;
     List<Resource>? orderedResources;
     LocalDate? previousMonth;
 
     [Inject] public CultureInfo CultureInfo { get; set; } = null!;
+    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
     [Inject] public IDateProvider DateProvider { get; set; } = null!;
     [Inject] public Formatter Formatter { get; set; } = null!;
 
     [Parameter] public IEnumerable<CleaningTask>? CleaningTasks { get; set; }
     [Parameter] public IReadOnlyDictionary<ResourceId, Resource>? Resources { get; set; }
     [Parameter] public IEnumerable<ReservedDay>? ReservedDays { get; set; }
+
+    protected override async Task OnInitializedAsync() => options = await DataProvider.GetOptionsAsync();
 
     protected override void OnParametersSet()
     {
@@ -54,8 +59,9 @@ public partial class CleaningScheduleCalendar
         var today = DateProvider.Today;
         var firstMonday = month.PreviousMonday();
         var lastSunday = month.PlusMonths(1).PlusDays(-1).PreviousMonday().PlusDays(6);
-
-        var fromDate = today < firstMonday.PlusDays(-1) ? firstMonday.PlusDays(-1) : today.PlusDays(-1);
+        var fromDate = today < firstMonday
+            ? firstMonday.PlusDays(-options!.AdditionalDaysWhereCleaningCanBeDone)
+            : today.PlusDays(-options!.AdditionalDaysWhereCleaningCanBeDone);
         var toDate = lastSunday.PlusDays(1);
         var intervals = CleaningTasks!
             .Where(task => fromDate <= task.End.Date && task.Begin.Date <= toDate)
@@ -73,7 +79,6 @@ public partial class CleaningScheduleCalendar
             .ToDictionary(
                 grouping => grouping.Key,
                 grouping => grouping.Select(day => day.ResourceId).ToHashSet());
-
         var days = Enumerable.Range(0, Period.Between(firstMonday.PlusDays(-1), lastSunday.PlusDays(1), PeriodUnits.Days).Days + 1)
             .Select(i => firstMonday.PlusDays(i - 1))
             .Select(date => new CleaningScheduleDay(

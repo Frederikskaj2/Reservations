@@ -9,68 +9,77 @@ namespace Frederikskaj2.Reservations.Application;
 
 static class OwnerOrderFunctions
 {
-    public static EitherAsync<Failure, IPersistenceContext> MakeHistoryOwnerOrder(IDateProvider dateProvider, LocalDate today, IPersistenceContext context) =>
-        MakeHistoryOwnerOrder(dateProvider, today, context, context.Item<Order>());
+    public static EitherAsync<Failure, IPersistenceContext> MakeHistoryOwnerOrder(
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context) =>
+        MakeHistoryOwnerOrder(dateProvider, options, today, context, context.Item<Order>());
 
     static EitherAsync<Failure, IPersistenceContext> MakeHistoryOwnerOrder(
-        IDateProvider dateProvider, LocalDate today, IPersistenceContext context, Order order) =>
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context, Order order) =>
         order.Flags.HasFlag(OrderFlags.IsOwnerOrder)
-            ? TryMakeHistoryOwnerOrder(dateProvider, today, context, order)
+            ? TryMakeHistoryOwnerOrder(dateProvider, options, today, context, order)
             : RightAsync<Failure, IPersistenceContext>(context);
 
     static EitherAsync<Failure, IPersistenceContext> TryMakeHistoryOwnerOrder(
-        IDateProvider dateProvider, LocalDate today, IPersistenceContext context, Order order) =>
-        WriteContext(TryMakeImplicitHistoryOrder(dateProvider, today, context, order));
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context, Order order) =>
+        WriteContext(TryMakeImplicitHistoryOrder(dateProvider, options, today, context, order));
 
     public static IPersistenceContext TryMakeHistoryOwnerOrders(
-        IDateProvider dateProvider, Instant timestamp, LocalDate today, Option<OrderId> orderWithCancellations, IPersistenceContext context) =>
+        IDateProvider dateProvider, OrderingOptions options, Instant timestamp, LocalDate today, Option<OrderId> orderWithCancellations, IPersistenceContext context) =>
         TryMakeImplicitHistoryOrders(
             dateProvider,
+            options,
             today,
-            TryMakeExplicitHistoryOrder(timestamp, today, orderWithCancellations, context));
+            TryMakeExplicitHistoryOrder(options, timestamp, today, orderWithCancellations, context));
 
     static IPersistenceContext TryMakeExplicitHistoryOrder(
-        Instant timestamp, LocalDate today, Option<OrderId> orderWithCancellations, IPersistenceContext context) =>
+        OrderingOptions options, Instant timestamp, LocalDate today, Option<OrderId> orderWithCancellations, IPersistenceContext context) =>
         orderWithCancellations.Case switch
         {
-            OrderId orderId => TryMakeExplicitHistoryOrder(timestamp, today, context, context.Order(orderId)),
+            OrderId orderId => TryMakeExplicitHistoryOrder(options, timestamp, today, context, context.Order(orderId)),
             _ => context
         };
 
-    static IPersistenceContext TryMakeImplicitHistoryOrders(IDateProvider dateProvider, LocalDate today, IPersistenceContext context) =>
-        TryMakeImplicitHistoryOrders(dateProvider, today, context, context.Items<Order>().ToSeq());
+    static IPersistenceContext TryMakeImplicitHistoryOrders(
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context) =>
+        TryMakeImplicitHistoryOrders(dateProvider, options, today, context, context.Items<Order>().ToSeq());
 
-    static IPersistenceContext TryMakeImplicitHistoryOrders(IDateProvider dateProvider, LocalDate today, IPersistenceContext context, Seq<Order> orders) =>
+    static IPersistenceContext TryMakeImplicitHistoryOrders(IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context, Seq<Order> orders) =>
         orders.Match(
             () => context,
-            (head, tail) => TryMakeImplicitHistoryOrders(dateProvider, today, context, head, tail));
+            (head, tail) => TryMakeImplicitHistoryOrders(dateProvider, options, today, context, head, tail));
 
     static IPersistenceContext TryMakeImplicitHistoryOrders(
-        IDateProvider dateProvider, LocalDate today, IPersistenceContext context, Order order, Seq<Order> orders) =>
-        TryMakeImplicitHistoryOrders(dateProvider, today, TryMakeImplicitHistoryOrder(dateProvider, today, context, order), orders);
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context, Order order, Seq<Order> orders) =>
+        TryMakeImplicitHistoryOrders(dateProvider, options, today, TryMakeImplicitHistoryOrder(dateProvider, options, today, context, order), orders);
 
-    static IPersistenceContext TryMakeImplicitHistoryOrder(IDateProvider dateProvider, LocalDate today, IPersistenceContext context, Order order) =>
-        ShouldBeHistoryOrder(today, order) ? MakeImplicitHistoryOrder(dateProvider, context, order) : context;
+    static IPersistenceContext TryMakeImplicitHistoryOrder(
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context, Order order) =>
+        ShouldBeHistoryOrder(options, today, order) ? MakeImplicitHistoryOrder(dateProvider, context, order) : context;
 
-    public static EitherAsync<Failure, IPersistenceContext> MakeHistoryOwnerOrders(IDateProvider dateProvider, LocalDate today, IPersistenceContext context) =>
-        WriteContext(TryMakeHistoryOrders(dateProvider, today, context, context.Items<Order>().ToSeq()));
+    public static EitherAsync<Failure, IPersistenceContext> MakeHistoryOwnerOrders(
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context) =>
+        WriteContext(TryMakeHistoryOrders(dateProvider, options, today, context, context.Items<Order>().ToSeq()));
 
-    static IPersistenceContext TryMakeHistoryOrders(IDateProvider dateProvider, LocalDate today, IPersistenceContext context, Seq<Order> orders) =>
+    static IPersistenceContext TryMakeHistoryOrders(
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context, Seq<Order> orders) =>
         orders.Match(
             () => context,
-            (head, tail) => TryMakeHistoryOrders(dateProvider, today, context, head, tail));
+            (head, tail) => TryMakeHistoryOrders(dateProvider, options, today, context, head, tail));
 
-    static IPersistenceContext TryMakeHistoryOrders(IDateProvider dateProvider, LocalDate today, IPersistenceContext context, Order order, Seq<Order> orders) =>
-        TryMakeHistoryOrders(dateProvider, today, TryMakeHistoryOrder(dateProvider, today, context, order), orders);
+    static IPersistenceContext TryMakeHistoryOrders(
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context, Order order, Seq<Order> orders) =>
+        TryMakeHistoryOrders(dateProvider, options, today, TryMakeHistoryOrder(dateProvider, options, today, context, order), orders);
 
-    static IPersistenceContext TryMakeHistoryOrder(IDateProvider dateProvider, LocalDate today, IPersistenceContext context, Order order) =>
-        ShouldBeHistoryOrder(today, order)
+    static IPersistenceContext TryMakeHistoryOrder(
+        IDateProvider dateProvider, OrderingOptions options, LocalDate today, IPersistenceContext context, Order order) =>
+        ShouldBeHistoryOrder(options, today, order)
             ? MakeImplicitHistoryOrder(GetLatestReservationEndTimestamp(dateProvider, order), context, order.OrderId)
             : context;
 
-    static bool ShouldBeHistoryOrder(LocalDate today, Order order) =>
+    static bool ShouldBeHistoryOrder(OrderingOptions options, LocalDate today, Order order) =>
         order.Flags.HasFlag(OrderFlags.IsOwnerOrder) && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) &&
-        order.Reservations.All(reservation => reservation.Status is ReservationStatus.Cancelled || reservation.Extent.Ends() < today);
+        order.Reservations.All(reservation =>
+            reservation.Status is ReservationStatus.Cancelled || reservation.Extent.Ends().PlusDays(options.AdditionalDaysWhereCleaningCanBeDone) < today);
 
     static Instant GetLatestReservationEndTimestamp(IDateProvider dateProvider, Order order) =>
         dateProvider.GetMidnight(
@@ -79,8 +88,9 @@ static class OwnerOrderFunctions
                 .OrderByDescending(reservation => reservation.Extent.Ends())
                 .First().Extent.Ends());
 
-    static IPersistenceContext TryMakeExplicitHistoryOrder(Instant timestamp, LocalDate today, IPersistenceContext context, Order order) =>
-        ShouldBeHistoryOrder(today, order) ? MakeExplicitHistoryOrder(timestamp, context, order.OrderId) : context;
+    static IPersistenceContext TryMakeExplicitHistoryOrder(
+        OrderingOptions options, Instant timestamp, LocalDate today, IPersistenceContext context, Order order) =>
+        ShouldBeHistoryOrder(options, today, order) ? MakeExplicitHistoryOrder(timestamp, context, order.OrderId) : context;
 
     static IPersistenceContext MakeExplicitHistoryOrder(Instant timestamp, IPersistenceContext context, OrderId orderId) =>
         context.UpdateItem<Order>(Order.GetId(orderId), order => MakeExplicitHistoryOrder(timestamp, order));
