@@ -80,6 +80,8 @@ static class PlaceUserOrderFunctions
         user
             .UpdateApartmentId(command.Timestamp, command.ApartmentId)
             .SetAccountNumber(command.Timestamp, command.AccountNumber, user.UserId)
+            .UpdateFullName(command.Timestamp, command.FullName, user.UserId)
+            .UpdatePhone(command.Timestamp, command.Phone, user.UserId)
             .AddOrderToUser(command.Timestamp, orderId);
 
     static User AddOrderToUser(this User user, Instant timestamp, OrderId orderId) =>
