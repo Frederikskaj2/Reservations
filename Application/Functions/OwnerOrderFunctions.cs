@@ -99,7 +99,7 @@ static class OwnerOrderFunctions
         order with
         {
             Flags = order.Flags | OrderFlags.IsHistoryOrder,
-            Audits = order.Audits.Add(new OrderAudit(timestamp, null, OrderAuditType.FinishOrder))
+            Audits = order.Audits.Add(new(timestamp, null, OrderAuditType.FinishOrder))
         };
 
     static IPersistenceContext MakeImplicitHistoryOrder(IDateProvider dateProvider, IPersistenceContext context, Order order) =>
@@ -112,7 +112,7 @@ static class OwnerOrderFunctions
         order with
         {
             Flags = order.Flags | OrderFlags.IsHistoryOrder,
-            Audits = order.Audits.Add(new OrderAudit(timestamp, null, OrderAuditType.FinishOrder))
+            Audits = order.Audits.Add(new(timestamp, null, OrderAuditType.FinishOrder))
         };
 
     public static EitherAsync<Failure, IPersistenceContext> UpdateOwnerOrder(UpdateOwnerOrderCommand command, IPersistenceContext context) =>
@@ -135,7 +135,7 @@ static class OwnerOrderFunctions
         order with
         {
             Owner = new(description),
-            Audits = order.Audits.Add(new OrderAudit(timestamp, userId, OrderAuditType.UpdateDescription))
+            Audits = order.Audits.Add(new(timestamp, userId, OrderAuditType.UpdateDescription))
         };
 
     static IPersistenceContext TryUpdateCleaning(UpdateOwnerOrderCommand command, IPersistenceContext context) =>
@@ -158,7 +158,7 @@ static class OwnerOrderFunctions
         order with
         {
             Flags = GetFlags(order.Flags, isCleaningRequired),
-            Audits = order.Audits.Add(new OrderAudit(timestamp, userId, OrderAuditType.UpdateCleaning))
+            Audits = order.Audits.Add(new(timestamp, userId, OrderAuditType.UpdateCleaning))
         };
 
     static OrderFlags GetFlags(OrderFlags flags, bool isCleaningRequired) =>

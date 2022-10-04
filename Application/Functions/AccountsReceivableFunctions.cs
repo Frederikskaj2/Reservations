@@ -97,7 +97,7 @@ static class AccountsReceivableFunctions
         order with
         {
             Reservations = order.Reservations.Map(TryConfirmReservation).ToSeq(),
-            Audits = order.Audits.Add(new OrderAudit(timestamp, updateByUserId, OrderAuditType.ConfirmOrder, transactionId))
+            Audits = order.Audits.Add(new(timestamp, updateByUserId, OrderAuditType.ConfirmOrder, transactionId))
         };
 
     static Reservation TryConfirmReservation(Reservation reservation) =>

@@ -42,6 +42,7 @@ public sealed partial class OrderAudits : IDisposable
         OrderAuditType.UpdateDescription => "Ændring af beskrivelse",
         OrderAuditType.UpdateCleaning => "Ændring af rengøring",
         OrderAuditType.FinishOrder => "Afslutning af bestilling",
+        OrderAuditType.UpdateReservations => "Ændring af reservationer",
         _ => "?"
     };
 }

@@ -15,24 +15,24 @@ using System.Threading.Tasks;
 namespace Frederikskaj2.Reservations.Server;
 
 [Authorize(Roles = nameof(Roles.OrderHandling))]
-public class UpdateUserOrderEndpoint : EndpointBaseAsync.WithRequest<UpdateUserOrderServerRequest>.WithActionResult<OrderDetails>
+public class UpdateUserReservationsEndpoint : EndpointBaseAsync.WithRequest<UpdateUserReservationsServerRequest>.WithoutResult
 {
     readonly ILogger logger;
-    readonly Func<UpdateUserOrderCommand, EitherAsync<Failure, OrderDetails>> updateOrder;
-    readonly Func<OrderId, UpdateUserOrderRequest?, UserId, EitherAsync<Failure, UpdateUserOrderCommand>> validateRequest;
+    readonly Func<UpdateUserReservationsCommand, EitherAsync<Failure, Unit>> updateOrder;
+    readonly Func<OrderId, UpdateUserReservationsRequest?, UserId, EitherAsync<Failure, UpdateUserReservationsCommand>> validateRequest;
 
-    public UpdateUserOrderEndpoint(
-        IPersistenceContextFactory contextFactory, IDateProvider dateProvider, IEmailService emailService, ILogger<UpdateUserOrderEndpoint> logger,
+    public UpdateUserReservationsEndpoint(
+        IPersistenceContextFactory contextFactory, IDateProvider dateProvider, IEmailService emailService, ILogger<UpdateUserReservationsEndpoint> logger,
         IOptionsSnapshot<OrderingOptions> options)
     {
         this.logger = logger;
         validateRequest = (orderId, request, updatedByUserid) =>
-            Validator.ValidateUpdateUserOrder(dateProvider, orderId, request, updatedByUserid).ToAsync();
-        updateOrder = command => UpdateUserOrderHandler.Handle(contextFactory, dateProvider, emailService, options.Value, command);
+            Validator.ValidateUpdateUserReservations(dateProvider, orderId, request, updatedByUserid).ToAsync();
+        updateOrder = command => UpdateUserReservationsHandler.Handle(contextFactory, dateProvider, emailService, options.Value, command);
     }
 
-    [HttpPatch("orders/user/{orderId:int}")]
-    public override Task<ActionResult<OrderDetails>> HandleAsync([FromRoute] UpdateUserOrderServerRequest request, CancellationToken cancellationToken = default)
+    [HttpPatch("orders/user/{orderId:int}/reservations")]
+    public override Task<ActionResult> HandleAsync([FromRoute] UpdateUserReservationsServerRequest request, CancellationToken cancellationToken = default)
     {
         var either =
             from userId in User.Id().ToEitherAsync(Failure.New(HttpStatusCode.Unauthorized))

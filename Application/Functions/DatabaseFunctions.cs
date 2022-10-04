@@ -122,8 +122,11 @@ static class DatabaseFunctions
 
     public static EitherAsync<Failure, IPersistenceContext> ReadUserAndAllOrdersContext(IPersistenceContext context, UserId userId) =>
         from context1 in ReadUserContext(context, userId)
-        from context2 in MapReadError(context1.ReadItems(context.Query<Order>().Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder))))
+        from context2 in MapReadError(context1.ReadItems(GetAllActiveOrdersQuery(context)))
         select context2;
+
+    static IQuery<Order> GetAllActiveOrdersQuery(IPersistenceContext context) =>
+        context.Query<Order>().Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder));
 
     public static EitherAsync<Failure, IPersistenceContext> ReadUserAndOrdersContext(IPersistenceContext context, UserId userId) =>
         from context1 in ReadUserContext(context, userId)
@@ -136,6 +139,12 @@ static class DatabaseFunctions
     public static EitherAsync<Failure, IPersistenceContext> ReadOrderAndUserContext(IPersistenceContext context, OrderId orderId) =>
         from context1 in ReadOrderContext(context, orderId)
         let order = context1.Item<Order>()
+        from context2 in ReadUserContext(context1, order.UserId)
+        select context2;
+
+    public static EitherAsync<Failure, IPersistenceContext> ReadAllOrdersAndUserFromOrderContext(IPersistenceContext context, OrderId orderId) =>
+        from context1 in MapReadError(context.ReadItems(GetAllActiveOrdersQuery(context)))
+        let order = context1.Order(orderId)
         from context2 in ReadUserContext(context1, order.UserId)
         select context2;
 

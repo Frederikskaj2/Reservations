@@ -39,7 +39,7 @@ public partial class CreditorsPage
             this.apartments = apartments.ToDictionary(apartment => apartment.ApartmentId);
             var response = await ApiClient.GetAsync<IEnumerable<Creditor>>("creditors");
             if (response.IsSuccess)
-                creditors = response.Result!.ToList();
+                creditors = response.Result!.OrderBy(creditor => creditor.UserInformation.ApartmentId?.ToInt32() ?? 999).ToList();
         }
         isInitialized = true;
     }

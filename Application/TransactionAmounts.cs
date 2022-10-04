@@ -4,13 +4,21 @@ namespace Frederikskaj2.Reservations.Application;
 
 static class TransactionAmounts
 {
-    public static AccountAmounts PlaceOrder(Price price, Amount accountsPayable) =>
+    public static AccountAmounts PlaceOrder(Price price, Amount accountsPayableToSpend) =>
         AccountAmounts.Create(
             (Account.Rent, -price.Rent),
             (Account.Cleaning, -price.Cleaning),
-            (Account.AccountsReceivable, price.Total() + accountsPayable),
-            (Account.AccountsPayable, -accountsPayable),
+            (Account.AccountsReceivable, price.Total() + accountsPayableToSpend),
+            (Account.AccountsPayable, -accountsPayableToSpend),
             (Account.Deposits, -price.Deposit));
+
+    public static AccountAmounts UpdateReservations(Price oldPrice, Price newPrice, Amount accountsPayableToSpend) =>
+        AccountAmounts.Create(
+            (Account.Rent, -(newPrice.Rent - oldPrice.Rent)),
+            (Account.Cleaning, -(newPrice.Cleaning - oldPrice.Cleaning)),
+            (Account.AccountsReceivable, newPrice.Total() - oldPrice.Total() + accountsPayableToSpend),
+            (Account.AccountsPayable, -accountsPayableToSpend),
+            (Account.Deposits, -(newPrice.Deposit - oldPrice.Deposit)));
 
     public static AccountAmounts CancelUnpaidReservation(Price price, Amount fee)
     {
@@ -23,16 +31,16 @@ static class TransactionAmounts
             (Account.Deposits, price.Deposit));
     }
 
-    public static AccountAmounts CancelPaidReservation(Price price, Amount fee)
-    {
-        var amountToRefund = price.Total() - fee;
-        return AccountAmounts.Create(
+    public static AccountAmounts CancelPaidReservation(Price price, Amount fee) =>
+        CancelPaidReservation(price, fee, price.Total() - fee);
+
+    static AccountAmounts CancelPaidReservation(Price price, Amount fee, Amount amountToRefund) =>
+        AccountAmounts.Create(
             (Account.Rent, price.Rent),
             (Account.Cleaning, price.Cleaning),
             (Account.CancellationFees, -fee),
             (Account.AccountsPayable, -amountToRefund),
             (Account.Deposits, price.Deposit));
-    }
 
     public static AccountAmounts Settle(Price price, Amount damages) =>
         AccountAmounts.Create(

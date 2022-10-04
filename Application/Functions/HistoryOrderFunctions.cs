@@ -27,7 +27,7 @@ static class HistoryOrderFunctions
         order with
         {
             Flags = GetHistoryOrderFlags(order),
-            Audits = order.Audits.Add(new OrderAudit(timestamp, null, OrderAuditType.FinishOrder))
+            Audits = order.Audits.Add(new(timestamp, null, OrderAuditType.FinishOrder))
         };
 
     static OrderFlags GetHistoryOrderFlags(Order order) =>

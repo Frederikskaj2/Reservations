@@ -4,5 +4,6 @@ public enum TransactionDescriptionType
 {
     None,
     Cancellation,
-    Settlement
+    Settlement,
+    ReservationsUpdate
 }

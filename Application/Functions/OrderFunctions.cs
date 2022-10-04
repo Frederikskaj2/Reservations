@@ -35,6 +35,11 @@ static class OrderFunctions
     public static IEnumerable<Reservation> GetReservations(IEnumerable<Order> orders) =>
         orders.Bind(order => order.Reservations.Filter(reservation => reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed));
 
+    public static IEnumerable<ReservationWithOrder> GetReservationsWithOrders(IEnumerable<Order> orders) =>
+        orders.Bind(order => order.Reservations
+            .Map((index, reservation) => new ReservationWithOrder(reservation, order, index))
+            .Filter(reservationWithOrder => reservationWithOrder.Reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed));
+
     public static IEnumerable<ReservationWithOrder> GetUpcomingReservations(IEnumerable<Order> orders, LocalDate date) =>
         orders.Bind(
             order => order.Reservations

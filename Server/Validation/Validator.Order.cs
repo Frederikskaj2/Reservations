@@ -87,6 +87,20 @@ public static partial class Validator
         return either.MapFailure(HttpStatusCode.UnprocessableEntity);
     }
 
+    public static Either<Failure, UpdateUserReservationsCommand> ValidateUpdateUserReservations(
+        IDateProvider dateProvider, OrderId orderId, UpdateUserReservationsRequest? body, UserId userId)
+    {
+        var either =
+            from request in HasValue(body, "Request body")
+            from reservations in ValidateReservationUpdates(request.Reservations.ToSeq())
+            select new UpdateUserReservationsCommand(
+                dateProvider.Now,
+                userId,
+                orderId,
+                reservations);
+        return either.MapFailure(HttpStatusCode.UnprocessableEntity);
+    }
+
     public static Either<Failure, PayInCommand> ValidatePayIn(
         IDateProvider dateProvider, string? paymentId, PayInRequest? body, UserId createdByUserId)
     {
@@ -152,11 +166,20 @@ public static partial class Validator
             _ => "Resource ID is invalid."
         };
 
+    static Either<string, Seq<ReservationUpdate>> ValidateReservationUpdates(Seq<ReservationUpdateRequest> reservations) =>
+        from seq in IsBoundedCollection(reservations, 1, ValidationRules.MaximumReservationsPerOrder, "Reservations")
+        from models in ValidateAll(seq, ValidateReservationUpdate)
+        select models;
+
+    static Either<string, ReservationUpdate> ValidateReservationUpdate(ReservationUpdateRequest request) =>
+        from _ in IsNotLessThan(request.Extent.Nights, 1, "Nights")
+        select new ReservationUpdate(request.ReservationIndex, request.Extent);
+
     static Either<string, PaymentId> ValidatePaymentId(string? paymentId) =>
         PaymentIdEncoder.IsValid(paymentId) ? PaymentId.FromString(paymentId) : Left("Invalid payment ID.");
 
-    static Seq<Seq<ReservationRequest>> GetAllCombinations(Seq<ReservationRequest> reservations) =>
-        reservations.Match(
+    static Seq<Seq<T>> GetAllCombinations<T>(Seq<T> items) =>
+        items.Match(
             () => Empty,
             seq => seq.Cons(GetAllCombinations(seq.Tail)));
 

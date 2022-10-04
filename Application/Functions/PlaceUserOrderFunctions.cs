@@ -6,6 +6,7 @@ using System.Net;
 using static Frederikskaj2.Reservations.Application.AccountsReceivableFunctions;
 using static Frederikskaj2.Reservations.Application.CleaningScheduleFunctions;
 using static Frederikskaj2.Reservations.Application.TransactionFunctions;
+using static Frederikskaj2.Reservations.Shared.Core.Pricing;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Application;
@@ -37,11 +38,11 @@ static class PlaceUserOrderFunctions
                 command.UserId,
                 AddUserTransaction(
                     UpdateUser(command, AddOrder(context, order), order.OrderId),
-                    CreatePlaceOrderTransaction(today, order, transactionId, GetUserAccountsPayable(context))),
+                    CreatePlaceOrderTransaction(today, order, transactionId, GetAccountsPayableToSpend(context, order))),
                 transactionId));
 
-    static Amount GetUserAccountsPayable(IPersistenceContext context) =>
-        context.Item<User>().Accounts[Account.AccountsPayable];
+    static Amount GetAccountsPayableToSpend(IPersistenceContext context, Order order) =>
+        Amount.Max(-order.Price().Total(), context.Item<User>().Accounts[Account.AccountsPayable]);
 
     static IPersistenceContext AddOrder(IPersistenceContext context, Order order) =>
         context.CreateItem(order, o => Order.GetId(o.OrderId));
@@ -55,17 +56,17 @@ static class PlaceUserOrderFunctions
             command.Timestamp,
             new UserOrder(command.ApartmentId, null, Empty),
             null,
-            CreateReservations(options, holidays, command),
+            CreateReservations(options, holidays, command.Reservations),
             CreateAudit(command, transactionId).Cons());
 
-    static Seq<Reservation> CreateReservations(OrderingOptions options, IReadOnlySet<LocalDate> holidays, PlaceMyOrderCommand command) =>
-        command.Reservations
+    public static Seq<Reservation> CreateReservations(OrderingOptions options, IReadOnlySet<LocalDate> holidays, Seq<ReservationModel> reservations) =>
+        reservations
             .Map(reservation =>
                 new Reservation(
                     reservation.ResourceId,
                     ReservationStatus.Reserved,
                     reservation.Extent,
-                    Pricing.GetPrice(options, holidays, reservation.Extent, reservation.ResourceType),
+                    GetPrice(options, holidays, reservation.Extent, reservation.ResourceType),
                     ReservationEmails.None,
                     null))
             .ToSeq();

@@ -178,7 +178,7 @@ static class CancelReservationsFunctions
         order with
         {
             User = order.User! with { NoFeeCancellationIsAllowedBefore = timestamp.Plus(options.CancellationWithoutFeeDuration) },
-            Audits = order.Audits.Add(new OrderAudit(timestamp, userId, OrderAuditType.AllowCancellationWithoutFee))
+            Audits = order.Audits.Add(new(timestamp, userId, OrderAuditType.AllowCancellationWithoutFee))
         };
 
     static IPersistenceContext DisallowCancellationWithoutFee(Instant timestamp, UserId userId, OrderId orderId, IPersistenceContext context) =>
@@ -188,7 +188,7 @@ static class CancelReservationsFunctions
         order with
         {
             User = order.User! with { NoFeeCancellationIsAllowedBefore = null },
-            Audits = order.Audits.Add(new OrderAudit(timestamp, userId, OrderAuditType.DisallowCancellationWithoutFee))
+            Audits = order.Audits.Add(new(timestamp, userId, OrderAuditType.DisallowCancellationWithoutFee))
         };
 
     public static Seq<Order> GetConfirmedOrders(Seq<Order> originalOrders, Seq<Order> updatedOrders) =>

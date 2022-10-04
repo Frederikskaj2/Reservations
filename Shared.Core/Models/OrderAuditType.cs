@@ -12,5 +12,6 @@ public enum OrderAuditType
     DisallowCancellationWithoutFee,
     UpdateDescription,
     UpdateCleaning,
-    FinishOrder
+    FinishOrder,
+    UpdateReservations
 }

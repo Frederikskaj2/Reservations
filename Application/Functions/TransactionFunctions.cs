@@ -12,7 +12,7 @@ static class TransactionFunctions
         from id in IdGenerator.CreateId(contextFactory, nameof(Transaction))
         select TransactionId.FromInt32(id);
 
-    public static Transaction CreatePlaceOrderTransaction(LocalDate date, Order order, TransactionId transactionId, Amount accountsPayable) =>
+    public static Transaction CreatePlaceOrderTransaction(LocalDate date, Order order, TransactionId transactionId, Amount accountsPayableToSpend) =>
         new(
             transactionId,
             date,
@@ -22,8 +22,7 @@ static class TransactionFunctions
             order.UserId,
             order.OrderId,
             null,
-            PlaceOrder(order.Price(), accountsPayable));
-
+            PlaceOrder(order.Price(), accountsPayableToSpend));
 
     public static Transaction CreateCancelReservationTransaction(
         Instant timestamp, UserId userId, LocalDate date, Order order, Seq<Reservation> cancelledReservations, TransactionId transactionId, Amount fee) =>
@@ -45,6 +44,20 @@ static class TransactionFunctions
 
     static Price GetCancelledReservationsPrice(Seq<Reservation> cancelledReservations) =>
         cancelledReservations.Fold(new Price(), (sum, reservation) => sum + reservation.Price!);
+
+    public static Transaction CreateUpdateReservationsTransaction(
+        Instant timestamp, UserId userId, LocalDate date, Order oldOrder, Order newOrder, Seq<UpdatedReservation> reservations, TransactionId transactionId,
+        Amount accountsPayableToSpend) =>
+        new(
+            transactionId,
+            date,
+            userId,
+            timestamp,
+            Activity.UpdateOrder,
+            oldOrder.UserId,
+            oldOrder.OrderId,
+            CreateReservationsUpdateDescription(reservations.Map(reservation => new ReservedDay(reservation.Extent.Date, reservation.ResourceId))),
+            UpdateReservations(oldOrder.Price(), newOrder.Price(), accountsPayableToSpend));
 
     public static Transaction CreatePayInTransaction(PayInCommand command, UserId userId, TransactionId transactionId, Amount excessAmount) =>
         new(

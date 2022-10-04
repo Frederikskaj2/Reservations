@@ -28,6 +28,19 @@ static class ReservationValidationFunctions
             .Map(_ => unit)
             .ToAsync();
 
+    public static EitherAsync<Failure, Unit> ValidateReservationsCanBeUpdated(Order order) =>
+        // TODO: Validate that at least one reservation is updated.
+        !order.Flags.HasFlag(OrderFlags.IsOwnerOrder) && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder)
+            ? unit
+            : Failure.New(HttpStatusCode.Forbidden, $"Reservations cannot be updated on order {order.OrderId}.");
+
+    public static EitherAsync<Failure, Unit> ValidateReservationsCheckingConflicts(
+        IEnumerable<Reservation> existingReservations, Seq<ReservationModel> reservations) =>
+        reservations.Map(reservation => ValidateNoConflicts(reservation, existingReservations))
+            .Traverse(identity)
+            .Map(_ => unit)
+            .ToAsync();
+
     static Either<Failure, Unit> ValidateReservation(
         OrderingOptions options, Func<ReservationModel, Either<Failure, Unit>> validateReservationDuration, LocalDate today,
         IEnumerable<Reservation> existingReservations, ReservationModel reservation) =>
