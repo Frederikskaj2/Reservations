@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Frederikskaj2.Reservations.Shared.Core.ReservationPolicies;
 
 namespace Frederikskaj2.Reservations.Client.Pages;
 
@@ -44,7 +45,7 @@ public partial class CalendarPage
     }
 
     bool IsResourceAvailable(ResourceId resourceId, IReadOnlySet<LocalDate> reservedDays, LocalDate today, LocalDate date) =>
-        ReservationPolicies.IsResourceAvailableToUser(options!, DataProvider.Holidays, reservedDays, today, date, resources![resourceId].Type);
+        IsResourceAvailableToUser(options!, DataProvider.Holidays, reservedDays, today, date, resources![resourceId].Type);
 
     void MakeReservation((ResourceId, LocalDate) tuple)
     {
@@ -58,10 +59,8 @@ public partial class CalendarPage
             .Select(reservedDay => reservedDay.Date)
             .ToList();
         // Automatically adjust the date to a previous date to allow the user to reserve despite a minimum duration of more than one night.
-        var adjustedDate =
-            ReservationPolicies.GetReservationDateToAllowReservation(DataProvider.Holidays, resourceReservedDays, date, resources![resourceId].Type);
-        var (minimumDays, maximumDays) =
-            ReservationPolicies.GetUserAllowedNights(options!, DataProvider.Holidays, resourceReservedDays, adjustedDate, resource.Type);
+        var adjustedDate = GetReservationDateToAllowReservation(DataProvider.Holidays, resourceReservedDays, date, resources![resourceId].Type);
+        var (minimumDays, maximumDays) = GetUserAllowedNights(options!, DataProvider.Holidays, resourceReservedDays, adjustedDate, resource.Type);
         // If the date was adjusted to previous day ensure that the original date always is included in the extent.
         minimumDays = Math.Max(minimumDays, (date - adjustedDate).Days + 1);
         reservationDialog.Options = options;

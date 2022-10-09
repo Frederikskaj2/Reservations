@@ -2,6 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Frederikskaj2.Reservations.Shared.Core.HighPricePolicy;
+using static System.Linq.Enumerable;
+using static System.Math;
 
 namespace Frederikskaj2.Reservations.Shared.Core;
 
@@ -21,7 +24,7 @@ public static class ReservationPolicies
         IReadOnlySet<LocalDate> holidays, IEnumerable<LocalDate> reservedDays, LocalDate date, ResourceType resourceType)
     {
         var minimumAllowedNights = GetMinimumAllowedNightsForUser(holidays, date, resourceType);
-        var firstAllowedExtent = Enumerable.Range(0, minimumAllowedNights)
+        var firstAllowedExtent = Range(0, minimumAllowedNights)
             .Select(i => new Extent(date.PlusDays(-i), minimumAllowedNights))
             .First(extent => reservedDays.All(reservedDate => !extent.Contains(reservedDate)));
         return firstAllowedExtent.Date;
@@ -74,7 +77,7 @@ public static class ReservationPolicies
     static bool IsReservationPossibleForUser(IReadOnlySet<LocalDate> holidays, IEnumerable<LocalDate> reservedDays, LocalDate date, ResourceType resourceType)
     {
         var minimumAllowedNights = GetMinimumAllowedNightsForUser(holidays, date, resourceType);
-        return Enumerable.Range(0, minimumAllowedNights)
+        return Range(0, minimumAllowedNights)
             .Select(i => new Extent(date.PlusDays(-i), minimumAllowedNights))
             .Any(extent => reservedDays.All(reservedDate => !extent.Contains(reservedDate)));
     }
@@ -82,7 +85,7 @@ public static class ReservationPolicies
     static bool IsReservationPossibleForOwner(IEnumerable<LocalDate> reservedDays, LocalDate date)
     {
         const int minimumAllowedNights = 1;
-        return Enumerable.Range(0, minimumAllowedNights)
+        return Range(0, minimumAllowedNights)
             .Select(i => new Extent(date.PlusDays(-i), minimumAllowedNights))
             .Any(extent => reservedDays.All(reservedDate => !extent.Contains(reservedDate)));
     }
@@ -103,19 +106,22 @@ public static class ReservationPolicies
 
     static int GetBanquetFacilitiesMinimumNights(IReadOnlySet<LocalDate> holidays, Extent reservation)
     {
-        var isHighPrice = Enumerable.Range(0, reservation.Nights)
+        var isHighPriceDayGovernedByMinimumRule = Range(0, reservation.Nights)
             .Select(i => reservation.Date.PlusDays(i))
-            .Any(day => HighPricePolicy.IsHighPriceDay(day, holidays));
-        return isHighPrice ? banquetFacilitiesHighPriceMinimumNights : 1;
+            .Any(day => IsHighPriceDayGovernedByMinimumRule(holidays, day));
+        return isHighPriceDayGovernedByMinimumRule ? banquetFacilitiesHighPriceMinimumNights : 1;
     }
 
     static int GetMinimumAllowedNightsForUser(IReadOnlySet<LocalDate> holidays, LocalDate date, ResourceType resourceType) =>
         resourceType switch
         {
             ResourceType.Bedroom => 1,
-            ResourceType.BanquetFacilities => HighPricePolicy.IsHighPriceDay(date, holidays) ? banquetFacilitiesHighPriceMinimumNights : 1,
+            ResourceType.BanquetFacilities => IsHighPriceDayGovernedByMinimumRule(holidays, date) ? banquetFacilitiesHighPriceMinimumNights : 1,
             _ => throw new ArgumentException("Invalid resource type.", nameof(resourceType))
         };
+
+    static bool IsHighPriceDayGovernedByMinimumRule(IReadOnlySet<LocalDate> holidays, LocalDate date) =>
+        IsHighPriceDay(date, holidays) && IsHighPriceDay(date.PlusDays(1), holidays);
 
     static int GetMaximumAllowedNights(OrderingOptions options, IEnumerable<LocalDate> reservedDays, LocalDate date)
     {
@@ -123,7 +129,7 @@ public static class ReservationPolicies
             .OrderBy(reservedDay => reservedDay)
             .FirstOrDefault(reservedDay => reservedDay > date);
         return nextReservedDay != default
-            ? Math.Min((nextReservedDay - date).Days, options.MaximumAllowedReservationNights)
+            ? Min((nextReservedDay - date).Days, options.MaximumAllowedReservationNights)
             : options.MaximumAllowedReservationNights;
     }
 }

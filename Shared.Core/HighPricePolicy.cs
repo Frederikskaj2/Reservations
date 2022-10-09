@@ -9,9 +9,7 @@ public static class HighPricePolicy
         IsHighPriceDayOfWeek(date) || IsHolidayOrDayBeforeHoliday(date, holidays);
 
     static bool IsHighPriceDayOfWeek(LocalDate date) =>
-        date.DayOfWeek == IsoDayOfWeek.Friday
-        || date.DayOfWeek == IsoDayOfWeek.Saturday
-        || date.DayOfWeek == IsoDayOfWeek.Sunday;
+        date.DayOfWeek is IsoDayOfWeek.Friday or IsoDayOfWeek.Saturday or IsoDayOfWeek.Sunday;
 
     static bool IsHolidayOrDayBeforeHoliday(LocalDate date, IReadOnlySet<LocalDate> holidays)
         => holidays.Contains(date) || holidays.Contains(date.PlusDays(1));
