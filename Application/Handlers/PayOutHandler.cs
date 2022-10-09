@@ -15,7 +15,7 @@ public static class PayOutHandler
         from context2 in PayOut(command, context1)
         let user = context2.Item<User>()
         from context3 in TryDeleteUser(emailService, context2, command.Timestamp, command.AdministratorUserId)
-        from _1 in DatabaseFunctions.WriteContext(context3)
+        from _1 in WriteContext(context3)
         from _2 in SendPayOutEmail(emailService, user, command.Amount)
         select CreateCreditor(user);
 }

@@ -23,7 +23,7 @@ public static class UpdateUserOrderHandler
         let tuple = TryAllowCancellationWithoutFee(
             options, command.Timestamp, command.AdministratorUserId, command.AllowCancellationWithoutFee, order, context3)
         from contextWithPossiblyDeletedUser in TryDeleteUser(emailService, tuple.Context, command.Timestamp, order.UserId)
-        from _1 in DatabaseFunctions.WriteContext(contextWithPossiblyDeletedUser)
+        from _1 in WriteContext(contextWithPossiblyDeletedUser)
         from _2 in SendReservationsCancelledEmail(emailService, command.OrderId, command.CancelledReservations, tuple.Context)
         from _3 in SendOrdersConfirmedEmail(emailService, context1, tuple.Context)
         from _4 in SendNoFeeCancellationIsAllowed(

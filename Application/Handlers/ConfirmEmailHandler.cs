@@ -13,6 +13,6 @@ public static class ConfirmEmailHandler
         from _1 in ParseToken(tokenProvider, command.Timestamp, command.Token, userEmail.UserId)
         from context1 in ReadUserContext(contextFactory, userEmail.UserId)
         let context2 = context1.UpdateItem<User>(User.GetId(userEmail.UserId), u => ConfirmUserEmail(u, command.Email, command.Timestamp))
-        from _2 in WriteContext(context2)
+        from _2 in ConfirmEmailWriteContext(context2)
         select unit;
 }

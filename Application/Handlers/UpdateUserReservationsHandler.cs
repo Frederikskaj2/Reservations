@@ -26,7 +26,7 @@ public static class UpdateUserReservationsHandler
         from _2 in ValidateReservationsCheckingConflicts(otherExistingReservations.Map(reservationWithOrder => reservationWithOrder.Reservation), reservations)
         from transactionId in CreateTransactionId(contextFactory)
         from context2 in UpdateOrder(options, dateProvider.Holidays, command, today, context1, transactionId)
-        from _3 in DatabaseFunctions.WriteContext(context2)
+        from _3 in WriteContext(context2)
         from _4 in SendOrdersConfirmedEmail(emailService, context1, context2)
         select unit;
 

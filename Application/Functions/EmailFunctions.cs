@@ -135,6 +135,18 @@ static class EmailFunctions
                         FullName = user.FullName
                     })));
 
+    public static EitherAsync<Failure, IEnumerable<EmailUser>> ReadEmailUsers(IPersistenceContext context, EmailSubscriptions subscriptions) =>
+        MapReadError(
+            context.Untracked.ReadItems(
+                context.Query<User>()
+                    .Where(user => user.EmailSubscriptions.HasFlag(subscriptions))
+                    .ProjectTo(user => new EmailUser
+                    {
+                        UserId = user.UserId,
+                        Email = user.Emails[0].Email,
+                        FullName = user.FullName
+                    })));
+
     public static EitherAsync<Failure<ConfirmEmailError>, UserEmail> ReadUserEmailHideNotFoundStatus(
         IPersistenceContextFactory contextFactory, EmailAddress email) =>
         MapReadErrorHideNotFound(CreateContext(contextFactory).Untracked.ReadItem<UserEmail>(EmailAddress.NormalizeEmail(email)));
@@ -142,7 +154,7 @@ static class EmailFunctions
     public static EitherAsync<Failure<ConfirmEmailError>, IPersistenceContext> ReadUserContext(IPersistenceContextFactory contextFactory, UserId userId) =>
         MapReadErrorHideNotFound(CreateContext(contextFactory).ReadItem<User>(User.GetId(userId)));
 
-    public static EitherAsync<Failure<ConfirmEmailError>, IPersistenceContext> WriteContext(IPersistenceContext context) =>
+    public static EitherAsync<Failure<ConfirmEmailError>, IPersistenceContext> ConfirmEmailWriteContext(IPersistenceContext context) =>
         MapWriteError(context.Write());
 
     static EitherAsync<Failure<ConfirmEmailError>, T> MapReadErrorHideNotFound<T>(EitherAsync<HttpStatusCode, T> either) =>

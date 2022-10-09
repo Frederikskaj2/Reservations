@@ -1,9 +1,11 @@
+using Frederikskaj2.Reservations.Shared.Core;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using static Frederikskaj2.Reservations.Application.DatabaseFunctions;
+using static Frederikskaj2.Reservations.Application.EmailFunctions;
 using static Frederikskaj2.Reservations.Application.OrderFunctions;
 using static LanguageExt.Prelude;
 
@@ -39,10 +41,11 @@ public class OrderService
         IEmailService emailService, IPersistenceContext context, Seq<ReservationWithOrder> reservations) =>
         reservations.IsEmpty ? unit : SendSettlementNeededEmails(emailService, context, reservations);
 
-    static EitherAsync<Failure, Unit> SendSettlementNeededEmails(IEmailService emailService, IPersistenceContext context, Seq<ReservationWithOrder> reservations) =>
-        from users in EmailFunctions.ReadEmailUsers(context, toHashSet(reservations.Map(reservation => reservation.Order.UserId)))
-        let context3 = SetReservationEmailFlag(context, reservations, ReservationEmails.NeedsSettlement)
-        from _1 in WriteContext(context3)
+    static EitherAsync<Failure, Unit> SendSettlementNeededEmails(
+        IEmailService emailService, IPersistenceContext context, Seq<ReservationWithOrder> reservations) =>
+        from users in ReadEmailUsers(context, EmailSubscriptions.SettlementRequired)
+        let context1 = SetReservationEmailFlag(context, reservations, ReservationEmails.NeedsSettlement)
+        from _1 in WriteContext(context1)
         from _2 in SendSettlementNeededEmails(emailService, reservations, users)
         select unit;
 

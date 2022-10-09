@@ -28,7 +28,7 @@ public static class PlaceMyOrderHandler
         let context3 = PlaceUserOrder(options, dateProvider.Holidays, command, today, context2, orderId, transactionId)
         let user = context3.Item<User>()
         let order = context3.Item<Order>(Order.GetId(orderId))
-        from _3 in DatabaseFunctions.WriteContext(context3)
+        from _3 in WriteContext(context3)
         let payment = GetPaymentInformation(options, user)
         from _4 in SendOrderReceivedEmail(emailService, user, order, payment)
         from _5 in SendNewOrderEmail(context3, emailService, orderId)

@@ -18,7 +18,7 @@ public static class PayInHandler
         from transactionId in CreateTransactionId(contextFactory)
         let context2 = PayIn(options, command, context1, transactionId)
         let user = context2.Item<User>()
-        from _1 in DatabaseFunctions.WriteContext(context2)
+        from _1 in WriteContext(context2)
         let payment = GetPaymentInformation(options, user)
         from _2 in SendPayInReceivedEmail(emailService, user, command.Amount, payment)
         from _3 in SendOrdersConfirmedEmail(emailService, context1, context2)

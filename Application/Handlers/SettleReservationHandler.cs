@@ -24,7 +24,7 @@ public static class SettleReservationHandler
         let user = context3.Item<User>()
         from context4 in TryDeleteUser(emailService, context3, command.Timestamp, order.UserId)
         from orderDetails in CreateOrderDetails(options, today, context4, command.OrderId)
-        from _1 in DatabaseFunctions.WriteContext(context4)
+        from _1 in WriteContext(context4)
         let updateOrder = context4.Order(command.OrderId)
         from _2 in SendReservationSettledEmail(emailService, user, command.OrderId, reservation, command.Damages, command.Description)
         from _3 in SendOrdersConfirmedEmail(emailService, context1, context4)

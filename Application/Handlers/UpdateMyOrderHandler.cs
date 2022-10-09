@@ -28,7 +28,7 @@ public static class UpdateMyOrderHandler
             options, command.Timestamp, command.UserId, command.CancelledReservations, waiveFee, alwaysAllowCancellation, today, context3, order)
         let user = context4.Item<User>()
         from context5 in TryDeleteUser(emailService, context4, command.Timestamp, order.UserId)
-        from _1 in DatabaseFunctions.WriteContext(context5)
+        from _1 in WriteContext(context5)
         let updatedOrder = context5.Item<Order>(Order.GetId(command.OrderId))
         from _3 in SendReservationsCancelledEmail(emailService, command.OrderId, command.CancelledReservations, context5)
         from _4 in SendOrdersConfirmedEmail(emailService, context1, context5)
