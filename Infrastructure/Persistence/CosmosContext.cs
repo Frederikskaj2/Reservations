@@ -23,7 +23,7 @@ class CosmosContext : IPersistenceContext
     internal string PartitionKey { get; }
     HashMap<Key, Entity> Entities { get; }
 
-    public T Item<T>() => (T) Entities.Values.Single(entity => entity.Item.GetType() == typeof(T) && entity.Status != EntityStatus.Deleted).Item;
+    public T Item<T>() => (T) Entities.Values.Single(entity => entity.Item.GetType() == typeof(T) && entity.Status is not EntityStatus.Deleted).Item;
 
     public T Item<T>(string id) => Entities.Find(GetKey<T>(id)).Case switch
     {
@@ -35,7 +35,7 @@ class CosmosContext : IPersistenceContext
     };
 
     public Option<T> ItemOption<T>() => Entities.Values
-        .Find(entity => entity.Item.GetType() == typeof(T) && entity.Status != EntityStatus.Deleted)
+        .Find(entity => entity.Item.GetType() == typeof(T) && entity.Status is not EntityStatus.Deleted)
         .Map(entity => (T) entity.Item);
 
     public Option<T> ItemOption<T>(string id) => Entities.Find(GetKey<T>(id)).Case switch
@@ -48,7 +48,7 @@ class CosmosContext : IPersistenceContext
     };
 
     public IEnumerable<T> Items<T>() =>
-        Entities.Values.Filter(entity => entity.Item.GetType() == typeof(T) && entity.Status != EntityStatus.Deleted).Map(entity => (T) entity.Item);
+        Entities.Values.Filter(entity => entity.Item.GetType() == typeof(T) && entity.Status is not EntityStatus.Deleted).Map(entity => (T) entity.Item);
 
     public IPersistenceContext CreateItem<T>(string id, T item) where T : class =>
         new CosmosContext(Cosmos, PartitionKey, Entities.Add(GetKey<T>(id), new Entity(item, EntityStatus.New, None)));
@@ -199,7 +199,7 @@ class CosmosContext : IPersistenceContext
         };
 
     IEnumerable<BatchOperation> GetBatch() =>
-        Entities.Filter(tuple => tuple.Item2.Status != EntityStatus.Unchanged).Map(CreateBatchOperation);
+        Entities.Filter(tuple => tuple.Item2.Status is not EntityStatus.Unchanged).Map(CreateBatchOperation);
 
     static BatchOperation CreateBatchOperation((Key Key, Entity Value) tuple) =>
         tuple.Value.Status switch

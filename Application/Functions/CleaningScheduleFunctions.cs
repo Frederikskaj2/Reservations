@@ -21,21 +21,21 @@ static class CleaningScheduleFunctions
         select new CleaningSchedule(cleaningTasks, reservedDays);
 
     public static EitherAsync<Failure, (CleaningSchedule Schedule, Option<CleaningTasksDelta> Delta)> TryGetCleaningScheduleDelta(
-        IPersistenceContextFactory contextFactory, Instant timestamp, OrderingOptions options, LocalDate date) =>
+        IPersistenceContextFactory contextFactory, OrderingOptions options, LocalDate date) =>
         from context in GetPersistedCleaningSchedule(CreateContext(contextFactory))
         from tuple in GetCleaningScheduleDelta(context, options, date)
         let optionalDelta = GetCleaningTasksDeltaOption(tuple.Delta)
-        from _ in UpdateCleaningScheduleIfNeeded(context, timestamp, tuple.Schedule, optionalDelta)
+        from _ in UpdateCleaningScheduleIfNeeded(context, tuple.Schedule, optionalDelta)
         select (tuple.Schedule, optionalDelta);
 
     static EitherAsync<Failure, IPersistenceContext> GetPersistedCleaningSchedule(IPersistenceContext context) =>
-        MapReadError(context.ReadItem(singletonId, () => new CleaningTasks(default, Empty<CleaningTask>())));
+        MapReadError(context.ReadItem(singletonId, () => new CleaningTasks(Empty<CleaningTask>())));
 
     static EitherAsync<Failure, (CleaningSchedule Schedule, CleaningTasksDelta Delta)> GetCleaningScheduleDelta(
         IPersistenceContext context, OrderingOptions options, LocalDate date) =>
         from reservations in GetCleaningReservations(context, options, date)
         let cleaningTasks = GetCleaningTasks(reservations)
-        let delta = GetCleaningTasksDelta(context.Item<CleaningTasks>().Tasks, cleaningTasks)
+        let delta = GetCleaningTasksDelta(date, context.Item<CleaningTasks>().Tasks, cleaningTasks)
         let reservedDays = GetReservedDays(reservations.Map(tuple => tuple.Reservation))
         select (new CleaningSchedule(cleaningTasks, reservedDays), delta);
 
@@ -64,12 +64,13 @@ static class CleaningScheduleFunctions
 
     static IEnumerable<CleaningTask> GetCleaningTasksForResource(IEnumerable<ReservationWithOrder> reservations) =>
         reservations.Map(
-            reservationWithOrder => new CleaningTask(reservationWithOrder.Reservation.ResourceId,
+            reservationWithOrder => new CleaningTask(
+                reservationWithOrder.Reservation.ResourceId,
                 reservationWithOrder.Reservation.Cleaning!.Begin,
                 reservationWithOrder.Reservation.Cleaning.End));
 
-    static CleaningTasksDelta GetCleaningTasksDelta(IEnumerable<CleaningTask> persistedTasks, IEnumerable<CleaningTask> tasks) =>
-        GetCleaningTasksDelta(persistedTasks, tasks, persistedTasks.Map(task => ((task.Begin, task.ResourceId), task)).ToHashMap());
+    static CleaningTasksDelta GetCleaningTasksDelta(LocalDate date, IEnumerable<CleaningTask> persistedTasks, IEnumerable<CleaningTask> tasks) =>
+        GetCleaningTasksDelta(date, persistedTasks, tasks, persistedTasks.Map(task => ((task.Begin, task.ResourceId), task)).ToHashMap());
 
     static Option<CleaningTasksDelta> GetCleaningTasksDeltaOption(CleaningTasksDelta delta) =>
         delta.NewTasks.Any() || delta.CancelledTasks.Any() || delta.UpdatedTasks.Any()
@@ -77,24 +78,25 @@ static class CleaningScheduleFunctions
             : None;
 
     static EitherAsync<Failure, IPersistenceContext> UpdateCleaningScheduleIfNeeded(
-        IPersistenceContext context, Instant timestamp, CleaningSchedule schedule, Option<CleaningTasksDelta> optionalDelta) =>
+        IPersistenceContext context, CleaningSchedule schedule, Option<CleaningTasksDelta> optionalDelta) =>
         optionalDelta.Case switch
         {
-            CleaningTasksDelta => UpdateCleaningTasks(context, timestamp, schedule),
+            CleaningTasksDelta => UpdateCleaningTasks(context, schedule),
             _ => RightAsync<Failure, IPersistenceContext>(context)
         };
 
-    static EitherAsync<Failure, IPersistenceContext> UpdateCleaningTasks(IPersistenceContext context, Instant timestamp, CleaningSchedule schedule) =>
-        MapWriteError(context.UpdateItem<CleaningTasks>(_ => UpdateCleaningTasks(timestamp, schedule)).Write());
+    static EitherAsync<Failure, IPersistenceContext> UpdateCleaningTasks(IPersistenceContext context, CleaningSchedule schedule) =>
+        MapWriteError(context.UpdateItem<CleaningTasks>(_ => UpdateCleaningTasks(schedule)).Write());
 
-    static CleaningTasks UpdateCleaningTasks(Instant timestamp, CleaningSchedule schedule) =>
-        new(timestamp, schedule.CleaningTasks);
+    static CleaningTasks UpdateCleaningTasks(CleaningSchedule schedule) =>
+        new(schedule.CleaningTasks);
 
     static CleaningTasksDelta GetCleaningTasksDelta(
-        IEnumerable<CleaningTask> persistedTasks, IEnumerable<CleaningTask> tasks, HashMap<(LocalDateTime, ResourceId), CleaningTask> persistedTaskMap) =>
+        LocalDate date, IEnumerable<CleaningTask> persistedTasks, IEnumerable<CleaningTask> tasks,
+        HashMap<(LocalDateTime, ResourceId), CleaningTask> persistedTaskMap) =>
         new(
             tasks.Except(persistedTasks, CleaningTaskComparer.Instance).ToList(),
-            persistedTasks.Except(tasks, CleaningTaskComparer.Instance).ToList(),
+            persistedTasks.Except(tasks, CleaningTaskComparer.Instance).Filter(task => task.End.Date >= date).ToList(),
             tasks.Filter(task => persistedTaskMap.Find((task.Begin, task.ResourceId)).Case switch
             {
                 CleaningTask matchingTask => matchingTask != task,

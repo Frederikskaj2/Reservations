@@ -30,7 +30,7 @@ class CleaningScheduleService
     }
 
     public Task<Unit> SendDifferentialCleaningScheduleEmail(Instant timestamp) =>
-        TryGetCleaningScheduleDelta(contextFactory, timestamp, options, timestamp.InZone(dateTimeZone).Date).Match(
+        TryGetCleaningScheduleDelta(contextFactory, options, timestamp.InZone(dateTimeZone).Date).Match(
             Right: tuple => SendEmail(tuple.Schedule, tuple.Delta),
             Left: LogFailure);
 
