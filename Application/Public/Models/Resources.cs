@@ -11,7 +11,7 @@ public static class Resources
 {
     static readonly IReadOnlyDictionary<ResourceId, Resource> resources = new[]
     {
-        new Resource(ResourceId.FromInt32(1), 0, ResourceType.BanquetFacilities, "Aktivitets-/festlokale"),
+        new Resource(ResourceId.FromInt32(1), 0, ResourceType.BanquetFacilities, "Festlokale"),
         new Resource(ResourceId.FromInt32(2), 2, ResourceType.Bedroom, "Frederik (soveværelse)"),
         new Resource(ResourceId.FromInt32(3), 1, ResourceType.Bedroom, "Kaj (soveværelse)")
     }.ToDictionary(resource => resource.ResourceId);
