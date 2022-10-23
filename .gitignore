@@ -1,5 +1,6 @@
 __blobstorage__/
 __queuestorage__/
+.fleet/
 .idea/
 .ionide/
 .run/
