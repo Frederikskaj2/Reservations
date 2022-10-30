@@ -48,7 +48,7 @@ static class OrderFunctions
                     reservationWithOrder =>
                         reservationWithOrder.Reservation.Status is ReservationStatus.Confirmed &&
                         !reservationWithOrder.Reservation.SentEmails.HasFlag(ReservationEmails.LockBoxCode) &&
-                        reservationWithOrder.Reservation.Extent.Ends() < date));
+                        reservationWithOrder.Reservation.Extent.Date < date));
 
     public static IEnumerable<ReservationWithOrder> GetReservationsToSettle(IEnumerable<Order> orders, LocalDate date) =>
         orders.Bind(
