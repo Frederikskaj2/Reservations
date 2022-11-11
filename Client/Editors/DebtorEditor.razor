@@ -9,7 +9,7 @@
                     {
                         foreach (var debtor in Debtors)
                         {
-                            <SelectItem Value="@debtor.PaymentId">@debtor.PaymentId (@debtor.UserInformation.FullName)</SelectItem>
+                            <SelectItem Value="@debtor.PaymentId">@debtor.PaymentId @GetDebtorDescription(debtor)</SelectItem>
                         }
                     }
                 </ChildContent>
