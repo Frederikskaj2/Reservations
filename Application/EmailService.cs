@@ -64,7 +64,7 @@ class EmailService : IEmailService
                 emailAddress,
                 fullName,
                 orderId,
-                GetOrderUrl(applicationOptions.BaseUrl, orderId),
+                GetMyOrderUrl(applicationOptions.BaseUrl, orderId),
                 Resources.Name(resourceId),
                 GetRulesUrl(applicationOptions.BaseUrl, resourceId),
                 date,

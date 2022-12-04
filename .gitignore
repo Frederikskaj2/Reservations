@@ -5,6 +5,7 @@ __queuestorage__/
 .ionide/
 .run/
 .vs/
+.vscode/
 bin/
 obj/
 *.log
