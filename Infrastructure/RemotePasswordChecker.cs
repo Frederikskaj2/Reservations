@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -50,8 +51,7 @@ class RemotePasswordChecker : IRemotePasswordChecker
             return 0;
         }
 
-        var clearTextPassword = password;
-        var hash = GetHash(clearTextPassword);
+        var hash = GetHash(password);
         var hexString = GetHexString(hash);
 
         return await cache.GetOrCreateAsync(hexString, async entry =>
@@ -105,7 +105,7 @@ class RemotePasswordChecker : IRemotePasswordChecker
             var lines = SplitLines(suffixes.AsMemory());
             var suffix = hexString[hashPrefixLength..];
             var matchingLine = lines.FirstOrDefault(l => l[..hashSuffixLength].Span.SequenceEqual(suffix.Span));
-            return matchingLine.Length != 0 ? int.Parse(matchingLine[(hashSuffixLength + 1)..].Span) : 0;
+            return matchingLine.Length is not 0 ? int.Parse(matchingLine[(hashSuffixLength + 1)..].Span, NumberStyles.None, CultureInfo.InvariantCulture) : 0;
         }
         catch (Exception exception)
         {
