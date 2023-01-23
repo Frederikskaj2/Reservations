@@ -9,7 +9,8 @@
 <body>
     <p>Hej @Model.Data.FullName</p>
     <p>Vi har udbetalt @Model.FormatAmount(Model.Data.Amount) til den bankkonto du oplyste da du afgav din seneste bestilling.</p>
-    <p>Bemærk at der kan gå nogle dage før pengene er til rådighed på din konto.</p>
+    <p><strong>Bemærk:</strong> Der kan gå nogle dage før pengene er til rådighed på din konto.</p>
+    <p><em>(Dette er en automatisk udsendt besked som ikke skal besvares.)</em></p>
     <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
     <p><a href="@Model.GetUrl(Urls.MyOrders)" />Dine bestillinger</a> • <a href="@Model.GetUrl(Urls.MyTransactions)" />Dit kontoudtog</a> • <a href="@Model.GetUrl(Urls.MyAccount)" />Din konto</a></p>
 </body>

@@ -17,7 +17,9 @@
 @if (Model.Data.Damages < Model.Data.Deposit)
 {
     <p>Du vil få udbetalt@(Model.Data.Damages > Amount.Zero ? " resten af" : "") dit depositum som udgør @Model.FormatAmount(Model.Data.Deposit - Model.Data.Damages).</p>
+    <p><strong>Bemærk:</strong> Vi udbetaler én gang om måneden, og der kan derfor godt gå noget tid før vi udbetaler dit tilgodehavende. Du vil få besked når udbetalingen gennemføres.</p>
 }
+    <p><em>(Dette er en automatisk udsendt besked som ikke skal besvares.)</em></p>
     <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
     <p><a href="@Model.Data.OrderUrl">Din bestilling</a> • <a href="@Model.GetUrl(Urls.MyTransactions)">Dit kontoudtog</a> • <a href="@Model.GetUrl(Urls.MyAccount)">Din konto</a></p>
 </body>

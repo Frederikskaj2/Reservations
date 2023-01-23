@@ -9,6 +9,7 @@
 <body>
     <p>Hej @Model.Data.FullName</p>
     <p>Der er oprettet en ny bestilling med <a href="@Model.Data.OrderUrl">bestillingsnr. @Model.Data.OrderId</a>.</p>
+    <p><em>(Dette er en automatisk udsendt besked som ikke skal besvares.)</em></p>
     <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
     <p><a href="@Model.GetUrl(Urls.Orders)">Bestillinger</a> • <a href="@Model.GetUrl(Urls.MyAccount)">Din konto</a></p>
 </body>

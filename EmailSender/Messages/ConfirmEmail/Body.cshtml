@@ -13,5 +13,6 @@
     <p>Hej @Model.Data.FullName</p>
     <p><a href="@Model.Data.Url">Åbn linket for at bekræfte din mail.</a></p>
     <p>Dette link er gyldigt i @validDays dag@(validDays == 1 ? "" : "e").</p>
+    <p><em>(Dette er en automatisk udsendt besked som ikke skal besvares.)</em></p>
     <p>Med venlig hilsen<br />@Model.From<br /><a href="@Model.FromUrl">@Model.FromUrl</a></p>
 </body>
