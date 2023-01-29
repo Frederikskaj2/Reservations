@@ -24,7 +24,7 @@ readonly struct CombinationCodeDifference
         static void SpanAction(Span<char> span, CombinationCodeDifference state)
         {
             var offset = 0;
-            foreach (var digit in state.turnOff.Concat(state.turnOn).OrderBy(d => d))
+            foreach (var digit in state.turnOff.Concat(state.turnOn).OrderBy(d => d > 0 ? d : 10))
             {
                 const char plus = '+';
                 const char minus = '\u2212';
