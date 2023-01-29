@@ -1,11 +1,13 @@
 using Frederikskaj2.Reservations.Shared.Core;
 using LanguageExt;
 using System.Collections.Generic;
+using System.Net;
 using static Frederikskaj2.Reservations.Application.AccountsReceivableFunctions;
 using static Frederikskaj2.Reservations.Application.CreditorFactory;
 using static Frederikskaj2.Reservations.Application.DatabaseFunctions;
 using static Frederikskaj2.Reservations.Application.TransactionFunctions;
 using static Frederikskaj2.Reservations.Application.UserFunctions;
+using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Application;
 
@@ -16,6 +18,14 @@ static class PayOutFunctions
             context.Query<User>().Where(user => !user.Flags.HasFlag(UserFlags.IsDeleted) && user.Roles.HasFlag(Roles.Resident) &&
                                                 user.Accounts[Account.AccountsPayable] < Amount.Zero)))
         select CreateCreditors(users);
+
+    public static EitherAsync<Failure, Creditor> GetCreditor(IPersistenceContext context, UserId userId) =>
+        from user in ReadUser(context, userId)
+        from _ in EnsureIsCreditor(user)
+        select CreateCreditor(user);
+
+    static EitherAsync<Failure, Unit> EnsureIsCreditor(User user) =>
+        user.Accounts[Account.AccountsPayable] < Amount.Zero ? unit : Failure.New(HttpStatusCode.NotFound);
 
     public static EitherAsync<Failure, IPersistenceContext> PayOut(PayOutCommand command, IPersistenceContext context) =>
         from transactionId in CreateTransactionId(context.Factory)

@@ -15,19 +15,19 @@ namespace Frederikskaj2.Reservations.Server;
 [Authorize(Roles = nameof(Roles.Bookkeeping))]
 public class GetCreditorsEndpoint : EndpointBaseAsync.WithoutRequest.WithActionResult<IEnumerable<Creditor>>
 {
-    readonly Func<EitherAsync<Failure, IEnumerable<Creditor>>> getDebits;
+    readonly Func<EitherAsync<Failure, IEnumerable<Creditor>>> getCreditors;
     readonly ILogger logger;
 
     public GetCreditorsEndpoint(IPersistenceContextFactory contextFactory, ILogger<GetCreditorsEndpoint> logger)
     {
         this.logger = logger;
-        getDebits = () => GetCreditorsHandler.Handle(contextFactory);
+        getCreditors = () => GetCreditorsHandler.Handle(contextFactory);
     }
 
     [HttpGet("creditors")]
     public override Task<ActionResult<IEnumerable<Creditor>>> HandleAsync(CancellationToken cancellationToken = default)
     {
-        var either = getDebits();
+        var either = getCreditors();
         return either.ToResultAsync(logger, HttpContext, true);
     }
 }

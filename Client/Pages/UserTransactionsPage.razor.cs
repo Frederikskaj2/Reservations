@@ -14,7 +14,6 @@ public partial class UserTransactionsPage
     UserTransactions? transactions;
 
     [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
     [Inject] public NavigationManager NavigationManager { get; set; } = null!;
 
     [Parameter] public int UserId { get; set; }

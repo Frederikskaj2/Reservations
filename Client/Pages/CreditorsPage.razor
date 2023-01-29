@@ -16,14 +16,6 @@
     else
     {
         <Container>
-            <Alert Color="Color.Success" Visible="@showSuccessAlert" Dismisable="true">
-                Udbetaling af @Formatter.FormatMoneyLong(amount) til @accountNumber er registreret.
-                <CloseButton Clicked="@DismissSuccessAlert"/>
-            </Alert>
-            <Alert Color="Color.Danger" Visible="@showErrorAlert" Dismisable="true">
-                Der er sket en fejl, og udbetalingen blev ikke registreret.
-                <CloseButton Clicked="@DismissErrorAlert"/>
-            </Alert>
             <h1>Til udbetaling</h1>
             @if (creditors.Count is 0)
             {
@@ -62,7 +54,6 @@
                         }
                     </TableBody>
                 </Table>
-                <PayOutDialog @ref="payOutDialog" OnConfirm="@OnPaymentConfirmAsync"/>
             }
         </Container>
     }

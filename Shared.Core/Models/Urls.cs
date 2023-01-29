@@ -22,6 +22,7 @@ public static class Urls
     public const string OwnerCheckout2 = "ejer/bestil/2";
     public const string OwnerOrders = "ejer/bestillinger";
     public const string PayIns = "indbetalinger";
+    public const string PayOut = "til-udbetaling/{0}";
     public const string PayOuts = "til-udbetaling";
     public const string Postings = "posteringer";
     public const string RequestNewPassword = "anmod-om-ny-adgangskode";
