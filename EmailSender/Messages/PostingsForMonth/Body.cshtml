@@ -36,23 +36,23 @@
                 <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">@Model.FormatSortableDate(posting.Date)</td>
                             @if (posting.Activity is Activity.PlaceOrder || posting.Activity is Activity.PayIn && posting.OrderId.HasValue)
                             {
-                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Oprettelse af bestilling @posting.OrderId (@posting.FullName)</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Oprettelse af bestilling @posting.OrderId (@posting.FullName @posting.PaymentId)</td>
                             }
                             else if (posting.Activity is Activity.UpdateOrder)
                             {
-                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Ændring af bestilling @posting.OrderId (@posting.FullName)</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Ændring af bestilling @posting.OrderId (@posting.FullName @posting.PaymentId)</td>
                             }
                             else if (posting.Activity is Activity.SettleReservation)
                             {
-                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Opgørelse af reservation på bestilling @posting.OrderId (@posting.FullName)</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Opgørelse af reservation på bestilling @posting.OrderId (@posting.FullName @posting.PaymentId)</td>
                             }
                             else if (posting.Activity is Activity.PayIn)
                             {
-                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Indbetaling fra @posting.FullName</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Indbetaling fra @posting.FullName @posting.PaymentId</td>
                             }
                             else
                             {
-                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Udbetaling til @posting.FullName</td>
+                <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Udbetaling til @posting.FullName @posting.PaymentId</td>
                             }
                         }
                         else

@@ -58,7 +58,7 @@
                     <FieldLabel ColumnSize="ColumnSize.Is4">Saldo</FieldLabel>
                     <FieldBody ColumnSize="ColumnSize.Is6">
                         <div class="field-text">
-                            <a href="@string.Format(Urls.UsersTransactions, User.Information.UserId)">@Formatter.FormatMoneyLong(User.Balance)</a>
+                            <a href="@string.Format(Urls.UsersTransactions, User.Information.UserId)">@Formatter.FormatMoneyLong(User.Balance)</a> <span class="payment-id">@User.PaymentId</span>
                         </div>
                     </FieldBody>
                 </Field>

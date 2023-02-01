@@ -3,6 +3,7 @@ using LanguageExt;
 using NodaTime;
 using System.Collections.Generic;
 using static Frederikskaj2.Reservations.Application.DatabaseFunctions;
+using static Frederikskaj2.Reservations.Application.PaymentIdEncoder;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Application;
@@ -22,6 +23,7 @@ static class PostingV1Functions
             posting.Activity,
             posting.UserId,
             userNames[posting.UserId],
+            FromUserId(posting.UserId).ToString(),
             posting.OrderId,
             posting.Amounts.Map(tuple1 => new AccountAmount(tuple1.Key, tuple1.Value)));
 }

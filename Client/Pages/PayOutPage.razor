@@ -34,7 +34,7 @@
             </Alert>
             <Card Background="Background.Light">
                 <CardHeader>
-                    <CardTitle Size="1">Udbetaling til @creditor.UserInformation.FullName</CardTitle>
+                    <CardTitle Size="1">Udbetaling til @creditor.UserInformation.FullName <span class="payment-id">@creditor.PaymentId</span></CardTitle>
                 </CardHeader>
                 <CardBody>
                     <Validations @ref="validations" Mode="ValidationMode.Manual">

@@ -1,5 +1,6 @@
 using Frederikskaj2.Reservations.Shared.Core;
 using LanguageExt;
+using static Frederikskaj2.Reservations.Application.PaymentIdEncoder;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Application;
@@ -13,6 +14,7 @@ static class PostingFactory
             transaction.Activity,
             transaction.UserId,
             userNames[transaction.UserId],
+            FromUserId(transaction.UserId).ToString(),
             transaction.OrderId,
             SafeGetAmounts(transaction));
 

@@ -9,5 +9,6 @@ public record Posting(
     Activity Activity,
     UserId? UserId,
     string FullName,
+    string PaymentId,
     OrderId? OrderId,
     IEnumerable<AccountAmount> Amounts);

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Frederikskaj2.Reservations.Shared.Core;
+using static Frederikskaj2.Reservations.Application.PaymentIdEncoder;
 
 namespace Frederikskaj2.Reservations.Application;
 
@@ -37,6 +38,7 @@ static class UserFactory
             user.Orders,
             user.HistoryOrders,
             -user.Balance(),
+            FromUserId(user.UserId),
             user.LatestSignIn,
             user.Audits.Map(audit => CreateUserAudit(audit, userFullNames)));
 

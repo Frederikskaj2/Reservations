@@ -39,7 +39,7 @@
                         @foreach (var creditor in creditors)
                         {
                             <TableRow @key="@creditor.UserInformation.UserId">
-                                <TableRowCell><a href="@string.Format(Urls.UsersTransactions, creditor.UserInformation.UserId)">@creditor.UserInformation.FullName</a></TableRowCell>
+                                <TableRowCell><a href="@string.Format(Urls.UsersTransactions, creditor.UserInformation.UserId)">@creditor.UserInformation.FullName</a> <span class="payment-id">@creditor.PaymentId</span></TableRowCell>
                                 <TableRowCell>@(creditor.UserInformation.ApartmentId.HasValue ? apartments![creditor.UserInformation.ApartmentId.Value] : "")</TableRowCell>
                                 <TableRowCell>
                                     <a href="mailto:@creditor.UserInformation.Email?subject=Frederikskaj 2 lokaler">@Formatter.FormatEmail(creditor.UserInformation.Email)</a>

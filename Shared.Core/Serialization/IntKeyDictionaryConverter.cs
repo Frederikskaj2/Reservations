@@ -75,7 +75,7 @@ class IntKeyDictionaryConverter : JsonConverterFactory
     static MethodInfo? GetToInt32Method(Type type)
     {
         var query = from method in type.GetMethods()
-            where method.Name == "ToInt32" && !method.GetParameters().Any() && method.ReturnType == typeof(int)
+            where method.Name is "ToInt32" && !method.GetParameters().Any() && method.ReturnType == typeof(int)
             select method;
         return query.SingleOrDefault();
     }
@@ -83,7 +83,7 @@ class IntKeyDictionaryConverter : JsonConverterFactory
     static MethodInfo? GetFromInt32Method(Type type)
     {
         var query = from method in type.GetMethods(BindingFlags.Public | BindingFlags.Static)
-            where method.Name == "FromInt32" && method.GetParameters().Length == 1 && method.GetParameters()[0].ParameterType == typeof(int) &&
+            where method.Name is "FromInt32" && method.GetParameters().Length is 1 && method.GetParameters()[0].ParameterType == typeof(int) &&
                   method.ReturnType == type
             select method;
         return query.SingleOrDefault();
@@ -115,7 +115,7 @@ class IntKeyDictionaryConverter : JsonConverterFactory
 
             while (reader.Read())
             {
-                if (reader.TokenType == JsonTokenType.EndObject)
+                if (reader.TokenType is JsonTokenType.EndObject)
                     return dictionary;
 
                 if (reader.TokenType != JsonTokenType.PropertyName)

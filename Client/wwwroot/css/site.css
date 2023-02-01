@@ -310,3 +310,7 @@ a.sign-in:hover {
 .validation-message {
     color: red;
 }
+
+.payment-id {
+    color: gray;
+}
