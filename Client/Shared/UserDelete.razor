@@ -11,10 +11,10 @@
         }
         else if (!User.IsPendingDelete && !IsCurrentUser)
         {
-            @if (User.Orders.Any())
+            @if (User.Orders.Any() || User.Balance != Amount.Zero)
             {
                 <Paragraph>
-                    Brugeren har aktive bestillinger. En sletningen registeres, men den gennemføres først når disse bestillinger er afsluttet.
+                    Brugeren har et økonomisk mellemværende med grundejerforeningen (aktive bestillinger, depositum til gode). En sletningen registeres, men den gennemføres først når dette mellemværende er bragt ud af verden.
                 </Paragraph>
             }
             else
