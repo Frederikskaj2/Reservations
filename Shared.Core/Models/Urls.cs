@@ -25,6 +25,7 @@ public static class Urls
     public const string PayOut = "til-udbetaling/{0}";
     public const string PayOuts = "til-udbetaling";
     public const string Postings = "posteringer";
+    public const string Reports = "rapporter";
     public const string RequestNewPassword = "anmod-om-ny-adgangskode";
     public const string RoomsBanquetFacilities = "vaerelser/festlokale";
     public const string RoomsBedrooms = "vaerelser/sovevaerelser";

@@ -20,6 +20,7 @@ public partial class MainLayout
         { Urls.PayIns, "Indbetaling" },
         { Urls.PayOuts, "Udbetaling" },
         { Urls.Postings, "Bogføring" },
+        { Urls.Reports, "Rapporter" },
         { Urls.CleaningSchedule, "Rengøringsplan" },
         { Urls.LockBoxCodes, "Nøglebokskoder" },
         { Urls.Users, "Brugere" }
@@ -98,6 +99,8 @@ public partial class MainLayout
             yield return Urls.PayOuts;
             yield return Urls.Postings;
         }
+        if (user.IsInRole(nameof(Roles.OrderHandling)))
+            yield return Urls.Reports;
         if (user.IsInRole(nameof(Roles.OrderHandling)) || user.IsInRole(nameof(Roles.Bookkeeping)) || user.IsInRole(nameof(Roles.UserAdministration)))
             yield return Urls.Users;
         if (user.IsInRole(nameof(Roles.Cleaning)))

@@ -100,4 +100,10 @@ static class AdministratorExtensions
         var request = new UpdateUserOrderRequest { UserId = userId, AllowCancellationWithoutFee = true };
         return await session.DeserializeAsync<OrderDetails>(await session.AdministratorPatchAsync($"orders/user/{orderId}", request));
     }
+
+    public static async ValueTask<YearlySummaryRange> GetYearlySummaryRange(this SessionFixture session) =>
+        await session.DeserializeAsync<YearlySummaryRange>(await session.AdministratorGetAsync("reports/yearly-summary/range"));
+
+    public static async ValueTask<YearlySummary> GetYearlySummary(this SessionFixture session, int year) =>
+        await session.DeserializeAsync<YearlySummary>(await session.AdministratorGetAsync($"reports/yearly-summary?year={year}"));
 }

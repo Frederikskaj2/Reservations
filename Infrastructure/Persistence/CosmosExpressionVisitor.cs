@@ -36,7 +36,7 @@ class CosmosExpressionVisitor<T> : ExpressionVisitor
 
     protected override Expression VisitMember(MemberExpression node)
     {
-        if (node.Expression is ConstantExpression constant && node.Member is FieldInfo instanceField)
+        if (node is { Expression: ConstantExpression constant, Member: FieldInfo instanceField })
         {
             var value = instanceField.GetValue(constant.Value);
             stringBuilder.Append(FormatValue(value));
@@ -59,14 +59,14 @@ class CosmosExpressionVisitor<T> : ExpressionVisitor
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
-        if (node.Method.IsSpecialName && node.Method.Name is "get_Item" && node.Arguments.Count is 1 && node.Arguments[0] is ConstantExpression constant)
+        if (node is { Method: { IsSpecialName: true, Name: "get_Item" }, Arguments.Count: 1 } && node.Arguments[0] is ConstantExpression constant)
         {
             Visit(node.Object);
             var propertyPath = $".{constant.Value?.ToString().ToCamelCase()}";
             stringBuilder.Append(propertyPath);
             return node;
         }
-        if (node.Method.DeclaringType == typeof(Enumerable) && node.Method.IsGenericMethod && node.Method.Name is nameof(Enumerable.Contains))
+        if (node.Method.DeclaringType == typeof(Enumerable) && node.Method is { IsGenericMethod: true, Name: nameof(Enumerable.Contains) })
         {
             Visit(node.Arguments[1]);
             stringBuilder.Append(" in (");
@@ -99,15 +99,12 @@ class CosmosExpressionVisitor<T> : ExpressionVisitor
     static int GetEnumAsNumber(Expression node)
     {
         if (node is UnaryExpression { NodeType: ExpressionType.Convert } unary && unary.Type == typeof(Enum))
-        {
-            switch (unary.Operand)
+            return unary.Operand switch
             {
-                case ConstantExpression constant:
-                    return (int) constant.Value!;
-                case MemberExpression { Expression: ConstantExpression constant, Member: FieldInfo field }:
-                    return (int) field.GetValue(constant.Value)!;
-            }
-        }
+                ConstantExpression constant => (int) constant.Value!,
+                MemberExpression { Expression: ConstantExpression constant, Member: FieldInfo field } => (int) field.GetValue(constant.Value)!,
+                _ => throw new ArgumentException("Expression is not an enum value.", nameof(node))
+            };
         throw new ArgumentException("Expression is not an enum value.", nameof(node));
     }
 

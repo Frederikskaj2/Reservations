@@ -10,7 +10,6 @@ namespace Frederikskaj2.Reservations.Infrastructure.Persistence;
 
 class CosmosQuery<TDocument> : IQuery<TDocument>, IProjectedQuery<TDocument>
 {
-    const string rootPrefix = "root.v";
     readonly CosmosQueryDefinition queryDefinition;
     string? sql;
 
@@ -24,21 +23,23 @@ class CosmosQuery<TDocument> : IQuery<TDocument>, IProjectedQuery<TDocument>
     public IQuery<TDocument> Top(int n) =>
         new CosmosQuery<TDocument>(queryDefinition with { Top = $" top {n}" });
 
-    public IQuery<TDocument> Join<TChild>(
+    public IQuery<TChild> Join<TChild>(
         Expression<Func<TDocument, IEnumerable<TChild>>> joinExpression, Expression<Func<TChild, bool>> whereExpression)
     {
         var visitor = new CosmosExpressionVisitor<TChild>("child");
         visitor.Visit(whereExpression);
-        return new CosmosQuery<TDocument>(queryDefinition with
+        return new CosmosQuery<TChild>(queryDefinition with
         {
-            Join = $"child in {rootPrefix}{GetPropertyPath(joinExpression.Body, rootPrefix)}",
-            Where = $"{queryDefinition.Where} and {visitor}"
+            Projection = "child",
+            Join = $"child in {GetPropertyPath(joinExpression.Body, queryDefinition.RootPrefix)}",
+            Where = $"{queryDefinition.Where} and {visitor}",
+            RootPrefix = "child"
         });
     }
 
     public IQuery<TDocument> Where(Expression<Func<TDocument, bool>> expression)
     {
-        var visitor = new CosmosExpressionVisitor<TDocument>(rootPrefix);
+        var visitor = new CosmosExpressionVisitor<TDocument>(queryDefinition.RootPrefix);
         visitor.Visit(expression);
         return new CosmosQuery<TDocument>(queryDefinition with { Where = $"{queryDefinition.Where} and {visitor}" });
     }
@@ -46,7 +47,7 @@ class CosmosQuery<TDocument> : IQuery<TDocument>, IProjectedQuery<TDocument>
     // Notice multiple OrderBy require that a composite index is defined.
     public IQuery<TDocument> OrderBy<TValue>(Expression<Func<TDocument, TValue>> expression)
     {
-        var visitor = new CosmosExpressionVisitor<TDocument>(rootPrefix);
+        var visitor = new CosmosExpressionVisitor<TDocument>(queryDefinition.RootPrefix);
         visitor.Visit(expression);
         var prefix = queryDefinition.OrderBy is not null
             ? $"{queryDefinition.OrderBy}, "
@@ -57,7 +58,7 @@ class CosmosQuery<TDocument> : IQuery<TDocument>, IProjectedQuery<TDocument>
     // Notice multiple OrderBy require that a composite index is defined.
     public IQuery<TDocument> OrderByDescending<TValue>(Expression<Func<TDocument, TValue>> expression)
     {
-        var visitor = new CosmosExpressionVisitor<TDocument>(rootPrefix);
+        var visitor = new CosmosExpressionVisitor<TDocument>(queryDefinition.RootPrefix);
         visitor.Visit(expression);
         var prefix = queryDefinition.OrderBy is not null
             ? $"{queryDefinition.OrderBy}, "
@@ -66,13 +67,13 @@ class CosmosQuery<TDocument> : IQuery<TDocument>, IProjectedQuery<TDocument>
     }
 
     public IProjectedQuery<TDocument> Project() =>
-        new CosmosQuery<TDocument>(queryDefinition with { Projection = "value " + rootPrefix });
+        new CosmosQuery<TDocument>(queryDefinition with { Projection = "value " + queryDefinition.RootPrefix });
 
     public IProjectedQuery<TProjection> ProjectProperty<TProjection>(Expression<Func<TDocument, TProjection>> expression) =>
-        new CosmosQuery<TProjection>(queryDefinition with { Projection = $"value {GetPropertyPath(expression.Body, rootPrefix)}" });
+        new CosmosQuery<TProjection>(queryDefinition with { Projection = $"value {GetPropertyPath(expression.Body, queryDefinition.RootPrefix)}" });
 
     public IProjectedQuery<TProjection> ProjectTo<TProjection>(Expression<Func<TDocument, TProjection>> expression) where TProjection : class =>
-        new CosmosQuery<TProjection>(queryDefinition with { Projection = $"{GetProjection(expression.Body, rootPrefix)}" });
+        new CosmosQuery<TProjection>(queryDefinition with { Projection = $"{GetProjection(expression.Body, queryDefinition.RootPrefix)}" });
 
     static string GetPropertyPath(Expression expression, string prefix)
     {

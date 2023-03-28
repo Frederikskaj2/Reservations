@@ -75,6 +75,28 @@ static class DatabaseFunctions
         from user in ReadUserFullName(context, userId)
         select CreateUserTransactions(formatter, user, transactions);
 
+    public static EitherAsync<Failure, Option<LocalDate>> ReadEarliestReservationDate(IPersistenceContext context) =>
+        from reservation in MapReadError(
+            context.Untracked.ReadItems(
+                context.Query<Order>()
+                    .Where(order => !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
+                    .Join<Reservation>(
+                        order => order.Reservations,
+                        reservation => reservation.Status == ReservationStatus.Confirmed || reservation.Status == ReservationStatus.Settled)
+                    .ProjectProperty(reservation => reservation.Extent.Date)))
+        select reservation.Any() ? Some(reservation.MinBy(date => date)) : None;
+
+    public static EitherAsync<Failure, IEnumerable<Reservation>> ReadReservations(IPersistenceContext context, LocalDate fromDate, LocalDate toDate) =>
+        MapReadError(
+            context.Untracked.ReadItems(
+                context.Query<Order>()
+                    .Where(order => !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
+                    .Join<Reservation>(
+                        order => order.Reservations,
+                        reservation => (reservation.Status == ReservationStatus.Confirmed || reservation.Status == ReservationStatus.Settled) &&
+                                       fromDate <= reservation.Extent.Date && reservation.Extent.Date < toDate)
+                    .Project()));
+
     static EitherAsync<Failure, UserFullName> ReadUserFullName(IPersistenceContext context, UserId userId) =>
         from users in MapReadError(context.Untracked.ReadItems(GetUserQuery(context, userId)))
         let option = users.ToOption()

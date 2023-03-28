@@ -2,7 +2,7 @@
 
 namespace Frederikskaj2.Reservations.Infrastructure.Persistence;
 
-record CosmosQueryDefinition(bool Distinct, string? Top, string? Projection, string? Join, string Where, string? OrderBy)
+record CosmosQueryDefinition(bool Distinct, string? Top, string? Projection, string? Join, string Where, string? OrderBy, string RootPrefix = "root.v")
 {
     public string ToSql()
     {
