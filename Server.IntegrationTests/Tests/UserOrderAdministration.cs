@@ -81,7 +81,8 @@ public class UserOrderAdministration : IClassFixture<SessionFixture>
         cancelledOrder.Audits.Select(audit => audit.Type).Should().Equal(
             OrderAuditType.PlaceOrder, OrderAuditType.CancelReservation, OrderAuditType.FinishOrder);
         emails.Should().HaveCount(3);
-        reservationsCancelledEmail.Email.Should().Be(order.UserInformation.Email);
+        reservationsCancelledEmail.Should().NotBeNull();
+        reservationsCancelledEmail!.Email.Should().Be(order.UserInformation.Email);
         reservationsCancelledEmail.FullName.Should().Be(order.UserInformation.FullName);
         reservationsCancelledEmail.OrderId.Should().Be(order.OrderId);
         reservationsCancelledEmail.Reservations.Should().HaveCount(1);

@@ -6,9 +6,8 @@ namespace Frederikskaj2.Reservations.Application;
 static class PaymentFunctions
 {
     public static PaymentInformation? GetPaymentInformation(OrderingOptions options, User user) =>
-        GetPaymentInformation(options, user, user.Accounts[Account.AccountsReceivable]);
+        GetPaymentInformation(options, user, user.Balance());
 
-    static PaymentInformation? GetPaymentInformation(OrderingOptions options, User user, Amount accountsReceivable) =>
-        accountsReceivable > Amount.Zero ? new(FromUserId(user.UserId), accountsReceivable, options.PayInAccountNumber) : null;
-
+    static PaymentInformation? GetPaymentInformation(OrderingOptions options, User user, Amount balance) =>
+        balance > Amount.Zero ? new(FromUserId(user.UserId), balance, options.PayInAccountNumber) : null;
 }

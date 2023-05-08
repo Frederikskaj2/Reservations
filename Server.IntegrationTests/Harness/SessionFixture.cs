@@ -1,5 +1,6 @@
 using Azure.Storage.Queues;
 using Frederikskaj2.Reservations.Shared.Web;
+using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 using System;
 using System.Collections.Generic;
@@ -62,6 +63,9 @@ public sealed class SessionFixture : IAsyncLifetime, IDisposable
     public Calendar Calendar { get; } = new();
 
     void IDisposable.Dispose() => factory?.Dispose();
+
+    public IServiceScope CreateServiceScope() =>
+        factory?.Services.CreateScope() ?? throw new InvalidOperationException();
 
     public async ValueTask<HttpResponseMessage> AnonymousGetAsync(string path)
     {

@@ -40,12 +40,14 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         myReservedDays.Should().Equal(reservation.ToMyReservedDays(order.OrderId, true));
         order.Audits.Select(audit => audit.Type).Should().Equal(OrderAuditType.PlaceOrder);
         emails.Should().HaveCount(2);
-        orderReceivedEmail.Email.Should().Be(order.UserInformation.Email);
+        orderReceivedEmail.Should().NotBeNull();
+        orderReceivedEmail!.Email.Should().Be(order.UserInformation.Email);
         orderReceivedEmail.FullName.Should().Be(order.UserInformation.FullName);
         orderReceivedEmail.Payment.Should().NotBeNull();
         orderReceivedEmail.Payment!.Amount.Should().Be(price);
         orderReceivedEmail.Payment.AccountNumber.Should().NotBeEmpty();
-        newOrderEmail.Email.Should().Be(EmailAddress.FromString(TestData.AdministratorEmail));
+        newOrderEmail.Should().NotBeNull();
+        newOrderEmail!.Email.Should().Be(EmailAddress.FromString(TestData.AdministratorEmail));
         newOrderEmail.OrderId.Should().Be(userOrder.OrderId);
     }
 
@@ -72,7 +74,8 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         myReservedDays.Should().BeEmpty();
         order.Audits.Select(audit => audit.Type).Should().Equal(OrderAuditType.PlaceOrder, OrderAuditType.CancelReservation, OrderAuditType.FinishOrder);
         emails.Should().HaveCount(3);
-        reservationsCancelledEmail.Email.Should().Be(order.UserInformation.Email);
+        reservationsCancelledEmail.Should().NotBeNull();
+        reservationsCancelledEmail!.Email.Should().Be(order.UserInformation.Email);
         reservationsCancelledEmail.FullName.Should().Be(order.UserInformation.FullName);
         reservationsCancelledEmail.OrderId.Should().Be(order.OrderId);
         reservationsCancelledEmail.Reservations.Should().HaveCount(1);
@@ -113,7 +116,8 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         myReservedDays.Should().Equal(reservation.ToMyReservedDays(order.OrderId, true));
         order.Audits.Select(audit => audit.Type).Should().Equal(OrderAuditType.PlaceOrder, OrderAuditType.CancelReservation);
         emails.Should().HaveCount(3);
-        reservationsCancelledEmail.Email.Should().Be(order.UserInformation.Email);
+        reservationsCancelledEmail.Should().NotBeNull();
+        reservationsCancelledEmail!.Email.Should().Be(order.UserInformation.Email);
         reservationsCancelledEmail.FullName.Should().Be(order.UserInformation.FullName);
         reservationsCancelledEmail.OrderId.Should().Be(order.OrderId);
         reservationsCancelledEmail.Reservations.Should().HaveCount(1);

@@ -42,12 +42,15 @@ static class EmailsExtensions
         return emails.Last(email => email.UserDeleted is not null).UserDeleted!;
     }
 
-    public static NewOrder NewOrder(this IEnumerable<Email> emails) =>
-        emails.Single(email => email.NewOrder is not null).NewOrder!;
+    public static NewOrder? NewOrder(this IEnumerable<Email> emails) =>
+        emails.SingleOrDefault(email => email.NewOrder is not null)?.NewOrder;
 
-    public static OrderReceived OrderReceived(this IEnumerable<Email> emails) =>
-        emails.Single(email => email.OrderReceived is not null).OrderReceived!;
+    public static OrderReceived? OrderReceived(this IEnumerable<Email> emails) =>
+        emails.SingleOrDefault(email => email.OrderReceived is not null)?.OrderReceived;
 
-    public static ReservationsCancelled ReservationsCancelled(this IEnumerable<Email> emails) =>
-        emails.Single(email => email.ReservationsCancelled is not null).ReservationsCancelled!;
+    public static ReservationsCancelled? ReservationsCancelled(this IEnumerable<Email> emails) =>
+        emails.SingleOrDefault(email => email.ReservationsCancelled is not null)?.ReservationsCancelled;
+
+    public static DebtReminder? DebtReminder(this IEnumerable<Email> emails) =>
+        emails.SingleOrDefault(email => email.DebtReminder is not null)?.DebtReminder;
 }

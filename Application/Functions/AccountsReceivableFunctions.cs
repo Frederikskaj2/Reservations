@@ -17,7 +17,7 @@ static class AccountsReceivableFunctions
     // Balance in favor of the user (credit) can be used to confirm orders.
     public static IPersistenceContext ApplyCreditToOrders(
         Instant timestamp, UserId updatedByUserId, IPersistenceContext context, TransactionId transactionId) =>
-        TrySetLatestDebtReminder(
+        TryUpdateLatestDebtReminder(
             ApplyCreditToOrders(timestamp, updatedByUserId, context, transactionId, context.Item<User>()),
             timestamp);
 
@@ -55,8 +55,9 @@ static class AccountsReceivableFunctions
 
     // When money is paid by the user it's debited to their balance.
     public static IPersistenceContext ApplyDebitToOrders(Instant timestamp, UserId updatedByUserId, IPersistenceContext context, TransactionId transactionId) =>
-        TryClearLatestDebtReminder(
-            ApplyDebitToOrders(timestamp, updatedByUserId, context, transactionId, GetUnconfirmedOrdersOldestFirst(context.Item<User>().UserId, context)));
+        TryUpdateLatestDebtReminder(
+            ApplyDebitToOrders(timestamp, updatedByUserId, context, transactionId, GetUnconfirmedOrdersOldestFirst(context.Item<User>().UserId, context)),
+            timestamp);
 
     static Seq<Order> GetUnconfirmedOrdersOldestFirst(UserId userId, IPersistenceContext context) =>
         context.Items<Order>().Filter(order => order.UserId == userId && order.NeedsConfirmation()).OrderBy(order => order.CreatedTimestamp).ToSeq();

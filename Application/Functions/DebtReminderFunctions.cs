@@ -7,19 +7,19 @@ namespace Frederikskaj2.Reservations.Application;
 
 static class DebtReminderFunctions
 {
-    public static IPersistenceContext TrySetLatestDebtReminder(IPersistenceContext context, Instant timestamp) =>
-        context.UpdateItem<User>(user => TrySetLatestDebtReminder(user, timestamp));
+    public static IPersistenceContext TryUpdateLatestDebtReminder(IPersistenceContext context, Instant timestamp) =>
+        context.UpdateItem<User>(user => TryUpdateLatestDebtReminder(user, timestamp));
+
+    static User TryUpdateLatestDebtReminder(User user, Instant timestamp) =>
+        user.Balance() > Amount.Zero
+            ? TrySetLatestDebtReminder(user, timestamp)
+            : TryClearLatestDebtReminder(user);
 
     static User TrySetLatestDebtReminder(User user, Instant timestamp) =>
-        user.Balance() > Amount.Zero && !user.LatestDebtReminder.HasValue
-            ? user with { LatestDebtReminder = timestamp }
-            : user;
-
-    public static IPersistenceContext TryClearLatestDebtReminder(IPersistenceContext context) =>
-        context.UpdateItem<User>(TryClearLatestDebtReminder);
+        !user.LatestDebtReminder.HasValue ? user with { LatestDebtReminder = timestamp } : user;
 
     static User TryClearLatestDebtReminder(User user) =>
-        user.Balance() <= Amount.Zero && user.LatestDebtReminder.HasValue
+        user.LatestDebtReminder.HasValue
             ? user with { LatestDebtReminder = null }
             : user;
 
@@ -28,7 +28,8 @@ static class DebtReminderFunctions
         ReadUsersToRemindAboutDebtContext(context, timestamp.Minus(options.RemindUsersAboutDebtInterval));
 
     static EitherAsync<Failure, IPersistenceContext> ReadUsersToRemindAboutDebtContext(IPersistenceContext context, Instant previousReminder) =>
-        MapReadError(context.ReadItems(context.Query<User>().Where(user => !user.Flags.HasFlag(UserFlags.IsDeleted) && user.LatestDebtReminder <= previousReminder)));
+        MapReadError(
+            context.ReadItems(context.Query<User>().Where(user => !user.Flags.HasFlag(UserFlags.IsDeleted) && user.LatestDebtReminder <= previousReminder)));
 
     public static IPersistenceContext UpdateLatestDebtReminders(IPersistenceContext context, Instant timestamp) =>
         context.UpdateItems<User>(user => user with { LatestDebtReminder = timestamp });

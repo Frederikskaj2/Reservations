@@ -35,9 +35,10 @@ class DebtReminderService
     static EitherAsync<Failure, Unit> SendDebtReminders(
         IPersistenceContextFactory contextFactory, OrderingOptions options, IEmailService emailService, Instant timestamp) =>
         from context1 in ReadUsersToRemindAboutDebtContext(options, timestamp, CreateContext(contextFactory))
-        let users = context1.Items<User>()
+        // Handles the case where the latest debt reminder was set by mistake or not cleared after user's debt was paid.
+        let usersThatOwesMoney = context1.Items<User>().Filter(user => user.Balance() > Amount.Zero)
         let context2 = UpdateLatestDebtReminders(context1, timestamp)
-        from _1 in users.Map(user => SendDebtReminder(options, emailService, user)).TraverseSerial(identity)
+        from _1 in usersThatOwesMoney.Map(user => SendDebtReminder(options, emailService, user)).TraverseSerial(identity)
         from _2 in WriteContext(context2)
         select unit;
 
