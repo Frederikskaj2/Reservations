@@ -41,8 +41,8 @@ public class UserOrderAdministration : IClassFixture<SessionFixture>
         var myOrder = await Session.GetMyOrderAsync(userOrder.OrderId);
         var reservation = myOrder.Reservations!.First();
         var result = await Session.CancelUserReservationNoFeeAsync(userOrder.OrderId, 0);
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         var reservedDays = await Session.GetUserReservedDays();
         var myReservedDays = reservedDays.Where(reservedDay => reservedDay.IsMyReservation);
         myReservation.CanBeCancelled.Should().BeFalse();
@@ -50,7 +50,7 @@ public class UserOrderAdministration : IClassFixture<SessionFixture>
         result.Order.Should().NotBeNull();
         result.Order!.IsHistoryOrder.Should().BeTrue();
         result.Order!.Reservations!.First().Status.Should().Be(ReservationStatus.Cancelled);
-        userBalance.Should().Be(price);
+        myBalance.Should().Be(price);
         myReservedDays.Should().BeEmpty();
     }
 
@@ -62,8 +62,8 @@ public class UserOrderAdministration : IClassFixture<SessionFixture>
         var order = await Session.GetOrderAsync(userOrder.OrderId);
         var reservation = order.Reservations.First();
         var cancelledOrder = await Session.CancelReservationAsync(Session.UserId(), userOrder.OrderId, 0);
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         var reservedDays = await Session.GetUserReservedDays();
         var myReservedDays = reservedDays.Where(reservedDay => reservedDay.IsMyReservation);
         var emails = await Session.DequeueEmailsAsync();
@@ -72,11 +72,11 @@ public class UserOrderAdministration : IClassFixture<SessionFixture>
         cancelledOrder.Should().NotBeNull();
         cancelledOrder.Type.Should().Be(OrderType.User);
         cancelledOrder.IsHistoryOrder.Should().BeTrue();
-        userBalance.Should().Be(Amount.Zero);
+        myBalance.Should().Be(Amount.Zero);
         cancelledOrder.Reservations.Single().Status.Should().Be(ReservationStatus.Abandoned);
         myReservedDays.Should().BeEmpty();
         cancelledOrder.User!.AccountNumber.Should().BeNullOrEmpty();
-        userBalance.Should().Be(Amount.Zero);
+        myBalance.Should().Be(Amount.Zero);
         myReservedDays.Should().BeEmpty();
         cancelledOrder.Audits.Select(audit => audit.Type).Should().Equal(
             OrderAuditType.PlaceOrder, OrderAuditType.CancelReservation, OrderAuditType.FinishOrder);

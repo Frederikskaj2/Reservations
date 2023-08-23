@@ -23,7 +23,7 @@ public sealed class SessionFixture : IAsyncLifetime, IDisposable
     public async Task InitializeAsync()
     {
         await SessionThrottle.StartSessionAsync();
-        factory = new ApplicationFactory(GetId());
+        factory = new(GetId());
         await factory.InitializeAsync();
     }
 
@@ -110,7 +110,7 @@ public sealed class SessionFixture : IAsyncLifetime, IDisposable
         if (Tokens is null)
             throw new InvalidOperationException();
         using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Tokens.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", Tokens.AccessToken);
         return await client.PatchAsJsonAsync(new Uri(path, UriKind.Relative), request, SerializerOptions);
     }
 
@@ -118,7 +118,7 @@ public sealed class SessionFixture : IAsyncLifetime, IDisposable
     {
         await EnsureAdministratorIsSignedInAsync();
         using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", administratorTokens!.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", administratorTokens!.AccessToken);
         return await client.PatchAsJsonAsync(new Uri(path, UriKind.Relative), request, SerializerOptions);
     }
 
@@ -127,7 +127,15 @@ public sealed class SessionFixture : IAsyncLifetime, IDisposable
         if (Tokens is null)
             throw new InvalidOperationException();
         using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Tokens.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", Tokens.AccessToken);
+        return await client.DeleteAsync(new Uri(path, UriKind.Relative));
+    }
+
+    public async ValueTask<HttpResponseMessage> AdministratorDeleteAsync(string path)
+    {
+        await EnsureAdministratorIsSignedInAsync();
+        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", administratorTokens!.AccessToken);
         return await client.DeleteAsync(new Uri(path, UriKind.Relative));
     }
 
@@ -142,14 +150,14 @@ public sealed class SessionFixture : IAsyncLifetime, IDisposable
     async ValueTask<HttpResponseMessage> GetAsync(string path, Tokens tokens)
     {
         using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", tokens.AccessToken);
         return await client.GetAsync(new Uri(path, UriKind.Relative));
     }
 
     async ValueTask<HttpResponseMessage> PostAsync<T>(string path, T request, Tokens tokens, IEnumerable<string>? cookies = default)
     {
         using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new("Bearer", tokens.AccessToken);
         if (cookies is not null)
             client.DefaultRequestHeaders.Add("Cookie", cookies);
         return await client.PostAsJsonAsync(new Uri(path, UriKind.Relative), request, SerializerOptions);

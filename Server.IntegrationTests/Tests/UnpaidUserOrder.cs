@@ -21,8 +21,8 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         var price = userOrder.Price.Total();
         var order = await Session.GetOrderAsync(userOrder.OrderId);
         var reservation = order.Reservations.Single();
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         var reservedDays = await Session.GetUserReservedDays();
         var myReservedDays = reservedDays.Where(reservedDay => reservedDay.IsMyReservation);
         var emails = await Session.DequeueEmailsAsync();
@@ -34,7 +34,7 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         order.Should().NotBeNull();
         order.Type.Should().Be(OrderType.User);
         order.User!.AccountNumber.Should().NotBeNullOrEmpty();
-        userBalance.Should().Be(-price);
+        myBalance.Should().Be(-price);
         reservation.Status.Should().Be(ReservationStatus.Reserved);
         reservedDays.Should().Contain(reservation.ToMyReservedDays(order.OrderId, true));
         myReservedDays.Should().Equal(reservation.ToMyReservedDays(order.OrderId, true));
@@ -59,8 +59,8 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         await Session.UserCancelReservationsAsync(userOrder.OrderId, 0);
         var order = await Session.GetOrderAsync(userOrder.OrderId);
         var reservation = order.Reservations.Single();
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         var reservedDays = await Session.GetUserReservedDays();
         var myReservedDays = reservedDays.Where(reservedDay => reservedDay.IsMyReservation);
         var emails = await Session.DequeueEmailsAsync();
@@ -69,7 +69,7 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         order.Type.Should().Be(OrderType.User);
         order.IsHistoryOrder.Should().BeTrue();
         order.User!.AccountNumber.Should().BeNullOrEmpty();
-        userBalance.Should().Be(Amount.Zero);
+        myBalance.Should().Be(Amount.Zero);
         reservation.Status.Should().Be(ReservationStatus.Abandoned);
         myReservedDays.Should().BeEmpty();
         order.Audits.Select(audit => audit.Type).Should().Equal(OrderAuditType.PlaceOrder, OrderAuditType.CancelReservation, OrderAuditType.FinishOrder);
@@ -94,8 +94,8 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         var price = userOrder.Price.Total();
         var order = await Session.GetOrderAsync(userOrder.OrderId);
         var reservation = order.Reservations.Skip(1).Single();
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         var reservationPrice = userOrder.Reservations!.First().Price!.Total();
         var remainingPrice = price - reservationPrice;
         var reservedDays = await Session.GetUserReservedDays();
@@ -109,7 +109,7 @@ public class UnpaidUserOrder : IClassFixture<SessionFixture>
         order.Should().NotBeNull();
         order.Type.Should().Be(OrderType.User);
         order.IsHistoryOrder.Should().BeFalse();
-        userBalance.Should().Be(-remainingPrice);
+        myBalance.Should().Be(-remainingPrice);
         order.Reservations.First().Status.Should().Be(ReservationStatus.Abandoned);
         order.Reservations.Skip(1).Single().Status.Should().Be(ReservationStatus.Reserved);
         reservedDays.Should().Contain(reservation.ToMyReservedDays(order.OrderId, true));

@@ -41,13 +41,16 @@ class AccountAmounts : IEnumerable<(Account Account, Amount Amount)>
     }
 
     public static AccountAmounts Create(params (Account, Amount)[] items) =>
-        ValidateAmounts(new AccountAmounts(new HashMap<Account, Amount>(items)));
+        ValidateAmounts(new(new(items)));
 
     public AccountAmounts Apply(AccountAmounts amounts) =>
-        ValidateAmounts(amounts.hashMap.Fold(this, (accountAmounts, tuple) => accountAmounts.ApplyAmount(tuple)));
+        ValidateAmounts(amounts.hashMap.Fold(this, folder: (accountAmounts, tuple) => accountAmounts.ApplyAmount(tuple)));
+
+    public AccountAmounts ApplyReverse(AccountAmounts amounts) =>
+        ValidateAmounts(amounts.hashMap.Fold(this, folder: (accountAmounts, tuple) => accountAmounts.ApplyAmount((tuple.Item1, Amount.Negate(tuple.Item2)))));
 
     public AccountAmounts Apply(params (Account, Amount)[] tuples) =>
-        tuples.Fold(this, (accountAmounts, tuple) => accountAmounts.ApplyAmount(tuple));
+        tuples.Fold(this, folder: (accountAmounts, tuple) => accountAmounts.ApplyAmount(tuple));
 
     AccountAmounts ApplyAmount((Account, Amount) tuple)
     {
@@ -57,7 +60,7 @@ class AccountAmounts : IEnumerable<(Account Account, Amount Amount)>
             Amount existingAmount => hashMap.SetItem(account, existingAmount + amount),
             _ => hashMap.Add(account, amount)
         };
-        return new AccountAmounts(updatedHashMap);
+        return new(updatedHashMap);
     }
 
     static AccountAmounts ValidateAmounts(AccountAmounts amounts)

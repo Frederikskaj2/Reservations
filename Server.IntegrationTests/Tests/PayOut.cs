@@ -24,8 +24,8 @@ public class PayOut : IClassFixture<SessionFixture>
         var creditor = creditors.Single(c => c.UserInformation.UserId == Session.UserId());
         var paidCreditor = await Session.PayOutAsync(creditor.UserInformation.UserId, creditor.Amount);
         var order = await Session.GetOrderAsync(userOrder.OrderId);
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         creditor.AccountNumber.Should().NotBeEmpty();
         creditor.Amount.Should().Be(deposit);
         paidCreditor.AccountNumber.Should().BeNull();
@@ -34,7 +34,7 @@ public class PayOut : IClassFixture<SessionFixture>
         order.Type.Should().Be(OrderType.User);
         order.IsHistoryOrder.Should().BeTrue();
         order.Reservations.Single().Status.Should().Be(ReservationStatus.Settled);
-        userBalance.Should().Be(Amount.Zero);
+        myBalance.Should().Be(Amount.Zero);
         order.Audits.Select(audit => audit.Type).Should().Equal(
             OrderAuditType.PlaceOrder, OrderAuditType.ConfirmOrder, OrderAuditType.SettleReservation, OrderAuditType.FinishOrder);
     }
@@ -52,8 +52,8 @@ public class PayOut : IClassFixture<SessionFixture>
         var payOut = creditor.Amount - missingAmount;
         var paidCreditor = await Session.PayOutAsync(creditor.UserInformation.UserId, payOut);
         var order = await Session.GetOrderAsync(userOrder.OrderId);
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         creditor.AccountNumber.Should().NotBeEmpty();
         creditor.Amount.Should().Be(deposit);
         paidCreditor.AccountNumber.Should().NotBeEmpty();
@@ -62,7 +62,7 @@ public class PayOut : IClassFixture<SessionFixture>
         order.Type.Should().Be(OrderType.User);
         order.IsHistoryOrder.Should().BeTrue();
         order.Reservations.Single().Status.Should().Be(ReservationStatus.Settled);
-        userBalance.Should().Be(missingAmount);
+        myBalance.Should().Be(missingAmount);
     }
 
     [Fact]
@@ -80,8 +80,8 @@ public class PayOut : IClassFixture<SessionFixture>
         var paidCreditor = await Session.PayOutAsync(creditor.UserInformation.UserId, creditor.Amount);
         var order1 = await Session.GetOrderAsync(userOrder1.OrderId);
         var order2 = await Session.GetOrderAsync(userOrder2.OrderId);
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         creditor.AccountNumber.Should().NotBeEmpty();
         creditor.Amount.Should().Be(deposit1 + deposit2);
         paidCreditor.AccountNumber.Should().BeNull();
@@ -94,6 +94,6 @@ public class PayOut : IClassFixture<SessionFixture>
         order2.Type.Should().Be(OrderType.User);
         order2.IsHistoryOrder.Should().BeTrue();
         order2.Reservations.Single().Status.Should().Be(ReservationStatus.Settled);
-        userBalance.Should().Be(Amount.Zero);
+        myBalance.Should().Be(Amount.Zero);
     }
 }

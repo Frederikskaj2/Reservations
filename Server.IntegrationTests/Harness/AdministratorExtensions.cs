@@ -14,8 +14,11 @@ static class AdministratorExtensions
     public static async ValueTask<UserDetails> GetUserAsync(this SessionFixture session, UserId userId) =>
         await session.DeserializeAsync<UserDetails>(await session.AdministratorGetAsync($"users/{userId}"));
 
+    public static async ValueTask<UserTransactions> GetUserTransactionsAsync(this SessionFixture session, UserId userId) =>
+        await session.DeserializeAsync<UserTransactions>(await session.AdministratorGetAsync($"users/{userId}/transactions"));
+
     public static async ValueTask<IEnumerable<User>> GetUsersAsync(this SessionFixture session) =>
-        await session.DeserializeAsync<IEnumerable<User>>(await session.AdministratorGetAsync($"users"));
+        await session.DeserializeAsync<IEnumerable<User>>(await session.AdministratorGetAsync("users"));
 
     public static async ValueTask<IEnumerable<Order>> GetUserOrdersAsync(this SessionFixture session) =>
         await session.DeserializeAsync<IEnumerable<Order>>(await session.AdministratorGetAsync("orders/user"));
@@ -60,6 +63,9 @@ static class AdministratorExtensions
         var request = new PayOutRequest { Date = LocalDate.FromDateTime(DateTime.UtcNow), Amount = amount };
         return await session.DeserializeAsync<Creditor>(await session.AdministratorPostAsync($"users/{userId}/pay-out", request));
     }
+
+    public static async ValueTask DeleteTransactionAsync(this SessionFixture session, TransactionId transactionId) =>
+        await session.AdministratorDeleteAsync($"transactions/{transactionId}");
 
     public static async ValueTask<OrderDetails> SettleReservationAsync(
         this SessionFixture session, UserId userId, OrderId orderId, ReservationIndex reservationIndex)

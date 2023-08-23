@@ -164,6 +164,12 @@ static class DatabaseFunctions
         from context2 in ReadUserContext(context1, order.UserId)
         select context2;
 
+    public static EitherAsync<Failure, IPersistenceContext> ReadTransactionAndUserContext(IPersistenceContext context, TransactionId transactionId) =>
+        from context1 in ReadTransactionContext(context, transactionId)
+        let transaction = context1.Item<Transaction>()
+        from context2 in ReadUserContext(context1, transaction.UserId)
+        select context2;
+
     public static EitherAsync<Failure, IPersistenceContext> ReadAllOrdersAndUserFromOrderContext(IPersistenceContext context, OrderId orderId) =>
         from context1 in MapReadError(context.ReadItems(GetAllActiveOrdersQuery(context)))
         let order = context1.Order(orderId)
@@ -185,6 +191,9 @@ static class DatabaseFunctions
     public static EitherAsync<Failure, IPersistenceContext> ReadOwnerOrdersContext(IPersistenceContext context) =>
         MapReadError(context.ReadItems(context.Query<Order>()
             .Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && order.Flags.HasFlag(OrderFlags.IsOwnerOrder))));
+
+    public static EitherAsync<Failure, IPersistenceContext> ReadTransactionContext(IPersistenceContext context, TransactionId transactionId) =>
+        MapReadError(context.ReadItem<Transaction>(Transaction.GetId(transactionId)));
 
     public static EitherAsync<Failure, IPersistenceContext> WriteContext(IPersistenceContext context) =>
         MapWriteError(context.Write());

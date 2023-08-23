@@ -115,7 +115,7 @@ static class UserExtensions
         await session.SignInAsync();
     }
 
-    public static async ValueTask<MyTransactions> GetUserTransactionsAsync(this SessionFixture session) =>
+    public static async ValueTask<MyTransactions> GetMyTransactionsAsync(this SessionFixture session) =>
         await session.DeserializeAsync<MyTransactions>(await session.GetAsync("transactions"));
 
     public static UserId UserId(this SessionFixture session)

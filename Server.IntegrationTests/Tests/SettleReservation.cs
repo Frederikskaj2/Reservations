@@ -21,14 +21,14 @@ public class SettleReservation : IClassFixture<SessionFixture>
         var reservation = userOrder.Reservations!.Single();
         await Session.SettleReservationAsync(Session.UserId(), userOrder.OrderId, 0);
         var order = await Session.GetOrderAsync(userOrder.OrderId);
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         var creditors = await Session.GetCreditorsAsync();
         var creditor = creditors.SingleOrDefault(c => c.UserInformation.UserId == Session.UserId());
         order.Should().NotBeNull();
         order.Type.Should().Be(OrderType.User);
         order.IsHistoryOrder.Should().BeTrue();
-        userBalance.Should().Be(reservation.Price!.Deposit);
+        myBalance.Should().Be(reservation.Price!.Deposit);
         order.Reservations.Single().Status.Should().Be(ReservationStatus.Settled);
         order.Audits.Select(audit => audit.Type).Should().Equal(
             OrderAuditType.PlaceOrder, OrderAuditType.ConfirmOrder, OrderAuditType.SettleReservation, OrderAuditType.FinishOrder);
@@ -57,9 +57,9 @@ public class SettleReservation : IClassFixture<SessionFixture>
         order1.Reservations.Single().Status.Should().Be(ReservationStatus.Settled);
         order2.IsHistoryOrder.Should().BeFalse();
         order2.Reservations.Single().Status.Should().Be(ReservationStatus.Confirmed);
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
-        userBalance.Should().Be(order1Deposit - price2);
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        myBalance.Should().Be(order1Deposit - price2);
         order1.Audits.Select(audit => audit.Type).Should().Equal(
             OrderAuditType.PlaceOrder, OrderAuditType.ConfirmOrder, OrderAuditType.SettleReservation, OrderAuditType.FinishOrder);
         order2.Audits.Select(audit => audit.Type).Should().Equal(OrderAuditType.PlaceOrder, OrderAuditType.ConfirmOrder);
@@ -77,14 +77,14 @@ public class SettleReservation : IClassFixture<SessionFixture>
         await Session.SettleReservationAsync(Session.UserId(), userOrder.OrderId, reservationIndex, damages, description);
         var order = await Session.GetOrderAsync(userOrder.OrderId);
         var damagesLineItem = order.User!.AdditionalLineItems.Single();
-        var userTransactions = await Session.GetUserTransactionsAsync();
-        var userBalance = userTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
         var creditors = await Session.GetCreditorsAsync();
         var creditor = creditors.SingleOrDefault(c => c.UserInformation.UserId == Session.UserId());
         order.Should().NotBeNull();
         order.Type.Should().Be(OrderType.User);
         order.IsHistoryOrder.Should().BeTrue();
-        userBalance.Should().Be(remainingAmount);
+        myBalance.Should().Be(remainingAmount);
         order.Reservations.Single().Status.Should().Be(ReservationStatus.Settled);
         damagesLineItem.Type.Should().Be(LineItemType.Damages);
         damagesLineItem.Amount.Should().Be(-damages);
