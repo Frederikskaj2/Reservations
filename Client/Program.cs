@@ -35,7 +35,7 @@ public static class Program
             .AddBootstrapProviders()
             .AddFontAwesomeIcons();
 
-        ConfigureServices(builder.Services, new Uri(builder.HostEnvironment.BaseAddress));
+        ConfigureServices(builder.Services, new(builder.HostEnvironment.BaseAddress));
 
         var host = builder.Build();
 

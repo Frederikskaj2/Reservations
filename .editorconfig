@@ -882,6 +882,9 @@ dotnet_diagnostic.ca9999.severity = warning
 # CS8509: The switch expression does not handle all possible values of its input type (it is not exhaustive).
 dotnet_diagnostic.cs8509.severity = suggestion
 
+# ReSharper properties
+resharper_object_creation_when_type_not_evident = target_typed
+
 [*.{appxmanifest,asax,ascx,aspx,axaml,build,c,c++,cc,cginc,compute,cp,cpp,cs,cshtml,cu,cuh,cxx,dtd,fs,fsi,fsscript,fsx,fx,fxh,h,hh,hlsl,hlsli,hlslinc,hpp,hxx,inc,inl,ino,ipp,master,ml,mli,mpp,mq4,mq5,mqh,nuspec,paml,razor,resw,resx,shader,skin,tpp,usf,ush,vb,xaml,xamlx,xoml,xsd}]
 indent_style = space
 indent_size = 4

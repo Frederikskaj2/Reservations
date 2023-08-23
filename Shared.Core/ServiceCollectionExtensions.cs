@@ -12,14 +12,40 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddShared(this IServiceCollection services)
     {
+        // Blazor WASM by default does not provide a way to access a specific
+        // culture. Instead everything needed is configured here.
         var cultureInfo = new CultureInfo("da-DK")
         {
             DateTimeFormat =
             {
-                // These have different values in Blazor WASM so are set
-                // here for consistency.
                 DateSeparator = "-",
-                TimeSeparator = ":"
+                TimeSeparator = ":",
+                DayNames = new[]
+                {
+                    "søndag",
+                    "mandag",
+                    "tirsdag",
+                    "onsdag",
+                    "torsdag",
+                    "fredag",
+                    "lørdag"
+                },
+                MonthNames = new[]
+                {
+                    "januar",
+                    "februar",
+                    "marts",
+                    "april",
+                    "maj",
+                    "juni",
+                    "juli",
+                    "august",
+                    "september",
+                    "oktober",
+                    "november",
+                    "december",
+                    ""
+                }
             },
             NumberFormat =
             {

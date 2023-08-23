@@ -66,7 +66,8 @@ public class Formatter
             { TotalMinutes: < 90 } => "den næste time",
             { TotalMinutes: < 120 } => "den næste halvanden time",
             { TotalHours: < 24 } => $"de næste {GetNumber(duration.Hours)} timer",
-            { TotalHours: < 48 } => (future.InZone(dateTimeZone).Date - now.InZone(dateTimeZone).Date).Days is 1 ? $"senest i morgen inden kl. {future.InZone(dateTimeZone).Date}" : "de næste to dage",
+            { TotalHours: < 48 } => (future.InZone(dateTimeZone).Date - now.InZone(dateTimeZone).Date).Days is 1
+                ? $"senest i morgen inden kl. {future.InZone(dateTimeZone).Date}" : "de næste to dage",
             _ => $"de næste {GetNumber(duration.Days + (duration.TotalDays - duration.Days > 0.5 ? 1 : 0))} dage"
         };
     }
@@ -83,8 +84,8 @@ public class Formatter
             { TotalHours: < 24 } => $"For {GetNumber(duration.Hours)} timer siden",
             { TotalHours: < 48 } => (past.InZone(dateTimeZone).Date - now.InZone(dateTimeZone).Date).Days is 1 ? "I dag" : "I går",
             { TotalDays: < 7 } => $"For {GetNumber(duration.Days)} dage siden",
-            { TotalDays: < 10 } => $"For en uge siden",
-            { TotalDays: < 14 } => $"For halvanden uge siden",
+            { TotalDays: < 10 } => "For en uge siden",
+            { TotalDays: < 14 } => "For halvanden uge siden",
             { TotalDays: < 31 } => $"For {GetNumber(duration.Days/7)} uger siden",
             _ => FormatHumanizedPastTimeWhenMoreThanOneMonth(now, past)
         };
