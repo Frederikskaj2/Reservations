@@ -1,6 +1,7 @@
 using Frederikskaj2.Reservations.Shared.Core;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Frederikskaj2.Reservations.Application;
 
@@ -37,7 +38,10 @@ public static class PaymentIdEncoder
     // validate a provided identifier.
 
     const string characterSet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const char prefix = 'B';
+    const char prefixSeparator = '-';
 
+    static readonly Dictionary<char, int> characterToFiveBitValueMap = characterSet.Select(KeyValuePair.Create).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     static readonly HashSet<char> validCharacters = new(characterSet.ToCharArray());
 
     // Masks used to perform the matrix multiplication required for the
@@ -68,7 +72,7 @@ public static class PaymentIdEncoder
         var obfuscatedId = XorShift(id);
         var hash = GetPearsonHash(obfuscatedId);
         var obfuscatedIdWithHash = hash << 15 | (ushort) obfuscatedId;
-        return PaymentId.FromString("B-" + Encode(obfuscatedIdWithHash));
+        return PaymentId.FromString(Encode(obfuscatedIdWithHash));
 
         static short XorShift(short value)
         {
@@ -80,11 +84,13 @@ public static class PaymentIdEncoder
 
         static string Encode(int value)
         {
-            return string.Create(4, value, SpanAction);
+            return string.Create(6, value, SpanAction);
 
             static void SpanAction(Span<char> span, int state)
             {
-                for (var i = 0; i < 4; i += 1)
+                span[0] = prefix;
+                span[1] = prefixSeparator;
+                for (var i = 2; i < 6; i += 1)
                 {
                     var fiveBitValue = state & 0x1F;
                     state >>= 5;
@@ -108,7 +114,7 @@ public static class PaymentIdEncoder
             {
                 result <<= 1;
                 var maskedValue = value & rowMasks[row];
-                var oddNumberOfBits = CountBits((short) maskedValue)%2 == 1;
+                var oddNumberOfBits = CountBits((short) maskedValue)%2 is 1;
                 if (oddNumberOfBits)
                     result |= 1;
             }
@@ -126,10 +132,10 @@ public static class PaymentIdEncoder
 
     static (short ObfuscatedId, bool IsValid) Validate(PaymentId paymentId)
     {
-        var id = paymentId.ToString();
+        var id = paymentId.ToString()!;
         var isValid = id.Length is 6 &&
-                      id[0] is 'B' &&
-                      id[1] is '-' &&
+                      id[0] is prefix &&
+                      id[1] is prefixSeparator &&
                       validCharacters.Contains(id[2]) &&
                       validCharacters.Contains(id[3]) &&
                       validCharacters.Contains(id[4]) &&
@@ -148,9 +154,7 @@ public static class PaymentIdEncoder
             var value = 0;
             for (var i = 0; i < 4; i += 1)
             {
-                var fiveBitValue = characterSet.IndexOf(code[i], StringComparison.Ordinal);
-                if (fiveBitValue == -1)
-                    throw new ArgumentException("Invalid character in payment ID.", nameof(code));
+                var fiveBitValue = characterToFiveBitValueMap[code[i]];
                 value |= fiveBitValue << i*5;
             }
             return value;
