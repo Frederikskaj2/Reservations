@@ -3,7 +3,6 @@ using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using NodaTime;
 using System.Collections.Generic;
-using System.Linq;
 using static Frederikskaj2.Reservations.Application.DatabaseFunctions;
 using static Frederikskaj2.Reservations.Application.PostingFactory;
 using static LanguageExt.Prelude;

@@ -1,8 +1,6 @@
-using Frederikskaj2.Reservations.Shared.Core;
 using Microsoft.AspNetCore.Identity;
 using NodaTime;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace Frederikskaj2.Reservations.Importer.Input;
 

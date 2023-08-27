@@ -1,6 +1,5 @@
 ﻿using Frederikskaj2.Reservations.Client.Dialogs;
 using Frederikskaj2.Reservations.Shared.Core;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using NodaTime;
 using System;

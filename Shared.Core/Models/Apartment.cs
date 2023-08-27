@@ -8,7 +8,7 @@ public record Apartment(ApartmentId ApartmentId, char Letter, int? Story, Apartm
 
     static string GetStory(int? story) => story switch
     {
-        var above0 and > 0 => $", {above0}.",
+        > 0 => $", {story}.",
         0 => ", st.",
         _ => ""
     };

@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Frederikskaj2.Reservations.Importer.Input;
 
 public class AccountBalance

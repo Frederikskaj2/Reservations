@@ -1,5 +1,4 @@
-﻿using Frederikskaj2.Reservations.Client.Dialogs;
-using Frederikskaj2.Reservations.Shared.Core;
+﻿using Frederikskaj2.Reservations.Shared.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using System.Collections.Generic;

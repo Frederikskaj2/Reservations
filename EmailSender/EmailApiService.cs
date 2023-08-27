@@ -1,6 +1,5 @@
 using Frederikskaj2.Reservations.Shared.Core;
 using Microsoft.Extensions.Options;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;

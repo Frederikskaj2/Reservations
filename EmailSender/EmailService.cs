@@ -1,4 +1,3 @@
-using Frederikskaj2.Reservations.Shared.Core;
 using Frederikskaj2.Reservations.Shared.Email;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

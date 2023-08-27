@@ -1,7 +1,6 @@
 using Frederikskaj2.Reservations.Shared.Core;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Frederikskaj2.Reservations.Application;
 
