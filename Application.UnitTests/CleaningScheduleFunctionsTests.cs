@@ -13,10 +13,10 @@ using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Application.UnitTests;
 
-public class CleaningScheduleFunctions
+public class CleaningScheduleFunctionsTests
 {
     [Fact]
-    public async Task CleaningTaskInThePastShouldNotAppearAsCancelledTask2()
+    public async Task CleaningTaskInThePastShouldNotAppearAsCancelledTask()
     {
         // Arrange
         const int additionalDaysWhereCleaningCanBeDone = 3;
@@ -40,7 +40,7 @@ public class CleaningScheduleFunctions
             UserId.FromInt32(1),
             OrderFlags.IsCleaningRequired,
             timestamp,
-            new UserOrder(ApartmentId.FromInt32(1), null, Empty),
+            new(ApartmentId.FromInt32(1), null, Empty),
             null,
             Seq1(reservation),
             Empty);
@@ -66,7 +66,7 @@ public class CleaningScheduleFunctions
         var options = new OrderingOptions { AdditionalDaysWhereCleaningCanBeDone = additionalDaysWhereCleaningCanBeDone };
 
         // Act
-        var either = Application.CleaningScheduleFunctions.TryGetCleaningScheduleDelta(persistenceContextFactory, options, cleaningEnd.PlusDays(1));
+        var either = CleaningScheduleFunctions.TryGetCleaningScheduleDelta(persistenceContextFactory, options, cleaningEnd.PlusDays(1));
         var (schedule, deltaOption) = await either.MatchAsync(
             tuple => tuple,
             failure => throw new XunitException(failure.ToString()));
