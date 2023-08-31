@@ -10,7 +10,7 @@ static class UserBalanceFunctions
     public static User UpdateUserBalance(User user, Transaction transaction) =>
         user with { Accounts = ValidateUserAccounts(TryEqualizeAccountsReceivableAndAccountsPayable(user.Accounts.Apply(transaction.Amounts))) };
 
-    static AccountAmounts TryEqualizeAccountsReceivableAndAccountsPayable(AccountAmounts amounts) =>
+    public static AccountAmounts TryEqualizeAccountsReceivableAndAccountsPayable(AccountAmounts amounts) =>
         amounts[Account.AccountsReceivable] != Amount.Zero && amounts[Account.AccountsPayable] != Amount.Zero
             ? EqualizeAccountsReceivableAndAccountsPayable(amounts)
             : amounts;

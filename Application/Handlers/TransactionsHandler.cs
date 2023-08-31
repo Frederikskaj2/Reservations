@@ -1,6 +1,7 @@
 ﻿using Frederikskaj2.Reservations.Shared.Core;
 using LanguageExt;
 using System.Net;
+using static Frederikskaj2.Reservations.Application.UserBalanceFunctions;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Application;
@@ -32,7 +33,7 @@ public static class TransactionsHandler
         };
 
     static AccountAmounts UpdateAccounts(AccountAmounts accounts, Transaction transaction) =>
-        accounts.ApplyReverse(transaction.Amounts);
+        TryEqualizeAccountsReceivableAndAccountsPayable(accounts.ApplyReverse(transaction.Amounts));
 
     static Seq<UserAudit> DeleteAudit(Seq<UserAudit> audits, TransactionId transactionId) =>
         audits.Filter(audit => audit.TransactionId != transactionId);
