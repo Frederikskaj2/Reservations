@@ -59,4 +59,9 @@ static class TransactionAmounts
             (Account.AccountsPayable, amount - excessAmount),
             (Account.Bank, -amount),
             (Account.AccountsReceivable, excessAmount));
+
+    public static AccountAmounts Reimburse(Account incomeAccount, Amount amount) =>
+        AccountAmounts.Create(
+            (incomeAccount, amount),
+            (Account.AccountsPayable, -amount));
 }

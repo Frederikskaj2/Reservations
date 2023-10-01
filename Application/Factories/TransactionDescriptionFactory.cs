@@ -7,9 +7,9 @@ namespace Frederikskaj2.Reservations.Application;
 static class TransactionDescriptionFactory
 {
     public static string? CreateDescription(IFormatter formatter, OrderId? orderId, TransactionDescription? description) =>
-        description is not null ? CreateDescriptionCore(formatter, orderId!.Value, description) : null;
+        description is not null ? CreateDescriptionCore(formatter, orderId, description) : null;
 
-    static string CreateDescriptionCore(IFormatter formatter, OrderId orderId, TransactionDescription description) =>
+    static string CreateDescriptionCore(IFormatter formatter, OrderId? orderId, TransactionDescription description) =>
         description.Type switch
         {
             TransactionDescriptionType.Cancellation =>
@@ -18,6 +18,7 @@ static class TransactionDescriptionFactory
                 $"Opgørelse {GetReservationDescription(formatter, description.Settlement!.Reservation)} (bestilling {orderId}){GetDamagesDescription(description.Settlement.Damages)}",
             TransactionDescriptionType.ReservationsUpdate =>
                 $"Ændring {GetReservationDescriptions(formatter, description.ReservationsUpdate!.UpdatedReservations)} (bestilling {orderId})",
+            TransactionDescriptionType.Reimbursement => description.Reimbursement!.Description,
             _ => throw new ArgumentException($"Invalid transaction description type {description.Type}.", nameof(description))
         };
 

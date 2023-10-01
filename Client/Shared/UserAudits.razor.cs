@@ -50,6 +50,7 @@ public sealed partial class UserAudits : IDisposable
         UserAuditType.PayOut => "Udbetaling",
         UserAuditType.RequestDelete => "Anmodning om sletning af bruger",
         UserAuditType.Delete => "Sletning af bruger",
+        UserAuditType.Reimburse => "Godtgørelse",
         _ => "?"
     };
 }

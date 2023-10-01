@@ -51,21 +51,26 @@
                                 <TableRow>
                                     <TableRowCell>@Formatter.FormatDate(transaction.Date)</TableRowCell>
                                     <TableRowCell>
-                                        @if (transaction.Activity == Activity.PlaceOrder)
+                                        @switch (transaction.Activity)
                                         {
-                                            <a href="@Urls.MyOrders/@transaction.OrderId">Oprettelse af bestilling @transaction.OrderId</a>
-                                        }
-                                        else if (transaction.Activity is Activity.UpdateOrder or Activity.SettleReservation)
-                                        {
-                                            <a href="@Urls.MyOrders/@transaction.OrderId">@transaction.Description</a>
-                                        }
-                                        else if (transaction.Activity == Activity.PayIn)
-                                        {
-                                            <text>Indbetaling</text>
-                                        }
-                                        else
-                                        {
-                                            <text>Udbetaling</text>
+                                            case Activity.PlaceOrder:
+                                                <a href="@Urls.MyOrders/@transaction.OrderId">Oprettelse af bestilling @transaction.OrderId</a>
+                                                break;
+                                            case Activity.UpdateOrder or Activity.SettleReservation:
+                                                <a href="@Urls.MyOrders/@transaction.OrderId">@transaction.Description</a>
+                                                break;
+                                            case Activity.PayIn:
+                                                @:Indbetaling
+                                                break;
+                                            case Activity.PayOut:
+                                                @:Udbetaling
+                                                break;
+                                            case Activity.Reimburse:
+                                                @:Godtgørelse: @transaction.Description
+                                                break;
+                                            default:
+                                                @:Ukendt
+                                                break;
                                         }
                                     </TableRowCell>
                                     <TableRowCell class="text-right">@Formatter.FormatMoneyShort(transaction.Amount)</TableRowCell>

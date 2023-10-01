@@ -7,6 +7,5 @@ public class PayOutServerRequest
 {
     public int UserId { get; set; }
 
-    [FromBody]
-    public PayOutRequest? Body { get; set; }
+    [FromBody] public PayOutRequest? Body { get; set; }
 }

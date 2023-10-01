@@ -7,5 +7,7 @@ public enum Activity
     UpdateOrder,
     SettleReservation,
     PayIn,
-    PayOut
+    PayOut,
+    Reimburse,
+    Charge // TODO: "Opkrævning"
 }

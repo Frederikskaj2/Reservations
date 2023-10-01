@@ -21,5 +21,7 @@ public enum UserAuditType
     PayIn,
     PayOut,
     RequestDelete,
-    Delete
+    Delete,
+    Reimburse,
+    Charge // TODO: "Opkrævning"
 }

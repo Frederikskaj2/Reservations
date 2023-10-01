@@ -1,6 +1,7 @@
 ﻿using LanguageExt;
 using Frederikskaj2.Reservations.Shared.Core;
 using NodaTime;
+using System;
 using static Frederikskaj2.Reservations.Application.TransactionAmounts;
 using static Frederikskaj2.Reservations.Application.TransactionDescription;
 
@@ -95,4 +96,26 @@ static class TransactionFunctions
             null,
             null,
             PayOut(command.Amount, excessAmount));
+
+    public static Transaction CreateReimburseTransaction(ReimburseCommand command, TransactionId transactionId) =>
+        new(
+            transactionId,
+            command.Date,
+            command.AdministratorUserId,
+            command.Timestamp,
+            Activity.Reimburse,
+            command.UserId,
+            null,
+            CreateReimbursementDescription(command.AccountToDebit, command.Description),
+            Reimburse(GetIncomeAccount(command.AccountToDebit), command.Amount));
+
+    static Account GetIncomeAccount(IncomeAccount incomeAccount) =>
+        incomeAccount switch
+        {
+            IncomeAccount.Rent => Account.Rent,
+            IncomeAccount.Cleaning => Account.Cleaning,
+            IncomeAccount.CancellationFees => Account.CancellationFees,
+            IncomeAccount.Damages => Account.Damages,
+            _ => throw new ArgumentOutOfRangeException(nameof(incomeAccount), incomeAccount, null)
+        };
 }

@@ -107,6 +107,19 @@ static class AdministratorExtensions
         return await session.DeserializeAsync<OrderDetails>(await session.AdministratorPatchAsync($"orders/user/{orderId}", request));
     }
 
+    public static async ValueTask ReimburseAsync(this SessionFixture session, UserId userId, IncomeAccount accountToDebit, string description, Amount amount)
+    {
+        var request = new ReimburseRequest
+        {
+            Date = LocalDate.FromDateTime(DateTime.UtcNow),
+            AccountToDebit = accountToDebit,
+            Description = description,
+            Amount = amount
+        };
+        var response = await session.AdministratorPostAsync($"users/{userId}/reimburse", request);
+        response.EnsureSuccessStatusCode();
+    }
+
     public static async ValueTask<YearlySummaryRange> GetYearlySummaryRange(this SessionFixture session) =>
         await session.DeserializeAsync<YearlySummaryRange>(await session.AdministratorGetAsync("reports/yearly-summary/range"));
 

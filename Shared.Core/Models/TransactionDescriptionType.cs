@@ -5,5 +5,7 @@ public enum TransactionDescriptionType
     None,
     Cancellation,
     Settlement,
-    ReservationsUpdate
+    ReservationsUpdate,
+    Reimbursement,
+    Charge // TODO: "Opkrævning"
 }

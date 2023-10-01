@@ -137,6 +137,20 @@ public static partial class Validator
         return either.MapFailure(HttpStatusCode.UnprocessableEntity);
     }
 
+    public static Either<Failure, ReimburseCommand> ValidateReimburse(
+        IDateProvider dateProvider, UserId userId, ReimburseRequest? body, UserId administratorUserId)
+    {
+        var now = dateProvider.Now;
+        var either =
+            from request in HasValue(body, "Request body")
+            from date in IsNotFutureDate(dateProvider.GetDate(now), request.Date, "Date")
+            from description in ValidateReimburseDescription(request.Description)
+            from account in IsValidEnumValue(request.AccountToDebit, "Account to debit")
+            from amount in ValidateAmount(request.Amount, ValidationRules.MinimumAmount, ValidationRules.MaximumAmount, "Amount")
+            select new ReimburseCommand(now, administratorUserId, userId, date, account, description, amount);
+        return either.MapFailure(HttpStatusCode.UnprocessableEntity);
+    }
+
     static Either<string, Option<string>> ValidateOptionalAccountNumber(string? accountNumber) =>
         accountNumber is null ? Option<string>.None : Some(ValidateAccountNumber(accountNumber)).Sequence();
 
@@ -201,4 +215,9 @@ public static partial class Validator
         from nonEmptyString in IsNotNullOrEmpty(description, "Description")
         from validDescription in IsNotLongerThan(nonEmptyString, ValidationRules.MaximumDamagesDescriptionLength, "Description")
         select Some(validDescription);
+
+    static Either<string, string> ValidateReimburseDescription(string? description) =>
+        from nonEmptyString in IsNotNullOrEmpty(description, "Description")
+        from validDescription in IsNotLongerThan(nonEmptyString, ValidationRules.MaximumReimburseDescriptionLength, "Description")
+        select validDescription;
 }

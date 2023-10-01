@@ -13,6 +13,7 @@ public static class ValidationRules
     public const int MaximumOwnerOrderDescriptionLength = 200;
     public const int MaximumPasswordLength = 200;
     public const int MaximumPhoneLength = 50;
+    public const int MaximumReimburseDescriptionLength = 100;
     public const int MaximumReservationsPerOrder = 10;
     public static readonly Regex AccountNumberRegex = new(@"^\s*[0-9]{4}-[0-9]{4,}\s*$");
     public static readonly Regex EmailRegex = new(@"^.+\@.+\..+$");

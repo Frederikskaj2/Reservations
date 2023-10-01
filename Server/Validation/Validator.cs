@@ -70,4 +70,7 @@ partial class Validator
 
     static Either<Failure<F>, T> MapFailure<T, F>(this Either<string, T> self, HttpStatusCode status, F failure) where F : struct, IConvertible =>
         self.MapLeft(details => Failure.New(status, failure, details));
+
+    static Either<string, T> IsValidEnumValue<T>(T value, string context) where T : struct, Enum =>
+        !Equals(value,  default(T)) && Enum.IsDefined(value) ? value : $"{context} is not from the set of valid values.";
 }

@@ -112,9 +112,17 @@
                                             {
                                                 <a href="@string.Format(Urls.UsersTransactionsSpecific, posting.UserId, posting.TransactionId)">Indbetaling fra @posting.FullName <span class="payment-id">@posting.PaymentId</span></a>
                                             }
-                                            else
+                                            else if (posting.Activity is Activity.PayOut)
                                             {
                                                 <a href="@string.Format(Urls.UsersTransactionsSpecific, posting.UserId, posting.TransactionId)">Udbetaling til @posting.FullName <span class="payment-id">@posting.PaymentId</span></a>
+                                            }
+                                            else if (posting.Activity is Activity.Reimburse)
+                                            {
+                                                <a href="@string.Format(Urls.UsersTransactionsSpecific, posting.UserId, posting.TransactionId)">Godtgørelse af @posting.FullName <span class="payment-id">@posting.PaymentId</span></a>
+                                            }
+                                            else
+                                            {
+                                                <text>Ukendt</text>
                                             }
                                         </TableRowCell>
                                     }
