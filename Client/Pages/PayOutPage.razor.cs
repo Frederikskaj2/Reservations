@@ -17,6 +17,7 @@ public partial class PayOutPage
     AmountEditor amountEditor = null!;
     Creditor? creditor;
     LocalDate date;
+    bool isComplete;
     bool isInitialized;
     int maximumAmount;
     bool notFound;
@@ -50,6 +51,8 @@ public partial class PayOutPage
 
     async Task PayOutAsync()
     {
+        isComplete = true;
+
         DismissAllAlerts();
 
         await validations.ClearAll();

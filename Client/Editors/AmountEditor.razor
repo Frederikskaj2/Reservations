@@ -2,7 +2,7 @@
     <FieldLabel ColumnSize="ColumnSize.Is4">Beløb</FieldLabel>
     <FieldBody ColumnSize="ColumnSize.Is8">
         <Validation Validator="@Validator.ValidateAmount">
-            <NumericEdit Min="0" Max="@MaximumValue" Value="@Value" ValueChanged="@ValueChanged" EnableStep="false" SelectAllOnFocus="true" Autofocus="@AutoFocus">
+            <NumericEdit Min="0" Max="@MaximumValue" Value="@Value" ValueChanged="@ValueChanged" EnableStep="false" SelectAllOnFocus="true" Autofocus="@AutoFocus" Disabled="Disabled">
                 <Feedback>
                     <ValidationError />
                 </Feedback>

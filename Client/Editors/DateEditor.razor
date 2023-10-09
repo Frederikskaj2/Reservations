@@ -1,7 +1,7 @@
 ﻿<Field Horizontal="true">
     <FieldLabel ColumnSize="ColumnSize.Is4">Dato</FieldLabel>
     <FieldBody ColumnSize="ColumnSize.Is8">
-        <DateEdit TValue="DateTime" @ref="dateEdit" Date="@dateTime" DateChanged="@DateChangedAsync">
+        <DateEdit TValue="DateTime" @ref="dateEdit" Date="@dateTime" DateChanged="@DateChangedAsync" Disabled="Disabled">
             <Feedback>
                 <ValidationError/>
             </Feedback>

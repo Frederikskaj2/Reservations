@@ -13,6 +13,7 @@ public partial class DateEditor
 
     [Parameter] public LocalDate Date { get; set; }
     [Parameter] public EventCallback<LocalDate> DateChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
 
     protected override void OnParametersSet() => dateTime = Date.AtMidnight().ToDateTimeUnspecified();
 

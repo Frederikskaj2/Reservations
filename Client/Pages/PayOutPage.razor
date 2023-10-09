@@ -38,9 +38,15 @@
                 </CardHeader>
                 <CardBody>
                     <Validations @ref="validations" Mode="ValidationMode.Manual">
-                        <DateEditor @bind-Date="@date"/>
-                        <AmountEditor @ref="amountEditor" @bind-Value="@amount" MaximumValue="@maximumAmount" AutoFocus="true"/>
-                        <Button Color="Color.Primary" Type="ButtonType.Submit" Class="btn-fixed float-right" PreventDefaultOnSubmit="true" Clicked="@PayOutAsync" Disabled="@(amount <= 0)">Registrér udbetaling</Button>
+                        <Field Horizontal="true">
+                            <FieldLabel ColumnSize="ColumnSize.Is4">Kontonummer</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is6">
+                                <div class="field-text">@creditor.AccountNumber</div>
+                            </FieldBody>
+                        </Field>
+                        <DateEditor @bind-Date="@date" Disabled="isComplete"/>
+                        <AmountEditor @ref="amountEditor" @bind-Value="@amount" MaximumValue="@maximumAmount" AutoFocus="true" Disabled="isComplete"/>
+                        <Button Color="Color.Primary" Type="ButtonType.Submit" Class="btn-fixed float-right" PreventDefaultOnSubmit="true" Clicked="@PayOutAsync" Disabled="@(isComplete || amount <= 0)">Registrér udbetaling</Button>
                     </Validations>
                 </CardBody>
             </Card>
