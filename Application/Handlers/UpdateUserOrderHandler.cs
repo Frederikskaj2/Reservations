@@ -19,7 +19,7 @@ public static class UpdateUserOrderHandler
         let context2 = UpdateAccountNumber(context1, command.Timestamp, command.AdministratorUserId, command.AccountNumber)
         from order in GetUserOrder(context2, command.OrderId)
         let today = dateProvider.GetDate(command.Timestamp)
-        from context3 in TryCancelReservations(options, command.Timestamp, command.UserId, command.CancelledReservations, command.WaiveFee, true, today, context2, order)
+        from context3 in TryCancelReservations(options, command.Timestamp, command.AdministratorUserId, command.CancelledReservations, command.WaiveFee, true, today, context2, order)
         let tuple = TryAllowCancellationWithoutFee(
             options, command.Timestamp, command.AdministratorUserId, command.AllowCancellationWithoutFee, order, context3)
         from contextWithPossiblyDeletedUser in TryDeleteUser(emailService, tuple.Context, command.Timestamp, order.UserId)
