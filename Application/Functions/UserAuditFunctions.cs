@@ -10,7 +10,7 @@ static class UserAuditFunctions
             ? user with
             {
                 ApartmentId = apartmentId,
-                Audits = user.Audits.Add(new UserAudit(timestamp, user.UserId, UserAuditType.UpdateApartmentId))
+                Audits = user.Audits.Add(new(timestamp, user.UserId, UserAuditType.UpdateApartmentId))
             }
             : user;
 
@@ -19,7 +19,7 @@ static class UserAuditFunctions
             ? user with
             {
                 AccountNumber = accountNumber,
-                Audits = user.Audits.Add(new UserAudit(timestamp, userId, UserAuditType.SetAccountNumber))
+                Audits = user.Audits.Add(new(timestamp, userId, UserAuditType.SetAccountNumber))
             }
             : user;
 
@@ -28,7 +28,7 @@ static class UserAuditFunctions
             ? user with
             {
                 AccountNumber = null,
-                Audits = user.Audits.Add(new UserAudit(timestamp, userId, UserAuditType.RemoveAccountNumber))
+                Audits = user.Audits.Add(new(timestamp, userId, UserAuditType.RemoveAccountNumber))
             }
             : user;
 
@@ -37,7 +37,7 @@ static class UserAuditFunctions
             ? user with
             {
                 FullName = fullName,
-                Audits = user.Audits.Add(new UserAudit(timestamp, userId, UserAuditType.UpdateFullName))
+                Audits = user.Audits.Add(new(timestamp, userId, UserAuditType.UpdateFullName))
             }
             : user;
 
@@ -46,7 +46,7 @@ static class UserAuditFunctions
             ? user with
             {
                 Phone = phone,
-                Audits = user.Audits.Add(new UserAudit(timestamp, userId, UserAuditType.UpdatePhone))
+                Audits = user.Audits.Add(new(timestamp, userId, UserAuditType.UpdatePhone))
             }
             : user;
 
@@ -55,7 +55,7 @@ static class UserAuditFunctions
             ? user with
             {
                 EmailSubscriptions = subscriptions,
-                Audits = user.Audits.Add(new UserAudit(timestamp, user.UserId, UserAuditType.UpdateEmailSubscriptions))
+                Audits = user.Audits.Add(new(timestamp, user.UserId, UserAuditType.UpdateEmailSubscriptions))
             }
             : user;
 
@@ -64,7 +64,7 @@ static class UserAuditFunctions
             ? user with
             {
                 Roles = roles,
-                Audits = user.Audits.Add(new UserAudit(timestamp, userId, UserAuditType.UpdateRoles))
+                Audits = user.Audits.Add(new(timestamp, userId, UserAuditType.UpdateRoles))
             }
             : user;
 
@@ -73,7 +73,7 @@ static class UserAuditFunctions
             ? user with
             {
                 Flags = user.Flags | UserFlags.IsPendingDelete,
-                Audits = user.Audits.Add(new UserAudit(timestamp, userId, UserAuditType.RequestDelete))
+                Audits = user.Audits.Add(new(timestamp, userId, UserAuditType.RequestDelete))
             }
             : user;
 }

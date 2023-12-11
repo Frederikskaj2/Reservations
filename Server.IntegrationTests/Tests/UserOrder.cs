@@ -49,6 +49,7 @@ public class UserOrder : IClassFixture<SessionFixture>
             UserAuditType.SignUp, UserAuditType.ConfirmEmail, UserAuditType.SetAccountNumber, UserAuditType.CreateOrder, UserAuditType.PayIn,
             UserAuditType.SetAccountNumber);
     }
+
     [Fact]
     public async Task PlaceOrderThenPayOrderThenCancelOrder()
     {
