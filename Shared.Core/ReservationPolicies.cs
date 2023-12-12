@@ -37,6 +37,13 @@ public static class ReservationPolicies
         return reservationsAreNotAllowedBefore <= date && date <= reservationsAreNotAllowedAfter;
     }
 
+    public static bool IsOwnerReservationDateWithinBounds(OrderingOptions options, LocalDate today, LocalDate date)
+    {
+        var reservationsAreNotAllowedBefore = today.PlusDays(1);
+        var reservationsAreNotAllowedAfter = today.PlusDays(options.ReservationIsNotAllowedAfterDaysFromNow);
+        return reservationsAreNotAllowedBefore <= date && date <= reservationsAreNotAllowedAfter;
+    }
+
     public static bool IsUserReservationDurationWithinBounds(
         OrderingOptions options, IReadOnlySet<LocalDate> holidays, Extent reservation, ResourceType resourceType) =>
         resourceType switch

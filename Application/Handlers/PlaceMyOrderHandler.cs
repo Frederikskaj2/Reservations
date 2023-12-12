@@ -25,7 +25,14 @@ public static class PlaceMyOrderHandler
         from context2 in ReadLockBoxCodesContext(context1, today)
         from orderId in CreateOrderId(contextFactory)
         from transactionId in CreateTransactionId(contextFactory)
-        let context3 = PlaceUserOrder(options, dateProvider.Holidays, command, today, context2, orderId, transactionId)
+        let context3 = PlaceUserOrder(
+            options,
+            dateProvider.Holidays,
+            new(command.Timestamp, command.UserId, command.UserId, command.FullName, command.Phone, command.ApartmentId, command.AccountNumber, command.Reservations),
+            today,
+            context2,
+            orderId,
+            transactionId)
         let user = context3.Item<User>()
         let order = context3.Item<Order>(Order.GetId(orderId))
         from _3 in WriteContext(context3)

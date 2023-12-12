@@ -27,6 +27,20 @@ public static partial class Validator
         return either.MapFailure(HttpStatusCode.UnprocessableEntity);
     }
 
+    public static Either<Failure, PlaceUserOrderCommand> ValidatePlaceUserOrder(
+        Func<ApartmentId, bool> isValidApartmentId, Func<ResourceId, Option<ResourceType>> getResourceType, Func<Instant> getTimestamp,
+        PlaceUserOrderRequest request, UserId administratorUserId)
+    {
+        var either =
+            from fullName in ValidateFullName(request.FullName)
+            from phone in ValidatePhone(request.Phone)
+            from apartmentId in ValidateApartmentId(isValidApartmentId, request.ApartmentId)
+            from accountNumber in ValidateAccountNumber(request.AccountNumber)
+            from reservations in ValidateReservations(getResourceType, request.Reservations.ToSeq())
+            select new PlaceUserOrderCommand(getTimestamp(), administratorUserId, request.UserId, fullName, phone, apartmentId, accountNumber, reservations);
+        return either.MapFailure(HttpStatusCode.UnprocessableEntity);
+    }
+
     public static Either<Failure, PlaceOwnerOrderCommand> ValidatePlaceOwnerOrder(
         Func<ResourceId, Option<ResourceType>> getResourceType, Func<Instant> getTimestamp, PlaceOwnerOrderRequest request, UserId userId)
     {
