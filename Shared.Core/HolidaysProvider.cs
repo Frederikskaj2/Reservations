@@ -49,8 +49,6 @@ public static class HolidaysProvider
         yield return easter;
         // 2. påskedag
         yield return easter.PlusDays(1);
-        // Store bededag
-        yield return easter.PlusDays(26);
         // Kristi himmelfartsdag
         yield return easter.PlusDays(39);
         // Pinsedag
