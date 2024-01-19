@@ -13,6 +13,9 @@ namespace Frederikskaj2.Reservations.EmailSender;
 
 class EmailQueue
 {
+    // Turn off distributed tracing to reduce data volume logged to application insights.
+    static readonly QueueClientOptions queueClientOptions = new() { Diagnostics = { IsDistributedTracingEnabled = false } };
+
     readonly IOptionsMonitor<EmailQueueOptions> queueOptions;
 
     public EmailQueue(IOptionsMonitor<EmailQueueOptions> queueOptions) => this.queueOptions = queueOptions;
@@ -36,7 +39,7 @@ class EmailQueue
 
     static async ValueTask<QueueClient> CreateQueueClientAsync(EmailQueueOptions options, CancellationToken cancellationToken)
     {
-        var client = new QueueClient(options.ConnectionString, options.QueueName);
+        var client = new QueueClient(options.ConnectionString, options.QueueName, queueClientOptions);
         await client.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
         return client;
     }
