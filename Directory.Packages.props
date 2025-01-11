@@ -1,0 +1,47 @@
+﻿<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageVersion Include="Ardalis.ApiEndpoints" Version="4.1.0"/>
+        <PackageVersion Include="Azure.Storage.Queues" Version="12.21.0"/>
+        <PackageVersion Include="Blazored.LocalStorage" Version="4.5.0"/>
+        <PackageVersion Include="Blazorise.Bootstrap" Version="1.7.2"/>
+        <PackageVersion Include="Blazorise.Icons.FontAwesome" Version="1.7.2"/>
+        <PackageVersion Include="Bogus" Version="35.6.1"/>
+        <PackageVersion Include="coverlet.collector" Version="6.0.3"/>
+        <PackageVersion Include="FakeItEasy" Version="8.3.0"/>
+        <PackageVersion Include="FluentAssertions" Version="7.0.0"/>
+        <PackageVersion Include="LanguageExt.Core" Version="4.4.9"/>
+        <PackageVersion Include="libphonenumber-csharp" Version="8.13.52"/>
+        <PackageVersion Include="Liversage.Primitives" Version="4.2.11"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.36"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="6.0.36"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.36"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.36"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.36"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="6.0.36"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.36"/>
+        <PackageVersion Include="Microsoft.AspNetCore.Razor.Language" Version="6.0.36"/>
+        <PackageVersion Include="Microsoft.Azure.Cosmos" Version="3.46.1"/>
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0"/>
+        <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="6.0.3"/>
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0"/>
+        <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.1"/>
+        <PackageVersion Include="Microsoft.Extensions.Http" Version="6.0.1"/>
+        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.4"/>
+        <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="6.0.1"/>
+        <PackageVersion Include="Microsoft.Extensions.Options" Version="6.0.1"/>
+        <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.1"/>
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0"/>
+        <PackageVersion Include="NetEscapades.Extensions.Logging.RollingFile" Version="2.5.0"/>
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageVersion Include="NodaTime" Version="3.2.0"/>
+        <PackageVersion Include="Polly" Version="8.5.0"/>
+        <PackageVersion Include="SixLabors.ImageSharp.Drawing" Version="2.1.5"/>
+        <PackageVersion Include="System.Linq.Async" Version="6.0.1"/>
+        <PackageVersion Include="xunit" Version="2.9.3"/>
+        <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.1"/>
+    </ItemGroup>
+</Project>

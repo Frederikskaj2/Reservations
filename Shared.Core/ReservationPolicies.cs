@@ -71,12 +71,9 @@ public static class ReservationPolicies
 
     public static bool CanReservationBeCancelled(
         OrderingOptions options, LocalDate date, ReservationStatus status, Extent extent, bool alwaysAllowCancellation) =>
-        date < extent.Ends() && alwaysAllowCancellation && status is ReservationStatus.Reserved or ReservationStatus.Confirmed ||
-        date < extent.Date && CanReservationBeCancelledByUser(options, date, status, extent.Date);
-
-    static bool CanReservationBeCancelledByUser(OrderingOptions options, LocalDate date, ReservationStatus status, LocalDate reservationDate) =>
-        status == ReservationStatus.Reserved ||
-        status == ReservationStatus.Confirmed && date.PlusDays(options.MinimumCancellationNoticeInDays) <= reservationDate;
+        status is ReservationStatus.Reserved ||
+        status is ReservationStatus.Confirmed &&
+        (date < extent.Ends() && alwaysAllowCancellation || date.PlusDays(options.MinimumCancellationNoticeInDays) <= extent.Date);
 
     public static bool CanOwnerReservationBeCancelled(LocalDate date, ReservationStatus status, Extent extent) =>
         status == ReservationStatus.Confirmed && date < extent.Ends();

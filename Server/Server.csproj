@@ -5,16 +5,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Ardalis.ApiEndpoints" Version="4.0.1" />
-        <PackageReference Include="libphonenumber-csharp" Version="8.12.56" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="$(AspNetCoreVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="$(AspNetCoreVersion)" />
+        <PackageReference Include="Ardalis.ApiEndpoints"/>
+        <PackageReference Include="libphonenumber-csharp"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Client\Client.csproj" />
-        <ProjectReference Include="..\EmailSender\EmailSender.csproj" />
-        <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+        <ProjectReference Include="..\Client\Client.csproj"/>
+        <ProjectReference Include="..\EmailSender\EmailSender.csproj"/>
+        <ProjectReference Include="..\Infrastructure\Infrastructure.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

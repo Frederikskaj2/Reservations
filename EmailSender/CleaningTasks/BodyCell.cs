@@ -55,7 +55,7 @@ record BodyCell(int Day, IReadOnlyList<ResourceUsages> Resources, bool IsOtherMo
         {
             // ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
             var font = Design.FontFamily.CreateFont(Design.FontSizeSmall, Design.TableBodyFontStyle);
-            var options = new TextOptions(font)
+            var options = new RichTextOptions(font)
             {
                 Origin = new PointF(xStart + 2, yStart + 2),
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -65,7 +65,7 @@ record BodyCell(int Day, IReadOnlyList<ResourceUsages> Resources, bool IsOtherMo
             context.DrawText(options, Day.ToString(CultureInfo.InvariantCulture), Design.TableBodyForegroundColor);
         }
 
-        static void Fill(IImageProcessingContext context, int x, int y, int width, int height, IBrush brush) =>
+        static void Fill(IImageProcessingContext context, int x, int y, int width, int height, Brush brush) =>
             context.Fill(brush, GetCellPath(x, y, width, height));
     }
 }

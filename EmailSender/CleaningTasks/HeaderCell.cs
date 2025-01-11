@@ -12,7 +12,7 @@ record HeaderCell(string Text) : Cell
         context.Fill(Color.White, GetCellPath(x, y, width, height));
         // ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
         var font = Design.FontFamily.CreateFont(Design.FontSizeNormal, Design.TableHeaderFontStyle);
-        var options = new TextOptions(font)
+        var options = new RichTextOptions(font)
         {
             Origin = new PointF(x + width/2F, y + height/2F),
             HorizontalAlignment = HorizontalAlignment.Center,

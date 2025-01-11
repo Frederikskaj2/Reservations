@@ -5,10 +5,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Liversage.Primitives" Version="4.2.2" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(ExtensionsVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="$(ExtensionsVersion)" />
-        <PackageReference Include="NodaTime" Version="$(NodaTimeVersion)" />
+        <PackageReference Include="Liversage.Primitives"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Options"/>
+        <PackageReference Include="NodaTime"/>
     </ItemGroup>
 
 </Project>

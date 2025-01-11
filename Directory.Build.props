@@ -1,15 +1,6 @@
 <Project>
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <AspNetCoreVersion>6.0.9</AspNetCoreVersion>
-        <AzureStorageQueuesVersion>12.11.1</AzureStorageQueuesVersion>
-        <BlazoriseVersion>1.1.1</BlazoriseVersion>
-        <ExtensionsVersion>6.0.0</ExtensionsVersion>
-        <LanguageExtVersion>4.2.9</LanguageExtVersion>
-        <NodaTimeVersion>3.1.9</NodaTimeVersion>
-    </PropertyGroup>
-
-    <PropertyGroup>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 </Project>

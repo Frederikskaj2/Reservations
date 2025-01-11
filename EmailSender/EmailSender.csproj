@@ -5,58 +5,58 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Storage.Queues" Version="$(AzureStorageQueuesVersion)" />
-        <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="$(AspNetCoreVersion)" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(ExtensionsVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="$(ExtensionsVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(ExtensionsVersion)" />
-        <PackageReference Include="Polly" Version="7.2.3" />
-        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta14" />
-        <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+        <PackageReference Include="Azure.Storage.Queues"/>
+        <PackageReference Include="Microsoft.AspNetCore.Razor.Language"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Http"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+        <PackageReference Include="Polly"/>
+        <PackageReference Include="SixLabors.ImageSharp.Drawing"/>
+        <PackageReference Include="System.Linq.Async"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Shared.Email\Shared.Email.csproj" />
+        <ProjectReference Include="..\Shared.Email\Shared.Email.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="CleaningTasks\verdana.ttf" />
-        <EmbeddedResource Include="CleaningTasks\verdanab.ttf" />
-        <EmbeddedResource Include="Messages\EmailCleaningSchedule\Body.cshtml" />
-        <EmbeddedResource Include="Messages\EmailCleaningSchedule\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\ConfirmEmail\Body.cshtml" />
-        <EmbeddedResource Include="Messages\ConfirmEmail\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\LockBoxCodesOverview\Body.cshtml" />
-        <EmbeddedResource Include="Messages\LockBoxCodesOverview\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\LockBoxCodes\Body.cshtml" />
-        <EmbeddedResource Include="Messages\LockBoxCodes\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\NewOrder\Body.cshtml" />
-        <EmbeddedResource Include="Messages\NewOrder\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\NewPassword\Body.cshtml" />
-        <EmbeddedResource Include="Messages\NewPassword\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\NoFeeCancellationAllowed\Body.cshtml" />
-        <EmbeddedResource Include="Messages\NoFeeCancellationAllowed\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\OrderConfirmed\Body.cshtml" />
-        <EmbeddedResource Include="Messages\OrderConfirmed\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\OrderReceived\Body.cshtml" />
-        <EmbeddedResource Include="Messages\OrderReceived\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\PayIn\Body.cshtml" />
-        <EmbeddedResource Include="Messages\PayIn\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\PayOut\Body.cshtml" />
-        <EmbeddedResource Include="Messages\PayOut\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\PostingsForMonth\Body.cshtml" />
-        <EmbeddedResource Include="Messages\PostingsForMonth\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\ReservationsCancelled\Body.cshtml" />
-        <EmbeddedResource Include="Messages\ReservationsCancelled\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\ReservationSettled\Body.cshtml" />
-        <EmbeddedResource Include="Messages\ReservationSettled\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\SettlementNeeded\Body.cshtml" />
-        <EmbeddedResource Include="Messages\SettlementNeeded\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\DebtReminder\Body.cshtml" />
-        <EmbeddedResource Include="Messages\DebtReminder\Subject.cshtml" />
-        <EmbeddedResource Include="Messages\UserDeleted\Body.cshtml" />
-        <EmbeddedResource Include="Messages\UserDeleted\Subject.cshtml" />
+        <EmbeddedResource Include="CleaningTasks\verdana.ttf"/>
+        <EmbeddedResource Include="CleaningTasks\verdanab.ttf"/>
+        <EmbeddedResource Include="Messages\EmailCleaningSchedule\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\EmailCleaningSchedule\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\ConfirmEmail\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\ConfirmEmail\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\LockBoxCodesOverview\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\LockBoxCodesOverview\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\LockBoxCodes\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\LockBoxCodes\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\NewOrder\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\NewOrder\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\NewPassword\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\NewPassword\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\NoFeeCancellationAllowed\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\NoFeeCancellationAllowed\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\OrderConfirmed\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\OrderConfirmed\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\OrderReceived\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\OrderReceived\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\PayIn\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\PayIn\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\PayOut\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\PayOut\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\PostingsForMonth\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\PostingsForMonth\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\ReservationsCancelled\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\ReservationsCancelled\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\ReservationSettled\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\ReservationSettled\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\SettlementNeeded\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\SettlementNeeded\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\DebtReminder\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\DebtReminder\Subject.cshtml"/>
+        <EmbeddedResource Include="Messages\UserDeleted\Body.cshtml"/>
+        <EmbeddedResource Include="Messages\UserDeleted\Subject.cshtml"/>
     </ItemGroup>
 
 </Project>

@@ -14,12 +14,12 @@ jobs:
 
     steps:
       - name: Get source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.401
+          dotnet-version: 6.0.x
 
       - name: Install dependencies
         run: dotnet restore
@@ -31,7 +31,7 @@ jobs:
         run: dotnet publish Server --configuration Release --no-build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Server
           path: Server/bin/Release/net6.0/publish/
@@ -39,7 +39,7 @@ jobs:
 
   deploy-to-test:
     name: Deploy to test
-    
+
     needs: build
 
     runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Server
 
@@ -59,8 +59,8 @@ jobs:
           publish-profile: ${{secrets.AZURE_WEBAPP_PUBLISH_PROFILE}}
 
       - name: Get source code
-        uses: actions/checkout@v3
-        
+        uses: actions/checkout@v4
+
       - name: Get timestamp
         run: echo "TIMESTAMP=`TZ=Europe/Copenhagen date +"%d-%m-%Y %H:%M"`" >> $GITHUB_ENV
 
@@ -73,7 +73,7 @@ jobs:
 
   deploy-to-production:
     name: Deploy to production
-    
+
     needs: deploy-to-test
 
     runs-on: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Server
 
@@ -93,8 +93,8 @@ jobs:
           publish-profile: ${{secrets.AZURE_WEBAPP_PUBLISH_PROFILE}}
 
       - name: Get source code
-        uses: actions/checkout@v3
-        
+        uses: actions/checkout@v4
+
       - name: Get timestamp
         run: echo "TIMESTAMP=`TZ=Europe/Copenhagen date +"%d-%m-%Y %H:%M"`" >> $GITHUB_ENV
 

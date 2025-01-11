@@ -13,8 +13,6 @@ namespace Frederikskaj2.Reservations.EmailSender;
 
 static class Design
 {
-    static readonly ColorSpaceConverter converter = new();
-
     static readonly bool[][,] resourceBrushes =
     {
         new[,]
@@ -48,10 +46,10 @@ static class Design
         }
     };
 
-    static readonly Color reservedBackgroundColor = new(new Argb32(converter.ToRgb(new Hsl(0, 0.5F, 0.67F)).ToVector3()));
-    static readonly Color reservedPatternColor = new(new Argb32(converter.ToRgb(new Hsl(0, 0.5F, 0.8F)).ToVector3()));
-    static readonly Color cleaningBackgroundColor = new(new Argb32(converter.ToRgb(new Hsl(120, 0.67F, 0.4F)).ToVector3()));
-    static readonly Color cleaningPatternColor = new(new Argb32(converter.ToRgb(new Hsl(120, 0.67F, 0.6F)).ToVector3()));
+    static readonly Color reservedBackgroundColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(0, 0.5F, 0.67F)).ToVector3()));
+    static readonly Color reservedPatternColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(0, 0.5F, 0.8F)).ToVector3()));
+    static readonly Color cleaningBackgroundColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(120, 0.67F, 0.4F)).ToVector3()));
+    static readonly Color cleaningPatternColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(120, 0.67F, 0.6F)).ToVector3()));
 
     public const int FontSizeNormal = 12;
     public const int FontSizeSmall = 8;
@@ -66,11 +64,11 @@ static class Design
 
     public static readonly FontFamily FontFamily = GetFontFamily();
 
-    public static readonly Color InnerBorderColor = new(new Argb32(converter.ToRgb(new Hsl(240, 0F, 0.9F)).ToVector3()));
-    public static readonly Color OuterBorderColor = new(new Argb32(converter.ToRgb(new Hsl(240, 0F, 0.7F)).ToVector3()));
-    public static readonly Color OtherMonthBackgroundColor = new(new Argb32(converter.ToRgb(new Hsl(240, 0F, 0.8F)).ToVector3()));
-    public static readonly Color WeekendBackgroundColor = new(new Argb32(converter.ToRgb(new Hsl(240, 0.5F, 0.8F)).ToVector3()));
-    public static readonly Color WeekdayBackgroundColor = new(new Argb32(converter.ToRgb(new Hsl(240, 0.5F, 0.9F)).ToVector3()));
+    public static readonly Color InnerBorderColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(240, 0F, 0.9F)).ToVector3()));
+    public static readonly Color OuterBorderColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(240, 0F, 0.7F)).ToVector3()));
+    public static readonly Color OtherMonthBackgroundColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(240, 0F, 0.8F)).ToVector3()));
+    public static readonly Color WeekendBackgroundColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(240, 0.5F, 0.8F)).ToVector3()));
+    public static readonly Color WeekdayBackgroundColor = new(new Argb32(ColorSpaceConverter.ToRgb(new Hsl(240, 0.5F, 0.9F)).ToVector3()));
     public static readonly Color TableHeaderForegroundColor = Color.Black;
     public static readonly Color TableBodyForegroundColor = Color.Black;
     public static readonly Color LegendForegroundColor = Color.White;

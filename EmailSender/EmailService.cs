@@ -96,6 +96,6 @@ class EmailService : BackgroundService
         recipients.Where(recipient => !IsRecipientAllowed(allowedRecipients, recipient)));
 
     static bool IsRecipientAllowed(IEnumerable<string> allowedRecipients, string recipient) =>
-        allowedRecipients.Count() is 0 ||
+        !allowedRecipients.Any() ||
         allowedRecipients.Any(allowedRecipient => string.Equals(allowedRecipient, recipient, StringComparison.OrdinalIgnoreCase));
 }

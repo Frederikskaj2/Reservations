@@ -64,21 +64,19 @@ static class CleaningSchedulePictureGenerator
 
         static int DrawHorizontalLine(Image image, int y, int width, Color color)
         {
-            image.Mutate(context => context.DrawLines(
+            image.Mutate(context => context.Draw(
                 color,
                 Design.BorderWidth,
-                new PointF(0, y + Design.BorderWidth/2F),
-                new PointF(width, y + Design.BorderWidth/2F)));
+                new RectangleF(0, y + Design.BorderWidth/2F, width, y + Design.BorderWidth/2F)));
             return y + Design.BorderWidth;
         }
 
         static int DrawVerticalLine(Image image, int x, int y, int height, Color color)
         {
-            image.Mutate(context => context.DrawLines(
+            image.Mutate(context => context.Draw(
                 color,
                 Design.BorderWidth,
-                new PointF(x + Design.BorderWidth/2F, y),
-                new PointF(x + Design.BorderWidth/2F, y + height)));
+                new RectangleF(x + Design.BorderWidth/2F, y, x + Design.BorderWidth/2F, y + height)));
             return x + Design.BorderWidth;
         }
     }
@@ -111,7 +109,7 @@ static class CleaningSchedulePictureGenerator
             image.Mutate(context => context.Fill(Color.White, path));
         }
 
-        static int DrawBox(Image image, int x, int y, int width, int height, string text, IBrush brush)
+        static int DrawBox(Image image, int x, int y, int width, int height, string text, Brush brush)
         {
             var path = new PathBuilder()
                 .SetOrigin(new PointF(x, y))
@@ -121,7 +119,7 @@ static class CleaningSchedulePictureGenerator
             image.Mutate(context => context.Fill(brush, path));
             // ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
             var font = Design.FontFamily.CreateFont(Design.FontSizeNormal, Design.LegendFontStyle);
-            var options = new TextOptions(font)
+            var options = new RichTextOptions(font)
             {
                 Origin = new PointF(x + width/2F, y + height/2F),
                 HorizontalAlignment = HorizontalAlignment.Center,

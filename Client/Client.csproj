@@ -1,23 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
-	<PropertyGroup>
-		<RootNamespace>Frederikskaj2.Reservations.Client</RootNamespace>
-	</PropertyGroup>
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Client</RootNamespace>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
-		<PackageReference Include="Blazorise.Bootstrap" Version="$(BlazoriseVersion)" />
-		<PackageReference Include="Blazorise.Icons.FontAwesome" Version="$(BlazoriseVersion)" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="$(AspNetCoreVersion)" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(AspNetCoreVersion)" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(AspNetCoreVersion)" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="$(ExtensionsVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="$(ExtensionsVersion)" />
-		<PackageReference Include="NodaTime" Version="$(NodaTimeVersion)" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Blazored.LocalStorage"/>
+        <PackageReference Include="Blazorise.Bootstrap"/>
+        <PackageReference Include="Blazorise.Icons.FontAwesome"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.Authorization"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.Extensions.Http"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Configuration"/>
+        <PackageReference Include="NodaTime"/>
+    </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Shared.Web\Shared.Web.csproj" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Shared.Web\Shared.Web.csproj"/>
+    </ItemGroup>
 
 </Project>
