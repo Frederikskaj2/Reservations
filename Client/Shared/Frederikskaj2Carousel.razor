@@ -1,8 +1,0 @@
-﻿<div class="carousel">
-    <div tabindex="1" class="carousel navigate left fa" @onclick="@(() => NavigateAsync(-1))" @onkeyup="@(e => NavigateKeyUpAsync(e, -1))">&#xf0a8;</div>
-    <div tabindex="3" class="carousel navigate right fa" @onclick="@(() => NavigateAsync(1))" @onkeyup="@(e => NavigateKeyUpAsync(e, 1))">&#xf0a9;</div>
-    @for (var i = 1; i <= Count; i += 1)
-    {
-        <img tabindex="2" class="@(i == currentIndex ? "opaque" : string.Empty)" @onclick="@ToggleSlideshow" @onkeyup="ToggleSlideshowKeyUp" src="/img/@BaseName-@(i).jpg" alt="@Description" />
-    }
-</div>

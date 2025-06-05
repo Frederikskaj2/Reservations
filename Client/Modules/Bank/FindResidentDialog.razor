@@ -1,0 +1,65 @@
+﻿<div>
+    <Modal @ref="modal">
+        <Form>
+            <ModalContent Size="ModalSize.Large">
+                <ModalHeader>
+                    <ModalTitle>Find beboer hørende til bankbevægelse</ModalTitle>
+                    <CloseButton Clicked="Cancel"/>
+                </ModalHeader>
+                <ModalBody>
+                    <TextEdit Text="@selectedTransaction?.Text" ReadOnly/>
+                    <Table FixedHeader FixedHeaderTableHeight="40rem" FixedHeaderTableMaxHeight="40rem">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell>
+                                    <Link To="#" Clicked="_ => Sort(SortColumn.PaymentId)">Betalings-ID</Link>
+                                    <SortIndicator IsVisible="sortColumn is SortColumn.PaymentId" IsDescending="sortDirection is SortDirection.Descending"/>
+                                </TableHeaderCell>
+                                <TableHeaderCell>
+                                    <Link To="#" Clicked="_ => Sort(SortColumn.Name)">Navn</Link>
+                                    <SortIndicator IsVisible="sortColumn is SortColumn.Name" IsDescending="sortDirection is SortDirection.Descending"/>
+                                </TableHeaderCell>
+                                <TableHeaderCell>
+                                    <Link To="#" Clicked="_ => Sort(SortColumn.Address)">Adresse</Link>
+                                    <SortIndicator IsVisible="sortColumn is SortColumn.Address" IsDescending="sortDirection is SortDirection.Descending"/>
+                                </TableHeaderCell>
+                                <TableHeaderCell Class="text-end">
+                                    <Link To="#" Clicked="_ => Sort(SortColumn.Balance)">Saldo</Link>
+                                    <SortIndicator IsVisible="sortColumn is SortColumn.Balance" IsDescending="sortDirection is SortDirection.Descending"/>
+                                </TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @if (residents is not null)
+                            {
+                                @foreach (var resident in residents)
+                                {
+                                    <TableRow
+                                        @key="resident.UserIdentity.UserId"
+                                        Clicked="_ => SelectResident(resident)"
+                                        Class="@(resident == selectedResident ? "selected" : "")">
+                                        <TableRowCell>@resident.PaymentId</TableRowCell>
+                                        <TableRowCell>@resident.UserIdentity.FullName</TableRowCell>
+                                        <TableRowCell>@apartments![resident.UserIdentity.ApartmentId!.Value].ToString()</TableRowCell>
+                                        <TableRowCell Class="text-end"><SignedAmount Amount="resident.Balance"/></TableRowCell>
+                                    </TableRow>
+                                }
+                            }
+                        </TableBody>
+                    </Table>
+                </ModalBody>
+                <ModalFooter>
+                    <Button
+                        Color="Color.Primary"
+                        Type="@ButtonType.Submit"
+                        PreventDefaultOnSubmit="true"
+                        Disabled="@(selectedResident is null)"
+                        Clicked="Confirm">
+                        Vælg beboer
+                    </Button>
+                    <Button Color="Color.Secondary" Clicked="Cancel">Annullér</Button>
+                </ModalFooter>
+            </ModalContent>
+        </Form>
+    </Modal>
+</div>

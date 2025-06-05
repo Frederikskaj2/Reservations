@@ -1,0 +1,135 @@
+<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Oplysninger</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Form>
+            <Validations @ref="validations">
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Mail</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            <a href="mailto:@User.Identity.Email?subject=Frederikskaj 2 lokaler">@User.Identity.Email</a>
+                        </div>
+                    </FieldBody>
+                    @if (!User.IsEmailConfirmed)
+                    {
+                        <Column ColumnSize="ColumnSize.Is2">
+                        <div class="field-text align-right">
+                            (Ubekræftet)
+                        </div>
+                        </Column>
+                    }
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Fulde navn</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <Validation Validator="Validator.ValidateFullName">
+                            <TextEdit @bind-Text="fullName" Disabled="isDisabled">
+                                <Feedback>
+                                    <ValidationError/>
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Telefonnummer</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <Validation Validator="Validator.ValidatePhone">
+                            <TextEdit InputMode="TextInputMode.Tel" @bind-Text="phone" Disabled="isDisabled">
+                                <Feedback>
+                                    <ValidationError/>
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Adresse</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            @(address ?? "(Ikke oplyst)")
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Saldo</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            <a href="@string.Format(UrlPath.UsersTransactions, User.Identity.UserId)">@Formatter.FormatMoneyLong(User.Balance)</a>
+                            <span class="payment-id">@User.PaymentId</span>
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Sidst logget på</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div
+                            class="field-text"
+                            title="@(User.LatestSignIn.HasValue ? Formatter.FormatTimeLong(TimeConverter.GetTime(User.LatestSignIn.Value)) : null)">
+                            @(User.LatestSignIn.HasValue ? Formatter.FormatHumanizedPastTime(DateProvider.Now, User.LatestSignIn.Value) : "Aldrig")
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Aktuelle bestillinger</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            @{
+                                if (User.Orders.Any())
+                                {
+                                    var delimiter = "";
+                                    foreach (var orderId in User.Orders)
+                                    {
+                                        var url = $"{UrlPath.Orders}/{orderId}";
+                                        <text>@delimiter</text>
+                                        <a href="@url">@orderId</a>
+                                        delimiter = ", ";
+                                    }
+                                }
+                                else
+                                {
+                                    <text>(Ingen aktuelle bestillinger)</text>
+                                }
+                            }
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Tidligere bestillinger</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is6">
+                        <div class="field-text">
+                            @{
+                                if (User.HistoryOrders.Any())
+                                {
+                                    var delimiter = "";
+                                    foreach (var orderId in User.HistoryOrders)
+                                    {
+                                        var url = $"{UrlPath.Orders}/{orderId}";
+                                        <text>@delimiter</text>
+                                        <a href="@url">@orderId</a>
+                                        delimiter = ", ";
+                                    }
+                                }
+                                else
+                                {
+                                    <text>(Ingen tidligere bestillinger)</text>
+                                }
+                            }
+                        </div>
+                    </FieldBody>
+                </Field>
+                <Button
+                    Color="Color.Primary"
+                    Type="@ButtonType.Submit"
+                    PreventDefaultOnSubmit="true"
+                    Class="btn-fixed float-end"
+                    Clicked="UpdateUser"
+                    Disabled="@isDisabled">
+                    Opdatér
+                </Button>
+            </Validations>
+        </Form>
+    </CardBody>
+</Card>

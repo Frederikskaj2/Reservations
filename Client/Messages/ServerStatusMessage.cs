@@ -2,6 +2,6 @@
 
 record ServerStatusMessage(bool IsUp)
 {
-    public static readonly ServerStatusMessage Down = new(false);
-    public static readonly ServerStatusMessage Up = new(true);
+    public static readonly ServerStatusMessage Down = new(IsUp: false);
+    public static readonly ServerStatusMessage Up = new(IsUp: true);
 }

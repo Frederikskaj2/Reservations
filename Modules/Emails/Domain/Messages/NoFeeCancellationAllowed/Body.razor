@@ -1,0 +1,15 @@
+@inherits MessageComponentBase<NoFeeCancellationAllowedDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Bestilling @Model.Data.OrderId</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Du har nu mulighed for at afbestille reservationer på <ResidentOrderLink Model="Model" OrderId="Model.Data.OrderId"/> uden at betale afbestillingsgebyr.</p>
+    <p>Du kan gøre dette @FormatDuration(Model.Data.Duration).</p>
+    <Regards Model="Model"/>
+    <ResidentOrderFooter Model="Model" OrderId="Model.Data.OrderId"/>
+</body>
+</html>

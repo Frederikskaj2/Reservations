@@ -1,0 +1,92 @@
+﻿@using ValidationRule = Frederikskaj2.Reservations.Core.ValidationRule
+<form>
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableRowCell Class="border-top-0 no-margins" ColumnSpan="4">
+                    <Validations @ref="validations" Mode="ValidationMode.Manual">
+                        <Field>
+                            <FieldLabel>Formål</FieldLabel>
+                            <FieldBody>
+                                <Validation Validator="Validator.ValidateOwnerOrderDescription">
+                                    <TextEdit
+                                        @bind-Text="description"
+                                        Placeholder="Oplys formålet med bestillingen"
+                                        MaxLength="ValidationRule.MaximumOwnerOrderDescriptionLength"
+                                        Disabled="IsHistoryOrder">
+                                        <Feedback>
+                                            <ValidationError/>
+                                        </Feedback>
+                                    </TextEdit>
+                                </Validation>
+                            </FieldBody>
+                        </Field>
+                    </Validations>
+                </TableRowCell>
+            </TableRow>
+            <TableRow>
+                <TableHeaderCell Class="order-table-resource-column">Lokale</TableHeaderCell>
+                <TableHeaderCell Class="order-table-time-column">Fra</TableHeaderCell>
+                <TableHeaderCell Class="text-end">Nætter</TableHeaderCell>
+                <TableHeaderCell Class="order-table-time-column text-end">Til</TableHeaderCell>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            @{
+                var reservationIndex = 0;
+                foreach (var reservation in Reservations ?? [])
+                {
+                    var index = reservationIndex;
+                    var wasAlreadyCancelled = reservation.Status is ReservationStatus.Abandoned or ReservationStatus.Cancelled;
+                    var isCancelled = cancelledReservations.Contains(index);
+                    <TableRow Class="@(wasAlreadyCancelled || isCancelled ? "reservation-cancelled" : "")">
+                        <TableRowCell>@resources![reservation.ResourceId].Name</TableRowCell>
+                        <TableRowCell>@Formatter.FormatCheckInTimeShort(options!, reservation.Extent.Date)</TableRowCell>
+                        <TableRowCell Class="text-end">@reservation.Extent.Nights</TableRowCell>
+                        <TableRowCell Class="text-end">@Formatter.FormatCheckOutTimeShort(options!, reservation.Extent.Ends())</TableRowCell>
+                        @if (!IsHistoryOrder)
+                        {
+                            <TableRowCell Class="border-0">
+                                @if (!wasAlreadyCancelled)
+                                {
+                                    <Button Color="Color.Light" Size="Size.Small" Clicked="() => ToggleCancelReservation(index)">
+                                        @if (!cancelledReservations.Contains(index))
+                                        {
+                                            <Icon Name="Blazorise.Icons.FontAwesome.FontAwesomeIcons.Trash" TextColor="TextColor.Danger"/>
+                                        }
+                                        else
+                                        {
+                                            <Icon Name="IconName.Undo" TextColor="TextColor.Success"/>
+                                        }
+                                    </Button>
+                                }
+                            </TableRowCell>
+                        }
+                    </TableRow>
+                    reservationIndex += 1;
+                }
+            }
+        </TableBody>
+        <TableFooter>
+            <TableRow>
+                <TableRowCell ColumnSpan="2" Class="border-top-0">
+                    <Check @bind-Checked="isCleaningRequired" Disabled="IsHistoryOrder">Bestil rengøring</Check>
+                </TableRowCell>
+                @if (!IsHistoryOrder)
+                {
+                    <TableRowCell ColumnSpan="2" Class="border-top-0">
+                        <Button
+                            Class="float-end"
+                            Color="cancelledReservations.Count > 0 ? Color.Danger : Color.Primary"
+                            Type="@ButtonType.Submit"
+                            PreventDefaultOnSubmit="true"
+                            Disabled="@IsSubmitDisabled"
+                            Clicked="Submit">
+                            Opdatér bestilling
+                        </Button>
+                    </TableRowCell>
+                }
+            </TableRow>
+        </TableFooter>
+    </Table>
+</form>

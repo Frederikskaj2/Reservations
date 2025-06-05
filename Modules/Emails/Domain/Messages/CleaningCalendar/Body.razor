@@ -1,0 +1,126 @@
+@inherits MessageComponentBase<CleaningCalendarDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Rengøringsplan</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+@if (Model.Data.CancelledTasks.Any() || Model.Data.NewTasks.Any())
+{
+    <p>Rengøringsplanen for Frederikskaj&nbsp;2 er blevet opdateret.</p>
+}
+@if (Model.Data.CancelledTasks.Any())
+{
+    <p><strong>Aflysninger</strong></p>
+    <table>
+        <thead>
+        <tr>
+            <th style="@bottomBorderStyle">Start</th>
+            <th style="@bottomBorderStyle">Slut</th>
+            <th style="@bottomBorderStyle">Tidsrum</th>
+            <th style="@bottomBorderStyle">Lokale</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var task in Model.Data.CancelledTasks)
+        {
+            <tr style="text-decoration: line-through">
+                <td style="@baseStyle">@Model.FormatLongTime(task.Begin)</td>
+                <td style="@baseStyle">@Model.FormatLongTime(task.End)</td>
+                <td style="@baseStyle">@Model.FormatPeriod(task.End - task.Begin)</td>
+                <td style="@baseStyle">@Model.Data.ResourceNames[task.ResourceId]</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+@if (Model.Data.NewTasks.Any())
+{
+    <p><strong>Nye opgaver</strong></p>
+    <table>
+        <thead>
+        <tr>
+            <th style="@bottomBorderStyle">Start</th>
+            <th style="@bottomBorderStyle">Slut</th>
+            <th style="@bottomBorderStyle">Tidsrum</th>
+            <th style="@bottomBorderStyle">Lokale</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var task in Model.Data.NewTasks)
+        {
+            <tr>
+                <td style="@baseStyle">@Model.FormatLongTime(task.Begin)</td>
+                <td style="@baseStyle">@Model.FormatLongTime(task.End)</td>
+                <td style="@baseStyle">@Model.FormatPeriod(task.End - task.Begin)</td>
+                <td style="@baseStyle">@Model.Data.ResourceNames[task.ResourceId]</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+@if (Model.Data.UpdatedTasks.Any())
+{
+    <p><strong>Ændrede opgaver</strong></p>
+    <table>
+        <thead>
+        <tr>
+            <th style="@bottomBorderStyle">Start</th>
+            <th style="@bottomBorderStyle">Slut</th>
+            <th style="@bottomBorderStyle">Tidsrum</th>
+            <th style="@bottomBorderStyle">Lokale</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var task in Model.Data.UpdatedTasks)
+        {
+            <tr>
+                <td style="@baseStyle">@Model.FormatLongTime(task.Begin)</td>
+                <td style="@baseStyle">@Model.FormatLongTime(task.End)</td>
+                <td style="@baseStyle">@Model.FormatPeriod(task.End - task.Begin)</td>
+                <td style="@baseStyle">@Model.Data.ResourceNames[task.ResourceId]</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+    <p><strong>Aktuel rengøringsplan</strong></p>
+@if (Model.Data.Tasks.Any())
+{
+    <table>
+        <thead>
+        <tr>
+            <th style="@bottomBorderStyle">Start</th>
+            <th style="@bottomBorderStyle">Slut</th>
+            <th style="@bottomBorderStyle">Tidsrum</th>
+            <th style="@bottomBorderStyle">Lokale</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var task in Model.Data.Tasks)
+        {
+            <tr>
+                <td style="@baseStyle">@Model.FormatLongTime(task.Begin)</td>
+                <td style="@baseStyle">@Model.FormatLongTime(task.End)</td>
+                <td style="@baseStyle">@Model.FormatPeriod(task.End - task.Begin)</td>
+                <td style="@baseStyle">@Model.Data.ResourceNames[task.ResourceId]</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @foreach (var month in Model.Data.Months)
+    {
+    <p><strong>@Model.FormatMonth(month.Month)</strong></p>
+    <p>@month.Picture.ToInlineHtml()</p>
+    }
+    <p>@Model.Data.Legend.ToInlineHtml()</p>
+}
+else
+{
+    <p>Der er ingen opgaver.</p>
+}
+    <Regards Model="Model"/>
+</body>
+</html>

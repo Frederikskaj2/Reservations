@@ -1,0 +1,7 @@
+.sort-indicator {
+    display: inline-block;
+}
+
+::deep .hidden {
+    visibility: hidden;
+}

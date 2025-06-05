@@ -1,0 +1,34 @@
+﻿<Field>
+    <FieldLabel>Din adresse</FieldLabel>
+    <FieldBody>
+        <Validation Validator="Validate">
+            <div class="parent">
+                <Select Class="form-control child" TValue="char" SelectedValue="selectedLetter" SelectedValueChanged="LetterChanged" Disabled="@Disabled">
+                    <SelectItem Value="noLetter">Vælg opgang</SelectItem>
+                    @if (apartmentsByLetter is not null)
+                    {
+                        foreach (var letter in apartmentsByLetter.Keys)
+                        {
+                            <SelectItem Value="letter">2@(letter)</SelectItem>
+                        }
+                    }
+                </Select>
+                <Select Class="form-control child" TValue="int" SelectedValue="selectedApartmentId" SelectedValueChanged="SetApartmentId" Disabled="@(Disabled || selectedLetter is noLetter)">
+                    <ChildContent>
+                        <SelectItem Value="noApartmentId">Vælg lejlighed</SelectItem>
+                        @if (selectedLetter is not noLetter)
+                        {
+                            foreach (var apartment in apartmentsByLetter![selectedLetter])
+                            {
+                                <SelectItem Value="apartment.ApartmentId.ToInt32()">@apartment</SelectItem>
+                            }
+                        }
+                    </ChildContent>
+                    <Feedback>
+                        <ValidationError/>
+                    </Feedback>
+                </Select>
+            </div>
+        </Validation>
+    </FieldBody>
+</Field>

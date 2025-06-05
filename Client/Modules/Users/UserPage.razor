@@ -1,0 +1,36 @@
+@page "/brugere/{userId:int}"
+<PageTitle>@(user is not null ? $"Bruger {user.Identity.FullName} - " : "")Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner/>
+    }
+    else if (user is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <Alert Color="Color.Success" Visible="showUserUpdatedAlert" Dismisable="true">
+                Brugerens oplysninger blev opdateret.
+                <CloseButton Clicked="DismissUserUpdatedAlert"/>
+            </Alert>
+            <Alert Color="Color.Danger" Visible="showUserUpdatedErrorAlert" Dismisable="true">
+                Der er sket en fejl, og brugerens oplysninger blev ikke gemt.
+                <CloseButton Clicked="DismissUserUpdatedErrorAlert"/>
+            </Alert>
+            <UserInformation User="user" IsReadOnly="!canEditUserInformation" OnUpdate="UpdateUser"/>
+            <UserRoles User="user" IsReadOnly="!canEditUserInformation" OnUpdate="UpdateUser"/>
+            @if (canEditUserInformation)
+            {
+                <UserDelete User="user" IsCurrentUser="currentUserId == user!.Identity.UserId" OnDelete="DeleteUser"/>
+            }
+            <UserAudits User="user"/>
+        </Container>
+    }
+</main>

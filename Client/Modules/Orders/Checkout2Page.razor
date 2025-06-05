@@ -1,0 +1,144 @@
+﻿@page "/bestil/2"
+<PageTitle>Gennemse bestilling - Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!DraftOrder.Reservations.Any())
+    {
+        <Container>
+            <Paragraph>Gå til <a href="@UrlPath.Calendar">kalenderen</a> for at reservere et lokale.</Paragraph>
+        </Container>
+    }
+    else if (!isInitialized)
+    {
+        <Spinner/>
+    }
+    else
+    {
+        <Container Class="container-min-md">
+            <Alert Color="Color.Danger" Visible="showErrorAlert" Dismisable="true">
+                Der er sket en fejl, og din bestilling blev ikke gennemført.
+                <CloseButton Clicked="DismissErrorAlert"/>
+            </Alert>
+            <IndefiniteProgressBar @ref="progressBar"/>
+            <h1>Din bestilling</h1>
+            <Form>
+                <Validations @ref="validations" Mode="ValidationMode.Manual">
+                    <Text>@OrderInformation.FullName</Text>
+                    <br/>
+                    <Text>Frederikskaj @apartments![OrderInformation.ApartmentId!.Value]</Text>
+                    <br/>
+                    <Text>Telefon: @OrderInformation.Phone</Text>
+                    <br/>
+                    <Text>Kontonummer: @OrderInformation.AccountNumber</Text>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHeaderCell Class="order-table-resource-column">Lokale</TableHeaderCell>
+                                <TableHeaderCell Class="order-table-time-column">Fra</TableHeaderCell>
+                                <TableHeaderCell>Nætter</TableHeaderCell>
+                                <TableHeaderCell Class="order-table-time-column">Til</TableHeaderCell>
+                                <TableHeaderCell Class="text-end">Leje</TableHeaderCell>
+                                <TableHeaderCell Class="text-end">Rengøring</TableHeaderCell>
+                                <TableHeaderCell Class="text-end">Depositum</TableHeaderCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            @foreach (var reservation in DraftOrder.Reservations)
+                            {
+                                var price = GetPrice(reservation);
+                                <TableRow>
+                                    <TableRowCell>@reservation.Resource.Name</TableRowCell>
+                                    <TableRowCell>@Formatter.FormatCheckInTimeShort(options!, reservation.Extent.Date)</TableRowCell>
+                                    <TableRowCell>@reservation.Extent.Nights</TableRowCell>
+                                    <TableRowCell>
+                                        @Formatter.FormatCheckOutTimeShort(options!, reservation.Extent.Date.PlusDays(reservation.Extent.Nights))
+                                    </TableRowCell>
+                                    <TableRowCell Class="text-end">@Formatter.FormatMoneyShort(price.Rent)</TableRowCell>
+                                    <TableRowCell Class="text-end">@Formatter.FormatMoneyShort(price.Cleaning)</TableRowCell>
+                                    <TableRowCell Class="text-end">@Formatter.FormatMoneyShort(price.Deposit)</TableRowCell>
+                                </TableRow>
+                            }
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TableRowCell ColumnSpan="6">Leje (inkl. rengøring)</TableRowCell>
+                                <TableRowCell Class="text-end">@Formatter.FormatMoneyLong(totalRentAndCleaning)</TableRowCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableRowCell ColumnSpan="6" Class="border-top-0">Depositum</TableRowCell>
+                                <TableRowCell Class="text-end border-top-0">@Formatter.FormatMoneyLong(totalDeposit)</TableRowCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableRowCell ColumnSpan="6" Class="border-bottom">
+                                    <strong>Til betaling</strong>
+                                </TableRowCell>
+                                <TableRowCell Class="text-end border-bottom">
+                                    <strong>@Formatter.FormatMoneyLong(totalRentAndCleaning + totalDeposit)</strong>
+                                </TableRowCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableRowCell ColumnSpan="7" Class="border-top-0">
+                                    <Field>
+                                        <Validation Validator="Validator.ValidateAcceptTerms">
+                                            <Check TValue="bool">
+                                                <ChildContent>
+                                                    @if (linkBanquetFacilitiesRules && linkBedroomRules)
+                                                    {
+                                                        <text>
+                                                            Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for
+                                                            <a href="@UrlPath.RulesBanquetFacilities">festlokalet</a> og <a href="@UrlPath.RulesBedrooms">
+                                                                soveværelserne
+                                                            </a>.
+                                                        </text>
+                                                    }
+                                                    else if (linkBanquetFacilitiesRules)
+                                                    {
+                                                        <text>
+                                                            Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for
+                                                            <a href="@UrlPath.RulesBanquetFacilities">festlokalet</a>.
+                                                        </text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>
+                                                            Jeg accepterer <a href="lejebetingelser">lejebetingelserne</a> samt husorden for
+                                                            <a href="@UrlPath.RulesBedrooms">soveværelserne</a>.
+                                                        </text>
+                                                    }
+                                                </ChildContent>
+                                                <Feedback>
+                                                    <ValidationError>Du skal acceptere betingelserne</ValidationError>
+                                                </Feedback>
+                                            </Check>
+                                        </Validation>
+                                    </Field>
+                                    <Field>
+                                        <Validation Validator="Validator.ValidateAcceptTerms">
+                                            <Check TValue="bool">
+                                                <ChildContent>
+                                                    Jeg <a href="@UrlPath.Consent">samtykker</a> til at ovenstående oplysninger behandles af Grundejerforeningen
+                                                    Frederikskaj&nbsp;2 med henblik på reservation af lokaler.
+                                                </ChildContent>
+                                                <Feedback>
+                                                    <ValidationError>Du skal samtykke til at vi behandler dine personoplysninger</ValidationError>
+                                                </Feedback>
+                                            </Check>
+                                        </Validation>
+                                    </Field>
+                                    <a Class="btn btn-secondary" href="javascript:history.back()">Tilbage</a>
+                                    <Button
+                                        Class="float-end"
+                                        Color="Color.Success"
+                                        Type="@ButtonType.Submit"
+                                        PreventDefaultOnSubmit="true"
+                                        Clicked="Submit">
+                                        Bekræft bestilling
+                                    </Button>
+                                </TableRowCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </Validations>
+            </Form>
+        </Container>
+    }
+</main>

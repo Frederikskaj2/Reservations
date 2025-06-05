@@ -1,0 +1,32 @@
+@inherits MessageComponentBase<DebtReminderDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Manglende betaling</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Du mangler stadig at betale en eller flere af dine bestillinger. De bliver først godkendt når du har indbetalt det beløb du skylder til grundejerforeningens bankkonto:</p>
+    <table>
+        <tbody>
+            <tr>
+                <td>Beløb:</td>
+                <td><strong>@Model.FormatAmount(Model.Data.Payment.Amount)</strong></td>
+            </tr>
+            <tr>
+                <td>Kontonummer:</td>
+                <td><strong>@Model.Data.Payment.AccountNumber</strong></td>
+            </tr>
+            <tr>
+                <td>Tekst på indbetaling:</td>
+                <td><strong>@Model.Data.Payment.PaymentId</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Du bedes straks indbetale det skyldige beløb. Ellers forbeholder vi os ret til at annullere dine bestillinger.</p>
+    <p><strong>Bemærk:</strong> Der kan gå lidt tid fra du betaler til vi registrerer din indbetaling. Hvis du allerede har betalt, kan du se bort fra denne påmindelse.</p>
+    <Regards Model="Model"/>
+    <ResidentFooter Model="Model"/>
+</body>
+</html>

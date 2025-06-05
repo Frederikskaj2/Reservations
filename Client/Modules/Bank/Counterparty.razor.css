@@ -1,0 +1,18 @@
+﻿span {
+    display: inline-block;
+}
+
+.payment-id {
+    min-width: 3rem;
+    color: var(--bs-body-color);
+}
+
+.amount {
+    min-width: 3rem;
+
+}
+
+.address {
+    margin-left: 0.5rem;
+    min-width: 3.5rem;
+}

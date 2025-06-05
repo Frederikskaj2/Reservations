@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# S2699: Tests should include assertions
+dotnet_diagnostic.s2699.severity = none

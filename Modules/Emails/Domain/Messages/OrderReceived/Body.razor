@@ -1,0 +1,40 @@
+@inherits MessageComponentBase<OrderReceivedDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Bestilling @Model.Data.OrderId</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Tak for din bestilling med <ResidentOrderLink Model="Model" OrderId="Model.Data.OrderId"/>.</p>
+@if (Model.Data.Payment is null)
+{
+    <p>Da du tidligere har indbetalt et beløb som dækker prisen for denne bestilling, er din bestilling godkendt og betalt, og du behøver ikke at foretage dig yderligere.</p>
+}
+else
+{
+    <p>Din bestilling bliver først godkendt når du har indbetalt det beløb du skylder til grundejerforeningens bankkonto:</p>
+    <table>
+        <tbody>
+            <tr>
+                <td>Beløb:</td>
+                <td><strong>@Model.FormatAmount(Model.Data.Payment.Amount)</strong></td>
+            </tr>
+            <tr>
+                <td>Kontonummer:</td>
+                <td><strong>@Model.Data.Payment.AccountNumber</strong></td>
+            </tr>
+            <tr>
+                <td>Tekst på indbetaling:</td>
+                <td><strong>@Model.Data.Payment.PaymentId</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Du bedes <strong>inden fire dage</strong> indbetale det skyldige beløb. Ellers forbeholder vi os ret til at annullere din bestilling.</p>
+    <p><strong>Bemærk:</strong> Hvis du har flere ubetalte bestillinger udgør ovenstående din <strong>samlede</strong> gæld til grundejerforeningen. Du skal kun betale det beløb som fremgår af den <strong>seneste</strong> besked du har modtaget.</p>
+}
+    <Regards Model="Model"/>
+    <ResidentOrderFooter Model="Model" OrderId="Model.Data.OrderId"/>
+</body>
+</html>

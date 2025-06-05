@@ -1,4 +1,6 @@
-﻿using Frederikskaj2.Reservations.Shared.Core;
+﻿using Frederikskaj2.Reservations.Core;
+using Frederikskaj2.Reservations.Orders;
+using Frederikskaj2.Reservations.Users;
 using NodaTime;
 using NodaTime.Text;
 using System;
@@ -15,6 +17,7 @@ public class Formatter
     readonly DateTimeZone dateTimeZone;
     readonly LocalDatePattern longDatePattern;
     readonly LocalDateTimePattern longTimePattern;
+    readonly LocalDatePattern shortDatePattern;
     readonly LocalDateTimePattern shortTimePattern;
 
     public Formatter(CultureInfo cultureInfo, DateTimeZone dateTimeZone)
@@ -24,6 +27,7 @@ public class Formatter
         longTimePattern = LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH':'mm", cultureInfo);
         shortTimePattern = LocalDateTimePattern.Create("d'-'M'-'yyyy HH':'mm", cultureInfo);
         longDatePattern = LocalDatePattern.Create("d. MMMM yyyy", cultureInfo);
+        shortDatePattern = LocalDatePattern.Create("dd.MM.yyyy", cultureInfo);
     }
 
     public string FormatMoneyLong(Amount value) => value.ToString("C0", cultureInfo);
@@ -42,8 +46,10 @@ public class Formatter
 
     public string FormatDate(Instant instant) => longDatePattern.Format(instant.InZone(dateTimeZone).Date);
 
+    public string FormatDateShort(LocalDate date) => shortDatePattern.Format(date);
+
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is accessed through an injected instance.")]
-    public string? FormatEmail(EmailAddress email) => email.ToString().Replace("@", softHyphen + "@", StringComparison.Ordinal);
+    public string FormatEmail(EmailAddress email) => email.ToString().Replace("@", softHyphen + "@", StringComparison.Ordinal);
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is accessed through an injected instance.")]
     public string? FormatPhone(string? phone) => phone?.Replace(' ', noBreakSpace);
@@ -67,8 +73,9 @@ public class Formatter
             { TotalMinutes: < 120 } => "den næste halvanden time",
             { TotalHours: < 24 } => $"de næste {GetNumber(duration.Hours)} timer",
             { TotalHours: < 48 } => (future.InZone(dateTimeZone).Date - now.InZone(dateTimeZone).Date).Days is 1
-                ? $"senest i morgen inden kl. {future.InZone(dateTimeZone).Date}" : "de næste to dage",
-            _ => $"de næste {GetNumber(duration.Days + (duration.TotalDays - duration.Days > 0.5 ? 1 : 0))} dage"
+                ? $"senest i morgen inden kl. {future.InZone(dateTimeZone).Date}"
+                : "de næste to dage",
+            _ => $"de næste {GetNumber(duration.Days + (duration.TotalDays - duration.Days > 0.5 ? 1 : 0))} dage",
         };
     }
 
@@ -77,6 +84,7 @@ public class Formatter
         var duration = now - past;
         return duration switch
         {
+            { TotalSeconds: < 60 } => "For et øjeblik siden",
             { TotalSeconds: < 120 } => "For et minut siden",
             { TotalMinutes: < 60 } => $"For {GetNumber(duration.Minutes)} minutter siden",
             { TotalMinutes: < 90 } => "For en time siden",
@@ -87,7 +95,7 @@ public class Formatter
             { TotalDays: < 10 } => "For en uge siden",
             { TotalDays: < 14 } => "For halvanden uge siden",
             { TotalDays: < 31 } => $"For {GetNumber(duration.Days/7)} uger siden",
-            _ => FormatHumanizedPastTimeWhenMoreThanOneMonth(now, past)
+            _ => FormatHumanizedPastTimeWhenMoreThanOneMonth(now, past),
         };
     }
 
@@ -97,7 +105,7 @@ public class Formatter
         var pastDate = past.InZone(dateTimeZone).Date;
         var period = Period.Between(pastDate, nowDate, PeriodUnits.Months);
         if (nowDate.Year == pastDate.Year || period.Months <= 6)
-            return period.Months == 1 ? "For en måned siden" : $"For {period.Months} måneder siden";
+            return period.Months == 1 ? "For en måned siden" : $"For {GetNumber(period.Months)} måneder siden";
         return nowDate.Year - 1 == pastDate.Year ? "Sidste år" : $"I {pastDate.Year}";
     }
 
@@ -113,7 +121,7 @@ public class Formatter
             8 => "otte",
             9 => "ni",
             10 => "ti",
-            _ => number.ToString(cultureInfo)
+            _ => number.ToString(cultureInfo),
         };
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "This member is accessed through an injected instance.")]

@@ -1,10 +1,8 @@
-﻿using Frederikskaj2.Reservations.Shared.Web;
+﻿using Frederikskaj2.Reservations.Users;
 
 namespace Frederikskaj2.Reservations.Client;
 
 public class SignUpState
 {
-    public SignUpRequest ViewModel { get; private set; } = new();
-
-    public void Reset() => ViewModel = new SignUpRequest();
+    public SignUpRequest ViewModel { get; } = new();
 }

@@ -1,4 +1,4 @@
-using Frederikskaj2.Reservations.Shared.Core;
+using Frederikskaj2.Reservations.Users;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 

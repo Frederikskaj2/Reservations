@@ -1,101 +1,96 @@
-﻿using Blazored.LocalStorage;
+using Blazored.LocalStorage;
 using Blazorise;
-using Blazorise.Bootstrap;
+using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
-using Frederikskaj2.Reservations.Shared.Core;
-using Microsoft.AspNetCore.Components.Authorization;
+using Frederikskaj2.Reservations.Bank;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Frederikskaj2.Reservations.Client;
+using Frederikskaj2.Reservations.Core;
+using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
+using Frederikskaj2.Reservations.Users;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization.Metadata;
 
-namespace Frederikskaj2.Reservations.Client;
+const string apiHttpClientName = "Api";
 
-public static class Program
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+builder.Logging.SetMinimumLevel(LogLevel.Trace);
+builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+
+builder.Services
+    .AddBlazorise(options => options.Immediate = true)
+    .AddBootstrap5Providers()
+    .AddFontAwesomeIcons();
+
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+
+ConfigureServices(builder.Services, new(builder.HostEnvironment.BaseAddress));
+
+await builder.Build().RunAsync();
+
+static void ConfigureServices(IServiceCollection services, Uri baseAddress)
 {
-    const string apiHttpClientName = "Api";
+    services
+        .AddHttpClient(apiHttpClientName, client => client.BaseAddress = baseAddress);
 
-    public static async Task Main(string[] args)
-    {
-        var builder = WebAssemblyHostBuilder.CreateDefault(args);
+    services
+        .AddSingleton(serviceProvider =>
+        {
+            var configureOptions = serviceProvider.GetRequiredService<IConfigureOptions<JsonSerializerOptions>>();
+            var options = new JsonSerializerOptions();
+            configureOptions.Configure(options);
+            return options;
+        })
+        .AddSingleton<IJsonTypeInfoResolver, DefaultJsonTypeInfoResolver>()
+        .AddBankSharedDomain()
+        .AddCoreSharedDomain()
+        .AddLockBoxSharedDomain()
+        .AddOrdersSharedDomain()
+        .AddUsersSharedDomain()
+        .AddOptions<JsonSerializerOptions>();
 
-        builder.Logging.SetMinimumLevel(LogLevel.Trace);
-        builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+    services
+        .AddSingleton(serviceProvider => serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(apiHttpClientName))
+        .AddSingleton<ApiClient>()
+        .AddSingleton<AuthenticatedApiClient>();
 
-        builder.RootComponents.Add<HeadOutlet>("head::after");;
-        builder.RootComponents.Add<App>("#app");
+    services
+        .AddBlazoredLocalStorageAsSingleton()
+        .AddAuthorizationCore(options =>
+        {
+            options.AddPolicy(
+                Policy.ViewOrders,
+                policy => policy.RequireRole(nameof(Roles.OrderHandling), nameof(Roles.Bookkeeping), nameof(Roles.UserAdministration)));
+            options.AddPolicy(
+                Policy.ViewUsers,
+                policy => policy.RequireRole(nameof(Roles.OrderHandling), nameof(Roles.Bookkeeping), nameof(Roles.UserAdministration)));
+        })
+        .AddSingleton<AuthenticationService>()
+        .AddSingleton<TokenAuthenticationStateProvider>()
+        .AddSingleton<AuthenticationStateProvider>(serviceProvider => serviceProvider.GetRequiredService<TokenAuthenticationStateProvider>());
 
-        builder.Services
-            .AddBlazorise(options => options.Immediate = true)
-            .AddBootstrapProviders()
-            .AddFontAwesomeIcons();
+    services
+        .AddSingleton<IDateProvider, DateProvider>()
+        .AddCoreSharedInfrastructure();
 
-        ConfigureServices(builder.Services, new(builder.HostEnvironment.BaseAddress));
-
-        var host = builder.Build();
-
-        await host.RunAsync();
-    }
-
-    static void ConfigureServices(IServiceCollection services, Uri baseAddress)
-    {
-        services
-            .AddHttpClient(apiHttpClientName, client => client.BaseAddress = baseAddress);
-
-        services
-            .AddSingleton(serviceProvider =>
-            {
-                var configureOptions = serviceProvider.GetRequiredService<IConfigureOptions<JsonSerializerOptions>>();
-                var options = new JsonSerializerOptions();
-                configureOptions.Configure(options);
-                return options;
-            })
-            .AddSerialization()
-            .AddOptions<JsonSerializerOptions>();
-
-        services
-            .AddScoped(serviceProvider => serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(apiHttpClientName))
-            .AddScoped<ApiClient>()
-            .AddScoped<AuthenticatedApiClient>();
-
-        services
-            .AddBlazoredLocalStorage()
-            .AddAuthorizationCore(options =>
-            {
-                options.AddPolicy(
-                    Policies.ViewOrders,
-                    policy => policy.RequireRole(nameof(Roles.OrderHandling), nameof(Roles.Bookkeeping), nameof(Roles.UserAdministration)));
-                options.AddPolicy(
-                    Policies.ViewUsers,
-                    policy => policy.RequireRole(nameof(Roles.OrderHandling), nameof(Roles.Bookkeeping), nameof(Roles.UserAdministration)));
-            })
-            .AddScoped<AuthenticationService>()
-            .AddScoped<TokenAuthenticationStateProvider>()
-            .AddScoped<AuthenticationStateProvider>(serviceProvider => serviceProvider.GetRequiredService<TokenAuthenticationStateProvider>());
-
-        services
-            .AddBlazorise(options => options.Immediate = true)
-            .AddBootstrapProviders()
-            .AddFontAwesomeIcons();
-
-        services
-            .AddShared();
-
-        services
-            .AddSingleton<AsyncEventAggregator>()
-            .AddSingleton<DraftOrder>()
-            .AddSingleton<EventAggregator>()
-            .AddSingleton<UserOrderInformation>()
-            .AddScoped<ClientDataProvider>()
-            .AddScoped<Formatter>()
-            .AddScoped<RedirectState>()
-            .AddScoped<SignOutService>()
-            .AddScoped<SignUpState>()
-            .AddScoped<SignInState>();
-    }
+    services
+        .AddSingleton<DraftOrder>()
+        .AddSingleton<EventAggregator>()
+        .AddSingleton<UserOrderInformation>()
+        .AddSingleton<ClientDataProvider>()
+        .AddSingleton<Formatter>()
+        .AddSingleton<RedirectState>()
+        .AddSingleton<SignOutService>()
+        .AddSingleton<SignUpState>()
+        .AddSingleton<SignInState>();
 }

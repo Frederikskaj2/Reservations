@@ -1,0 +1,36 @@
+﻿@page "/bestil/3"
+<PageTitle>Bestilling modtaget - Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (DataProvider.CurrentOrder is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er opstået en fejl.
+            </Alert>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <Paragraph>
+                Tak for din bestilling med
+                <a href="@($"{UrlPath.MyOrders}/{DataProvider.CurrentOrder!.OrderId}")">bestillingsnr. @DataProvider.CurrentOrder.OrderId</a>.
+            </Paragraph>
+            @if (DataProvider.CurrentOrder.Payment is null)
+            {
+                <Paragraph>
+                    Da du tidligere har indbetalt et beløb som dækker prisen for denne bestilling, er din bestilling godkendt og betalt, og du behøver ikke at
+                    foretage dig yderligere.
+                </Paragraph>
+            }
+            else
+            {
+                <Paragraph>Din bestilling bliver først godkendt når du har indbetalt det beløb du skylder til grundejerforeningens bankkonto:</Paragraph>
+                <PaymentInstructions PaymentInformation="DataProvider.CurrentOrder.Payment"/>
+                <Paragraph>
+                    Du bedes <strong>inden fire dage</strong> indbetale det skyldige beløb. Ellers forbeholder vi os ret til at annullere din bestilling.
+                </Paragraph>
+            }
+        </Container>
+    }
+</main>

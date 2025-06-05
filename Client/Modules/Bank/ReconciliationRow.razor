@@ -1,0 +1,90 @@
+﻿@if (Transaction is not null && Residents is not null && PayOuts is not null && FindResidentDialog is not null && ConfirmReconciliationDialog is not null)
+{
+    <TableRow @key="Transaction.BankTransactionId">
+        <TableRowCell>@Formatter.FormatDateShort(Transaction.Date)</TableRowCell>
+        <TableRowCell>@Transaction.Text</TableRowCell>
+        <TableRowCell Class="text-end">
+            <SignedAmount Amount="Transaction.Amount" AlwaysDisplayDecimals="true"/>
+        </TableRowCell>
+        <TableRowCell Class="text-end">
+            <SignedAmount Amount="Transaction.Balance" AlwaysDisplayDecimals="true"/>
+        </TableRowCell>
+        <TableRowCell>
+            @if (Transaction.Status is BankTransactionStatus.Unknown)
+            {
+                <Icon Name="IconName.QuestionCircle"/>
+            }
+            else if (Transaction.Status is BankTransactionStatus.Reconciled)
+            {
+                <Icon Name="IconName.Check"/>
+            }
+        </TableRowCell>
+        <TableRowCell>
+            @if (Transaction.Amount > Amount.Zero)
+            {
+                <Dropdown Display="Display.InlineBlock" Disabled="Transaction.Status is BankTransactionStatus.Reconciled">
+                    <DropdownToggle Color="Color.Light" Size="Size.Small">
+                        Afstem
+                    </DropdownToggle>
+                    <DropdownMenu>
+                        @if (suggestedResident is not null)
+                        {
+                            <DropdownItem Clicked="() => ReconcilePayIn(suggestedResident)">
+                                <Counterparty PaymentId="suggestedResident.PaymentId" Amount="suggestedResident.Balance" User="suggestedResident.UserIdentity"/>
+                            </DropdownItem>
+                        }
+                        <DropdownItem Clicked="() => FindResident()">Find beboer</DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            }
+            else
+            {
+                <Dropdown Display="Display.InlineBlock" Disabled="Transaction.Status is BankTransactionStatus.Reconciled">
+                    <DropdownToggle Color="Color.Light" Size="Size.Small">
+                        Afstem
+                    </DropdownToggle>
+                    <DropdownMenu>
+                        @if (suggestedPayOut is not null)
+                        {
+                            <DropdownItem Clicked="() => ReconcilePayOut(suggestedPayOut)">
+                                <Counterparty PaymentId="suggestedPayOut.PaymentId" Amount="suggestedPayOut.Amount" User="suggestedPayOut.UserIdentity"/>
+                            </DropdownItem>
+                        }
+                        @if (otherPayOuts.Count > 0)
+                        {
+                            <Dropdown>
+                                <DropdownToggle>Udbetalinger</DropdownToggle>
+                                <DropdownMenu>
+                                    @foreach (var payOut in otherPayOuts)
+                                    {
+                                        <DropdownItem Clicked="() => ReconcilePayOut(payOut)">
+                                            <Counterparty PaymentId="payOut.PaymentId" Amount="payOut.Amount" User="payOut.UserIdentity"/>
+                                        </DropdownItem>
+                                    }
+                                </DropdownMenu>
+                            </Dropdown>
+                        }
+                        <DropdownItem Clicked="() => FindResident()">Find beboer</DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            }
+            <Dropdown Display="Display.InlineBlock" Style="margin-left: 1rem;" Disabled="Transaction.Status is BankTransactionStatus.Reconciled">
+                <DropdownToggle Color="Color.Light" Size="Size.Small">
+                    Status
+                </DropdownToggle>
+                <DropdownMenu>
+                    <DropdownItem
+                        Disabled="Transaction.Status is BankTransactionStatus.Unknown"
+                        Clicked="_ => SetTransactionStatus(BankTransactionStatus.Unknown)">
+                        Ikke-afstemt
+                    </DropdownItem>
+                    <DropdownItem
+                        Disabled="Transaction.Status is BankTransactionStatus.Ignored"
+                        Clicked="_ => SetTransactionStatus(BankTransactionStatus.Ignored)">
+                        Ignoreret
+                    </DropdownItem>
+                </DropdownMenu>
+            </Dropdown>
+        </TableRowCell>
+    </TableRow>
+}

@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Calendar</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\LockBox\Domain.Shared\LockBox.Domain.Shared.csproj"/>
+        <ProjectReference Include="..\..\Users\Domain.Shared\Users.Domain.Shared.csproj"/>
+    </ItemGroup>
+</Project>

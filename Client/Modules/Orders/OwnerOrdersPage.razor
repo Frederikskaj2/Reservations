@@ -1,0 +1,55 @@
+﻿@page "/ejer/bestillinger"
+<PageTitle>Ejerbestillinger - Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Container Class="container-fluid">
+            <Spinner/>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <h1>Bestillinger til grundejerforeningen</h1>
+            @if (!orders!.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Betillingsnr.</TableHeaderCell>
+                            <TableHeaderCell>Dato</TableHeaderCell>
+                            <TableHeaderCell>Næste reservation</TableHeaderCell>
+                            <TableHeaderCell>Beskrivelse</TableHeaderCell>
+                            <TableHeaderCell>Oprettet af</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var order in orders!)
+                        {
+                            <TableRow @key="order.OrderId">
+                                <TableRowCell><a href="@UrlPath.Orders/@order.OrderId">@order.OrderId</a></TableRowCell>
+                                <TableRowCell>@Formatter.FormatDate(order.CreatedTimestamp)</TableRowCell>
+                                <TableRowCell>@Formatter.FormatDate(order.NextReservationDate)</TableRowCell>
+                                <TableRowCell>@order.Description</TableRowCell>
+                                <TableRowCell>
+                                    @if (order.User.Email != EmailAddress.Deleted)
+                                    {
+                                        <a href="@UrlPath.Users/@order.User.UserId">@order.User.FullName</a>
+                                    }
+                                    else
+                                    {
+                                        <text>(Slettet)</text>
+                                    }
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+            }
+        </Container>
+    }
+</main>

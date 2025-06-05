@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Cleaning</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Orders\Domain.Shared\Orders.Domain.Shared.csproj"/>
+        <ProjectReference Include="..\..\Users\Domain.Shared\Users.Domain.Shared.csproj" />
+        <ProjectReference Include="..\Domain.Shared\Cleaning.Domain.Shared.csproj"/>
+    </ItemGroup>
+</Project>

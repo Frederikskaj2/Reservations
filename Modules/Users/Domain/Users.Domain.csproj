@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Users</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\Domain.Shared\Core.Domain.Shared.csproj"/>
+        <ProjectReference Include="..\..\Persistence\Domain\Persistence.Domain.csproj"/>
+        <ProjectReference Include="..\Domain.Shared\Users.Domain.Shared.csproj"/>
+    </ItemGroup>
+</Project>

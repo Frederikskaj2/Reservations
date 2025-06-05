@@ -11,10 +11,6 @@ public record ProblemDetails
     public string? Detail { get; init; }
     public string? Error { get; init; }
 
-    public T GetError<T>() where T : struct, Enum
-    {
-        if (Error is null || !int.TryParse(Error, out var value))
-            return default;
-        return EnumConverter<T>.Convert(value);
-    }
+    public T GetError<T>() where T : struct, Enum =>
+        Error is not null && Enum.TryParse<T>(Error, out var value) ? value : default;
 }

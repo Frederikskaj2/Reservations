@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Core</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\LockBox\Domain\LockBox.Domain.csproj"/>
+        <ProjectReference Include="..\..\Users\Domain\Users.Domain.csproj"/>
+        <ProjectReference Include="..\Contracts\Core.Contracts.csproj"/>
+    </ItemGroup>
+</Project>

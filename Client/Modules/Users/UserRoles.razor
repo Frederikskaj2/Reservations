@@ -1,0 +1,73 @@
+<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Roller</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Paragraph>Bemærk at ændringer af disse først træder i kraft efter nogle minutter hvis brugeren allerede er logget ind.</Paragraph>
+        <Form>
+            <Check
+                TValue="bool"
+                Checked="roles.HasFlag(Roles.Resident)"
+                CheckedChanged="isChecked => CheckRole(isChecked, Roles.Resident)"
+                Disabled="isDisabled">
+                <ChildContent>
+                    Beboer
+                </ChildContent>
+            </Check>
+            <Check
+                TValue="bool"
+                Checked="roles.HasFlag(Roles.OrderHandling)"
+                CheckedChanged="isChecked => CheckRole(isChecked, Roles.OrderHandling)"
+                Disabled="isDisabled">
+                <ChildContent>
+                    Bestillinger
+                </ChildContent>
+            </Check>
+            <Check
+                TValue="bool"
+                Checked="roles.HasFlag(Roles.Bookkeeping)"
+                CheckedChanged="isChecked => CheckRole(isChecked, Roles.Bookkeeping)"
+                Disabled="isDisabled">
+                <ChildContent>
+                    Bogføring
+                </ChildContent>
+            </Check>
+            <Check
+                TValue="bool"
+                Checked="roles.HasFlag(Roles.UserAdministration)"
+                CheckedChanged="isChecked => CheckRole(isChecked, Roles.UserAdministration)"
+                Disabled="isUserAdministrationDisabled">
+                <ChildContent>
+                    Brugeradministration
+                </ChildContent>
+            </Check>
+            <Check
+                TValue="bool"
+                Checked="roles.HasFlag(Roles.Cleaning)"
+                CheckedChanged="isChecked => CheckRole(isChecked, Roles.Cleaning)"
+                Disabled="isDisabled">
+                <ChildContent>
+                    Rengøring
+                </ChildContent>
+            </Check>
+            <Check
+                TValue="bool"
+                Checked="roles.HasFlag(Roles.LockBoxCodes)"
+                CheckedChanged="isChecked => CheckRole(isChecked, Roles.LockBoxCodes)"
+                Disabled="isDisabled">
+                <ChildContent>
+                    Nøglebokskoder
+                </ChildContent>
+            </Check>
+            <Button
+                Color="Color.Primary"
+                Type="@ButtonType.Submit"
+                PreventDefaultOnSubmit="true"
+                Class="btn-fixed float-end"
+                Clicked="UpdateUser"
+                Disabled="@isDisabled">
+                Opdatér
+            </Button>
+        </Form>
+    </CardBody>
+</Card>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Cleaning</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Orders\Domain\Orders.Domain.csproj"/>
+        <ProjectReference Include="..\Domain.Shared\Cleaning.Domain.Shared.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Emails.UnitTests"/>
+    </ItemGroup>
+</Project>

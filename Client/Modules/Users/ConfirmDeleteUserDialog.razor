@@ -1,0 +1,33 @@
+<Modal @ref="modal">
+    <Form>
+        <ModalContent>
+            <ModalHeader>
+                <ModalTitle>Bekræft sletning af bruger</ModalTitle>
+                <CloseButton Clicked="Cancel"/>
+            </ModalHeader>
+            <ModalBody>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is3">Mail</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is9">
+                        <TextEdit Plaintext="true" Text="@email.ToString()" TabIndex="-1"/>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is3">Navn</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is9">
+                        <TextEdit Plaintext="true" Text="@fullName" TabIndex="-1"/>
+                    </FieldBody>
+                </Field>
+                <Row>
+                    <Column>
+                        <strong>Advarsel</strong>: Denne handling kan ikke fortrydes.
+                    </Column>
+                </Row>
+            </ModalBody>
+            <ModalFooter>
+                <Button @ref="submitButton" Color="Color.Danger" Type="@ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="Confirm">Slet bruger</Button>
+                <Button Color="Color.Secondary" Clicked="Cancel">Fortryd</Button>
+            </ModalFooter>
+        </ModalContent>
+    </Form>
+</Modal>

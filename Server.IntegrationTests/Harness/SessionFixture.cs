@@ -1,5 +1,5 @@
 using Azure.Storage.Queues;
-using Frederikskaj2.Reservations.Shared.Web;
+using Frederikskaj2.Reservations.Users;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 using System;
@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Net.Mime;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
@@ -17,14 +17,14 @@ namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 
 public sealed class SessionFixture : IAsyncLifetime, IDisposable
 {
-    Tokens? administratorTokens;
+    string? administratorAccessToken;
     ApplicationFactory? factory;
 
     public async Task InitializeAsync()
     {
-        await SessionThrottle.StartSessionAsync();
+        await SessionThrottle.StartSession();
         factory = new(GetId());
-        await factory.InitializeAsync();
+        await factory.Initialize();
     }
 
     public async Task DisposeAsync()
@@ -35,21 +35,21 @@ public sealed class SessionFixture : IAsyncLifetime, IDisposable
         SessionThrottle.EndSession();
     }
 
-    public User? User { get; set; }
+    internal User? User { get; set; }
 
-    public IEnumerable<string>? Cookies { get; set; }
+    internal IEnumerable<string>? Cookies { get; set; }
 
-    public Tokens? Tokens { get; set; }
+    internal string? AccessToken { get; set; }
 
-    public JsonSerializerOptions SerializerOptions => factory?.JsonSerializerOptions ?? throw new InvalidOperationException();
+    internal JsonSerializerOptions SerializerOptions => factory?.JsonSerializerOptions ?? throw new InvalidOperationException();
 
-    public QueueClient QueueClient => factory?.QueueClient ?? throw new InvalidOperationException();
+    internal QueueClient QueueClient => factory?.QueueClient ?? throw new InvalidOperationException();
 
-    public LocalDate TestStartDate => factory?.TestStartDate ?? throw new InvalidOperationException();
+    internal LocalDate TestStartDate => factory?.TestStartDate ?? throw new InvalidOperationException();
 
-    public LocalDate CurrentDate => factory?.CurrentDate ?? throw new InvalidOperationException();
+    internal LocalDate CurrentDate => factory?.CurrentDate ?? throw new InvalidOperationException();
 
-    public Period NowOffset
+    internal Period NowOffset
     {
         get => factory?.NowOffset ?? throw new InvalidOperationException();
         set
@@ -60,115 +60,150 @@ public sealed class SessionFixture : IAsyncLifetime, IDisposable
         }
     }
 
-    public Calendar Calendar { get; } = new();
+    internal DateTimeZone TimeZone { get; } = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/Copenhagen")!;
+
+    internal Calendar Calendar { get; } = new();
 
     void IDisposable.Dispose() => factory?.Dispose();
 
-    public IServiceScope CreateServiceScope() =>
+    internal IServiceScope CreateServiceScope() =>
         factory?.Services.CreateScope() ?? throw new InvalidOperationException();
 
-    public async ValueTask<HttpResponseMessage> AnonymousGetAsync(string path)
+    internal ValueTask<HttpResponseMessage> Get(string path)
     {
-        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        return await client.GetAsync(new Uri(path, UriKind.Relative));
-    }
-
-    public ValueTask<HttpResponseMessage> GetAsync(string path)
-    {
-        if (Tokens is null)
+        if (AccessToken is null)
             throw new InvalidOperationException();
-        return GetAsync(path, Tokens);
+        return Get(path, AccessToken);
     }
 
-    public async ValueTask<HttpResponseMessage> AdministratorGetAsync(string path)
+    internal async ValueTask<HttpResponseMessage> AdministratorGet(string path)
     {
-        await EnsureAdministratorIsSignedInAsync();
-        return await GetAsync(path, administratorTokens!);
+        await EnsureAdministratorIsSignedIn();
+        return await Get(path, administratorAccessToken);
     }
 
-    public async ValueTask<HttpResponseMessage> PostAnonymousAsync<T>(string path, T request)
+    internal async ValueTask<HttpResponseMessage> PostAnonymous<T>(string path, T request)
     {
-        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
+        using var client = CreateClient();
         return await client.PostAsJsonAsync(new Uri(path, UriKind.Relative), request, SerializerOptions);
     }
 
-    public async ValueTask<HttpResponseMessage> PostAsync<T>(string path, T request)
+    internal ValueTask<HttpResponseMessage> Post(string path)
     {
-        if (Tokens is null)
+        if (AccessToken is null)
             throw new InvalidOperationException();
-        return await PostAsync(path, request, Tokens, Cookies);
+        return Post<object?>(path, request: null, AccessToken, Cookies);
     }
 
-    public async ValueTask<HttpResponseMessage> AdministratorPostAsync<T>(string path, T request)
+    internal ValueTask<HttpResponseMessage> Post(string path, IEnumerable<string>? cookies)
     {
-        await EnsureAdministratorIsSignedInAsync();
-        return await PostAsync(path, request, administratorTokens!);
-    }
-
-    public async ValueTask<HttpResponseMessage> PatchAsync<T>(string path, T request)
-    {
-        if (Tokens is null)
+        if (AccessToken is null)
             throw new InvalidOperationException();
-        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", Tokens.AccessToken);
-        return await client.PatchAsJsonAsync(new Uri(path, UriKind.Relative), request, SerializerOptions);
+        return Post<object?>(path, request: null, AccessToken, cookies);
     }
 
-    public async ValueTask<HttpResponseMessage> AdministratorPatchAsync<T>(string path, T request)
+    internal ValueTask<HttpResponseMessage> Post<T>(string path, T request)
     {
-        await EnsureAdministratorIsSignedInAsync();
-        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", administratorTokens!.AccessToken);
-        return await client.PatchAsJsonAsync(new Uri(path, UriKind.Relative), request, SerializerOptions);
-    }
-
-    public async ValueTask<HttpResponseMessage> DeleteAsync(string path)
-    {
-        if (Tokens is null)
+        if (AccessToken is null)
             throw new InvalidOperationException();
-        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", Tokens.AccessToken);
+        return Post(path, request, AccessToken, Cookies);
+    }
+
+    internal async ValueTask<HttpResponseMessage> AdministratorPost(string path)
+    {
+        await EnsureAdministratorIsSignedIn();
+        return await Post<object?>(path, request: null, administratorAccessToken);
+    }
+
+    internal async ValueTask<HttpResponseMessage> AdministratorPost<T>(string path, T request)
+    {
+        await EnsureAdministratorIsSignedIn();
+        return await Post(path, request, administratorAccessToken);
+    }
+
+    internal async ValueTask<HttpResponseMessage> AdministratorPostContent(string path, HttpContent content)
+    {
+        await EnsureAdministratorIsSignedIn();
+        return await PostContent(path, content, administratorAccessToken);
+    }
+
+    internal async ValueTask<HttpResponseMessage> Patch<T>(string path, T request)
+    {
+        if (AccessToken is null)
+            throw new InvalidOperationException();
+        using var client = CreateClient(AccessToken);
+        return await client.PatchAsJsonAsync(new(path, UriKind.Relative), request, SerializerOptions);
+    }
+
+    internal async ValueTask<HttpResponseMessage> AdministratorPatch<T>(string path, T request)
+    {
+        await EnsureAdministratorIsSignedIn();
+        using var client = CreateClient(administratorAccessToken);
+        return await client.PatchAsJsonAsync(new(path, UriKind.Relative), request, SerializerOptions);
+    }
+
+    internal async ValueTask<HttpResponseMessage> Delete(string path)
+    {
+        if (AccessToken is null)
+            throw new InvalidOperationException();
+        using var client = CreateClient(AccessToken);
         return await client.DeleteAsync(new Uri(path, UriKind.Relative));
     }
 
-    public async ValueTask<HttpResponseMessage> AdministratorDeleteAsync(string path)
+    internal async ValueTask<HttpResponseMessage> AdministratorDelete(string path, string? eTag = null)
     {
-        await EnsureAdministratorIsSignedInAsync();
-        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", administratorTokens!.AccessToken);
+        await EnsureAdministratorIsSignedIn();
+        using var client = CreateClient(administratorAccessToken);
+        if (eTag is { Length: > 0 })
+            client.DefaultRequestHeaders.IfMatch.Add(new(eTag));
         return await client.DeleteAsync(new Uri(path, UriKind.Relative));
     }
 
-    public async ValueTask<T> DeserializeAsync<T>(HttpResponseMessage response)
+    internal async ValueTask<T> Deserialize<T>(HttpResponseMessage response)
     {
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<T>(SerializerOptions))!;
     }
 
-    public ValueTask<T?> DeserializeAsync<T>(Stream stream) => JsonSerializer.DeserializeAsync<T>(stream, SerializerOptions);
+    internal ValueTask<T?> Deserialize<T>(Stream stream) => JsonSerializer.DeserializeAsync<T>(stream, SerializerOptions);
 
-    async ValueTask<HttpResponseMessage> GetAsync(string path, Tokens tokens)
+    async ValueTask<HttpResponseMessage> Get(string path, string? accessToken)
     {
-        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", tokens.AccessToken);
+        using var client = CreateClient(accessToken);
         return await client.GetAsync(new Uri(path, UriKind.Relative));
     }
-
-    async ValueTask<HttpResponseMessage> PostAsync<T>(string path, T request, Tokens tokens, IEnumerable<string>? cookies = default)
+    async ValueTask<HttpResponseMessage> Post<T>(string path, T request, string? accessToken, IEnumerable<string>? cookies = null)
     {
-        using var client = factory?.CreateClient() ?? throw new InvalidOperationException();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", tokens.AccessToken);
-        if (cookies is not null)
-            client.DefaultRequestHeaders.Add("Cookie", cookies);
-        return await client.PostAsJsonAsync(new Uri(path, UriKind.Relative), request, SerializerOptions);
+        using var client = CreateClient(accessToken, cookies);
+        return request is not null
+            ? await client.PostAsJsonAsync(new Uri(path, UriKind.Relative), request, SerializerOptions)
+            : await client.PostAsync(new Uri(path, UriKind.Relative), content: null);
     }
 
-    async ValueTask EnsureAdministratorIsSignedInAsync()
+    async ValueTask<HttpResponseMessage> PostContent(string path, HttpContent content, string? accessToken, IEnumerable<string>? cookies = null)
     {
-        if (administratorTokens is not null)
+        using var client = CreateClient(accessToken, cookies);
+        return await client.PostAsync(new Uri(path, UriKind.Relative), content);
+    }
+
+    async ValueTask EnsureAdministratorIsSignedIn()
+    {
+        if (administratorAccessToken is not null)
             return;
-        var request = new SignInRequest { Email = TestData.AdministratorEmail, Password = TestData.AdministratorPassword };
-        administratorTokens = await DeserializeAsync<Tokens>(await PostAnonymousAsync("user/sign-in", request));
+        var request = new SignInRequest(SeedData.AdministratorEmail, SeedData.AdministratorPassword, IsPersistent: false);
+        var response = await Deserialize<TokensResponse>(await PostAnonymous("user/sign-in", request));
+        administratorAccessToken = response.AccessToken;
+    }
+
+    HttpClient CreateClient(string? bearerToken = null, IEnumerable<string>? cookies = null)
+    {
+        var client = factory?.CreateClient() ?? throw new InvalidOperationException();
+        client.DefaultRequestHeaders.Accept.Add(new(MediaTypeNames.Application.Json));
+        if (bearerToken is not null)
+            client.DefaultRequestHeaders.Authorization = new("Bearer", bearerToken);
+        if (cookies is not null)
+            client.DefaultRequestHeaders.Add("Cookie", cookies);
+        return client;
     }
 
     static string GetId() => Random.Shared.Next().ToString("x8", CultureInfo.InvariantCulture);

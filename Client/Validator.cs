@@ -1,5 +1,5 @@
 ﻿using Blazorise;
-using Frederikskaj2.Reservations.Shared.Web;
+using ValidationRule = Frederikskaj2.Reservations.Core.ValidationRule;
 
 namespace Frederikskaj2.Reservations.Client;
 
@@ -55,7 +55,7 @@ static class Validator
     public static void ValidateFullName(ValidatorEventArgs e)
     {
         var value = e.Value?.ToString();
-        if (string.IsNullOrWhiteSpace(value))
+        if (string.IsNullOrWhiteSpace(value) || !IsFullNameValid(value))
         {
             e.Status = ValidationStatus.Error;
             e.ErrorText = "Angiv dit fulde navn";
@@ -64,11 +64,6 @@ static class Validator
         {
             e.Status = ValidationStatus.Error;
             e.ErrorText = "Teksten er for lang";
-        }
-        else if (!IsFullNameValid(value))
-        {
-            e.Status = ValidationStatus.Error;
-            e.ErrorText = "Angiv dit fulde navn";
         }
         else
             e.Status = ValidationStatus.Success;
@@ -116,15 +111,15 @@ static class Validator
     public static void ValidateAmount(ValidatorEventArgs e)
     {
         var value = (int) e.Value;
-        if (value < ValidationRules.MinimumAmount)
+        if (value < ValidationRule.MinimumAmount)
         {
             e.Status = ValidationStatus.Error;
             e.ErrorText = "Angiv et beløb større end nul.";
         }
-        else if (value > ValidationRules.MaximumAmount)
+        else if (value > ValidationRule.MaximumAmount)
         {
             e.Status = ValidationStatus.Error;
-            e.ErrorText = $"Angiv et beløb som ikke overstiger {ValidationRules.MaximumAmount}.";
+            e.ErrorText = $"Angiv et beløb som ikke overstiger {ValidationRule.MaximumAmount}.";
         }
         else
             e.Status = ValidationStatus.Success;
@@ -138,7 +133,7 @@ static class Validator
             e.Status = ValidationStatus.Error;
             e.ErrorText = "Angiv formålet med din bestilling.";
         }
-        else if (description.Length > ValidationRules.MaximumOwnerOrderDescriptionLength)
+        else if (description.Length > ValidationRule.MaximumOwnerOrderDescriptionLength)
         {
             e.Status = ValidationStatus.Error;
             e.ErrorText = "Teksten er for lang.";
@@ -147,13 +142,13 @@ static class Validator
             e.Status = ValidationStatus.Success;
     }
 
-    static bool IsAccountNumberTooLong(string? value) => value is not null && value.Length > ValidationRules.MaximumAccountNumberLength;
-    static bool IsAccountNumberValid(string? value) => value is not null && ValidationRules.AccountNumberRegex.IsMatch(value);
-    static bool IsEmailTooLong(string? value) => value is not null && value.Length > ValidationRules.MaximumEmailLength;
-    static bool IsEmailValid(string? value) => value is not null && ValidationRules.EmailRegex.IsMatch(value);
-    static bool IsFullNameTooLong(string? value) => value is not null && value.Length > ValidationRules.MaximumFullNameLength;
-    static bool IsFullNameValid(string? value) => value is not null && ValidationRules.FullNameRegex.IsMatch(value);
-    static bool IsPasswordTooLong(string? value) => value is not null && value.Length > ValidationRules.MaximumPasswordLength;
-    static bool IsPhoneTooLong(string? value) => value is not null && value.Length > ValidationRules.MaximumPhoneLength;
-    static bool IsPhoneValid(string? value) => value is not null && ValidationRules.PhoneRegex.IsMatch(value);
+    static bool IsAccountNumberTooLong(string? value) => value?.Length > ValidationRule.MaximumAccountNumberLength;
+    static bool IsAccountNumberValid(string? value) => value is not null && ValidationRule.AccountNumberRegex.IsMatch(value);
+    static bool IsEmailTooLong(string? value) => value?.Length > ValidationRule.MaximumEmailLength;
+    static bool IsEmailValid(string? value) => value is not null && ValidationRule.EmailRegex.IsMatch(value);
+    static bool IsFullNameTooLong(string? value) => value?.Length > ValidationRule.MaximumFullNameLength;
+    static bool IsFullNameValid(string? value) => value is not null && ValidationRule.FullNameRegex.IsMatch(value);
+    static bool IsPasswordTooLong(string? value) => value?.Length > ValidationRule.MaximumPasswordLength;
+    static bool IsPhoneTooLong(string? value) => value?.Length > ValidationRule.MaximumPhoneLength;
+    static bool IsPhoneValid(string? value) => value is not null && ValidationRule.PhoneRegex.IsMatch(value);
 }

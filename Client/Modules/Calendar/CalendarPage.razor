@@ -1,0 +1,33 @@
+﻿@page "/kalender"
+<PageTitle>Kalender - Frederikskaj 2 lokalereservation</PageTitle>
+@if (!isInitialized)
+{
+    <main>
+        <Spinner/>
+    </main>
+}
+else if (reservedDays is null)
+{
+    <main>
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
+    </main>
+}
+else
+{
+    <main>
+        <MonthCalendar
+            Options="options"
+            Resources="resources"
+            ReservedDays="reservedDays"
+            IsResourceAvailable="IsResourceAvailable"
+            OnMakeReservation="MakeReservation"
+            LegendTheirReservations="Andres reservationer"
+            LegendOurReservations="Dine reservationer"/>
+    </main>
+    <Sidebar ShowPrices="true" OnCheckout="Checkout"/>
+    <ReservationDialog @ref="reservationDialog" ShowPrices="true" Order="DraftOrder" OnCancel="CancelReservation" OnConfirm="ConfirmReservation"/>
+}

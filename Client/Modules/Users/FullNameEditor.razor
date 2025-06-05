@@ -1,0 +1,13 @@
+﻿@using ValidationRule = Frederikskaj2.Reservations.Core.ValidationRule
+<Field>
+    <FieldLabel>Fulde navn</FieldLabel>
+    <FieldBody>
+        <Validation Validator="Validator.ValidateFullName">
+            <TextEdit @ref="textEdit" Text="@Value" TextChanged="ValueChanged" Disabled="Disabled" MaxLength="ValidationRule.MaximumFullNameLength">
+                <Feedback>
+                    <ValidationError/>
+                </Feedback>
+            </TextEdit>
+        </Validation>
+    </FieldBody>
+</Field>

@@ -1,0 +1,67 @@
+﻿<div>
+    <Modal @ref="modal">
+        <Form>
+            <ModalContent Size="ModalSize.Large">
+                @if (Transaction is not null && Resident is not null)
+                {
+                    <ModalHeader>
+                        <ModalTitle>Afstem @(Transaction!.Amount > Amount.Zero ? "indbetaling" : "udbetaling")</ModalTitle>
+                        <CloseButton Clicked="Cancel"/>
+                    </ModalHeader>
+                    <ModalBody>
+                        <Field>
+                            <FieldLabel>Bekræft at bankbevægelsen</FieldLabel>
+                        </Field>
+                        <FieldBody>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHeaderCell Width="Width.Rem(6)">Dato</TableHeaderCell>
+                                        <TableHeaderCell>Tekst</TableHeaderCell>
+                                        <TableHeaderCell Width="Width.Rem(6)" Class="text-end">Beløb</TableHeaderCell>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableRowCell>@Formatter.FormatDateShort(Transaction.Date)</TableRowCell>
+                                        <TableRowCell>@Transaction.Text</TableRowCell>
+                                        <TableRowCell Class="text-end"><SignedAmount Amount="Transaction.Amount"/></TableRowCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </FieldBody>
+                        <Field>
+                            <FieldLabel>Er @(Transaction!.Amount > Amount.Zero ? "indbetalt af" : "udbetalt til")</FieldLabel>
+                        </Field>
+                        <FieldBody>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHeaderCell Width="Width.Rem(6)">Betalings-ID</TableHeaderCell>
+                                        <TableHeaderCell>Navn</TableHeaderCell>
+                                        <TableHeaderCell Width="Width.Rem(6)">Adresse</TableHeaderCell>
+                                        <TableHeaderCell Width="Width.Rem(6)" Class="text-end">Saldo</TableHeaderCell>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableRowCell>@Resident.PaymentId</TableRowCell>
+                                        <TableRowCell>@Resident.UserIdentity.FullName</TableRowCell>
+                                        <TableRowCell>@apartments![Resident.UserIdentity.ApartmentId!.Value].ToString()</TableRowCell>
+                                        <TableRowCell Class="text-end">
+                                            <SignedAmount Amount="Resident.Balance"/>
+                                        </TableRowCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </FieldBody>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button Color="Color.Primary" Type="@ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="Confirm">Afstem</Button>
+                        <Button Color="Color.Secondary" Clicked="Cancel">Annullér</Button>
+                    </ModalFooter>
+                }
+            </ModalContent>
+        </Form>
+    </Modal>
+</div>

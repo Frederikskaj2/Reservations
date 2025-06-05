@@ -1,0 +1,125 @@
+﻿@page "/bruger/bestillinger/{orderId:int}"
+<PageTitle>@(order is not null ? $"Bestilling {order.OrderId} - " : "")Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner/>
+    }
+    else if (order is not null)
+    {
+        <Container class="container-min-lg">
+            <Alert Color="Color.Success" Visible="showSuccessAlert" Dismisable="true">
+                Din bestilling er blevet opdateret.
+                <CloseButton Clicked="DismissSuccessAlert"/>
+            </Alert>
+            <Alert Color="Color.Danger" Visible="showErrorAlert" Dismisable="true">
+                Der er sket en fejl, og din bestilling blev ikke opdateret.
+                <CloseButton Clicked="DismissErrorAlert"/>
+            </Alert>
+            <Card Background="Background.Light">
+                <CardHeader>
+                    <CardTitle Size="1">Bestilling @order.OrderId</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <div class="flex-container">
+                        <div>
+                            <div>@order.UserIdentity.Email</div>
+                            <div>@order.UserIdentity.FullName</div>
+                            @if (order.UserIdentity.ApartmentId.HasValue && order.UserIdentity.ApartmentId != Apartment.Deleted.ApartmentId)
+                            {
+                                <div>Frederikskaj @GetApartment(order.UserIdentity.ApartmentId.Value)</div>
+                            }
+                            <div>@order.UserIdentity.Phone</div>
+                        </div>
+                        <OrderStatus Reservations="order.Reservations"/>
+                    </div>
+                </CardBody>
+            </Card>
+            @if (order.Payment is not null)
+            {
+                <Card Background="Background.Light">
+                    <CardHeader>
+                        <CardTitle Size="1">Betalingsoplysninger</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        <Paragraph>Bestillingen kan først godkendes, når du indbetaler det beløb du skylder:</Paragraph>
+                        <PaymentInstructions PaymentInformation="order.Payment"/>
+                    </CardBody>
+                </Card>
+            }
+            @if (lockBoxCodes?.Count > 0)
+            {
+                <Card Background="Background.Light">
+                    <CardHeader>
+                        <CardTitle Size="1">Nøglebokskoder</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        @if (lockBoxCodes.Count is 1)
+                        {
+                            <Paragraph>Nøglebokskode for @lockBoxCodes[0].ResourceName: <strong class="text-primary">@lockBoxCodes[0].Code</strong></Paragraph>
+                        }
+                        else
+                        {
+                            foreach (var lockBoxCode in lockBoxCodes)
+                            {
+                                <Paragraph>
+                                    Nøglebokskode for @lockBoxCode.ResourceName (fra @Formatter.FormatDate(lockBoxCode.Date)):
+                                    <strong class="text-primary">@lockBoxCode.Code</strong>
+                                </Paragraph>
+                            }
+                        }
+                    </CardBody>
+                </Card>
+            }
+            @if (order.Reservations.Any(reservation => reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed))
+            {
+                <Card Background="Background.Light">
+                    <CardHeader>
+                        <CardTitle Size="1">Vigtig information</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        <Paragraph>Følgende betingelser og regler skal overholdes:</Paragraph>
+                        <ul>
+                            <li>
+                                <a href="@UrlPath.Terms">Lejebetingelser</a>
+                            </li>
+                            @if (linkBanquetFacilitiesRules)
+                            {
+                                <li>
+                                    <a href="@UrlPath.RulesBanquetFacilities">Husorden for festlokalet</a>
+                                </li>
+                            }
+                            @if (linkBedroomRules)
+                            {
+                                <li>
+                                    <a href="@UrlPath.RulesBedrooms">Husorden for soveværelserne</a>
+                                </li>
+                            }
+                        </ul>
+                    </CardBody>
+                </Card>
+            }
+            <Card Background="Background.Light">
+                <CardHeader>
+                    <CardTitle Size="1">Reservationer</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <OrderStatement
+                        IsHistoryOrder="order.IsHistoryOrder"
+                        AccountNumber="@accountNumber"
+                        Reservations="order.Reservations"
+                        NoFeeCancellationIsAllowedBefore="order.NoFeeCancellationIsAllowedBefore"
+                        CanEditOrder="true"
+                        OnSubmit="Submit"/>
+                </CardBody>
+            </Card>
+            <AdditionalLineItems Items="order.AdditionalLineItems" Reservations="order.Reservations"/>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <Text>Bestilling @OrderId er ikke tilgængelig.</Text>
+        </Container>
+    }
+</main>

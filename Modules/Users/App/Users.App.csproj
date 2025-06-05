@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Users</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="libphonenumber-csharp"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\App\Core.App.csproj"/>
+        <ProjectReference Include="..\Contracts\Users.Contracts.csproj"/>
+        <ProjectReference Include="..\Domain\Users.Domain.csproj"/>
+    </ItemGroup>
+</Project>

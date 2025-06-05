@@ -1,0 +1,14 @@
+@inherits MessageComponentBase<NewOrderDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Bestilling @Model.Data.OrderId</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Der er oprettet en ny bestilling med <AdministratorOrderLink Model="Model" OrderId="Model.Data.OrderId"/>.</p>
+    <Regards Model="Model"/>
+    <OrdersFooter Model="Model"/>
+</body>
+</html>

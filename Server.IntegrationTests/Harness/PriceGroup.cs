@@ -4,5 +4,5 @@ public enum PriceGroup
 {
     Any,
     Low,
-    High
+    High,
 }

@@ -1,23 +1,27 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
-
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
     <PropertyGroup>
         <RootNamespace>Frederikskaj2.Reservations.Client</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Blazored.LocalStorage"/>
-        <PackageReference Include="Blazorise.Bootstrap"/>
+        <PackageReference Include="Blazorise.Bootstrap5"/>
         <PackageReference Include="Blazorise.Icons.FontAwesome"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.Authorization"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.Extensions.Http"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Configuration"/>
-        <PackageReference Include="NodaTime"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Shared.Web\Shared.Web.csproj"/>
+        <ProjectReference Include="..\Modules\Bank\Contracts\Bank.Contracts.csproj"/>
+        <ProjectReference Include="..\Modules\Calendar\Contracts\Calendar.Contracts.csproj"/>
+        <ProjectReference Include="..\Modules\Cleaning\Contracts\Cleaning.Contracts.csproj"/>
+        <ProjectReference Include="..\Modules\Core\Contracts\Core.Contracts.csproj"/>
+        <ProjectReference Include="..\Modules\Core\Infrastructure.Shared\Core.Infrastructure.Shared.csproj"/>
+        <ProjectReference Include="..\Modules\LockBox\Contracts\LockBox.Contracts.csproj"/>
+        <ProjectReference Include="..\Modules\Orders\Contracts\Orders.Contracts.csproj"/>
+        <ProjectReference Include="..\Modules\Users\Infrastructure.Shared\Users.Infrastructure.Shared.csproj"/>
     </ItemGroup>
-
 </Project>

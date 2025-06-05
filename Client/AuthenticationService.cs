@@ -1,25 +1,21 @@
 ﻿using Blazored.LocalStorage;
-using Frederikskaj2.Reservations.Shared.Web;
+using Frederikskaj2.Reservations.Users;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Client;
 
-public class AuthenticationService
+public class AuthenticationService(ILocalStorageService localStorageService)
 {
     const string accessTokenKeyName = "accessToken";
 
-    readonly ILocalStorageService localStorageService;
+    public ValueTask<string?> GetAccessToken() => localStorageService.GetItemAsync<string?>(accessTokenKeyName);
 
-    public AuthenticationService(ILocalStorageService localStorageService) => this.localStorageService = localStorageService;
+    public ValueTask Clear() => SetAccessToken("");
 
-    public ValueTask<string?> GetAccessTokenAsync() => localStorageService.GetItemAsync<string?>(accessTokenKeyName);
+    public ValueTask SetTokens(Tokens tokens) => SetAccessToken(tokens.AccessToken);
 
-    public ValueTask ClearAsync() => SetAccessTokenAsync("");
-
-    public ValueTask SetTokensAsync(Tokens tokens) => SetAccessTokenAsync(tokens.AccessToken);
-
-    ValueTask SetAccessTokenAsync(string accessToken)
-        => !string.IsNullOrEmpty(accessToken)
+    ValueTask SetAccessToken(string accessToken)
+        => accessToken is { Length: > 0 }
             ? localStorageService.SetItemAsync(accessTokenKeyName, accessToken)
             : localStorageService.RemoveItemAsync(accessTokenKeyName);
 }

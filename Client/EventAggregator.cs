@@ -4,12 +4,9 @@ using System.Collections.Generic;
 
 namespace Frederikskaj2.Reservations.Client;
 
-public class EventAggregator
+public class EventAggregator(ILogger<EventAggregator> logger)
 {
-    readonly ILogger logger;
-    readonly Dictionary<Type, HashSet<Subscription>> subscriptions = new();
-
-    public EventAggregator(ILogger<EventAggregator> logger) => this.logger = logger;
+    readonly Dictionary<Type, HashSet<ISubscription>> subscriptions = new();
 
     public IDisposable Subscribe<T>(Action<T> action) where T : notnull
     {
@@ -28,38 +25,32 @@ public class EventAggregator
                 subscriber.Publish(message);
     }
 
-    HashSet<Subscription> GetSubscriptions<T>() where T : notnull
+    HashSet<ISubscription> GetSubscriptions<T>() where T : notnull
     {
         var type = typeof(T);
         if (subscriptions.TryGetValue(type, out var subscriptionsForMessage))
             return subscriptionsForMessage;
-        subscriptionsForMessage = new HashSet<Subscription>();
+        subscriptionsForMessage = [];
         subscriptions.Add(type, subscriptionsForMessage);
         return subscriptionsForMessage;
     }
 
-    void Unsubscribe<T>(Subscription subscription)
+    void Unsubscribe<T>(ISubscription subscription)
     {
         var type = typeof(T);
         var subscriptionsForMessage = subscriptions[type];
         subscriptionsForMessage.Remove(subscription);
     }
 
-    abstract class Subscription
+    interface ISubscription
     {
-        public abstract void Publish(object message);
+        void Publish(object message);
     }
 
-    class Subscription<T> : Subscription, IDisposable
+    sealed class Subscription<T>(EventAggregator eventAggregator, Action<T> action) : ISubscription, IDisposable
     {
-        readonly Action<T> action;
-        readonly EventAggregator eventAggregator;
-
-        public Subscription(EventAggregator eventAggregator, Action<T> action) =>
-            (this.eventAggregator, this.action) = (eventAggregator, action);
-
         public void Dispose() => eventAggregator.Unsubscribe<T>(this);
 
-        public override void Publish(object message) => action((T) message);
+        public void Publish(object message) => action((T) message);
     }
 }

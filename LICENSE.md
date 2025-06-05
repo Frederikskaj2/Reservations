@@ -1,4 +1,4 @@
-Copyright © 2020–2022 Martin Liversage
+Copyright © 2020–2025 Martin Liversage
 
 # Elastic License
 

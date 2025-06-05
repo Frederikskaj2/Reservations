@@ -1,0 +1,33 @@
+@using Frederikskaj2.Reservations.LockBox
+@using Frederikskaj2.Reservations.Users
+@inherits MessageComponentBase<ReservationsCancelledDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Bestilling @Model.Data.OrderId</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Følgende reservationer hørende til <ResidentOrderLink Model="Model" OrderId="Model.Data.OrderId"/> er blevet annulleret:</p>
+    <ul>
+@foreach (var reservation in Model.Data.Reservations)
+{
+        <li>@Resources.GetNameUnsafe(reservation.ResourceId) @Model.FormatLongDate(reservation.Date)</li>
+}
+    </ul>
+@if (Model.Data.Refund > Amount.Zero)
+{
+    <p>
+        Leje og depositum på @Model.FormatAmount(Model.Data.Refund) vil blive refunderet.
+    @if (Model.Data.Fee > Amount.Zero)
+    {
+        <text>        Vi har fratrukket et afbestillingsgebyr på @Model.FormatAmount(Model.Data.Fee)
+</text>
+    }
+    </p>
+}
+    <Regards Model="Model"/>
+    <ResidentOrderFooter Model="Model" OrderId="Model.Data.OrderId"/>
+</body>
+</html>

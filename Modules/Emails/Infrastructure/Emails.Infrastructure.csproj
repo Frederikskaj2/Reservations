@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Emails</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Azure.Storage.Queues"/>
+        <PackageReference Include="Microsoft.Extensions.Http"/>
+        <PackageReference Include="System.Linq.Async"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\Infrastructure\Core.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Abstractions\Emails.Abstractions.csproj"/>
+        <ProjectReference Include="..\Domain\Emails.Domain.csproj"/>
+    </ItemGroup>
+</Project>

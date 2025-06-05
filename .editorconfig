@@ -190,7 +190,7 @@ csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
 csharp_new_line_before_catch = true
 csharp_new_line_before_finally = true
-csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_object_initializers = false
 csharp_new_line_before_members_in_anonymous_types = false
 csharp_new_line_between_query_expression_clauses = true
 
@@ -316,7 +316,7 @@ dotnet_diagnostic.ca1040.severity = warning
 dotnet_diagnostic.ca1041.severity = warning
 
 # CA1043: Use Integral Or String Argument For Indexers
-dotnet_diagnostic.ca1043.severity = warning
+dotnet_diagnostic.ca1043.severity = silent
 
 # CA1044: Properties should not be write only
 dotnet_diagnostic.ca1044.severity = warning
@@ -882,10 +882,97 @@ dotnet_diagnostic.ca9999.severity = warning
 # CS8509: The switch expression does not handle all possible values of its input type (it is not exhaustive).
 dotnet_diagnostic.cs8509.severity = suggestion
 
-# ReSharper properties
-resharper_object_creation_when_type_not_evident = target_typed
+# MA0002: IEqualityComparer<string> or IComparer<string> is missing
+dotnet_diagnostic.ma0002.severity = suggestion
 
-[*.{appxmanifest,asax,ascx,aspx,axaml,build,c,c++,cc,cginc,compute,cp,cpp,cs,cshtml,cu,cuh,cxx,dtd,fs,fsi,fsscript,fsx,fx,fxh,h,hh,hlsl,hlsli,hlslinc,hpp,hxx,inc,inl,ino,ipp,master,ml,mli,mpp,mq4,mq5,mqh,nuspec,paml,razor,resw,resx,shader,skin,tpp,usf,ush,vb,xaml,xamlx,xoml,xsd}]
-indent_style = space
-indent_size = 4
-tab_width = 4
+# MA0004: Use Task.ConfigureAwait
+dotnet_diagnostic.ma0004.severity = none
+
+# MA0006: Use String.Equals instead of equality operator
+dotnet_diagnostic.ma0006.severity = suggestion
+
+# MA0008: Add StructLayoutAttribute
+dotnet_diagnostic.ma0008.severity = suggestion
+
+# MA0026: Fix TODO comment
+dotnet_diagnostic.ma0026.severity = suggestion
+
+# MA0051 : Method is too long
+dotnet_diagnostic.ma0051.severity = suggestion
+
+# RCS1001: Add braces (when expression spans over multiple lines)
+dotnet_diagnostic.rcs1001.severity = none
+
+# RCS1003: Add braces to if-else (when expression spans over multiple lines)
+dotnet_diagnostic.rcs1003.severity = none
+
+# RCS1018: Add/remove accessibility modifiers
+dotnet_diagnostic.rcs1018.severity = none
+
+# RCS1023: Format empty block
+dotnet_diagnostic.rcs1023.severity = none
+
+# RCS1089: Use --/++ operator instead of assignment
+dotnet_diagnostic.rcs1089.severity = none
+
+# RCS1090: Add/remove 'ConfigureAwait(false)' call
+dotnet_diagnostic.rcs1090.severity = none
+
+# RCS1123: Add parentheses when necessary
+dotnet_diagnostic.rcs1123.severity = none
+
+# S1121: Assignments should not be made from within sub-expressions
+dotnet_diagnostic.s1121.severity = suggestion
+
+# S1125: Boolean literals should not be redundant
+dotnet_diagnostic.s1125.severity = none
+
+# S1135: Track uses of "TODO" tags
+dotnet_diagnostic.s1135.severity = none
+
+# S1168: Empty arrays and collections should be returned instead of null
+dotnet_diagnostic.s1168.severity = suggestion
+
+# S1481: Unused local variables should be removed
+dotnet_diagnostic.s1481.severity = suggestion
+
+# S2094: Classes should not be empty
+dotnet_diagnostic.s2094.severity = none
+
+# S2325: Methods and properties that don't access instance data should be static
+dotnet_diagnostic.s2325.severity = none
+
+# S2344: Enumeration type names should not have "Flags" or "Enum" suffixes
+dotnet_diagnostic.s2344.severity = suggestion
+
+# S2346: Flags enumerations zero-value members should be named "None"
+dotnet_diagnostic.s2346.severity = suggestion
+
+# S3358: Ternary operators should not be nested
+dotnet_diagnostic.s3358.severity = none
+
+# S4136: Method overloads should be grouped together
+dotnet_diagnostic.s4136.severity = suggestion
+
+# SCS0005: Weak Random Number Generator
+dotnet_diagnostic.scs0005.severity = none
+
+# VSTHRD002: Avoid problematic synchronous waits
+dotnet_diagnostic.vsthrd002.severity = suggestion
+
+# VSTHRD003: Avoid awaiting foreign Tasks
+dotnet_diagnostic.vsthrd003.severity = none
+
+# VSTHRD011: Use AsyncLazy<T>
+dotnet_diagnostic.vsthrd011.severity = none
+
+# VSTHRD100: Avoid async void methods
+dotnet_diagnostic.vsthrd100.severity = suggestion
+
+# VSTHRD200: Use Async suffix for async methods
+dotnet_diagnostic.vsthrd200.severity = none
+
+# ReSharper properties
+resharper_csharp_wrap_after_declaration_lpar = true
+resharper_object_creation_when_type_not_evident = target_typed
+resharper_space_around_multiplicative_op = false

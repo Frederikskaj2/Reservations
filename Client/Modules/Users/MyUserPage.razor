@@ -1,0 +1,41 @@
+﻿@page "/bruger/konto"
+<PageTitle>Konto - Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner/>
+    }
+    else if (user is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <MyUserInformation User="user"/>
+            <MyUserUpdatePassword User="user"/>
+            @if (user.Roles.HasFlag(Roles.OrderHandling) || user.Roles.HasFlag(Roles.Bookkeeping) || user.Roles.HasFlag(Roles.Cleaning))
+            {
+                <MyUserEmailSubscriptions User="user"/>
+            }
+            @if (user.Roles.HasFlag(Roles.Resident))
+            {
+                <Card Background="Background.Light">
+                    <CardHeader>
+                        <CardTitle Size="1">Kontoudtog</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        <div class="button-row">
+                            <a class="btn btn-secondary btn-fixed" href="@UrlPath.MyTransactions">Kontoudtog</a>
+                        </div>
+                    </CardBody>
+                </Card>
+            }
+            <MyUserDelete User="user"/>
+        </Container>
+    }
+</main>

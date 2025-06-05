@@ -1,0 +1,37 @@
+@if (isInitialized)
+{
+    <Table>
+        <TableHeader>
+            <TableRow>
+                <TableHeaderCell>Bestillingsnr.</TableHeaderCell>
+                <TableHeaderCell>Oprettet</TableHeaderCell>
+                <TableHeaderCell>Næste reservation</TableHeaderCell>
+                <TableHeaderCell>Navn</TableHeaderCell>
+                <TableHeaderCell>Adresse</TableHeaderCell>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            @{
+                var tuples = Orders!.Select(order => (Order: order, Date: order.NextReservationDate)).OrderBy(tuple => tuple.Date).ThenBy(tuple => tuple.Order.OrderId);
+                foreach (var tuple in tuples)
+                {
+                    var (order, date) = tuple;
+                    <TableRow @key="order.OrderId">
+                        <TableRowCell><a href="@UrlPath.Orders/@order.OrderId">@order.OrderId</a></TableRowCell>
+                        <TableRowCell>@Formatter.FormatDate(order.CreatedTimestamp)</TableRowCell>
+                        <TableRowCell>@Formatter.FormatDate(date)</TableRowCell>
+                        <TableRowCell>
+                            <a href="@UrlPath.Users/@order.User.UserId">@order.User.FullName</a>
+                        </TableRowCell>
+                        <TableRowCell>
+                            @if (order.User.ApartmentId.HasValue && order.User.ApartmentId != Apartment.Deleted.ApartmentId)
+                            {
+                                @apartments![order.User.ApartmentId.Value]
+                            }
+                        </TableRowCell>
+                    </TableRow>
+                }
+            }
+        </TableBody>
+    </Table>
+}

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Orders</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="OneOf.Serialization.SystemTextJson"/>
+        <PackageReference Include="OneOf.SourceGenerator"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\LockBox\Domain\LockBox.Domain.csproj"/>
+        <ProjectReference Include="..\Domain.Shared\Orders.Domain.Shared.csproj" />
+    </ItemGroup>
+</Project>

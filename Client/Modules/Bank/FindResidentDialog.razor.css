@@ -1,0 +1,11 @@
+﻿::deep table.table tbody tr:not(.table-group).selected {
+    background-color: hsl(120, 50%, 90%);
+}
+
+::deep .table>:not(caption)>*>* {
+    background-color: transparent;
+}
+
+::deep tbody > tr, ::deep tbody > td {
+    cursor: pointer;
+}

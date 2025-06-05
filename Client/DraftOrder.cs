@@ -1,22 +1,20 @@
-﻿using Frederikskaj2.Reservations.Shared.Core;
-using Frederikskaj2.Reservations.Shared.Web;
+﻿using Frederikskaj2.Reservations.Calendar;
+using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Frederikskaj2.Reservations.Client;
 
-public class DraftOrder
+public class DraftOrder(EventAggregator eventAggregator)
 {
-    readonly EventAggregator eventAggregator;
-    readonly List<DraftReservation> reservations = new();
-
-    public DraftOrder(EventAggregator eventAggregator) => this.eventAggregator = eventAggregator;
+    readonly List<DraftReservation> reservations = [];
 
     public IEnumerable<DraftReservation> Reservations => reservations;
 
     public DraftReservation? DraftReservation { get; private set; }
 
-    public void AddReservation(Resource resource, Extent extent) => DraftReservation = new DraftReservation(resource, extent);
+    public void AddReservation(Resource resource, Extent extent) => DraftReservation = new(resource, extent);
 
     public void UpdateReservation(Extent extent)
     {
@@ -51,9 +49,8 @@ public class DraftOrder
     }
 
     public IEnumerable<ReservationRequest> GetReservationRequests() =>
-        reservations.Select(reservation => new ReservationRequest
-        {
-            ResourceId = reservation.Resource.ResourceId,
-            Extent = reservation.Extent
-        });
+        reservations.Select(reservation => new ReservationRequest(reservation.Resource.ResourceId, reservation.Extent));
+
+    public IEnumerable<ReservedDayDto> ReservedDays()
+        => Reservations.SelectMany(reservation => reservation.ReservedDays());
 }

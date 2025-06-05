@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Cleaning</RootNamespace>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\Core\Infrastructure\Core.Infrastructure.csproj" />
+      <ProjectReference Include="..\..\Emails\Abstractions\Emails.Abstractions.csproj" />
+      <ProjectReference Include="..\Domain\Cleaning.Domain.csproj" />
+    </ItemGroup>
+</Project>

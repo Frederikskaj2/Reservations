@@ -1,0 +1,15 @@
+@inherits MessageComponentBase<OrderConfirmedDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Bestilling @Model.Data.OrderId</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Din bestilling med <ResidentOrderLink Model="Model" OrderId="Model.Data.OrderId"/> er nu godkendt.</p>
+    <p>Du vil tre dage inden du skal bruge lokalet få tilsendt en nøglebokskode, så du kan låse dig ind på dagen. Den kode vil også blive vist på bestillingssiden.</p>
+    <Regards Model="Model"/>
+    <ResidentOrderFooter Model="Model" OrderId="Model.Data.OrderId"/>
+</body>
+</html>

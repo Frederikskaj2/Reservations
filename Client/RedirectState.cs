@@ -2,12 +2,8 @@
 
 namespace Frederikskaj2.Reservations.Client;
 
-public class RedirectState
+public class RedirectState(NavigationManager navigationManager)
 {
-    readonly NavigationManager navigationManager;
-
-    public RedirectState(NavigationManager navigationManager) => this.navigationManager = navigationManager;
-
     public string? RedirectUrl { get; set; }
 
     public void Redirect()

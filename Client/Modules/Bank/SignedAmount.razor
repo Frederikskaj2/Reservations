@@ -1,0 +1,3 @@
+﻿<span class="@(Amount < Amount.Zero ? "negative" : "")">
+    @(AlwaysDisplayDecimals ? Amount.Abs(Amount).ToString("N2", CultureInfo) : Amount.Abs(Amount).ToString(CultureInfo))
+</span>

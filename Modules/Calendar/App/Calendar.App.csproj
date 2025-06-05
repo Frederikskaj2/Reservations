@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Calendar</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\App\Core.App.csproj"/>
+        <ProjectReference Include="..\..\Persistence\Domain\Persistence.Domain.csproj"/>
+        <ProjectReference Include="..\Contracts\Calendar.Contracts.csproj"/>
+        <ProjectReference Include="..\Domain\Calendar.Domain.csproj"/>
+    </ItemGroup>
+
+</Project>

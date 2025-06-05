@@ -1,0 +1,85 @@
+﻿<Solution>
+  <Folder Name="/Modules/" />
+  <Folder Name="/Modules/Bank/">
+    <Project Path="Modules\Bank\App\Bank.App.csproj" Type="Classic C#" />
+    <Project Path="Modules\Bank\Contracts.Shared\Bank.Contracts.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\Bank\Contracts\Bank.Contracts.csproj" Type="Classic C#" />
+    <Project Path="Modules\Bank\Domain.Shared\Bank.Domain.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\Bank\Domain\Bank.Domain.csproj" Type="Classic C#" />
+    <Project Path="Modules\Bank\Infrastructure\Bank.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Modules/Calendar/">
+    <Project Path="Modules\Calendar\App\Calendar.App.csproj" Type="Classic C#" />
+    <Project Path="Modules\Calendar\Contracts\Calendar.Contracts.csproj" Type="Classic C#" />
+    <Project Path="Modules\Calendar\Domain\Calendar.Domain.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Modules/Cleaning/">
+    <Project Path="Modules\Cleaning\App\Cleaning.App.csproj" Type="Classic C#" />
+    <Project Path="Modules\Cleaning\Contracts\Cleaning.Contracts.csproj" Type="Classic C#" />
+    <Project Path="Modules\Cleaning\Domain.Shared\Cleaning.Domain.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\Cleaning\Domain\Cleaning.Domain.csproj" Type="Classic C#" />
+    <Project Path="Modules\Cleaning\Infrastructure\Cleaning.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Modules/Core/">
+    <Project Path="Modules\Core\App\Core.App.csproj" Type="Classic C#" />
+    <Project Path="Modules\Core\Contracts\Core.Contracts.csproj" Type="Classic C#" />
+    <Project Path="Modules\Core\Domain.Shared\Core.Domain.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\Core\Domain\Core.Domain.csproj" Type="Classic C#" />
+    <Project Path="Modules\Core\Infrastructure.Shared\Core.Infrastructure.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\Core\Infrastructure\Core.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Modules/Emails/">
+    <Project Path="Modules\Emails\Abstractions\Emails.Abstractions.csproj" Type="Classic C#" />
+    <Project Path="Modules\Emails\App\Emails.App.csproj" Type="Classic C#" />
+    <Project Path="Modules\Emails\Domain\Emails.Domain.csproj" Type="Classic C#" />
+    <Project Path="Modules\Emails\Infrastructure\Emails.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Modules/LockBox/">
+    <Project Path="Modules\LockBox\App\LockBox.App.csproj" Type="Classic C#" />
+    <Project Path="Modules\LockBox\Contracts.Shared\LockBox.Contracts.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\LockBox\Contracts\LockBox.Contracts.csproj" Type="Classic C#" />
+    <Project Path="Modules\LockBox\Domain.Shared\LockBox.Domain.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\LockBox\Domain\LockBox.Domain.csproj" Type="Classic C#" />
+    <Project Path="Modules\LockBox\Infrastructure\LockBox.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Modules/Orders/">
+    <Project Path="Modules\Orders\App\Orders.App.csproj" Type="Classic C#" />
+    <Project Path="Modules\Orders\Contracts\Orders.Contracts.csproj" Type="Classic C#" />
+    <Project Path="Modules\Orders\Domain.Shared\Orders.Domain.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\Orders\Domain\Orders.Domain.csproj" Type="Classic C#" />
+    <Project Path="Modules\Orders\Infrastructure\Orders.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Modules/Persistence/">
+    <Project Path="Modules\Persistence\Domain\Persistence.Domain.csproj" Type="Classic C#" />
+    <Project Path="Modules\Persistence\Infrastructure\Persistence.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Modules/Users/">
+    <Project Path="Modules\Users\App\Users.App.csproj" Type="Classic C#" />
+    <Project Path="Modules\Users\Contracts\Users.Contracts.csproj" Type="Classic C#" />
+    <Project Path="Modules\Users\Domain.Shared\Users.Domain.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\Users\Domain\Users.Domain.csproj" Type="Classic C#" />
+    <Project Path="Modules\Users\Infrastructure.Shared\Users.Infrastructure.Shared.csproj" Type="Classic C#" />
+    <Project Path="Modules\Users\Infrastructure\Users.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Reservations.slnx.DotSettings" />
+    <File Path="Directory.Packages.props" />
+    <File Path="Fortegnelse over behandling af personoplysninger.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Solution Items/GitHub/">
+    <File Path=".github\workflows\build-and-deploy.yml" />
+    <File Path=".github\workflows\deploy-to-production-success.json" />
+    <File Path=".github\workflows\deploy-to-test-success.json" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Modules\Emails\UnitTests\Emails.UnitTests.csproj" Type="Classic C#" />
+    <Project Path="Modules\Persistence\UnitTests\Persistence.UnitTests.csproj" Type="Classic C#" />
+    <Project Path="Server.EndpointAccessTests\Server.EndpointAccessTests.csproj" Type="Classic C#" />
+    <Project Path="Server.IntegrationTests\Server.IntegrationTests.csproj" Type="Classic C#" />
+  </Folder>
+  <Project Path="Client\Client.csproj" Type="Classic C#" />
+  <Project Path="Server\Server.csproj" Type="Classic C#" />
+</Solution>

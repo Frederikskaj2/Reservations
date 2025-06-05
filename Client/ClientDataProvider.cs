@@ -1,60 +1,76 @@
-﻿using Frederikskaj2.Reservations.Shared.Core;
-using Frederikskaj2.Reservations.Shared.Web;
-using NodaTime;
+﻿using Frederikskaj2.Reservations.Bank;
+using Frederikskaj2.Reservations.Core;
+using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
+using Frederikskaj2.Reservations.Users;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Client;
 
-public class ClientDataProvider
+public sealed class ClientDataProvider(AuthenticatedApiClient apiClient) : IDisposable
 {
-    readonly AuthenticatedApiClient apiClient;
-    Configuration? cachedConfiguration;
+    readonly SemaphoreSlim gate = new(1, 1);
+    IReadOnlyDictionary<PostingAccount, string>? cachedAccountNames;
+    IReadOnlyDictionary<ApartmentId, Apartment>? cachedApartments;
+    GetConfigurationResponse? cachedConfiguration;
     IReadOnlyDictionary<ResourceId, Resource>? cachedResources;
 
-    public ClientDataProvider(AuthenticatedApiClient apiClient, IDateProvider dateProvider)
-    {
-        this.apiClient = apiClient;
-        Holidays = dateProvider.Holidays;
-    }
+    public MyOrderDto? CurrentOrder { get; set; }
 
-    public MyOrder? CurrentOrder { get; set; }
+    public void Dispose() => gate.Dispose();
 
-    // TODO: Get rid of this and use IDateProvider directly.
-    public IReadOnlySet<LocalDate> Holidays { get; }
+    public async ValueTask<OrderingOptions?> GetOptions() => (await GetConfiguration())?.Options;
 
-    public async ValueTask<OrderingOptions?> GetOptionsAsync() => (await GetConfigurationAsync())?.Options;
-
-    public async ValueTask<IReadOnlyDictionary<ResourceId, Resource>?> GetResourcesAsync()
+    public async ValueTask<IReadOnlyDictionary<ResourceId, Resource>> GetResources()
     {
         if (cachedResources is not null)
             return cachedResources;
-        var configuration = await GetConfigurationAsync();
-        cachedResources = configuration?.Resources.ToDictionary(resource => resource.ResourceId);
+        var configuration = await GetConfiguration();
+        cachedResources = (IReadOnlyDictionary<ResourceId, Resource>?) configuration?.Resources.ToDictionary(resource => resource.ResourceId) ??
+                          ReadOnlyDictionary<ResourceId, Resource>.Empty;
         return cachedResources;
     }
 
-    public async ValueTask<IEnumerable<Apartment>?> GetApartmentsAsync()
+    public async ValueTask<IReadOnlyDictionary<ApartmentId, Apartment>> GetApartments()
     {
-        var configuration = await GetConfigurationAsync();
-        return configuration?.Apartments;
+        if (cachedApartments is not null)
+            return cachedApartments;
+        var configuration = await GetConfiguration();
+        cachedApartments = (IReadOnlyDictionary<ApartmentId, Apartment>?) configuration?.Apartments.ToDictionary(apartment => apartment.ApartmentId) ??
+                           ReadOnlyDictionary<ApartmentId, Apartment>.Empty;
+        return cachedApartments;
     }
 
-    public async ValueTask<IEnumerable<AccountName>?> GetAccountNamesAsync()
+    public async ValueTask<IReadOnlyDictionary<PostingAccount, string>?> GetAccountNames()
     {
-        var configuration = await GetConfigurationAsync();
-        return configuration?.AccountNames;
+        if (cachedAccountNames is not null)
+            return cachedAccountNames;
+        var configuration = await GetConfiguration();
+        cachedAccountNames = configuration?.AccountNames.ToDictionary(accountName => accountName.Account, accountName => accountName.Name);
+        return cachedAccountNames;
     }
 
-    async ValueTask<Configuration?> GetConfigurationAsync()
+    async ValueTask<GetConfigurationResponse?> GetConfiguration()
     {
-        if (cachedConfiguration is not null)
+        await gate.WaitAsync();
+        try
+        {
+            if (cachedConfiguration is not null)
+                return cachedConfiguration;
+            var response = await apiClient.Get<GetConfigurationResponse>("configuration");
+            if (!response.IsSuccess)
+                return null;
+            cachedConfiguration = response.Result;
             return cachedConfiguration;
-        var response = await apiClient.GetAsync<Configuration>("configuration");
-        if (!response.IsSuccess)
-            return null;
-        cachedConfiguration = response.Result;
-        return cachedConfiguration;
+        }
+        finally
+        {
+            gate.Release();
+        }
     }
 }

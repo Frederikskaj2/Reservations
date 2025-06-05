@@ -1,0 +1,21 @@
+﻿<Table>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>Start</TableHeaderCell>
+            <TableHeaderCell>Slut</TableHeaderCell>
+            <TableHeaderCell>Tidsrum</TableHeaderCell>
+            <TableHeaderCell>Lokale</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @foreach (var cleaningTask in CleaningTasks ?? [])
+        {
+            <TableRow>
+                <TableRowCell>@Formatter.FormatTimeLong(cleaningTask.Begin)</TableRowCell>
+                <TableRowCell>@Formatter.FormatTimeLong(cleaningTask.End)</TableRowCell>
+                <TableRowCell>@Formatter.FormatHumanizedPeriod(cleaningTask.End - cleaningTask.Begin)</TableRowCell>
+                <TableRowCell>@Resources?[cleaningTask.ResourceId].Name</TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>

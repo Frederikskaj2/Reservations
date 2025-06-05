@@ -1,0 +1,28 @@
+@using Frederikskaj2.Reservations.LockBox
+@inherits MessageComponentBase<LockBoxCodesDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Nøglebokskode til @Resources.GetNameUnsafe(Model.Data.ResourceId) den @Model.FormatShortDate(Model.Data.Date)</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+@if (Model.Data.DatedLockBoxCodes.Count() is 1)
+{
+    <p>Her er den nøglebokskode du skal bruge for at få adgang til <strong>@Resources.GetNameUnsafe(Model.Data.ResourceId)</strong> den @Model.FormatShortDate(Model.Data.Date):</p>
+    <p><strong>@Model.Data.DatedLockBoxCodes.First().Code</strong></p>
+}
+else
+{
+    <p>Her er de nøglebokskoder du skal bruge for at få adgang til <strong>@Resources.GetNameUnsafe(Model.Data.ResourceId)</strong> den @Model.FormatShortDate(Model.Data.Date):</p>
+    @foreach (var datedLockBoxCode in Model.Data.DatedLockBoxCodes)
+    {
+    <p>Fra @Model.FormatShortDate(datedLockBoxCode.Date): <strong>@datedLockBoxCode.Code</strong></p>
+    }
+}
+    <p>Det er <strong>vigtigt</strong> at du overholder den <a href="@Model.GetRulesUrl(Model.Data.ResourceId)">husorden</a> der gælder for brug lokalet.</p>
+    <Regards Model="Model"/>
+    <ResidentOrderFooter Model="Model" OrderId="Model.Data.OrderId"/>
+</body>
+</html>

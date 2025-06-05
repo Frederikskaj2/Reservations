@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Emails</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\App\Core.App.csproj" />
+        <ProjectReference Include="..\Domain\Emails.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

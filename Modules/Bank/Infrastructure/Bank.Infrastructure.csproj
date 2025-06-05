@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Bank</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\Infrastructure\Core.Infrastructure.csproj"/>
+        <ProjectReference Include="..\..\Emails\Abstractions\Emails.Abstractions.csproj"/>
+        <ProjectReference Include="..\Domain\Bank.Domain.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Sep"/>
+    </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+﻿@if (User is not null && apartments is not null)
+{
+    <span>
+        <span class="payment-id">@PaymentId</span>
+        <span class="amount text-end"><SignedAmount Amount="Amount"/> kr.</span>
+        <span class="address">@apartments![User.ApartmentId!.Value]</span>
+        <span>@User.FullName</span>
+    </span>
+}

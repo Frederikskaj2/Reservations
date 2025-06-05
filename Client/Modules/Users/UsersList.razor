@@ -1,0 +1,39 @@
+<Table>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>Navn</TableHeaderCell>
+            <TableHeaderCell>Adresse</TableHeaderCell>
+            <TableHeaderCell>Telefon</TableHeaderCell>
+            <TableHeaderCell class="text-center">Bestillinger</TableHeaderCell>
+            <TableHeaderCell class="text-center">Email bekræftet</TableHeaderCell>
+            <TableHeaderCell>Roller</TableHeaderCell>
+            <TableHeaderCell class="text-center">Sletning ønsket</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @foreach (var user in Users!)
+        {
+            <TableRow @key="user.Identity.UserId">
+                <TableRowCell><a href="@UrlPath.Users/@user.Identity.UserId">@user.Identity.FullName</a></TableRowCell>
+                <TableRowCell>@(GetApartment(user.Identity.ApartmentId)?.ToString() ?? "")</TableRowCell>
+                <TableRowCell>@Formatter.FormatPhone(user.Identity.Phone)</TableRowCell>
+                <TableRowCell class="text-center">@(user.Orders.Count() + user.HistoryOrders.Count() > 0 ? (user.Orders.Count() + user.HistoryOrders.Count()).ToString() : "")</TableRowCell>
+                <TableRowCell class="text-center">
+                    @if (user.IsEmailConfirmed)
+                    {
+                        <Icon Name="IconName.Check"/>
+                    }
+                </TableRowCell>
+                <TableRowCell>
+                    @((MarkupString) string.Join("<br/>", GetRoleNames(user.Roles)))
+                </TableRowCell>
+                <TableRowCell class="text-center">
+                    @if (user.IsPendingDelete)
+                    {
+                        <Icon Name="IconName.Check"/>
+                    }
+                </TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>

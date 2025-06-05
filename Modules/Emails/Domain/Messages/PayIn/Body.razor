@@ -1,0 +1,35 @@
+@inherits MessageComponentBase<PayInDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Indbetaling</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Vi har modtaget din indbetaling på @Model.FormatAmount(Model.Data.Amount)</p>
+@if (Model.Data.Payment is not null)
+{
+    <p>Da du stadig skylder et beløb for dine bestillinger beder vi dig indbetale den resterende gæld til grundejerforeningens bankkonto:</p>
+    <table>
+        <tbody>
+            <tr>
+                <td>Beløb:</td>
+                <td><strong>@Model.FormatAmount(Model.Data.Payment.Amount)</strong></td>
+            </tr>
+            <tr>
+                <td>Kontonummer:</td>
+                <td><strong>@Model.Data.Payment.AccountNumber</strong></td>
+            </tr>
+            <tr>
+                <td>Tekst på indbetaling:</td>
+                <td><strong>@Model.Data.Payment.PaymentId</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Du bedes <strong>inden fire dage</strong> indbetale det skyldige beløb. Ellers forbeholder vi os ret til at annullere din bestilling.</p>
+}
+    <Regards Model="Model"/>
+    <ResidentFooter Model="Model"/>
+</body>
+</html>

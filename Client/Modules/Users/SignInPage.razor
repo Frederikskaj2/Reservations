@@ -1,0 +1,61 @@
+﻿@page "/log-ind"
+<PageTitle>Log ind - Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    <Container Class="container-max-sm">
+        <Alert Color="Color.Danger" Visible="showErrorAlert" Dismisable="true">
+            @if (signInError is SignInError.InvalidEmailOrPassword)
+            {
+                <text>
+                    Du har brugt en forkert mail eller adgangskode.
+                    <a href="@UrlPath.RequestNewPassword">Vi kan sende dig en mail, så du kan få en ny adgangskode.</a>
+                </text>
+            }
+            else if (signInError is SignInError.LockedOut)
+            {
+                <text>Din bruger er blevet blokeret i fem minutter fordi der har været for mange forsøg på at logge ind med en forkert adgangskode.</text>
+            }
+            else
+            {
+                <text>Der er opstået en fejl, og du blev ikke logget ind.</text>
+            }
+            <CloseButton Clicked="DismissErrorAlert"/>
+        </Alert>
+        <IndefiniteProgressBar @ref="progressBar"/>
+        <Form>
+            <Validations @ref="validations" Mode="ValidationMode.Manual">
+                <EmailEditor @ref="emailEditor" @bind-Value="SignInState.Email" Disabled="isDisabled"/>
+                <Field>
+                    <FieldLabel>Adgangskode</FieldLabel>
+                    <FieldBody>
+                        <Validation Validator="e => Validator.ValidatePassword(e)">
+                            <TextEdit Role="@TextRole.Password" @bind-Text="password" Disabled="isDisabled" autocomplete="current-password">
+                                <Feedback>
+                                    <ValidationError/>
+                                </Feedback>
+                            </TextEdit>
+                        </Validation>
+                    </FieldBody>
+                    <Row>
+                        <Column><a href="@UrlPath.RequestNewPassword">Glemt adgangskode?</a></Column>
+                    </Row>
+                </Field>
+                <Field>
+                    <Check @bind-Checked="isPersistent" Disabled="isDisabled">Husk mig</Check>
+                </Field>
+                <Button
+                    Color="Color.Primary"
+                    Type="@ButtonType.Submit"
+                    PreventDefaultOnSubmit="true"
+                    Clicked="Submit"
+                    Disabled="@isDisabled"
+                    Class="btn-fixed">
+                    Log ind
+                </Button>
+            </Validations>
+        </Form>
+    </Container>
+    <Container>
+        <Paragraph>Hvis du ikke har en bruger kan du oprette dig.</Paragraph>
+        <Button Color="Color.Secondary" Clicked="SignUp" Class="btn-fixed">Opret bruger</Button>
+    </Container>
+</main>

@@ -1,0 +1,3 @@
+namespace Frederikskaj2.Reservations.Orders;
+
+record GetYearlySummaryRangeOutput(YearlySummaryRange YearlySummaryRange);

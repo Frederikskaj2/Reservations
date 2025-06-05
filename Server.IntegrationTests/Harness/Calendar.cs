@@ -1,22 +1,38 @@
-﻿using Frederikskaj2.Reservations.Shared.Core;
+﻿using Frederikskaj2.Reservations.Core;
+using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
 using NodaTime;
+using System;
 using System.Collections.Generic;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 
-public class Calendar
+class Calendar
 {
     readonly Dictionary<ResourceId, LocalDate> latestReservedDays = new();
 
     public Extent GetAvailableExtent(SessionFixture session, TestReservation reservation)
     {
         var latestReservedDay = latestReservedDays.TryGetValue(reservation.ResourceId, out var date) ? date : session.CurrentDate;
-        var minimumDate = session.CurrentDate.PlusDays(reservation.Early ? 6 : 15);
+        var minimumDate = session.CurrentDate.PlusDays(GetDaysInTheFutureFromToday(reservation.Type, session.CurrentDate));
         var earliestDate = Maximum(latestReservedDay, minimumDate).PlusDays(reservation.AdditionalDaysInTheFuture);
         var extent = GetNextExtent(earliestDate, reservation.Nights, reservation.PriceGroup);
         latestReservedDays[reservation.ResourceId] = extent.Ends();
         return extent;
     }
+
+    static int GetDaysInTheFutureFromToday(TestReservationType type, LocalDate date) =>
+        type switch
+        {
+            TestReservationType.Normal => 15,
+            TestReservationType.Soon => 6,
+            TestReservationType.Tomorrow => 1,
+            TestReservationType.Monday => GetPreviousMonday(date.PlusDays(15)).Minus(date).Days,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, message: null),
+        };
+
+    static LocalDate GetPreviousMonday(LocalDate date) =>
+        date.PlusDays(-((int) date.DayOfWeek - 1));
 
     static Extent GetNextExtent(LocalDate earliestDate, int nights, PriceGroup priceGroup)
     {
@@ -35,7 +51,7 @@ public class Calendar
         {
             PriceGroup.Low => !HighPricePolicy.IsHighPriceDay(date, holidays),
             PriceGroup.High => HighPricePolicy.IsHighPriceDay(date, holidays),
-            _ => true
+            _ => true,
         };
 
     static LocalDate Maximum(LocalDate date1, LocalDate date2) =>

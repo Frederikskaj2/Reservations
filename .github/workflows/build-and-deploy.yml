@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 9.0.x
 
       - name: Install dependencies
         run: dotnet restore
@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Server
-          path: Server/bin/Release/net6.0/publish/
+          path: Server/bin/Release/net9.0/publish/
           retention-days: 7
 
   deploy-to-test:
@@ -53,7 +53,7 @@ jobs:
           name: Server
 
       - name: Deploy to Azure
-        uses: Azure/webapps-deploy@v2
+        uses: Azure/webapps-deploy@v3.0.1
         with:
           app-name: lokaler-test
           publish-profile: ${{secrets.AZURE_WEBAPP_PUBLISH_PROFILE}}
@@ -69,7 +69,10 @@ jobs:
 
       - name: Post to Teams
         run: >
-          sed -e 's/TIMESTAMP/${{env.TIMESTAMP}}/' -e s/COMMITSHORT/${{env.COMMITSHORT}}/ -e s/COMMITLONG/${{github.sha}}/ .github/workflows/deploy-to-test-success.json | curl -d @- -H 'Content-Type: application/json' -X POST ${{secrets.BUILD_SUCCESS_WEBHOOK}}
+            Get-Content -Path .github/workflows/deploy-to-test-success.json -Raw
+            | ForEach-Object -Process { $_ -creplace 'TIMESTAMP', '${{env.TIMESTAMP}}' -creplace 'COMMITSHORT', '${{env.COMMITSHORT}}' -creplace 'COMMITLONG', '${{github.sha}}' }
+            | Invoke-RestMethod -Uri '${{secrets.BUILD_SUCCESS_WEBHOOK}}' -Method Post -Headers @{ 'Content-Type' = 'application/json' }
+        shell: pwsh
 
   deploy-to-production:
     name: Deploy to production
@@ -87,7 +90,7 @@ jobs:
           name: Server
 
       - name: Deploy to Azure
-        uses: Azure/webapps-deploy@v2
+        uses: Azure/webapps-deploy@v3.0.1
         with:
           app-name: lokaler
           publish-profile: ${{secrets.AZURE_WEBAPP_PUBLISH_PROFILE}}
@@ -103,4 +106,7 @@ jobs:
 
       - name: Post to Teams
         run: >
-          sed -e 's/TIMESTAMP/${{env.TIMESTAMP}}/' -e s/COMMITSHORT/${{env.COMMITSHORT}}/ -e s/COMMITLONG/${{github.sha}}/ .github/workflows/deploy-to-production-success.json | curl -d @- -H 'Content-Type: application/json' -X POST ${{secrets.BUILD_SUCCESS_WEBHOOK}}
+            Get-Content -Path .github/workflows/deploy-to-production-success.json -Raw
+            | ForEach-Object -Process { $_ -creplace 'TIMESTAMP', '${{env.TIMESTAMP}}' -creplace 'COMMITSHORT', '${{env.COMMITSHORT}}' -creplace 'COMMITLONG', '${{github.sha}}' }
+            | Invoke-RestMethod -Uri '${{secrets.BUILD_SUCCESS_WEBHOOK}}' -Method Post -Headers @{ 'Content-Type' = 'application/json' }
+        shell: pwsh

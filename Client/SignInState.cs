@@ -7,5 +7,6 @@ public class SignInState
         eventAggregator.Subscribe<SignInMessage>(_ => Email = null);
         eventAggregator.Subscribe<SignOutMessage>(_ => Email = null);
     }
+
     public string? Email { get; set; }
 }

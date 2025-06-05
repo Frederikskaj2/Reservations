@@ -1,0 +1,100 @@
+﻿@page "/bruger/kontoudtog"
+<PageTitle>Kontoudtog - Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner/>
+    }
+    else if (myTransactions is null)
+    {
+        <Container>
+            <Alert Color="Color.Danger" Visible="true">
+                Der er i øjeblikket driftsproblemer. Prøv igen om lidt.
+            </Alert>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <h1>Kontoudtog</h1>
+            @if (!myTransactions.Transactions.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                if (balance < Amount.Zero)
+                {
+                    <Paragraph>
+                        Du mangler at indbetale. Bemærk at der går noget tid fra du indbetaler til beløbet bliver registeret. Hvis du allerede har indbetalt kan
+                        du se bort fra denne besked.
+                    </Paragraph>
+                    <PaymentInstructions PaymentInformation="myTransactions.Payment"/>
+                }
+                else if (balance > Amount.Zero)
+                {
+                    <Paragraph>
+                        Du har @Formatter.FormatMoneyLong(balance) til gode. Beløbet vil blive udbetalt til din bankkonto næste gang vi udbetaler. Bemærk at det
+                        typisk kun sker en gang om måneden.
+                    </Paragraph>
+                }
+                var currentBalance = Amount.Zero;
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Dato</TableHeaderCell>
+                            <TableHeaderCell>Tekst</TableHeaderCell>
+                            <TableHeaderCell class="text-end">Beløb</TableHeaderCell>
+                            <TableHeaderCell class="text-end">Saldo</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @{
+                            foreach (var transaction in myTransactions.Transactions)
+                            {
+                                currentBalance += transaction.Amount;
+                                var localBalance = currentBalance;
+                                <TableRow>
+                                    <TableRowCell>@Formatter.FormatDate(transaction.Date)</TableRowCell>
+                                    <TableRowCell>
+                                        @switch (transaction.Activity)
+                                        {
+                                            case Activity.PlaceOrder:
+                                                <a href="@UrlPath.MyOrders/@transaction.OrderId">Oprettelse af bestilling @transaction.OrderId</a>
+                                                break;
+                                            case Activity.UpdateOrder or Activity.SettleReservation:
+                                                <a href="@UrlPath.MyOrders/@transaction.OrderId">@transaction.Description</a>
+                                                break;
+                                            case Activity.PayIn:
+                                                @:Indbetaling
+                                                break;
+                                            case Activity.PayOut:
+                                                @:Udbetaling
+                                                break;
+                                            case Activity.Reimburse:
+                                                @:Godtgørelse: @transaction.Description
+                                                break;
+                                            default:
+                                                @:Ukendt
+                                                break;
+                                        }
+                                    </TableRowCell>
+                                    <TableRowCell class="text-end">@Formatter.FormatMoneyShort(transaction.Amount)</TableRowCell>
+                                    <TableRowCell class="text-end">@Formatter.FormatMoneyShort(localBalance)</TableRowCell>
+                                </TableRow>
+                            }
+                        }
+                    </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableRowCell ColumnSpan="4" Class="text-end">
+                                <a id="total"><strong>@Formatter.FormatMoneyShort(currentBalance)</strong></a>
+                            </TableRowCell>
+                        </TableRow>
+                    </TableFooter>
+                </Table>
+                <Paragraph class="text-end">Alle beløb er i kr.</Paragraph>
+            }
+        </Container>
+    }
+</main>

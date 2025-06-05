@@ -1,0 +1,15 @@
+@using Frederikskaj2.Reservations.LockBox
+@inherits MessageComponentBase<SettlementNeededDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Bestilling @Model.Data.OrderId</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Brug af @Resources.GetNameUnsafe(Model.Data.ResourceId) på <AdministratorOrderLink Model="Model" OrderId="Model.Data.OrderId"/> sluttede @Model.FormatShortDate(Model.Data.Date), og der mangler nu en opgørelse.</p>
+    <Regards Model="Model"/>
+    <OrdersFooter Model="Model"/>
+</body>
+</html>

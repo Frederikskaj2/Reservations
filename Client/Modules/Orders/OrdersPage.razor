@@ -1,0 +1,38 @@
+﻿@page "/bestillinger"
+<PageTitle>Bestillinger - Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Container Class="container-fluid">
+            <Spinner/>
+        </Container>
+    }
+    else
+    {
+        <Container>
+            <h1>Bestillinger</h1>
+            @if (reservedOrders!.Count + confirmedOrders!.Count + unsettledOrders!.Count is 0)
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                @if (reservedOrders!.Count > 0)
+                {
+                    <h2>Mangler betaling</h2>
+                    <OrdersList Orders="reservedOrders"/>
+                }
+                @if (confirmedOrders!.Count > 0)
+                {
+                    <h2>Betalt</h2>
+                    <OrdersList Orders="confirmedOrders"/>
+                }
+                @if (unsettledOrders!.Count > 0)
+                {
+                    <h2>Mangler opgørelse</h2>
+                    <OrdersList Orders="unsettledOrders"/>
+                }
+            }
+        </Container>
+    }
+</main>

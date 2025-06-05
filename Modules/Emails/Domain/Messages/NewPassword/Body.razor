@@ -1,0 +1,15 @@
+@inherits MessageComponentBase<NewPasswordDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Din anmodning om en ny adgangskode</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p><a href="@Model.Data.Url">Åbn linket for at oprette en ny adgangskode.</a></p>
+    <p>Dette link er gyldigt i @Model.FormatDuration(Model.Data.NewPasswordDuration).</p>
+    <p><strong>Hvis du ikke selv har anmodet om en ny adgangskode skal du ikke foretage dig noget.</strong></p>
+    <Regards Model="Model"/>
+</body>
+</html>

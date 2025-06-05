@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Emails</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Components.Web"/>
+        <PackageReference Include="SixLabors.ImageSharp.Drawing"/>
+        <PackageReference Include="System.Linq.Async"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\Domain\Core.Domain.csproj"/>
+        <ProjectReference Include="..\..\LockBox\Domain\LockBox.Domain.csproj"/>
+        <ProjectReference Include="..\Abstractions\Emails.Abstractions.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Emails.UnitTests"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="CleaningTasks\verdana.ttf"/>
+        <EmbeddedResource Include="CleaningTasks\verdanab.ttf"/>
+    </ItemGroup>
+</Project>

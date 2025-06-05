@@ -1,4 +1,4 @@
-﻿using Frederikskaj2.Reservations.Shared.Web;
+﻿using Frederikskaj2.Reservations.Users;
 using Microsoft.AspNetCore.Components.Authorization;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ namespace Frederikskaj2.Reservations.Client;
 
 public sealed class TokenAuthenticationStateProvider : AuthenticationStateProvider, IDisposable
 {
-    static readonly AuthenticationState notAuthenticated = new(new ClaimsPrincipal(new ClaimsIdentity()));
+    static readonly AuthenticationState notAuthenticated = new(new(new ClaimsIdentity()));
 
     readonly AuthenticationService authenticationService;
     readonly IDisposable signInSubscription;
@@ -33,7 +33,7 @@ public sealed class TokenAuthenticationStateProvider : AuthenticationStateProvid
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var accessToken = await authenticationService.GetAccessTokenAsync();
+        var accessToken = await authenticationService.GetAccessToken();
         return string.IsNullOrEmpty(accessToken) ? notAuthenticated : GetAuthenticatedUser(accessToken);
     }
 
@@ -52,12 +52,12 @@ public sealed class TokenAuthenticationStateProvider : AuthenticationStateProvid
         foreach (var (claimName, element) in claims)
             if (element.ValueKind == JsonValueKind.Array)
                 foreach (var value in element.EnumerateArray().Select(subElement => subElement.ToString()).Where(value => value is { Length: > 0 }))
-                    yield return new Claim(claimName, value);
+                    yield return new(claimName, value);
             else
             {
                 var value = element.ToString();
                 if (value is { Length: > 0 })
-                    yield return new Claim(claimName, value);
+                    yield return new(claimName, value);
             }
     }
 }

@@ -1,0 +1,46 @@
+<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Sletning</CardTitle>
+    </CardHeader>
+    <CardBody>
+        @if (User.IsDeleted)
+        {
+            <Paragraph>
+                Brugeren er slettet.
+            </Paragraph>
+        }
+        else if (!User.IsPendingDelete && !IsCurrentUser)
+        {
+            @if (User.Orders.Any() || User.Balance != Amount.Zero)
+            {
+                <Paragraph>
+                    Brugeren har et økonomisk mellemværende med grundejerforeningen (aktive bestillinger, depositum til gode). En sletningen registeres, men den
+                    gennemføres først når dette mellemværende er bragt ud af verden.
+                </Paragraph>
+            }
+            else
+            {
+                <Paragraph>
+                    Brugeren har ikke nogle aktive bestillinger og kan slettes uden videre.
+                </Paragraph>
+            }
+            <div class="button-row">
+                <Button Color="Color.Danger" Class="btn-fixed" Clicked="ConfirmDelete">Slet bruger</Button>
+            </div>
+        }
+        else if (User.IsPendingDelete)
+        {
+            <Paragraph>
+                Brugeren er ønsket slettet men har stadig aktive bestillinger. Den endelige sletning gennemføres når disse er afsluttet.
+            </Paragraph>
+        }
+        else
+        {
+            <Paragraph>
+                Du kan ikke slette din bruger så længe du er brugeradministrator i systemet. For at slette din bruger skal du bede en anden brugeradministrator
+                om at fjerne din adgang til at administrere brugere. Når dette er sket kan du selv slette din bruger.
+            </Paragraph>
+        }
+    </CardBody>
+</Card>
+<ConfirmDeleteUserDialog @ref="confirmDeleteDialog" OnConfirm="Delete"/>

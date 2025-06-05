@@ -1,0 +1,13 @@
+﻿@using ValidationRule = Frederikskaj2.Reservations.Core.ValidationRule
+<Field>
+    <FieldLabel>Telefonnummer</FieldLabel>
+    <FieldBody>
+        <Validation Validator="Validator.ValidatePhone">
+            <TextEdit InputMode="TextInputMode.Tel" Text="@Value" TextChanged="ValueChanged" Disabled="Disabled" MaxLength="ValidationRule.MaximumPhoneLength">
+                <Feedback>
+                    <ValidationError/>
+                </Feedback>
+            </TextEdit>
+        </Validation>
+    </FieldBody>
+</Field>

@@ -1,0 +1,25 @@
+@using Frederikskaj2.Reservations.LockBox
+@using Frederikskaj2.Reservations.Users
+@inherits MessageComponentBase<ReservationSettledDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Bestilling @Model.Data.OrderId</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Vi har nu opgjort din reservation af @Resources.GetNameUnsafe(Model.Data.Reservation.ResourceId) @Model.FormatLongDate(Model.Data.Reservation.Date) hørende til <ResidentOrderLink Model="Model" OrderId="Model.Data.OrderId"/>.</p>
+@if (Model.Data.Damages > Amount.Zero)
+{
+    <p>Vi tilbageholder @Model.FormatAmount(Model.Data.Damages) af dit depositum på @Model.FormatAmount(Model.Data.Deposit) til dækning af følgende: @Model.Data.Description.</p>
+}
+@if (Model.Data.Damages < Model.Data.Deposit)
+{
+    <p>Du vil få udbetalt@(Model.Data.Damages > Amount.Zero ? " resten af" : "") dit depositum som udgør @Model.FormatAmount(Model.Data.Deposit - Model.Data.Damages)</p>
+    <p><strong>Bemærk:</strong> Vi udbetaler én gang om måneden, og der kan derfor godt gå noget tid før vi udbetaler dit tilgodehavende. Du vil få besked når udbetalingen gennemføres.</p>
+}
+    <Regards Model="Model"/>
+    <ResidentOrderFooter Model="Model" OrderId="Model.Data.OrderId"/>
+</body>
+</html>

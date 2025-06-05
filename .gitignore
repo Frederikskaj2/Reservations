@@ -1,15 +1,9 @@
 __blobstorage__/
 __queuestorage__/
-.fleet/
 .idea/
-.ionide/
-.run/
-.vs/
-.vscode/
 bin/
 obj/
-*.log
-*.csproj.user
-*.DotSettings.user
 __azurite_db_*.json
+*.user
 appsettings.local.json
+AzuriteConfig

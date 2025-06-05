@@ -3,22 +3,11 @@ using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Client;
 
-public class SignOutService
+public class SignOutService(AuthenticationService authenticationService, EventAggregator eventAggregator, NavigationManager navigationManager)
 {
-    readonly AuthenticationService authenticationService;
-    readonly EventAggregator eventAggregator;
-    readonly NavigationManager navigationManager;
-
-    public SignOutService(AuthenticationService authenticationService, EventAggregator eventAggregator, NavigationManager navigationManager)
+    public async ValueTask SignOut()
     {
-        this.authenticationService = authenticationService;
-        this.eventAggregator = eventAggregator;
-        this.navigationManager = navigationManager;
-    }
-
-    public async ValueTask SignOutAsync()
-    {
-        await authenticationService.ClearAsync();
+        await authenticationService.Clear();
         eventAggregator.Publish(SignOutMessage.Instance);
         navigationManager.NavigateTo("");
     }

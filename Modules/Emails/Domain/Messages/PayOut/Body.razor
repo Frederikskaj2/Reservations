@@ -1,0 +1,14 @@
+@inherits MessageComponentBase<PayOutDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Udbetaling</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Vi har udbetalt @Model.FormatAmount(Model.Data.Amount) til den bankkonto du oplyste da du afgav din seneste bestilling.</p>
+    <Regards Model="Model"/>
+    <ResidentFooter Model="Model"/>
+</body>
+</html>

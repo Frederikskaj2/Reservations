@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.Orders</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Users\App\Users.App.csproj"/>
+        <ProjectReference Include="..\Contracts\Orders.Contracts.csproj"/>
+        <ProjectReference Include="..\Domain\Orders.Domain.csproj"/>
+    </ItemGroup>
+
+</Project>

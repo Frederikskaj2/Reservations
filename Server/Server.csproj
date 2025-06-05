@@ -1,20 +1,30 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
+<Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
         <RootNamespace>Frederikskaj2.Reservations.Server</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Ardalis.ApiEndpoints"/>
-        <PackageReference Include="libphonenumber-csharp"/>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
+        <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server"/>
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Client\Client.csproj"/>
-        <ProjectReference Include="..\EmailSender\EmailSender.csproj"/>
-        <ProjectReference Include="..\Infrastructure\Infrastructure.csproj"/>
+        <ProjectReference Include="..\Modules\Bank\App\Bank.App.csproj"/>
+        <ProjectReference Include="..\Modules\Bank\Infrastructure\Bank.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Modules\Calendar\App\Calendar.App.csproj"/>
+        <ProjectReference Include="..\Modules\Cleaning\App\Cleaning.App.csproj"/>
+        <ProjectReference Include="..\Modules\Cleaning\Infrastructure\Cleaning.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Modules\Core\Infrastructure.Shared\Core.Infrastructure.Shared.csproj"/>
+        <ProjectReference Include="..\Modules\Emails\App\Emails.App.csproj"/>
+        <ProjectReference Include="..\Modules\Emails\Infrastructure\Emails.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Modules\LockBox\App\LockBox.App.csproj"/>
+        <ProjectReference Include="..\Modules\LockBox\Infrastructure\LockBox.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Modules\Orders\App\Orders.App.csproj"/>
+        <ProjectReference Include="..\Modules\Orders\Infrastructure\Orders.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Modules\Persistence\Infrastructure\Persistence.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Modules\Users\App\Users.App.csproj"/>
+        <ProjectReference Include="..\Modules\Users\Infrastructure\Users.Infrastructure.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -24,6 +34,9 @@
         <Content Update="appsettings.Development.json">
             <DependentUpon>appsettings.json</DependentUpon>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="appsettings.IntegrationTest.json">
+            <DependentUpon>appsettings.json</DependentUpon>
         </Content>
         <Content Update="appsettings.local.json">
             <DependentUpon>appsettings.json</DependentUpon>
@@ -38,5 +51,4 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
 </Project>

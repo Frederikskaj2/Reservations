@@ -1,0 +1,60 @@
+﻿@using ValidationRule = Frederikskaj2.Reservations.Core.ValidationRule
+<Modal @ref="modal" Closed="OnModalClosed">
+    <Form>
+        <ModalContent>
+            <ModalHeader>
+                <ModalTitle>Opgørelse af bestilling @OrderId</ModalTitle>
+                <CloseButton Clicked="Cancel"/>
+            </ModalHeader>
+            <ModalBody>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Lokale</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit Plaintext="true" Text="@resourceName" TabIndex="-1"/>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Dato</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit Plaintext="true" Text="@reservationDate" TabIndex="-1"/>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Antal nætter</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit Plaintext="true" Text="@reservationNights" TabIndex="-1"/>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Depositum</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit Plaintext="true" Text="@deposit" TabIndex="-1"/>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Erstatning for skader</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <NumericPicker @bind-Value="damages" Min="0" Max="maximumDamages" EnableStep="false" Autofocus="true" SelectAllOnFocus="true"/>
+                    </FieldBody>
+                </Field>
+                <Field Horizontal="true">
+                    <FieldLabel ColumnSize="ColumnSize.Is4">Beskrivelse</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.Is8">
+                        <TextEdit @bind-Text="description" Disabled="@(damages is 0)" MaxLength="ValidationRule.MaximumDamagesDescriptionLength"/>
+                    </FieldBody>
+                </Field>
+            </ModalBody>
+            <ModalFooter>
+                <Button
+                    Color="Color.Primary"
+                    Type="@ButtonType.Submit"
+                    PreventDefaultOnSubmit="true"
+                    Clicked="Confirm"
+                    Disabled="@(damages is not 0 && string.IsNullOrWhiteSpace(description))">
+                    Lav opgørelse
+                </Button>
+                <Button Color="Color.Secondary" Clicked="Cancel">Annullér</Button>
+            </ModalFooter>
+        </ModalContent>
+    </Form>
+</Modal>

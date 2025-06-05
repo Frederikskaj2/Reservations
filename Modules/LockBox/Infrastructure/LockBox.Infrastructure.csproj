@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Frederikskaj2.Reservations.LockBox</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\Infrastructure\Core.Infrastructure.csproj"/>
+        <ProjectReference Include="..\..\Emails\Abstractions\Emails.Abstractions.csproj"/>
+        <ProjectReference Include="..\Domain\LockBox.Domain.csproj"/>
+    </ItemGroup>
+
+</Project>

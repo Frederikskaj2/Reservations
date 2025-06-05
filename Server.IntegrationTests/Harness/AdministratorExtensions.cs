@@ -1,135 +1,117 @@
-using Frederikskaj2.Reservations.Shared.Core;
-using Frederikskaj2.Reservations.Shared.Web;
+using Frederikskaj2.Reservations.Bank;
+using Frederikskaj2.Reservations.Cleaning;
+using Frederikskaj2.Reservations.Core;
+using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
+using Frederikskaj2.Reservations.Users;
 using NodaTime;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 
 static class AdministratorExtensions
 {
-    public static async ValueTask<UserDetails> GetUserAsync(this SessionFixture session, UserId userId) =>
-        await session.DeserializeAsync<UserDetails>(await session.AdministratorGetAsync($"users/{userId}"));
+    public static async ValueTask UpdateLockBoxCodes(this SessionFixture session)
+    {
+        var response = await session.AdministratorPost("jobs/update-lock-box-codes/run");
+        response.EnsureSuccessStatusCode();
+    }
 
-    public static async ValueTask<UserTransactions> GetUserTransactionsAsync(this SessionFixture session, UserId userId) =>
-        await session.DeserializeAsync<UserTransactions>(await session.AdministratorGetAsync($"users/{userId}/transactions"));
+    public static async ValueTask<GetUserResponse> GetUser(this SessionFixture session, UserId userId) =>
+        await session.Deserialize<GetUserResponse>(await session.AdministratorGet($"users/{userId}"));
 
-    public static async ValueTask<IEnumerable<User>> GetUsersAsync(this SessionFixture session) =>
-        await session.DeserializeAsync<IEnumerable<User>>(await session.AdministratorGetAsync("users"));
+    public static async ValueTask<UpdateUserResponse> UpdateUser(this SessionFixture session, UserId userId, string fullName, string phone, Roles roles)
+    {
+        var request = new UpdateUserRequest(fullName, phone, roles, IsPendingDelete: false);
+        return await session.Deserialize<UpdateUserResponse>(await session.AdministratorPatch($"users/{userId}", request));
+    }
 
-    public static async ValueTask<IEnumerable<Order>> GetUserOrdersAsync(this SessionFixture session) =>
-        await session.DeserializeAsync<IEnumerable<Order>>(await session.AdministratorGetAsync("orders/user"));
+    public static async ValueTask<GetUserTransactionsResponse> GetResidentTransactions(this SessionFixture session, UserId userId) =>
+        await session.Deserialize<GetUserTransactionsResponse>(await session.AdministratorGet($"users/{userId}/transactions"));
 
-    public static async ValueTask<IEnumerable<Order>> GetOwnerOrdersAsync(this SessionFixture session) =>
-        await session.DeserializeAsync<IEnumerable<Order>>(await session.AdministratorGetAsync("orders/owner"));
+    public static async ValueTask<GetOrdersResponse> GetOwnerOrders(this SessionFixture session) =>
+        await session.Deserialize<GetOrdersResponse>(await session.AdministratorGet("orders?type=Owner"));
 
-    public static async ValueTask<OrderDetails> GetOrderAsync(this SessionFixture session, OrderId orderId) =>
-        await session.DeserializeAsync<OrderDetails>(await session.AdministratorGetAsync($"orders/any/{orderId}"));
+    public static async ValueTask<GetOrderResponse> GetOrder(this SessionFixture session, OrderId orderId) =>
+        await session.Deserialize<GetOrderResponse>(await session.AdministratorGet($"orders/{orderId}"));
 
-    public static async ValueTask<IEnumerable<Debtor>> GetDebtorsAsync(this SessionFixture session) =>
-        await session.DeserializeAsync<IEnumerable<Debtor>>(await session.AdministratorGetAsync("debtors"));
+    public static async ValueTask<GetResidentsResponse> GetResidents(this SessionFixture session) =>
+        await session.Deserialize<GetResidentsResponse>(await session.AdministratorGet("residents"));
 
-    public static async ValueTask<Debtor> GetUserDebtorAsync(this SessionFixture session)
+    public static async ValueTask<ResidentDto> GetMyResident(this SessionFixture session)
     {
         if (session.User is null)
             throw new InvalidOperationException();
-        var debtors = await session.GetDebtorsAsync();
-        return debtors.Single(d => d.UserInformation.Email == session.User.Email);
+        var response = await session.GetResidents();
+        return response.Residents.Single(resident => resident.UserIdentity.Email == session.User.Email);
     }
 
-    public static async ValueTask<IEnumerable<Creditor>> GetCreditorsAsync(this SessionFixture session) =>
-        await session.DeserializeAsync<IEnumerable<Creditor>>(await session.AdministratorGetAsync("creditors"));
+    public static async ValueTask<GetCreditorsResponse> GetCreditors(this SessionFixture session) =>
+        await session.Deserialize<GetCreditorsResponse>(await session.AdministratorGet("creditors"));
 
-    public static async ValueTask<CleaningSchedule> GetCleaningScheduleAsync(this SessionFixture session) =>
-        await session.DeserializeAsync<CleaningSchedule>(await session.AdministratorGetAsync("cleaning-schedule"));
+    public static async ValueTask<GetCleaningScheduleResponse> GetCleaningSchedule(this SessionFixture session) =>
+        await session.Deserialize<GetCleaningScheduleResponse>(await session.AdministratorGet("cleaning-schedule"));
 
-    public static async ValueTask<IEnumerable<Posting>> GetPostingsAsync(this SessionFixture session, LocalDate date) =>
-        await session.DeserializeAsync<IEnumerable<Posting>>(await session.AdministratorGetAsync($"postings?month={GetMonth(date)}"));
+    public static async ValueTask<GetPostingsResponse> GetPostings(this SessionFixture session, LocalDate date) =>
+        await session.Deserialize<GetPostingsResponse>(await session.AdministratorGet($"postings?month={GetMonth(date)}"));
 
     static string GetMonth(LocalDate date) =>
         date.ToString("yyyy-MM", CultureInfo.InvariantCulture) + "-01";
 
-    public static async ValueTask<Debtor> PayInAsync(this SessionFixture session, PaymentId paymentId, Amount amount)
+    public static ValueTask<SettleReservationResponse> SettleReservation(
+        this SessionFixture session, OrderId orderId, ReservationIndex reservationIndex) =>
+        session.SettleReservation(orderId, reservationIndex, Amount.Zero, description: null);
+
+    public static async ValueTask<SettleReservationResponse> SettleReservation(
+        this SessionFixture session, OrderId orderId, ReservationIndex reservationIndex, Amount damages, string? description)
     {
-        var request = new PayInRequest { Date = LocalDate.FromDateTime(DateTime.UtcNow), Amount = amount };
-        return await session.DeserializeAsync<Debtor>(await session.AdministratorPostAsync($"payments/{paymentId}", request));
+        var request = new SettleReservationRequest(reservationIndex, damages, description);
+        return await session.Deserialize<SettleReservationResponse>(await session.AdministratorPost($"orders/resident/{orderId}/settle-reservation", request));
     }
 
-    public static async ValueTask<Creditor> PayOutAsync(this SessionFixture session, UserId userId, Amount amount)
+    public static async ValueTask<UpdateResidentOrderResponse> CancelReservation(
+        this SessionFixture session, OrderId orderId, params ReservationIndex[] reservationIndices) =>
+        await session.Deserialize<UpdateResidentOrderResponse>(await session.CancelReservationRaw(orderId, reservationIndices));
+
+    public static ValueTask<HttpResponseMessage> CancelReservationRaw(
+        this SessionFixture session, OrderId orderId, params ReservationIndex[] reservationIndices)
     {
-        var request = new PayOutRequest { Date = LocalDate.FromDateTime(DateTime.UtcNow), Amount = amount };
-        return await session.DeserializeAsync<Creditor>(await session.AdministratorPostAsync($"users/{userId}/pay-out", request));
+        var request = new UpdateResidentOrderRequest(AccountNumber: null, reservationIndices.ToHashSet(), WaiveFee: false, AllowCancellationWithoutFee: false);
+        return session.AdministratorPatch($"orders/resident/{orderId}", request);
     }
 
-    public static async ValueTask DeleteTransactionAsync(this SessionFixture session, TransactionId transactionId) =>
-        await session.AdministratorDeleteAsync($"transactions/{transactionId}");
-
-    public static async ValueTask<OrderDetails> SettleReservationAsync(
-        this SessionFixture session, UserId userId, OrderId orderId, ReservationIndex reservationIndex)
+    public static async ValueTask<UpdateResidentOrderResponse> UpdateAccountNumber(this SessionFixture session, OrderId orderId, string accountNumber)
     {
-        var request = new SettleReservationRequest { UserId = userId, ReservationId = new(orderId, reservationIndex) };
-        return await session.DeserializeAsync<OrderDetails>(await session.AdministratorPostAsync($"orders/user/{orderId}/settle-reservation", request));
+        var request = new UpdateResidentOrderRequest(accountNumber, CancelledReservations: null, WaiveFee: false, AllowCancellationWithoutFee: false);
+        return await session.Deserialize<UpdateResidentOrderResponse>(await session.AdministratorPatch($"orders/resident/{orderId}", request));
     }
 
-    public static async ValueTask<OrderDetails> SettleReservationAsync(
-        this SessionFixture session, UserId userId, OrderId orderId, ReservationIndex reservationIndex, Amount damages, string description)
+    public static async ValueTask<UpdateResidentOrderResponse> AllowResidentToCancelWithoutFee(this SessionFixture session, OrderId orderId)
     {
-        var request = new SettleReservationRequest
-        {
-            UserId = userId,
-            ReservationId = new(orderId, reservationIndex),
-            Damages = damages,
-            Description = description
-        };
-        return await session.DeserializeAsync<OrderDetails>(await session.AdministratorPostAsync($"orders/user/{orderId}/settle-reservation", request));
+        var request = new UpdateResidentOrderRequest(AccountNumber: null, CancelledReservations: null, WaiveFee: false, AllowCancellationWithoutFee: true);
+        return await session.Deserialize<UpdateResidentOrderResponse>(await session.AdministratorPatch($"orders/resident/{orderId}", request));
     }
 
-    public static async ValueTask<OrderDetails> CancelReservationAsync(
-        this SessionFixture session, UserId userId, OrderId orderId, params ReservationIndex[] reservationIndices)
+    public static async ValueTask Reimburse(this SessionFixture session, UserId userId, IncomeAccount accountToDebit, string description, Amount amount)
     {
-        var request = new UpdateUserOrderRequest { UserId = userId, CancelledReservations = reservationIndices.ToHashSet() };
-        return await session.DeserializeAsync<OrderDetails>(await session.AdministratorPatchAsync($"orders/user/{orderId}", request));
-    }
-
-    public static async ValueTask<OrderDetails> UpdateAccountNumberAsync(
-        this SessionFixture session, UserId userId, OrderId orderId, string accountNumber)
-    {
-        var request = new UpdateUserOrderRequest { UserId = userId, AccountNumber = accountNumber};
-        return await session.DeserializeAsync<OrderDetails>(await session.AdministratorPatchAsync($"orders/user/{orderId}", request));
-    }
-
-    public static async ValueTask<OrderDetails> AllowUserToCancelWithoutFee(this SessionFixture session, UserId userId, OrderId orderId)
-    {
-        var request = new UpdateUserOrderRequest { UserId = userId, AllowCancellationWithoutFee = true };
-        return await session.DeserializeAsync<OrderDetails>(await session.AdministratorPatchAsync($"orders/user/{orderId}", request));
-    }
-
-    public static async ValueTask UpdateUserReservations(this SessionFixture session, OrderId orderId, params ReservationUpdateRequest[] reservationRequests)
-    {
-        var request = new UpdateUserReservationsRequest { Reservations = reservationRequests };
-        var response = await session.AdministratorPatchAsync($"orders/user/{orderId}/reservations", request);
+        var request = new ReimburseRequest(LocalDate.FromDateTime(DateTime.UtcNow), accountToDebit, description, amount);
+        var response = await session.AdministratorPost($"users/{userId}/reimburse", request);
         response.EnsureSuccessStatusCode();
     }
 
-    public static async ValueTask ReimburseAsync(this SessionFixture session, UserId userId, IncomeAccount accountToDebit, string description, Amount amount)
-    {
-        var request = new ReimburseRequest
-        {
-            Date = LocalDate.FromDateTime(DateTime.UtcNow),
-            AccountToDebit = accountToDebit,
-            Description = description,
-            Amount = amount
-        };
-        var response = await session.AdministratorPostAsync($"users/{userId}/reimburse", request);
-        response.EnsureSuccessStatusCode();
-    }
+    public static async ValueTask<GetLockBoxCodesResponse> GetLockBoxCodes(this SessionFixture session) =>
+        await session.Deserialize<GetLockBoxCodesResponse>(await session.AdministratorGet("lock-box-codes"));
 
-    public static async ValueTask<YearlySummaryRange> GetYearlySummaryRange(this SessionFixture session) =>
-        await session.DeserializeAsync<YearlySummaryRange>(await session.AdministratorGetAsync("reports/yearly-summary/range"));
+    public static async ValueTask<SendLockBoxCodesResponse> SendLockBoxCodes(this SessionFixture session) =>
+        await session.Deserialize<SendLockBoxCodesResponse>(await session.AdministratorPost("lock-box-codes/send"));
 
-    public static async ValueTask<YearlySummary> GetYearlySummary(this SessionFixture session, int year) =>
-        await session.DeserializeAsync<YearlySummary>(await session.AdministratorGetAsync($"reports/yearly-summary?year={year}"));
+    public static async ValueTask<GetYearlySummaryRangeResponse> GetYearlySummaryRange(this SessionFixture session) =>
+        await session.Deserialize<GetYearlySummaryRangeResponse>(await session.AdministratorGet("reports/yearly-summary/range"));
+
+    public static async ValueTask<GetYearlySummaryResponse> GetYearlySummary(this SessionFixture session, int year) =>
+        await session.Deserialize<GetYearlySummaryResponse>(await session.AdministratorGet($"reports/yearly-summary?year={year}"));
 }

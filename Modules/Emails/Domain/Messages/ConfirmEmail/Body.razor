@@ -1,0 +1,14 @@
+@inherits MessageComponentBase<ConfirmEmailDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Bekræft din mail</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p><a href="@Model.Data.Url">Åbn linket for at bekræfte din mail.</a></p>
+    <p>Dette link er gyldigt i @Model.FormatDuration(Model.Data.ConfirmEmailDuration).</p>
+    <Regards Model="Model"/>
+</body>
+</html>

@@ -1,0 +1,51 @@
+@inherits MessageComponentBase<LockBoxCodesOverviewDto>
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <title>Nøglebokskoder</title>
+    <HeaderMetas/>
+</head>
+<body>
+    <Greetings Model="Model"/>
+    <p>Her er de aktuelle nøglebokskoder for den kommende tid:</p>
+    <table>
+        <thead>
+            <tr>
+                <th style="@leftBottomBorderStyle">Uge</th>
+                <th style="@leftBottomBorderStyle">Dato</th>
+            @foreach (var resource in GetOrderedResources())
+            {
+                <th colspan="2" style="@centerBottomBorderStyle">@resource.Name</th>
+            }
+            </tr>
+        </thead>
+        <tbody>
+        @{
+            @foreach (var weeklyLockBoxCodes in Model.Data.Codes)
+            {
+            <tr>
+                <th style="@leftStyle">@weeklyLockBoxCodes.WeekNumber</th>
+                <td style="@leftStyle">@Model.FormatShortDate(weeklyLockBoxCodes.Date)</td>
+                @foreach (var resource in GetOrderedResources())
+                {
+                    var code = weeklyLockBoxCodes.Codes.FirstOrDefault(c => c.ResourceId == resource.ResourceId);
+                    if (code is not null)
+                    {
+                <td style="@rightStyle">@(code.Code)</td>
+                <td style="@leftStyle">@(code.Difference)</td>
+                    }
+                    else
+                    {
+                <td style="@leftStyle"></td>
+                <td style="@leftStyle"></td>
+                    }
+                }
+            </tr>
+            }
+        }
+        </tbody>
+    </table>
+    <Regards Model="Model"/>
+    <LockBoxCodesFooter Model="Model"/>
+</body>
+</html>
