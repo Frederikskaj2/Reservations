@@ -1,5 +1,4 @@
-﻿using Frederikskaj2.Reservations.Shared.Web;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Client.Shared;

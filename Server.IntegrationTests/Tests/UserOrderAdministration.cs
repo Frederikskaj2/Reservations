@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Shared.Core;
+using Frederikskaj2.Reservations.Shared.Web;
 using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests;
@@ -88,5 +89,19 @@ public class UserOrderAdministration : IClassFixture<SessionFixture>
         reservationsCancelledEmail.Reservations.Should().HaveCount(1);
         reservationsCancelledEmail.Refund.Should().Be(Amount.Zero);
         reservationsCancelledEmail.Fee.Should().Be(Amount.Zero);
+    }
+
+    [Fact]
+    public async Task AdministratorCanExtendReservation()
+    {
+        await Session.SignUpAndSignInAsync();
+        var userOrder = await Session.UserPlaceAndPayOrderAsync(new TestReservation(TestData.Kaj.ResourceId, 1, true));
+        var order = await Session.GetOrderAsync(userOrder.OrderId);
+        var reservation = order.Reservations.First();
+        await Session.UpdateUserReservations(order.OrderId, new ReservationUpdateRequest() { ReservationIndex = 0, Extent = new(reservation.Extent.Date, reservation.Extent.Nights + 1) });
+        var myTransactions = await Session.GetMyTransactionsAsync();
+        var myBalance = myTransactions.Transactions.Select(transaction => transaction.Amount).Sum();
+        myBalance.Should().BeGreaterThan(Amount.Zero);
+        myBalance.Should().BeLessThan(userOrder.Price.Deposit);
     }
 }

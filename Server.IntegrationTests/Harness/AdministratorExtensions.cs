@@ -107,6 +107,13 @@ static class AdministratorExtensions
         return await session.DeserializeAsync<OrderDetails>(await session.AdministratorPatchAsync($"orders/user/{orderId}", request));
     }
 
+    public static async ValueTask UpdateUserReservations(this SessionFixture session, OrderId orderId, params ReservationUpdateRequest[] reservationRequests)
+    {
+        var request = new UpdateUserReservationsRequest { Reservations = reservationRequests };
+        var response = await session.AdministratorPatchAsync($"orders/user/{orderId}/reservations", request);
+        response.EnsureSuccessStatusCode();
+    }
+
     public static async ValueTask ReimburseAsync(this SessionFixture session, UserId userId, IncomeAccount accountToDebit, string description, Amount amount)
     {
         var request = new ReimburseRequest

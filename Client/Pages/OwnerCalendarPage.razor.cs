@@ -63,21 +63,9 @@ public partial class OwnerCalendarPage
         reservationDialog.Show();
     }
 
-    async Task CancelReservation()
-    {
-        DraftOrder.ClearReservation();
-        await AsyncEventAggregator.PublishAsync(DraftOrderUpdatedMessage.Instance);
-    }
+    void CancelReservation() => DraftOrder.ClearReservation();
 
-    async Task ConfirmReservation()
-    {
-        DraftOrder.AddReservationToOrder();
-        await AsyncEventAggregator.PublishAsync(DraftOrderUpdatedMessage.Instance);
-    }
+    void ConfirmReservation() => DraftOrder.AddReservationToOrder();
 
-    Task Checkout()
-    {
-        NavigationManager.NavigateTo(Urls.OwnerCheckout1);
-        return Task.CompletedTask;
-    }
+    void Checkout() => NavigationManager.NavigateTo(Urls.OwnerCheckout1);
 }
