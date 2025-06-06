@@ -5,7 +5,3 @@
 ::deep .check-row {
     column-gap: 1rem;
 }
-
-::deep .table > tbody > tr.ignored > td {
-    color: #AAA;
-}

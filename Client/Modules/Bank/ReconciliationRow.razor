@@ -1,6 +1,6 @@
 ﻿@if (Transaction is not null && Residents is not null && PayOuts is not null && FindResidentDialog is not null && ConfirmReconciliationDialog is not null)
 {
-    <TableRow @key="Transaction.BankTransactionId">
+    <TableRow @key="Transaction.BankTransactionId" Class="@(Transaction.Status is BankTransactionStatus.Ignored ? "ignored": "")">
         <TableRowCell>@Formatter.FormatDateShort(Transaction.Date)</TableRowCell>
         <TableRowCell>@Transaction.Text</TableRowCell>
         <TableRowCell Class="text-end">

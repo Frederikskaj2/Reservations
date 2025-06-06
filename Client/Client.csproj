@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
     <PropertyGroup>
         <RootNamespace>Frederikskaj2.Reservations.Client</RootNamespace>
+        <WasmEnableSIMD>false</WasmEnableSIMD>
     </PropertyGroup>
 
     <ItemGroup>

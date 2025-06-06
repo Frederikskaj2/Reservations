@@ -316,3 +316,14 @@ a {
 .payment-id {
     color: gray;
 }
+
+/* ReconciliationRow CSS moved to global CSS to avoid having to wrap a
+   <TableRow> component in a <div> which is required for CSS isolation. */
+
+tr.ignored td {
+    color: #AAA;
+}
+
+tr.ignored td .negative {
+    color: #FAA;
+}

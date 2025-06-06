@@ -21,6 +21,9 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
+      - name: Install WASM tools
+        run: dotnet workload install wasm-tools
+
       - name: Install dependencies
         run: dotnet restore
 
