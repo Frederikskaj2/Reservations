@@ -17,7 +17,7 @@ class GetUserTransactionsEndpoint
 {
     GetUserTransactionsEndpoint() { }
 
-    [Authorize(Roles = nameof(Roles.UserAdministration))]
+    [Authorize(Policy = Policy.ViewUsers)]
     public static Task<IResult> Handle(
         [FromRoute] int userId,
         [FromServices] CultureInfo cultureInfo,

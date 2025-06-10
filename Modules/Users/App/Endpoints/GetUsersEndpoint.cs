@@ -13,7 +13,7 @@ class GetUsersEndpoint
 {
     GetUsersEndpoint() { }
 
-    [Authorize(Roles = nameof(Roles.UserAdministration))]
+    [Authorize(Policy = Policy.ViewUsers)]
     public static Task<IResult> Handle(
         [FromServices] IEntityReader entityReader,
         [FromServices] ILogger<GetUsersEndpoint> logger,
