@@ -2,4 +2,4 @@
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record ImportBankTransactionsResponse(int Count, LocalDate? LatestImportStartDate);
+public record ImportBankTransactionsResponse(int Count, DateRange? DateRange, LocalDate? LatestImportStartDate);

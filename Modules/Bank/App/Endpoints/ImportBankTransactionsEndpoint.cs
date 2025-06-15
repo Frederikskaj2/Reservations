@@ -25,7 +25,7 @@ class ImportBankTransactionsEndpoint
         var either =
             from command in ValidateFormFile(httpContext, httpContext.RequestAborted)
             from result in ImportBankTransactions(bankTransactionsParser, entityReader, entityWriter, command, httpContext.RequestAborted)
-            select new ImportBankTransactionsResponse(result.Count, result.LatestImportStartDate.ToNullable());
+            select new ImportBankTransactionsResponse(result.Count, result.DateRange, result.LatestImportStartDate.ToNullable());
         return either.ToResult(logger, httpContext);
     }
 }

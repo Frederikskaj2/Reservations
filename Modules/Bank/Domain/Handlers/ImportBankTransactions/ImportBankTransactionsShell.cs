@@ -20,7 +20,7 @@ public static class ImportBankTransactionsShell
         from existingTransactions in ReadExistingTransactions(reader, cancellationToken)
         from output in ImportBankTransactionsCore(new(newTransactions, existingTransactions)).ToAsync()
         from _ in writer.Write(tracker => TrackEntities(output, tracker), cancellationToken).Map(_ => unit).MapWriteError<ImportError>()
-        select new ImportResult(output.Transactions.Count, output.LatestImportStartDate);
+        select new ImportResult(output.Transactions.Count, output.DateRange, output.LatestImportStartDate);
 
     static EitherAsync<Failure<ImportError>, Seq<BankTransaction>> ReadExistingTransactions(IEntityReader reader, CancellationToken cancellationToken) =>
         reader

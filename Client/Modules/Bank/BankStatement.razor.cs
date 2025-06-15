@@ -61,20 +61,27 @@ partial class BankStatement
         var response = await ApiClient.Get<GetBankTransactionsRangeResponse>("bank/transactions/range");
         if (response.IsSuccess)
         {
-            latestImportStartDate = response.Result!.LatestImportStartDate;
-            dateRange = response.Result!.DateRange;
-            if (dateRange is not null)
-            {
-                latestTransactionDate = dateRange.LatestDate;
-                var earliestYear = dateRange.EarliestDate.Year;
-                var latestYear = dateRange.LatestDate.Year;
-                years = Enumerable.Range(earliestYear, latestYear - earliestYear + 1).ToList();
-                currentYear = years[^1];
-                UpdateMonths();
-            }
+            var getBankTransactionsRangeResponse = response.Result!;
+            UpdateUi(getBankTransactionsRangeResponse.LatestImportStartDate, getBankTransactionsRangeResponse.DateRange);
             await Update();
         }
         isInitialized = true;
+    }
+
+    void UpdateUi(LocalDate? importStartDate, DateRange? range)
+    {
+        latestImportStartDate = importStartDate;
+        if (latestImportStartDate is not null)
+            currentPeriod =  Period.LatestImport;
+        dateRange = range;
+        if (dateRange is null)
+            return;
+        latestTransactionDate = dateRange.LatestDate;
+        var earliestYear = dateRange.EarliestDate.Year;
+        var latestYear = dateRange.LatestDate.Year;
+        years = Enumerable.Range(earliestYear, latestYear - earliestYear + 1).ToList();
+        currentYear = years[^1];
+        UpdateMonths();
     }
 
     void UpdateMonths()
@@ -167,6 +174,8 @@ partial class BankStatement
             if (response.IsSuccess)
             {
                 showImportSuccessAlert = true;
+                var importBankTransactionsResponse = response.Result!;
+                UpdateUi(importBankTransactionsResponse.LatestImportStartDate, importBankTransactionsResponse.DateRange);
                 latestImportStartDate = response.Result!.LatestImportStartDate;
                 if (latestImportStartDate is not null)
                     currentPeriod =  Period.LatestImport;

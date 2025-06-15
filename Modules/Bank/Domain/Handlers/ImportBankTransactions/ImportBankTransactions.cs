@@ -15,7 +15,7 @@ static class ImportBankTransactions
         from _2 in ValidateNotOld(input.NewTransactions, input.ExistingBankTransaction)
         from newTransactions in ValidateNoMissingTransactions(input.NewTransactions, input.ExistingBankTransaction)
         let latestImportStartDate = GetLatestImportStartDate(input.ExistingBankTransaction, newTransactions)
-        select new ImportBankTransactionsOutput(newTransactions, latestImportStartDate, GetImportStartDate(newTransactions));
+        select CreateOutput(input, newTransactions, latestImportStartDate);
 
     static Either<Failure<ImportError>, Unit> ValidateTransactionBalances(Seq<ImportBankTransaction> transactions) =>
         transactions.Length <= 1 ? unit : ValidateMultipleTransactionBalances(transactions).Map(_ => unit);
@@ -92,6 +92,10 @@ static class ImportBankTransactions
         newTransactions.IsEmpty
             ? existingTransactions.HeadOrNone().Map(transaction => transaction.Date)
             : newTransactions.HeadOrNone().Map(transaction => transaction.Date);
+
+    static ImportBankTransactionsOutput CreateOutput(
+        ImportBankTransactionsInput input, Seq<BankTransaction> newTransactions, Option<LocalDate> latestImportStartDate) =>
+        new(newTransactions, new(input.ExistingBankTransaction[0].Date, newTransactions[^1].Date), latestImportStartDate, GetImportStartDate(newTransactions));
 
     static Option<LocalDate> GetImportStartDate(Seq<BankTransaction> transactions) =>
         transactions.HeadOrNone().Case switch
