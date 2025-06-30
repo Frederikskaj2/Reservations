@@ -24,7 +24,7 @@ sealed partial class SchedulingWithTwoOrders(SessionFixture session) : CleaningF
     {
         var getMyOrderResponse1 = await Session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         reservation1 = getMyOrderResponse1.Order.Reservations.Single();
-        await Session.ConfirmOrders();
+        await Session.RunConfirmOrders();
     }
 
     async Task GivenAnOwnerReservation()
@@ -37,12 +37,12 @@ sealed partial class SchedulingWithTwoOrders(SessionFixture session) : CleaningF
     {
         var getMyOrderResponse2 = await Session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, IntervalInDays));
         reservation2 = getMyOrderResponse2.Order.Reservations.Single();
-        await Session.ConfirmOrders();
+        await Session.RunConfirmOrders();
     }
 
     async Task GivenAnotherReservedReservation()
     {
-        var placeMyOrderResponse2 = await ResidentOrderExtensions.PlaceResidentOrder(Session, new TestReservation(SeedData.Frederik.ResourceId, 1, IntervalInDays));
+        var placeMyOrderResponse2 = await Session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, IntervalInDays));
         reservation2 = placeMyOrderResponse2.Order.Reservations.Single();
     }
 

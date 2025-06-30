@@ -27,7 +27,7 @@ sealed partial class ResidentOrderPlacedTooLate(SessionFixture session) : Featur
 
     async Task WhenAnAdministratorPlacesALateOrderForTheResident()
     {
-        var getMyOrderResponse = await AdministratorOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId, Type: TestReservationType.Tomorrow));
+        var getMyOrderResponse = await session.AdministratorPlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, Type: TestReservationType.Tomorrow));
         order = getMyOrderResponse.Order;
     }
 

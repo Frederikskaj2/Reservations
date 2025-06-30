@@ -31,7 +31,7 @@ sealed partial class ResidentOrderMultipleReservations(SessionFixture session) :
 
     async Task GivenAnOrderIsPlaced()
     {
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId, 2),
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 2),
             new TestReservation(SeedData.Kaj.ResourceId));
         order = placeMyOrderResponse.Order;
     }
@@ -39,7 +39,7 @@ sealed partial class ResidentOrderMultipleReservations(SessionFixture session) :
     async Task GivenTheOrderIsPaid()
     {
         await session.PayIn(Order.Payment!.PaymentId, Order.Price.Total());
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenAReservationsIsCancelled() => updateMyOrderResponse = await session.CancelResidentReservations(Order.OrderId, 0);

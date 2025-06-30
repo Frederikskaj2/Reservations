@@ -29,7 +29,7 @@ sealed partial class ReconcilePayIns(SessionFixture session) : FeatureFixture, I
     async Task GivenAnUnpaidOrder()
     {
         await session.SignUpAndSignIn();
-        var getMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId));
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order = getMyOrderResponse.Order;
     }
 

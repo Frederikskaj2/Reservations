@@ -42,7 +42,7 @@ sealed partial class YearlySummaryWithSomeOrders(SessionFixture session) : Featu
         orders = new([placeResidentOrderResponse1.Order, placeResidentOrderResponse2.Order, placeResidentOrderResponse3.Order]);
         session.NowOffset = Period.FromDays(365);
         await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenTheYearlySummaryRangeIsRetrieved()

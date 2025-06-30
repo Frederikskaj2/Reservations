@@ -31,14 +31,14 @@ sealed partial class PayOut(SessionFixture session) : FeatureFixture, IScenarioS
     {
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order1 = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenAnotherPaidOrder()
     {
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.BanquetFacilities.ResourceId, 2));
         order2 = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenTheOrderIsSettled() => await session.SettleReservation(Order1.OrderId, 0);

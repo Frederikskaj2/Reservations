@@ -91,6 +91,9 @@
         <Compile Update="Tests\Orders\CancelShortlyBeforeReservationDate.Steps.cs">
             <DependentUpon>CancelShortlyBeforeReservationDate.cs</DependentUpon>
         </Compile>
+        <Compile Update="Tests\Orders\LockBoxCodes.Steps.cs">
+            <DependentUpon>LockBoxCodes.cs</DependentUpon>
+        </Compile>
         <Compile Update="Tests\Orders\MyOrders.Steps.cs">
             <DependentUpon>MyOrders.cs</DependentUpon>
         </Compile>

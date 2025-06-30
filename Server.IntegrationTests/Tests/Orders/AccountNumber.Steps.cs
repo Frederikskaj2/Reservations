@@ -24,7 +24,7 @@ sealed partial class AccountNumber(SessionFixture session) : FeatureFixture, ISc
     async Task GivenAResidentHasPlacedAnOrder()
     {
         await session.SignUpAndSignIn();
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Kaj.ResourceId));
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Kaj.ResourceId));
         order = placeMyOrderResponse.Order;
     }
 

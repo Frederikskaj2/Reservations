@@ -35,12 +35,12 @@ sealed partial class ResidentOrderConfusion(SessionFixture session) : FeatureFix
 
     async Task GivenAnotherOrderIsPlaced()
     {
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Kaj.ResourceId, 1, PriceGroup.Low));
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Kaj.ResourceId, 1, PriceGroup.Low));
         order2 = placeMyOrderResponse.Order;
     }
 
     async Task WhenTheJobToConfirmOrdersExecute() =>
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
 
     async Task WhenTheFirstOrderIsCancelled() =>
         updateMyOrderResponse1 = await session.CancelResidentReservations(Order1.OrderId, 0);

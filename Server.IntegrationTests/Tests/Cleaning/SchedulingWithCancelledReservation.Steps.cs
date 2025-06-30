@@ -26,7 +26,7 @@ sealed partial class SchedulingWithCancelledReservation(SessionFixture session) 
     {
         var getMyOrderResponse = await Session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         reservation1 = getMyOrderResponse.Order.Reservations.Single();
-        await Session.ConfirmOrders();
+        await Session.RunConfirmOrders();
     }
 
     async Task GivenAnOwnerOrderWithTwoReservations()

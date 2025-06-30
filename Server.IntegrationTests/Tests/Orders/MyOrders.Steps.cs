@@ -26,7 +26,7 @@ sealed partial class MyOrders(SessionFixture session) : FeatureFixture, IScenari
     {
         await session.SignUpAndSignIn();
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
         await session.SettleReservation(getMyOrderResponse.Order.OrderId, 0);
     }
 
@@ -34,7 +34,7 @@ sealed partial class MyOrders(SessionFixture session) : FeatureFixture, IScenari
     {
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Kaj.ResourceId, 1, TestReservationType.Monday));
         upcomingOrder = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenTheResidentRetrievesOrders()

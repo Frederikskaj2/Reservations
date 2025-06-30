@@ -28,7 +28,7 @@ sealed partial class SchedulingWithReservationInThePast(SessionFixture session) 
     {
         var getMyOrderResponse = await Session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         reservation = getMyOrderResponse.Order.Reservations.Single();
-        await Session.ConfirmOrders();
+        await Session.RunConfirmOrders();
     }
 
     async Task GivenAnOwnerReservation()

@@ -30,7 +30,7 @@ sealed partial class PaymentTransferTwoOrders(SessionFixture session) : FeatureF
         await session.SignUpAndSignIn();
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
         order1 = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenTheResidentHasCancelledTheOrder() =>
@@ -38,11 +38,11 @@ sealed partial class PaymentTransferTwoOrders(SessionFixture session) : FeatureF
 
     async Task WhenTheResidentPlacesASimilarOrderAndPaysTheOutstandingAmount()
     {
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
         order2 = placeMyOrderResponse.Order;
         resident = await session.GetMyResident();
         await session.PayIn(Resident.PaymentId, -Resident.Balance);
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task ThenTheFirstOrderIsCancelled()

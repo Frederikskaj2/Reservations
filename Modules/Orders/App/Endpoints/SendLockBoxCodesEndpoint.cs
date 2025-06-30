@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
+using static Frederikskaj2.Reservations.Orders.SendLockBoxCodesShell;
 
 namespace Frederikskaj2.Reservations.Orders;
 
@@ -23,7 +24,7 @@ class SendLockBoxCodesEndpoint
         [FromServices] IOptionsSnapshot<OrderingOptions> options,
         HttpContext httpContext)
     {
-        var either = SendLockBoxCodesShell.SendLockBoxCodes(emailService, options.Value, entityReader, entityWriter, new(dateProvider.Today), httpContext.RequestAborted);
+        var either = SendLockBoxCodes(emailService, options.Value, entityReader, entityWriter, new(dateProvider.Today), httpContext.RequestAborted);
         return either.ToResult(logger, httpContext, includeFailureDetail: true);
     }
 }

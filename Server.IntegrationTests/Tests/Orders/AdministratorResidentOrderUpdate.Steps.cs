@@ -24,7 +24,7 @@ sealed partial class AdministratorResidentOrderUpdate(SessionFixture session) : 
     async Task GivenAResidentHasPlacedAnOrder()
     {
         await session.SignUpAndSignIn();
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Kaj.ResourceId, 1, TestReservationType.Soon));
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Kaj.ResourceId, 1, TestReservationType.Soon));
         myOrder = placeMyOrderResponse.Order;
     }
 

@@ -33,7 +33,7 @@ sealed partial class PaymentTransferFourOrders(SessionFixture session) : Feature
         // 3x200 + 200 + 500 = 1300
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 3, PriceGroup.Low));
         order1 = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenAResidentHasPlacedAndPaidAnOrderWithAHighPrice()
@@ -42,27 +42,27 @@ sealed partial class PaymentTransferFourOrders(SessionFixture session) : Feature
         await session.SignUpAndSignIn();
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.BanquetFacilities.ResourceId, 1, PriceGroup.Low));
         order1 = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenTheResidentHasPlacedButNotPaidAnotherOrder()
     {
         // 200 + 200 + 500 = 900
-        var getMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
         order2 = getMyOrderResponse.Order;
     }
 
     async Task GivenTheResidentHasPlacedButNotPaidAThirdOrder()
     {
         // 200 + 200 + 500 = 900
-        var getMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
         order3 = getMyOrderResponse.Order;
     }
 
     async Task GivenTheResidentHasPlacedButNotPaidAFourthOrder()
     {
         // 200 + 200 + 500 = 900
-        var getMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Kaj.ResourceId, 1, PriceGroup.Low));
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Kaj.ResourceId, 1, PriceGroup.Low));
         order4 = getMyOrderResponse.Order;
     }
 
@@ -70,7 +70,7 @@ sealed partial class PaymentTransferFourOrders(SessionFixture session) : Feature
     {
         var updateMyOrderResponse = await session.CancelResidentReservations(Order1.OrderId, 0);
         cancelledOrder1 = updateMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task ThenTheFirstOrderIsCancelled()

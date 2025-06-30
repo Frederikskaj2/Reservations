@@ -2,7 +2,7 @@ using System;
 
 namespace Frederikskaj2.Reservations.Users;
 
-static class EmailExtensions
+public static class EmailExtensions
 {
     const char maskChar = '*';
 

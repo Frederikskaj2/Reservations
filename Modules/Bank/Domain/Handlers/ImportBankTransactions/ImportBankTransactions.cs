@@ -95,7 +95,16 @@ static class ImportBankTransactions
 
     static ImportBankTransactionsOutput CreateOutput(
         ImportBankTransactionsInput input, Seq<BankTransaction> newTransactions, Option<LocalDate> latestImportStartDate) =>
-        new(newTransactions, new(input.ExistingBankTransaction[0].Date, newTransactions[^1].Date), latestImportStartDate, GetImportStartDate(newTransactions));
+        new(newTransactions, GetDateRange(input.ExistingBankTransaction, newTransactions), latestImportStartDate, GetImportStartDate(newTransactions));
+
+    static Option<DateRange> GetDateRange(Seq<BankTransaction> existingTransactions, Seq<BankTransaction> newTransactions) =>
+        (existingTransactions.IsEmpty, newTransactions.IsEmpty) switch
+        {
+            (false, false) => new DateRange(existingTransactions[0].Date, newTransactions[^1].Date),
+            (true, false) => new DateRange(newTransactions[0].Date, newTransactions[^1].Date),
+            (false, true) => new DateRange(existingTransactions[0].Date, existingTransactions[^1].Date),
+            _ => None,
+        };
 
     static Option<LocalDate> GetImportStartDate(Seq<BankTransaction> transactions) =>
         transactions.HeadOrNone().Case switch

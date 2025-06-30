@@ -32,19 +32,19 @@ sealed partial class SettleReservation(SessionFixture session) : FeatureFixture,
         await session.SignUpAndSignIn();
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.BanquetFacilities.ResourceId, 2));
         order = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenAnotherOrderIsPlaced()
     {
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
         anotherOrder = placeMyOrderResponse.Order;
     }
 
     async Task WhenTheReservationIsSettled()
     {
         await session.SettleReservation(Order.OrderId, 0);
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenTheReservationIsSettledWithDamages()

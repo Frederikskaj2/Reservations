@@ -27,16 +27,16 @@ sealed partial class DeleteUser(SessionFixture session) : FeatureFixture, IScena
 
     async Task GivenTheUserHasAnUnpaidOrder()
     {
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId));
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order = placeMyOrderResponse.Order;
     }
 
     async Task GivenTheUserHasAPaidOrder()
     {
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId));
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order = placeMyOrderResponse.Order;
         await session.PayIn(Order.Payment!.PaymentId, Order.Price.Total());
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenTheUserRequestsDeletion() => deleteUserResponse = await session.DeleteUser();
@@ -56,7 +56,7 @@ sealed partial class DeleteUser(SessionFixture session) : FeatureFixture, IScena
     async Task WhenTheResidentsBalanceIsRefunded() =>
         await session.PayOut(Order.UserIdentity.UserId, Order.Price.Deposit);
 
-    async Task WhenTheDeleteUsersJobHasExecuted() => await session.DeleteUsers();
+    async Task WhenTheDeleteUsersJobHasExecuted() => await session.RunDeleteUsers();
 
     Task ThenTheDeletionIsSuccessful()
     {

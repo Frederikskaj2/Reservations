@@ -31,5 +31,10 @@ public record Email(EmailAddress ToEmail, string ToFullName, Uri FromUrl)
     PropertyInfo? GetNonNullProperty() =>
         GetType()
             .GetProperties()
-            .FirstOrDefault(property => property.PropertyType != typeof(Uri) && property.GetValue(this) is not null);
+            .FirstOrDefault(
+                property =>
+                    property.PropertyType != typeof(EmailAddress) &&
+                    property.PropertyType != typeof(string) &&
+                    property.PropertyType != typeof(Uri) &&
+                    property.GetValue(this) is not null);
 }

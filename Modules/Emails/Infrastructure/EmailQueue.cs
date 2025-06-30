@@ -1,5 +1,7 @@
 ﻿using Azure.Storage.Queues;
 using Frederikskaj2.Reservations.Core;
+using Frederikskaj2.Reservations.Users;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Emails;
 
-class EmailQueue(IJobScheduler jobScheduler, IOptionsMonitor<EmailQueueOptions> queueOptions) : IEmailEnqueuer, IEmailDequeuer
+class EmailQueue(IJobScheduler jobScheduler, ILogger<EmailQueue> logger, IOptionsMonitor<EmailQueueOptions> queueOptions) : IEmailEnqueuer, IEmailDequeuer
 {
     const int maxMessages = 32;
 
@@ -24,6 +26,7 @@ class EmailQueue(IJobScheduler jobScheduler, IOptionsMonitor<EmailQueueOptions> 
         var client = await CreateQueueClient(options, cancellationToken);
         var json = JsonSerializer.Serialize(email, options.SerializerOptions);
         await client.SendMessageAsync(json, cancellationToken);
+        logger.LogInformation("Queued email {Email} to {Recipient}", email.ToString(), email.ToEmail.Mask());
         jobScheduler.Queue(JobName.SendEmails);
     }
 

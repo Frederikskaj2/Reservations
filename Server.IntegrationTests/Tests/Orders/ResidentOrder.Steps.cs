@@ -35,7 +35,7 @@ sealed partial class ResidentOrder(SessionFixture session) : FeatureFixture, ISc
 
     async Task WhenAnOrderIsPlaced()
     {
-        var getMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId));
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order = getMyOrderResponse.Order;
     }
 
@@ -46,7 +46,7 @@ sealed partial class ResidentOrder(SessionFixture session) : FeatureFixture, ISc
         updateMyOrderResponse = await session.CancelResidentReservations(Order.OrderId, 0);
 
     async Task WhenTheJobToConfirmOrdersExecute() =>
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
 
     async Task ThenTheResidentReceivesAnOrderReceivedEmail()
     {

@@ -34,7 +34,7 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
     {
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenTheOrderIsSettled() => await session.SettleReservation(Order.OrderId, 0);

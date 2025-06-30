@@ -35,7 +35,7 @@ sealed partial class ReconcilePayOuts(SessionFixture session) : FeatureFixture, 
     {
         await session.SignUpAndSignIn();
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
         await session.SettleReservation(getMyOrderResponse.Order.OrderId, 0);
         var getCreditorsResponse = await session.GetCreditors();
         creditor = getCreditorsResponse.Creditors.Single(c => c.UserInformation.UserId == session.UserId());

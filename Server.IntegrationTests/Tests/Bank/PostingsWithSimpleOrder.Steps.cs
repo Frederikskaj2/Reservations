@@ -30,7 +30,7 @@ sealed partial class PostingsWithSimpleOrder(SessionFixture session) : FeatureFi
     {
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenThePostingsAreRetrieved()

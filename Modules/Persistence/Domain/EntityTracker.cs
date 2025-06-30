@@ -63,7 +63,7 @@ public class EntityTracker
         return entityMap.Find(key).Case switch
         {
             Entity { Operation: Operation.None } entity => UpdateIfModified(entityMap, key, entity, value),
-            _ => throw new InvalidOperationException(),
+            _ => throw new InvalidOperationException($"Cannot update entity with {key}."),
         };
     }
 

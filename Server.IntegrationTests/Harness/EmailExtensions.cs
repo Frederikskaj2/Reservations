@@ -42,6 +42,12 @@ static class EmailExtensions
         return emails.Last(email => email.UserDeleted is not null);
     }
 
+    public static async ValueTask<Email?> DequeueLockBoxCodesEmail(this SessionFixture session)
+    {
+        var emails = await session.DequeueEmails();
+        return emails.LastOrDefault(email => email.LockBoxCodes is not null);
+    }
+
     public static Email? OrderReceived(this IEnumerable<Email> emails) =>
         emails.SingleOrDefault(email => email.OrderReceived is not null);
 

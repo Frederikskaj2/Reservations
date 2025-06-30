@@ -65,7 +65,7 @@ sealed partial class HistoryOwnerOrder(SessionFixture session) : FeatureFixture,
         return Task.CompletedTask;
     }
 
-    async Task WhenTheJobToFinishOwnerOrdersHasExecuted() => await session.FinishOwnerOrders();
+    async Task WhenTheJobToFinishOwnerOrdersHasExecuted() => await session.RunFinishOwnerOrders();
 
     async Task ThenTheOrderBecomesAHistoryOrder()
     {

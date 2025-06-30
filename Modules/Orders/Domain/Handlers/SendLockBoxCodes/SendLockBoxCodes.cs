@@ -50,7 +50,8 @@ static class SendLockBoxCodes
             _ => throw new UnreachableException(),
         };
 
-    static LockBoxCodesEmail CreateEmail(HashMap<Reservation, Seq<DatedLockBoxCode>> lockBoxCodes, ReservationWithOrder reservationWithOrder, UserExcerpt user) =>
+    static LockBoxCodesEmail CreateEmail(
+        HashMap<Reservation, Seq<DatedLockBoxCode>> lockBoxCodes, ReservationWithOrder reservationWithOrder, UserExcerpt user) =>
         new(
             user.Email(),
             user.FullName,

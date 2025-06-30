@@ -21,7 +21,7 @@ sealed partial class SchedulingWithOneResidentOrder(SessionFixture session) : Cl
         await Session.SignUpAndSignIn();
         var getMyOrderResponse = await Session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order = getMyOrderResponse.Order;
-        await Session.ConfirmOrders();
+        await Session.RunConfirmOrders();
     }
 
     async Task GivenAnOrderWithTwoConfirmedReservations()
@@ -31,7 +31,7 @@ sealed partial class SchedulingWithOneResidentOrder(SessionFixture session) : Cl
             new TestReservation(SeedData.Kaj.ResourceId),
             new TestReservation(SeedData.Kaj.ResourceId, 1, IntervalInDays));
         order = getMyOrderResponse.Order;
-        await Session.ConfirmOrders();
+        await Session.RunConfirmOrders();
     }
 
     async Task GivenAnOrderWithOneConfirmedAndOneCancelledReservation()
@@ -41,7 +41,7 @@ sealed partial class SchedulingWithOneResidentOrder(SessionFixture session) : Cl
             new TestReservation(SeedData.Kaj.ResourceId),
             new TestReservation(SeedData.Kaj.ResourceId, 1, IntervalInDays));
         order = getMyOrderResponse.Order;
-        await Session.ConfirmOrders();
+        await Session.RunConfirmOrders();
         await Session.CancelResidentReservations(Order.OrderId, 1);
     }
 

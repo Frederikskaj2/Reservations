@@ -50,7 +50,7 @@ partial class OwnerOrder(SessionFixture session) : FeatureFixture, IClassFixture
 
     async Task WhenTheJobToFinishOwnerOrdersHasExecuted()
     {
-        await session.FinishOwnerOrders();
+        await session.RunFinishOwnerOrders();
         var getOrderResponse = await session.GetOrder(OrderId);
         order = getOrderResponse.Order;
         var getOwnerOrdersResponse = await session.GetOwnerOrders();
@@ -117,7 +117,7 @@ partial class OwnerOrder(SessionFixture session) : FeatureFixture, IClassFixture
 
     async Task<CleaningTask?> GetCleaningTask()
     {
-        await session.UpdateCleaningSchedule();
+        await session.RunUpdateCleaningSchedule();
         var getCleaningScheduleResponse = await session.GetCleaningSchedule();
         var reservation = Order.Reservations.First();
         var cleaningTask = getCleaningScheduleResponse.CleaningTasks.FirstOrDefault(

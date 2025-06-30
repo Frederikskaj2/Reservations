@@ -23,7 +23,8 @@ static class AdministratorOrderExtensions
         return await session.Deserialize<PlaceOwnerOrderResponse>(await session.AdministratorPost("orders/owner", request));
     }
 
-    public static async ValueTask<PlaceResidentOrderResponse> PlaceResidentOrder(this SessionFixture session, params TestReservation[] reservations)
+    public static async ValueTask<PlaceResidentOrderResponse> AdministratorPlaceResidentOrder(
+        this SessionFixture session, params TestReservation[] reservations)
     {
         if (session.User is null)
             throw new InvalidOperationException();

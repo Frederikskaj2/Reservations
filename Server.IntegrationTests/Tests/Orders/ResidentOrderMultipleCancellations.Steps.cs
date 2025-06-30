@@ -37,7 +37,7 @@ sealed partial class ResidentOrderMultipleCancellations(SessionFixture session) 
             new TestReservation(SeedData.Kaj.ResourceId, 2),
             new TestReservation(SeedData.Frederik.ResourceId, 3));
         order = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenAReservationsIsCancelled() => updateMyOrderResponse1 = await session.CancelResidentReservations(Order.OrderId, 0);

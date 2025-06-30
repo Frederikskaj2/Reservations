@@ -43,7 +43,7 @@ sealed partial class PostingsWithChangedOrder(SessionFixture session) : FeatureF
             new TestReservation(SeedData.Frederik.ResourceId));
         order1 = getMyOrderResponse.Order;
         reservationToCancel = getMyOrderResponse.Order.Reservations.First();
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenThePaidOrderIsCancelled()

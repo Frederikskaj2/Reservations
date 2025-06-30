@@ -28,7 +28,7 @@ public abstract class CleaningFixture(SessionFixture session) : FeatureFixture, 
 
     protected async Task WhenTheCleaningScheduleIsRetrieved()
     {
-        await Session.UpdateCleaningSchedule();
+        await Session.RunUpdateCleaningSchedule();
         var getCleaningScheduleResponse = await Session.GetCleaningSchedule();
         cleaningTasks = new(getCleaningScheduleResponse.CleaningTasks);
     }

@@ -24,7 +24,7 @@ sealed partial class CancellationWithoutFee(SessionFixture session) : FeatureFix
         await session.SignUpAndSignIn();
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Kaj.ResourceId, 1, TestReservationType.Soon));
         order = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task AndGivenAnAdministratorHasAllowedTheResidentToCancelWithoutAFee() =>

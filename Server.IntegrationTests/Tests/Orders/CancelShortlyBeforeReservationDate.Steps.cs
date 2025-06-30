@@ -26,7 +26,7 @@ sealed partial class CancelShortlyBeforeReservationDate(SessionFixture session) 
         await session.SignUpAndSignIn();
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, Type: TestReservationType.Soon));
         order = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenTheResidentIsAllowedToCancelWithoutFee() =>

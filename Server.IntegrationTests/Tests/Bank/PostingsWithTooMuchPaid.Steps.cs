@@ -34,10 +34,10 @@ sealed partial class PostingsWithTooMuchPaid(SessionFixture session) : FeatureFi
 
     async Task GivenAPaidOrder()
     {
-        var getMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId));
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
         order = getMyOrderResponse.Order;
         await session.PayIn(Order.Payment!.PaymentId, Order.Price.Total() + excessAmount);
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenThePostingsAreRetrieved()

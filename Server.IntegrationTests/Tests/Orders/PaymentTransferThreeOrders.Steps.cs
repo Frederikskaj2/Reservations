@@ -32,25 +32,25 @@ sealed partial class PaymentTransferThreeOrders(SessionFixture session) : Featur
         await session.SignUpAndSignIn();
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 7));
         order1 = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenTheResidentHasPlacedAndPaidAnotherOrder()
     {
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Kaj.ResourceId, 1, PriceGroup.Low));
         order2 = getMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenTheResidentHasPlacedButNotPaidAnotherOrder()
     {
-        var getMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
         order2 = getMyOrderResponse.Order;
     }
 
     async Task GivenTheResidentHasPlacedButNotPaidYetAnotherOrder()
     {
-        var placeMyOrderResponse = await ResidentOrderExtensions.PlaceResidentOrder(session, new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
+        var placeMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, 1, PriceGroup.Low));
         order3 = placeMyOrderResponse.Order;
     }
 
@@ -58,14 +58,14 @@ sealed partial class PaymentTransferThreeOrders(SessionFixture session) : Featur
     {
         var updateMyOrderResponse = await session.CancelResidentReservations(Order1.OrderId, 0);
         cancelledOrder1 = updateMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task WhenTheResidentCancelsTheSecondOrder()
     {
         var updateMyOrderResponse = await session.CancelResidentReservations(Order2.OrderId, 0);
         cancelledOrder2 = updateMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task ThenTheFirstOrderIsCancelled()

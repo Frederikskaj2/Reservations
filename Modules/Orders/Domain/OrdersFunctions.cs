@@ -25,8 +25,7 @@ static class OrdersFunctions
             : Failure.New(HttpStatusCode.UnprocessableEntity, $"Order {orderEntity.Value.OrderId} is not a resident order.");
 
     public static EitherAsync<Failure<Unit>, Unit> SendReservationsCancelledEmail(
-        IOrdersEmailService emailService,
-        HashSet<ReservationIndex> cancelledReservations,
+        IOrdersEmailService emailService, HashSet<ReservationIndex> cancelledReservations,
         User user,
         Order order,
         Option<Transaction> transactionOption,
@@ -97,10 +96,20 @@ static class OrdersFunctions
         toHashSet(order.Audits.Map(audit => audit.UserId).Somes());
 
     public static Seq<Order> SetReservationsEmailFlag(Seq<ReservationWithOrder> reservations, ReservationEmails flag) =>
-        toHashSet(reservations.Map(reservation => SetReservationEmailFlag(reservation.Order, reservation.Reservation, flag))).ToSeq();
+        reservations
+            .GroupBy(
+                reservation => reservation.Order,
+                (order, reservationsForOrder) => SetReservationEmailFlag(
+                    order,
+                    toHashSet(reservationsForOrder.Map(reservation => reservation.Reservation)),
+                    flag))
+            .ToSeq();
 
-    static Order SetReservationEmailFlag(Order order, Reservation reservation, ReservationEmails flag) =>
-        order with { Reservations = order.Reservations.Map(r => r == reservation ? SetReservationEmailFlag(r, flag) : r) };
+    static Order SetReservationEmailFlag(Order order, HashSet<Reservation> reservations, ReservationEmails flag) =>
+        order with
+        {
+            Reservations = order.Reservations.Map(reservation => reservations.Contains(reservation) ? SetReservationEmailFlag(reservation, flag) : reservation),
+        };
 
     static Reservation SetReservationEmailFlag(Reservation reservation, ReservationEmails flag) =>
         reservation with { SentEmails = reservation.SentEmails | flag };

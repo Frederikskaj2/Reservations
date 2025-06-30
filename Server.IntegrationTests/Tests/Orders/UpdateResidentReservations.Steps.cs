@@ -37,7 +37,7 @@ sealed partial class UpdateResidentReservations(SessionFixture session) : Featur
             await CreateReservationRequest(SeedData.Kaj.ResourceId));
         await session.PayIn(placeMyOrderResponse.Order.Payment!.PaymentId, placeMyOrderResponse.Order.Price.Total());
         order = placeMyOrderResponse.Order;
-        await session.ConfirmOrders();
+        await session.RunConfirmOrders();
     }
 
     async Task GivenAnotherConfirmedResidentOrderRightAfterTheFirst()
