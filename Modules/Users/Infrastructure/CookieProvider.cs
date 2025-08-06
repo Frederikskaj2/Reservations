@@ -16,7 +16,7 @@ static class CookieProvider
     {
         if (cookie is null)
             return null;
-        if (!CookieHeaderValue.TryParseList(cookie.Split(';'), out var cookieHeaderValues))
+        if (!CookieHeaderValue.TryParseList(cookie.Split(','), out var cookieHeaderValues))
             return null;
         var fullCookieName = GetFullCookieName(cookieName);
         var cookieHeaderValue = cookieHeaderValues.FirstOrDefault(headerValue => headerValue.Name == fullCookieName);

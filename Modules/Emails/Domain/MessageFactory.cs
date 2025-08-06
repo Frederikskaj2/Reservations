@@ -9,11 +9,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Emails;
 
-public class MessageFactory(CultureInfo cultureInfo, ILogger<MessageFactory> logger, IOptionsSnapshot<EmailMessageOptions> options, HtmlRenderer renderer)
+public partial class MessageFactory(CultureInfo cultureInfo, ILogger<MessageFactory> logger, IOptionsSnapshot<EmailMessageOptions> options, HtmlRenderer renderer)
 {
     [SuppressMessage(
         "Sonar", "S6667:Logging in a catch clause should pass the caught exception as a parameter.",
@@ -24,7 +25,7 @@ public class MessageFactory(CultureInfo cultureInfo, ILogger<MessageFactory> log
         {
             var messageOptions = ValidateOptions(options.Value);
             var emailModel = new EmailModel<TModel>(model, toFullName, messageOptions.From!.Name!, fromUrl, cultureInfo);
-            var subject = (await Render(emailModel, TemplateType.Subject)).TrimEnd('\r', '\n');
+            var subject = ReplaceHtmlEntities((await Render(emailModel, TemplateType.Subject)).TrimEnd('\r', '\n'));
             var body = await Render(emailModel, TemplateType.Body);
             return new(messageOptions.From!.Email!, messageOptions.ReplyTo?.Email, [toEmail.ToString()], subject, body);
         }
@@ -61,4 +62,10 @@ public class MessageFactory(CultureInfo cultureInfo, ILogger<MessageFactory> log
 
     static string GetNamespacePartFromModelType(Type modelType) =>
         modelType.Name.EndsWith("Dto", StringComparison.Ordinal) ? modelType.Name[..^3] : modelType.Name;
+
+    static string ReplaceHtmlEntities(string html) =>
+        HtmlEntityRegex().Replace(html, match => ((char) Convert.ToInt32(match.Groups["hexCode"].Value, 16)).ToString());
+
+    [GeneratedRegex("&#x(?<hexCode>[0-9A-F]{2});", RegexOptions.None, 1000)]
+    private static partial Regex HtmlEntityRegex();
 }

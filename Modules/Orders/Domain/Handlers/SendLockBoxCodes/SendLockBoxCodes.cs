@@ -17,7 +17,8 @@ static class SendLockBoxCodes
             GetUpcomingReservations(input.Orders, input.Command.Date.Plus(options.RevealLockBoxCodeBeforeReservationStart)));
 
     static Seq<ReservationWithOrder> GetUpcomingReservations(Seq<Order> orders, LocalDate latestDate) =>
-        orders.Bind(
+        orders
+            .Bind(
                 order => order.Reservations
                     .Map((index, reservation) => new ReservationWithOrder(reservation, order, index))
                     .Filter(

@@ -22,7 +22,7 @@ public class LockBoxCodes(MessageFactoryFixture fixture) : IClassFixture<Message
         message.From.Should().Be(fixture.FromEmailAddress.ToString());
         message.ReplyTo.Should().Be(fixture.ReplyToEmailAddress.ToString());
         message.To.Should().BeEquivalentTo(fixture.ToEmailAddress.ToString());
-        message.Subject.Should().Be($"Nøglebokskode til {HtmlEncode(Resources.GetNameUnsafe(resourceId))} den {date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}");
+        message.Subject.Should().Be($"Nøglebokskode til {Resources.GetNameUnsafe(resourceId)} den {date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}");
         var rulesPath = Resources.GetResourceType(resourceId) == ResourceType.BanquetFacilities ? "festlokale" : "sovevaerelser";
         message.Body.Should().Be(
             $"""
@@ -62,7 +62,7 @@ public class LockBoxCodes(MessageFactoryFixture fixture) : IClassFixture<Message
         message.From.Should().Be(fixture.FromEmailAddress.ToString());
         message.ReplyTo.Should().Be(fixture.ReplyToEmailAddress.ToString());
         message.To.Should().BeEquivalentTo(fixture.ToEmailAddress.ToString());
-        message.Subject.Should().Be($"Nøglebokskode til {HtmlEncode(Resources.GetNameUnsafe(resourceId))} den {date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}");
+        message.Subject.Should().Be($"Nøglebokskode til {Resources.GetNameUnsafe(resourceId)} den {date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}");
         var rulesPath = Resources.GetResourceType(resourceId) == ResourceType.BanquetFacilities ? "festlokale" : "sovevaerelser";
         message.Body.Should().Be(
             $"""

@@ -11,9 +11,9 @@ static class GetOrders
         new(CreateOrderSummaries(input.Options, input.Today, input.Orders, toHashMap(input.Users.Map(user => (user.UserId, user)))));
 
     static Seq<OrderSummary> CreateOrderSummaries(OrderingOptions options, LocalDate today, Seq<OrderExcerpt> orders, HashMap<UserId, UserExcerpt> users) =>
-        orders.Map(order => CreateSummary(options, today, order, users));
+        orders.Map(order => CreateOrderSummary(options, today, order, users));
 
-    static OrderSummary CreateSummary(OrderingOptions options, LocalDate today, OrderExcerpt order, HashMap<UserId, UserExcerpt> users) =>
+    static OrderSummary CreateOrderSummary(OrderingOptions options, LocalDate today, OrderExcerpt order, HashMap<UserId, UserExcerpt> users) =>
         new(
             order.OrderId,
             order.Flags,
@@ -30,14 +30,16 @@ static class GetOrders
             .ToSeq();
 
     static LocalDate GetNextReservationDate(LocalDate today, Seq<Reservation> sortedReservations) =>
-        sortedReservations.FindSeq(reservation => reservation.Extent.Date >= today).Case switch
-        {
-            Reservation futureReservation => futureReservation.Extent.Date,
-            // Use today in the extreme rare event where all reservations on an
-            // owner order are canceled, but the order hasn't been converted to a
-            // history order yet.
-            _ => !sortedReservations.IsEmpty ? sortedReservations.Last.Extent.Date : today,
-        };
+        sortedReservations.
+                FindSeq(reservation => reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed && reservation.Extent.Date >= today)
+                .Case switch
+            {
+                Reservation futureReservation => futureReservation.Extent.Date,
+                // Use today in the extreme rare event where all reservations on an
+                // owner order are canceled, but the order hasn't been converted to a
+                // history order yet.
+                _ => !sortedReservations.IsEmpty ? sortedReservations.Last.Extent.Date : today,
+            };
 
     static OrderCategory GetOrderStatus(OrderingOptions options, LocalDate today, Seq<Reservation> reservations) =>
         reservations.Any(reservation => reservation.Status is ReservationStatus.Reserved)
