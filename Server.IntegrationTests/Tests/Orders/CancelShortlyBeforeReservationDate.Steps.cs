@@ -4,6 +4,7 @@ using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
+using NodaTime;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -19,7 +20,11 @@ sealed partial class CancelShortlyBeforeReservationDate(SessionFixture session) 
     MyOrderDto Order => order.GetValue(nameof(Order));
     HttpResponseMessage Response => response.GetValue(nameof(Response));
 
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
+    async Task IScenarioSetUp.OnScenarioSetUp()
+    {
+        session.NowOffset = Period.Zero;
+        await session.UpdateLockBoxCodes();
+    }
 
     async Task GivenAConfirmedOrder()
     {
@@ -27,6 +32,12 @@ sealed partial class CancelShortlyBeforeReservationDate(SessionFixture session) 
         var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId, Type: TestReservationType.Soon));
         order = getMyOrderResponse.Order;
         await session.RunConfirmOrders();
+    }
+
+    Task GivenTheDeadlineForResidentCancellationIsInThePast()
+    {
+        session.NowOffset += Period.FromDays(2);
+        return Task.CompletedTask;
     }
 
     async Task GivenTheResidentIsAllowedToCancelWithoutFee() =>

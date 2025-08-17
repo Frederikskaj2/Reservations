@@ -38,7 +38,7 @@ public class OrderingOptions
     public LocalTime CheckInTime { get; init; } = new(12, 0);
     public LocalTime CheckOutTime { get; init; } = new(10, 0);
     public Amount CancellationFee { get; init; } = 200;
-    public int MinimumCancellationNoticeInDays { get; init; } = 14;
+    public int MinimumCancellationNoticeInDays { get; init; } = 5;
     public Duration CancellationWithoutFeeDuration { get; init; } = Duration.FromDays(5);
     public string PayInAccountNumber { get; init; } = "9444-12501110";
     public Period RecentOrdersMaximumAge { get; init; } = Period.FromDays(7);

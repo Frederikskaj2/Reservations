@@ -17,6 +17,7 @@ public partial class CancelShortlyBeforeReservationDate
     public Task ResidentCannotCancel() =>
         Runner.RunScenarioAsync(
             GivenAConfirmedOrder,
+            GivenTheDeadlineForResidentCancellationIsInThePast,
             WhenTheResidentCancelsTheReservation,
             ThenTheReservationCannotBeCancelledByTheResident,
             ThenTheRequestToCancelTheReservationFails);
@@ -25,6 +26,7 @@ public partial class CancelShortlyBeforeReservationDate
     public Task AdministratorCanCanCancel() =>
         Runner.RunScenarioAsync(
             GivenAConfirmedOrder,
+            GivenTheDeadlineForResidentCancellationIsInThePast,
             WhenTheAdministratorCancelsTheReservation,
             ThenTheRequestToCancelTheReservationIsSuccessful,
             ThenTheReservationIsCancelled);
@@ -33,6 +35,7 @@ public partial class CancelShortlyBeforeReservationDate
     public Task ResidentCanCanCancelWhenAllowed() =>
         Runner.RunScenarioAsync(
             GivenAConfirmedOrder,
+            GivenTheDeadlineForResidentCancellationIsInThePast,
             GivenTheResidentIsAllowedToCancelWithoutFee,
             WhenTheResidentCancelsTheReservation,
             ThenTheRequestToCancelTheReservationIsSuccessful,
