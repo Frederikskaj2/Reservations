@@ -18,7 +18,7 @@ public static class ImportBankTransactionsShell
         CancellationToken cancellationToken) =>
         from newTransactions in bankTransactionsParser.ParseBankTransactions(command.Transactions).ToAsync()
         from existingTransactions in ReadExistingTransactions(reader, cancellationToken)
-        from output in ImportBankTransactionsCore(new(newTransactions, existingTransactions)).ToAsync()
+        from output in ImportBankTransactionsCore(new(command, newTransactions, existingTransactions)).ToAsync()
         from _ in writer.Write(tracker => TrackEntities(output, tracker), cancellationToken).Map(_ => unit).MapWriteError<ImportError>()
         select new ImportResult(output.Transactions.Count, output.DateRange, output.LatestImportStartDate);
 
@@ -31,9 +31,9 @@ public static class ImportBankTransactionsShell
         TryUpsertImportEntity(output, tracker.Add(output.Transactions));
 
     static EntityTracker TryUpsertImportEntity(ImportBankTransactionsOutput output, EntityTracker tracker) =>
-        output.ImportStartDate.Case switch
+        output.Import.Case switch
         {
-            LocalDate importStartDate => tracker.Upsert(new Import(importStartDate)),
+            Import import => tracker.Upsert(import),
             _ => tracker,
         };
 }

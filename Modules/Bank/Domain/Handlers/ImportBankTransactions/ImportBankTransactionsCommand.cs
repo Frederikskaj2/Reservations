@@ -1,3 +1,5 @@
-﻿namespace Frederikskaj2.Reservations.Bank;
+﻿using NodaTime;
 
-public record ImportBankTransactionsCommand(string Transactions);
+namespace Frederikskaj2.Reservations.Bank;
+
+public record ImportBankTransactionsCommand(Instant Timestamp, string Transactions);

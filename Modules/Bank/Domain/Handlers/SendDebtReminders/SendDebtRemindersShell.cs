@@ -20,9 +20,40 @@ public static class SendDebtRemindersShell
         IEntityWriter writer,
         SendDebtRemindersCommand command,
         CancellationToken cancellationToken) =>
+        from debtReminderEntity in reader.ReadWithETag<DebtReminder>(DebtReminder.SingletonId, cancellationToken).NotFoundToOption()
+        from importEntity in reader.Read<Import>(Import.SingletonId, cancellationToken).NotFoundToOption()
+        from _ in UpdateDebtRemindersWhenThereIsANewBankTransactionsImport(
+            emailService, options, reader, writer, command, debtReminderEntity, importEntity, cancellationToken)
+        select unit;
+
+    static EitherAsync<Failure<Unit>, Unit> UpdateDebtRemindersWhenThereIsANewBankTransactionsImport(
+        IBankEmailService emailService,
+        OrderingOptions options,
+        IEntityReader reader,
+        IEntityWriter writer,
+        SendDebtRemindersCommand command,
+        Option<ETaggedEntity<DebtReminder>> debtReminderEntityOption,
+        Option<Import> importOption,
+        CancellationToken cancellationToken) =>
+        (debtReminderEntityOption.Map(entity => entity.Value).Case, importOption.Case) switch
+        {
+            (DebtReminder debtReminder, Import import) when debtReminder.LatestExecutionTime < import.Timestamp =>
+                SendDebtReminders(emailService, options, reader, writer, command, debtReminderEntityOption, cancellationToken),
+            (null, Import) => SendDebtReminders(emailService, options, reader, writer, command, debtReminderEntityOption, cancellationToken),
+            _ => unit,
+        };
+
+    static EitherAsync<Failure<Unit>, Unit> SendDebtReminders(
+        IBankEmailService emailService,
+        OrderingOptions options,
+        IEntityReader reader,
+        IEntityWriter writer,
+        SendDebtRemindersCommand command,
+        Option<ETaggedEntity<DebtReminder>>  debtReminderEntityOption,
+        CancellationToken cancellationToken) =>
         from userEntities in reader.QueryWithETag(GetQuery(command.Timestamp.Minus(options.RemindUsersAboutDebtInterval)), cancellationToken).MapReadError()
         let output = SendDebtReminderCore(new(command, userEntities.ToValues()))
-        from _1 in Write(writer, userEntities, output.UsersToUpdate, cancellationToken)
+        from _1 in Write(writer, userEntities, debtReminderEntityOption, output.UsersToUpdate, output.DebtReminder, cancellationToken)
         from _2 in SendDebtReminderEmails(emailService, options, output.UsersToRemind, cancellationToken)
         select unit;
 
@@ -32,12 +63,14 @@ public static class SendDebtRemindersShell
     static EitherAsync<Failure<Unit>, Seq<(EntityOperation Operation, ETag ETag)>> Write(
         IEntityWriter writer,
         Seq<ETaggedEntity<User>> userEntities,
+        Option<ETaggedEntity<DebtReminder>> debtReminderEntityOption,
         Seq<User> userToUpdate,
+        DebtReminder debtReminder,
         CancellationToken cancellationToken) =>
         writer
             .Write(
-                collector => collector.Add(userEntities),
-                tracker => tracker.Update(userToUpdate),
+                collector => collector.Add(userEntities).Add(debtReminderEntityOption.ToSeq()),
+                tracker => tracker.Update(userToUpdate).AddOrUpdate(debtReminder),
                 cancellationToken)
             .MapWriteError();
 

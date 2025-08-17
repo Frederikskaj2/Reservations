@@ -23,12 +23,12 @@ static class Validator
     static readonly Encoding iso8859Encoding = Encoding.GetEncoding("iso-8859-1");
 
     public static EitherAsync<Failure<ImportError>, ImportBankTransactionsCommand> ValidateFormFile(
-        HttpContext httpContext, CancellationToken cancellationToken) =>
+        Instant timestamp, HttpContext httpContext, CancellationToken cancellationToken) =>
         httpContext.Request.Form.Files.Count is 1
-            ? GetFile(httpContext.Request.Form.Files[0], cancellationToken)
+            ? GetFile(timestamp, httpContext.Request.Form.Files[0], cancellationToken)
             : Failure.New(HttpStatusCode.UnprocessableEntity, ImportError.InvalidRequest, "None or too many files are provided.");
 
-    static EitherAsync<Failure<ImportError>, ImportBankTransactionsCommand> GetFile(IFormFile file, CancellationToken cancellationToken)
+    static EitherAsync<Failure<ImportError>, ImportBankTransactionsCommand> GetFile(Instant timestamp, IFormFile file, CancellationToken cancellationToken)
     {
         return Run().ToAsync();
 
@@ -36,7 +36,7 @@ static class Validator
         {
             await using var memoryStream = new MemoryStream((int) file.Length);
             await file.CopyToAsync(memoryStream, cancellationToken);
-            return new ImportBankTransactionsCommand(iso8859Encoding.GetString(memoryStream.ToArray()));
+            return new ImportBankTransactionsCommand(timestamp, iso8859Encoding.GetString(memoryStream.ToArray()));
         }
     }
 

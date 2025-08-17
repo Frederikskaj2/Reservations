@@ -51,6 +51,18 @@ public class EntityTracker
                 entity => Add(entity.Id, entity.Value),
                 entity => Update(entityMap, entity.Id, entity.Value)));
 
+    public EntityTracker AddOrUpdate<T>(T value) where T : class, IHasId
+    {
+        var id = value.GetId();
+        var key = GetKey(id, value.GetType());
+        var hashMap = entityMap.Find(key).Case switch
+        {
+            Entity { Operation: Operation.None } entity => UpdateIfModified(entityMap, key, entity, value),
+            _ => Add(id, value),
+        };
+        return new(hashMap);
+    }
+
     public EntityTracker Upsert<T>(T value) where T : class, IHasId =>
         new(entityMap.Add(GetKey(value.GetId(), value.GetType()), new(value, Operation.Upsert, null)));
 

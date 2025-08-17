@@ -17,13 +17,14 @@ class ImportBankTransactionsEndpoint
     [Authorize(Roles = nameof(Roles.Bookkeeping))]
     public static Task<IResult> Handle(
         [FromServices] IBankTransactionsParser bankTransactionsParser,
+        [FromServices] IDateProvider dateProvider,
         [FromServices] IEntityReader entityReader,
         [FromServices] IEntityWriter entityWriter,
         [FromServices] ILogger<ImportBankTransactionsEndpoint> logger,
         HttpContext httpContext)
     {
         var either =
-            from command in ValidateFormFile(httpContext, httpContext.RequestAborted)
+            from command in ValidateFormFile(dateProvider.Now, httpContext, httpContext.RequestAborted)
             from result in ImportBankTransactions(bankTransactionsParser, entityReader, entityWriter, command, httpContext.RequestAborted)
             select new ImportBankTransactionsResponse(result.Count, result.DateRange.ToNullableReference(), result.LatestImportStartDate.ToNullable());
         return either.ToResult(logger, httpContext);

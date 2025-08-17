@@ -2,4 +2,7 @@
 
 namespace Frederikskaj2.Reservations.Bank;
 
-record ImportBankTransactionsInput(Seq<ImportBankTransaction> NewTransactions, Seq<BankTransaction> ExistingBankTransaction);
+record ImportBankTransactionsInput(
+    ImportBankTransactionsCommand Command,
+    Seq<ImportBankTransaction> NewTransactions,
+    Seq<BankTransaction> ExistingBankTransaction);
