@@ -84,7 +84,6 @@ static class ConfirmOrders
         {
             Reservations = order.Reservations.Map(TryConfirmReservation),
             Audits = order.Audits.Add(OrderAudit.ConfirmOrder(timestamp, latestTransaction.AdministratorId, latestTransaction.TransactionId)),
-            Flags = order.Flags | OrderFlags.IsCleaningRequired,
         };
 
     static Reservation TryConfirmReservation(Reservation reservation) =>

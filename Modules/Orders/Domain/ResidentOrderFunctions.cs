@@ -89,7 +89,7 @@ static class ResidentOrderFunctions
         new(
             orderId,
             residentId,
-            OrderFlags.None,
+            OrderFlags.IsCleaningRequired,
             timestamp,
             new Resident(None, Empty),
             CreateReservations(options, holidays, reservations),

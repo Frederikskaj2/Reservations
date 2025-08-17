@@ -23,7 +23,7 @@ static class SendLockBoxCodes
                     .Map((index, reservation) => new ReservationWithOrder(reservation, order, index))
                     .Filter(
                         reservationWithOrder =>
-                            reservationWithOrder.Reservation.Status is ReservationStatus.Confirmed &&
+                            reservationWithOrder.Reservation.Status is  ReservationStatus.Reserved or ReservationStatus.Confirmed &&
                             !reservationWithOrder.Reservation.SentEmails.HasFlag(ReservationEmails.LockBoxCode) &&
                             reservationWithOrder.Reservation.Extent.Date < latestDate))
             .ToSeq();

@@ -29,7 +29,7 @@ public partial class SchedulingWithTwoOrders
             GivenAConfirmedReservation,
             GivenAnotherReservedReservation,
             WhenTheCleaningScheduleIsRetrieved,
-            ThenCleaningIsScheduledAfterTheFirstReservationIgnoringTheSecond);
+            ThenCleaningIsScheduledBetweenTheReservations);
 
     [Scenario]
     public Task OneOwnerReservationAnOneConfirmedReservation() =>
