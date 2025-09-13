@@ -34,17 +34,17 @@ public static class CleaningFunctions
         CreateCleaningSchedule(
             options,
             id,
-            GetReservationsInRange(GetReservations(options, startDate, orders), startDate.PlusDays(options.CleaningSchedulePeriodInDays)));
+            GetConfirmedReservationsInRange(GetConfirmedReservations(options, startDate, orders), startDate.PlusDays(options.CleaningSchedulePeriodInDays)));
 
-    static Seq<ReservationWithOrder> GetReservations(OrderingOptions options, LocalDate startDate, Seq<Order> orders) =>
+    static Seq<ReservationWithOrder> GetConfirmedReservations(OrderingOptions options, LocalDate startDate, Seq<Order> orders) =>
         orders
             .Bind(order => order.Reservations
                 .Map(reservation => new ReservationWithOrder(reservation, order))
                 .Filter(reservationWithOrder =>
-                    reservationWithOrder.Reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed or ReservationStatus.Settled &&
+                    reservationWithOrder.Reservation.Status is ReservationStatus.Confirmed or ReservationStatus.Settled &&
                     reservationWithOrder.Reservation.Extent.Ends().PlusDays(options.AdditionalDaysWhereCleaningCanBeDone) >= startDate));
 
-    static Seq<ReservationWithOrder> GetReservationsInRange(Seq<ReservationWithOrder> reservations, LocalDate endDate) =>
+    static Seq<ReservationWithOrder> GetConfirmedReservationsInRange(Seq<ReservationWithOrder> reservations, LocalDate endDate) =>
         reservations.Filter(reservation => reservation.Reservation.Extent.Ends() <= endDate);
 
     static CleaningSchedule CreateCleaningSchedule(OrderingOptions options, CleaningScheduleId id, Seq<ReservationWithOrder> reservations) =>

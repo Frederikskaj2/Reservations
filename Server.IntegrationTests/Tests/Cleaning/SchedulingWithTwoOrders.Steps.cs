@@ -60,4 +60,15 @@ sealed partial class SchedulingWithTwoOrders(SessionFixture session) : CleaningF
         (cleaningTask.End.Date - cleaningTask.Begin.Date).Days.Should().Be(IntervalInDays);
         return Task.CompletedTask;
     }
+
+    Task ThenCleaningIsScheduledAfterTheFirstReservationIgnoringTheSecond()
+    {
+        var cleaningTask1 = GetCleaningTaskForReservation(CleaningTasks, Reservation1);
+        var cleaningTask2 = GetCleaningTaskForReservation(CleaningTasks, Reservation2);
+        cleaningTask1.Should().NotBeNull();
+        cleaningTask1.End.Should().Be(Reservation1.Extent.Ends().PlusDays(AdditionalDaysWhereCleaningCanBeDone).At(CheckinTime));
+        (cleaningTask1.End.Date - cleaningTask1.Begin.Date).Days.Should().Be(AdditionalDaysWhereCleaningCanBeDone);
+        cleaningTask2.Should().BeNull();
+        return Task.CompletedTask;
+    }
 }
