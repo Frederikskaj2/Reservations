@@ -31,14 +31,14 @@ public class OrderingOptions
         },
     };
 
-    public int ReservationIsNotAllowedBeforeDaysFromNow { get; init; } = 5;
+    public int ReservationIsNotAllowedBeforeDaysFromNow { get; init; } = 10;
     public int ReservationIsNotAllowedAfterDaysFromNow { get; init; } = 274;
     // The key code logic expects that at most two key codes are required for a single reservation.
     public int MaximumAllowedReservationNights { get; init; } = 7;
     public LocalTime CheckInTime { get; init; } = new(12, 0);
     public LocalTime CheckOutTime { get; init; } = new(10, 0);
     public Amount CancellationFee { get; init; } = 200;
-    public int MinimumCancellationNoticeInDays { get; init; } = 5;
+    public int MinimumCancellationNoticeInDays { get; init; } = 14;
     public Duration CancellationWithoutFeeDuration { get; init; } = Duration.FromDays(5);
     public string PayInAccountNumber { get; init; } = "9444-12501110";
     public Period RecentOrdersMaximumAge { get; init; } = Period.FromDays(7);

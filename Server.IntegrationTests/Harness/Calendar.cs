@@ -25,9 +25,9 @@ class Calendar
         type switch
         {
             TestReservationType.Normal => 15,
-            TestReservationType.Soon => 6,
+            TestReservationType.Soon => 11,
             TestReservationType.Tomorrow => 1,
-            TestReservationType.Monday => GetPreviousMonday(date.PlusDays(15)).Minus(date).Days,
+            TestReservationType.Monday => GetPreviousMonday(date.PlusDays(20)).Minus(date).Days,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, message: null),
         };
 
