@@ -35,7 +35,7 @@ sealed partial class LockBoxCodes(SessionFixture session) : FeatureFixture, ISce
 
     Task GivenTheFirstReservationWillStartInAFewDays()
     {
-        session.NowOffset = Order.Reservations.First().Extent.Date.PlusDays(-1) - session.CurrentDate;
+        session.NowOffset = Period.Between(session.CurrentDate, Order.Reservations.First().Extent.Date.PlusDays(-1), PeriodUnits.Days);
         return Task.CompletedTask;
     }
 

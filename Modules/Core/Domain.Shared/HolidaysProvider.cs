@@ -25,12 +25,10 @@ public static class HolidaysProvider
         yield return GetNextDate(startingFrom, 12, 26);
 
         var nextYear = startingFrom.PlusYears(1);
-        foreach (var date in GetEasterRelatedHolidays(GetEaster(startingFrom.Year)))
-            if (startingFrom <= date && date < nextYear)
-                yield return date;
-        foreach (var date in GetEasterRelatedHolidays(GetEaster(nextYear.Year)))
-            if (startingFrom <= date && date < nextYear)
-                yield return date;
+        foreach (var date in GetEasterRelatedHolidays(GetEaster(startingFrom.Year)).Where(date => startingFrom <= date && date < nextYear))
+            yield return date;
+        foreach (var date in GetEasterRelatedHolidays(GetEaster(nextYear.Year)).Where(date => startingFrom <= date && date < nextYear))
+            yield return date;
     }
 
     static LocalDate GetNextDate(LocalDate date, int month, int day)
