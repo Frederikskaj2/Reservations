@@ -4,7 +4,7 @@ using LanguageExt;
 
 namespace Frederikskaj2.Reservations.Cleaning;
 
-public record CleaningSchedule(CleaningScheduleId CleaningScheduleId, Seq<CleaningTask> CleaningTasks, Seq<ReservedDay> ReservedDays) : IHasId
+public sealed record CleaningSchedule(CleaningScheduleId CleaningScheduleId, Seq<CleaningTask> CleaningTasks, Seq<ReservedDay> ReservedDays) : IHasId
 {
-    public string GetId() => CleaningScheduleId.GetId();
+    string IHasId.GetId() => CleaningScheduleId.GetId();
 }

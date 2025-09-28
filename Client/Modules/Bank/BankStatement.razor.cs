@@ -145,7 +145,7 @@ partial class BankStatement
             var startDate = new LocalDate(currentYear, currentMonth, 1);
             var endDate = startDate.PlusMonths(1);
             yield return ("startDate", datePattern.Format(startDate));
-            yield return ("sendDate", datePattern.Format(endDate));
+            yield return ("endDate", datePattern.Format(endDate));
         }
 
         if (includeUnknown)

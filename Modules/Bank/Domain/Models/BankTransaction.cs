@@ -5,7 +5,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record BankTransaction(
+public sealed record BankTransaction(
     BankTransactionId BankTransactionId,
     LocalDate Date,
     string Text,
@@ -15,5 +15,5 @@ public record BankTransaction(
 {
     public Option<TransactionId> ReconciledTransactionId { get; init; }
 
-    public string GetId() => BankTransactionId.ToString();
+    string IHasId.GetId() => BankTransactionId.ToString();
 }

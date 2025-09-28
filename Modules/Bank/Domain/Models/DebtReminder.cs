@@ -3,9 +3,9 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record DebtReminder(Instant LatestExecutionTime) : IHasId
+public sealed record DebtReminder(Instant LatestExecutionTime) : IHasId
 {
     public const string SingletonId = "";
 
-    public string GetId() => SingletonId;
+    string IHasId.GetId() => SingletonId;
 }

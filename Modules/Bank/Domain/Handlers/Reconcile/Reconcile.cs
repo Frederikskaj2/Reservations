@@ -41,7 +41,7 @@ static class Reconcile
             Activity.PayOut,
             input.User.UserId,
             None,
-            PayOut(input.BankTransaction.Amount, GetPayOutExcessAmount(input.BankTransaction.Amount, input.User)));
+            PayOut(-input.BankTransaction.Amount, GetPayOutExcessAmount(-input.BankTransaction.Amount, input.User)));
 
     static Amount GetPayOutExcessAmount(Amount amount, User user) =>
         GetPayOutExcessAmount(amount, user.Accounts[Account.AccountsPayable]);

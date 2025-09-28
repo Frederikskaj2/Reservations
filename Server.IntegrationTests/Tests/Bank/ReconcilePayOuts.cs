@@ -19,9 +19,19 @@ public partial class ReconcilePayOuts
             GivenASettledOrder,
             GivenAPayOutIsCreated,
             GivenBankTransactionsAreImported,
-            WhenTheTransactionIsReconciled,
+            WhenTheTransactionIsReconciledWithThePayOut,
             ThenTheBankTransactionIsReconciled,
             ThenThePayOutIsDeleted,
+            ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0,
+            ThenTheReconciliationIsAudited);
+
+    [Scenario]
+    public Task ReconcileCreditTransaction() =>
+        Runner.RunScenarioAsync(
+            GivenASettledOrder,
+            GivenBankTransactionsAreImported,
+            WhenTheTransactionIsReconciledToTheResident,
+            ThenTheBankTransactionIsReconciled,
             ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0,
             ThenTheReconciliationIsAudited);
 }

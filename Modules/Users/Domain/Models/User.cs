@@ -5,7 +5,7 @@ using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Users;
 
-public record User(
+public sealed record User(
     UserId UserId,
     Seq<EmailStatus> Emails,
     string FullName,
@@ -38,8 +38,6 @@ public record User(
     public bool HasDebt() => Balance() > Amount.Zero;
 
     public bool IsOwedMoney() => Balance() < Amount.Zero;
-
-    public static string GetId(UserId userId) => userId.ToString()!;
 
     string IHasId.GetId() => UserId.GetId();
 }

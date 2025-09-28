@@ -3,9 +3,9 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record Import(Instant Timestamp, LocalDate StartDate) : IHasId
+public sealed record Import(Instant Timestamp, LocalDate StartDate) : IHasId
 {
     public const string SingletonId = "";
 
-    public string GetId() => SingletonId;
+    string IHasId.GetId() => SingletonId;
 }

@@ -5,7 +5,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Orders;
 
-public record Transaction(
+public sealed record Transaction(
     TransactionId TransactionId,
     LocalDate Date,
     UserId AdministratorId,
@@ -16,7 +16,5 @@ public record Transaction(
     AccountAmounts Amounts)
     : IHasId
 {
-    public static string GetId(TransactionId transactionId) => transactionId.ToString()!;
-
     string IHasId.GetId() => TransactionId.GetId();
 }

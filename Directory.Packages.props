@@ -10,15 +10,15 @@
         <PackageVersion Include="Blazored.LocalStorage" Version="4.5.0"/>
         <PackageVersion Include="Blazorise.Bootstrap5" Version="1.7.7"/>
         <PackageVersion Include="Blazorise.Icons.FontAwesome" Version="1.7.7"/>
-        <PackageVersion Include="Bogus" Version="35.6.3"/>
+        <PackageVersion Include="Bogus" Version="35.6.4"/>
         <PackageVersion Include="coverlet.collector" Version="6.0.4"/>
         <PackageVersion Include="FluentAssertions.Analyzers" Version="0.34.1"/>
         <PackageVersion Include="FluentAssertions" Version="7.2.0"/>
         <PackageVersion Include="LanguageExt.Core" Version="4.4.9"/>
-        <PackageVersion Include="libphonenumber-csharp" Version="9.0.13"/>
+        <PackageVersion Include="libphonenumber-csharp" Version="9.0.15"/>
         <PackageVersion Include="LightBDD.XUnit2" Version="3.11.0"/>
         <PackageVersion Include="Liversage.Primitives" Version="4.2.11"/>
-        <PackageVersion Include="Meziantou.Analyzer" Version="2.0.219"/>
+        <PackageVersion Include="Meziantou.Analyzer" Version="2.0.221"/>
         <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9"/>
         <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.9"/>
         <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="9.0.9"/>
@@ -37,7 +37,7 @@
         <PackageVersion Include="Microsoft.Net.Http.Headers" Version="9.0.5"/>
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
         <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15"/>
-        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.4"/>
         <PackageVersion Include="NodaTime" Version="3.2.2"/>
         <PackageVersion Include="NSubstitute.Analyzers.CSharp" Version="1.0.17"/>
         <PackageVersion Include="NSubstitute" Version="5.3.0"/>

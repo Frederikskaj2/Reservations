@@ -7,6 +7,7 @@ using System.Linq;
 using static Frederikskaj2.Reservations.Orders.CancelReservationFunctions;
 using static Frederikskaj2.Reservations.Orders.HistoryOrderFunctions;
 using static Frederikskaj2.Reservations.Orders.ResidentBalanceFunctions;
+using static Frederikskaj2.Reservations.Orders.TransactionAmounts;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Orders;
@@ -60,8 +61,8 @@ static class CancelResidentReservations
 
     static AccountAmounts GetCancelReservationsAmounts(Seq<Reservation> cancelledReservations, Amount fee) =>
         cancelledReservations.Any(reservation => reservation.Status is ReservationStatus.Confirmed)
-            ? TransactionAmounts.CancelPaidReservation(GetCancelledReservationsPrice(cancelledReservations), fee)
-            : TransactionAmounts.CancelUnpaidReservation(GetCancelledReservationsPrice(cancelledReservations), fee);
+            ? CancelPaidReservation(GetCancelledReservationsPrice(cancelledReservations), fee)
+            : CancelUnpaidReservation(GetCancelledReservationsPrice(cancelledReservations), fee);
 
     static Price GetCancelledReservationsPrice(Seq<Reservation> cancelledReservations) =>
         cancelledReservations.Fold(

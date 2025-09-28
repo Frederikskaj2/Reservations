@@ -4,7 +4,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record PayOut(PayOutId PayOutId, Instant Timestamp, UserId UserId, Amount Amount) : IHasId
+public sealed record PayOut(PayOutId PayOutId, Instant Timestamp, UserId UserId, Amount Amount) : IHasId
 {
-    public string GetId() => PayOutId.GetId();
+    string IHasId.GetId() => PayOutId.GetId();
 }

@@ -5,7 +5,7 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Orders;
 
-public record Order(
+public sealed record Order(
     OrderId OrderId,
     UserId UserId,
     OrderFlags Flags,
@@ -36,8 +36,6 @@ public record Order(
     public bool IsConfirmed() => Reservations.All(reservation => reservation.Status is ReservationStatus.Confirmed);
 
     public Reservation this[ReservationIndex index] => Reservations[index.ToInt32()];
-
-    public static string GetId(OrderId orderId) => orderId.ToString()!;
 
     string IHasId.GetId() => OrderId.GetId();
 }
