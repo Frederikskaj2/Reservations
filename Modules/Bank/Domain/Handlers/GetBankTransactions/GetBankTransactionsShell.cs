@@ -5,6 +5,7 @@ using NodaTime;
 using System;
 using System.Linq.Expressions;
 using System.Threading;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 
 namespace Frederikskaj2.Reservations.Bank;
 
@@ -19,7 +20,7 @@ public static class GetBankTransactionsShell
         select transactions;
 
     static IProjectedQuery<BankTransaction> GetQuery(GetBankTransactionsQuery query) =>
-        QueryFactory.Query<BankTransaction>().Where(GetFilterPredicate(query)).OrderBy(transaction => transaction.BankTransactionId).Project();
+        Query<BankTransaction>().Where(GetFilterPredicate(query)).OrderBy(transaction => transaction.BankTransactionId).Project();
 
     static Expression<Func<BankTransaction, bool>> GetFilterPredicate(GetBankTransactionsQuery query) =>
         truePredicate

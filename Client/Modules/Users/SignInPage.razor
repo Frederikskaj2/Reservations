@@ -12,11 +12,11 @@
             }
             else if (signInError is SignInError.LockedOut)
             {
-                <text>Din bruger er blevet blokeret i fem minutter fordi der har været for mange forsøg på at logge ind med en forkert adgangskode.</text>
+                @:Din bruger er blevet blokeret i fem minutter fordi der har været for mange forsøg på at logge ind med en forkert adgangskode.
             }
             else
             {
-                <text>Der er opstået en fejl, og du blev ikke logget ind.</text>
+                @:Der er opstået en fejl, og du blev ikke logget ind.
             }
             <CloseButton Clicked="DismissErrorAlert"/>
         </Alert>

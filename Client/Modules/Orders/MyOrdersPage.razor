@@ -60,11 +60,11 @@
                                             <Button Color="Color.Light" Size="Size.Small" Class="btn-fixed float-end" Clicked="() => EditOrder(order)">
                                                 @if (order.CanBeEdited)
                                                 {
-                                                    <text>Redigér</text>
+                                                    @:Redigér
                                                 }
                                                 else
                                                 {
-                                                    <text>Vis</text>
+                                                    @:Vis
                                                 }
                                             </Button>
                                         }

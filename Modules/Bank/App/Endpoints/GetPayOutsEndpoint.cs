@@ -16,12 +16,14 @@ class GetPayOutsEndpoint
 
     [Authorize(Roles = nameof(Roles.Bookkeeping))]
     public static Task<IResult> Handle(
+        [FromServices] IBankingDateProvider bankingDateProvider,
         [FromServices] IEntityReader entityReader,
+        [FromServices] ITimeConverter timeConverter,
         [FromServices] ILogger<GetPayOutsEndpoint> logger,
         HttpContext httpContext)
     {
         var either =
-            from payOuts in GetPayOuts(entityReader, httpContext.RequestAborted)
+            from payOuts in GetPayOuts(bankingDateProvider, entityReader, timeConverter, httpContext.RequestAborted)
             select new GetPayOutsResponse(CreatePayOuts(payOuts));
         return either.ToResult(logger, httpContext);
     }

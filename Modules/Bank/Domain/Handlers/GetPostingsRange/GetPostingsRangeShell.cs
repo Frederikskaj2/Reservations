@@ -4,16 +4,17 @@ using Frederikskaj2.Reservations.Persistence;
 using LanguageExt;
 using System.Threading;
 using static Frederikskaj2.Reservations.Bank.GetPostingsRange;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 
 namespace Frederikskaj2.Reservations.Bank;
 
 public static class GetPostingsRangeShell
 {
     static readonly IProjectedQuery<Transaction> getEarliestTransactionQuery =
-        QueryFactory.Query<Transaction>().Top(1).OrderBy(transaction => transaction.Timestamp).Project();
+        Query<Transaction>().Top(1).OrderBy(transaction => transaction.Timestamp).Project();
 
     static readonly IProjectedQuery<Transaction> getLatestTransactionQuery =
-        QueryFactory.Query<Transaction>().Top(1).OrderByDescending(transaction => transaction.Timestamp).Project();
+        Query<Transaction>().Top(1).OrderByDescending(transaction => transaction.Timestamp).Project();
 
     public static EitherAsync<Failure<Unit>, MonthRange> GetPostingsRange(
         IEntityReader reader, GetPostingsRangeQuery query, CancellationToken cancellationToken) =>

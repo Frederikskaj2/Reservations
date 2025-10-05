@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading;
 using static Frederikskaj2.Reservations.Persistence.IdGenerator;
 using static Frederikskaj2.Reservations.Users.UsersFunctions;
+using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Bank;
 
@@ -18,7 +19,7 @@ public static class CreatePayOutShell
         from id in CreateId(reader, writer, nameof(PayOut), cancellationToken)
         let payOut = new PayOut(id, command.Timestamp, command.ResidentId, command.Amount)
         from tuples in writer.Write(tracker => tracker.Add(payOut), cancellationToken).MapWriteError()
-        select new PayOutDetails(payOut, tuples[0].ETag, userExcerpt);
+        select new PayOutDetails(payOut, tuples[0].ETag, userExcerpt, None);
 
     static Either<Failure<Unit>, UserExcerpt> GetUserExcerpt(UserId userId, Option<UserExcerpt> userExcerptOption) =>
         userExcerptOption.Case switch

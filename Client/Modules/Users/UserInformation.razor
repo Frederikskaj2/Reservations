@@ -83,14 +83,14 @@
                                     foreach (var orderId in User.Orders)
                                     {
                                         var url = $"{UrlPath.Orders}/{orderId}";
-                                        <text>@delimiter</text>
+                                        @delimiter
                                         <a href="@url">@orderId</a>
                                         delimiter = ", ";
                                     }
                                 }
                                 else
                                 {
-                                    <text>(Ingen aktuelle bestillinger)</text>
+                                    @:(Ingen aktuelle bestillinger)
                                 }
                             }
                         </div>
@@ -107,14 +107,14 @@
                                     foreach (var orderId in User.HistoryOrders)
                                     {
                                         var url = $"{UrlPath.Orders}/{orderId}";
-                                        <text>@delimiter</text>
+                                        @delimiter
                                         <a href="@url">@orderId</a>
                                         delimiter = ", ";
                                     }
                                 }
                                 else
                                 {
-                                    <text>(Ingen tidligere bestillinger)</text>
+                                    @:(Ingen tidligere bestillinger)
                                 }
                             }
                         </div>

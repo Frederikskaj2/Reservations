@@ -2,7 +2,6 @@
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using Microsoft.AspNetCore.Components;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;

@@ -7,6 +7,7 @@ using System.Threading;
 using static Frederikskaj2.Reservations.Bank.Reconcile;
 using static Frederikskaj2.Reservations.Orders.PaymentFunctions;
 using static Frederikskaj2.Reservations.Persistence.IdGenerator;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Bank;
@@ -18,17 +19,25 @@ public static class ReconcileShell
         IJobScheduler jobScheduler,
         OrderingOptions options,
         IEntityReader reader,
+        ITimeConverter timeConverter,
         IEntityWriter writer,
         ReconcileCommand command,
         CancellationToken cancellationToken) =>
         from bankTransactionEntity in reader.ReadWithETag<BankTransaction>(command.BankTransactionId, cancellationToken).MapReadError()
         from userEntity in reader.ReadWithETag<User>(command.ResidentId, cancellationToken).MapReadError()
         from transactionId in CreateId(reader, writer, nameof(Transaction), cancellationToken)
-        let output = ReconcileCore(new(command, bankTransactionEntity.Value, userEntity.Value, transactionId))
+        from import in reader.Read<Import>(Import.SingletonId, cancellationToken).MapReadError()
+        let latestImportDate = timeConverter.GetDate(import.Timestamp)
+        from payOutEntities in reader.QueryWithETag(GetUserPayOutsQuery(command.ResidentId), cancellationToken).MapReadError()
+        let input = new ReconcileInput(command, bankTransactionEntity.Value, userEntity.Value, transactionId, latestImportDate, payOutEntities)
+        let output = ReconcileCore(timeConverter, input)
         from _1 in Write(writer, bankTransactionEntity, userEntity, output, cancellationToken)
         from _2 in SendEmail(emailService, options, output.User, output.BankTransaction.Amount, cancellationToken)
         from _3 in ConfirmOrders(jobScheduler, output.BankTransaction.Amount).ToRightAsync<Failure<Unit>, Unit>()
         select output.BankTransaction;
+
+    static IQuery<PayOut> GetUserPayOutsQuery(UserId userId) =>
+        Query<PayOut>().Where(payOut => payOut.UserId == userId);
 
     static EitherAsync<Failure<Unit>, Seq<(EntityOperation Operation, ETag ETag)>> Write(
         IEntityWriter writer,
@@ -39,9 +48,16 @@ public static class ReconcileShell
         writer
             .Write(
                 collector => collector.Add(bankTransactionEntity).Add(userEntity),
-                tracker => tracker.Update(output.BankTransaction).Update(output.User).Add(output.Transaction),
+                tracker => DeletePayOutIfMatched(output.PayOutToDelete, tracker).Update(output.BankTransaction).Update(output.User).Add(output.Transaction),
                 cancellationToken)
             .MapWriteError();
+
+    static EntityTracker DeletePayOutIfMatched(Option<ETaggedEntity<PayOut>> entityOption, EntityTracker tracker) =>
+        entityOption.Case switch
+        {
+            ETaggedEntity<PayOut> entity => tracker.Remove<PayOut>(entity.Value.PayOutId, entity.ETag),
+            _ => tracker,
+        };
 
     static EitherAsync<Failure<Unit>, Unit> SendEmail(
         IBankEmailService emailService, OrderingOptions options, User user, Amount amount, CancellationToken cancellationToken) =>

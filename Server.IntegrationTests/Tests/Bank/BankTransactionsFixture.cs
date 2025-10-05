@@ -2,7 +2,6 @@ using FluentAssertions;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
-using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 

@@ -4,6 +4,7 @@ using Frederikskaj2.Reservations.Users;
 using LanguageExt;
 using System.Threading;
 using static Frederikskaj2.Reservations.Orders.GetMyTransactions;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 
 namespace Frederikskaj2.Reservations.Orders;
 
@@ -17,7 +18,7 @@ public static class GetMyTransactionsShell
         select output.MyTransactions;
 
     static IProjectedQuery<Transaction> GetQuery(UserId residentId) =>
-        QueryFactory.Query<Transaction>()
+        Query<Transaction>()
             .Where(transaction => transaction.ResidentId == residentId)
             .OrderBy(transaction => transaction.Date)
             .OrderBy(transaction => transaction.TransactionId)

@@ -2,13 +2,14 @@
 using Frederikskaj2.Reservations.Persistence;
 using LanguageExt;
 using System.Threading;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Users;
 
 public static class DeleteUsersShell
 {
-    static readonly IQuery<User> usersPendingDelete = QueryFactory.Query<User>().Where(user => user.Flags.HasFlag(UserFlags.IsPendingDelete));
+    static readonly IQuery<User> usersPendingDelete = Query<User>().Where(user => user.Flags.HasFlag(UserFlags.IsPendingDelete));
 
     public static EitherAsync<Failure<Unit>, Unit> DeleteUsers(
         IUsersEmailService emailService,
@@ -57,7 +58,7 @@ public static class DeleteUsersShell
 
     static EitherAsync<Failure<Unit>, Seq<ETaggedEntity<UserEmail>>> ReadUserEmailEntities(
         IEntityReader reader, HashSet<string> emailAddresses, CancellationToken cancellationToken) =>
-        ReadUserEmailEntities(reader, QueryFactory.Query<UserEmail>().Where(userEmail => emailAddresses.Contains(userEmail.NormalizedEmail)), cancellationToken);
+        ReadUserEmailEntities(reader, Query<UserEmail>().Where(userEmail => emailAddresses.Contains(userEmail.NormalizedEmail)), cancellationToken);
 
     static EitherAsync<Failure<Unit>, Seq<ETaggedEntity<UserEmail>>> ReadUserEmailEntities(
         IEntityReader reader, IQuery<UserEmail> query, CancellationToken cancellationToken) =>

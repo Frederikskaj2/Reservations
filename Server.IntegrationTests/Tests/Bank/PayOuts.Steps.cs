@@ -41,9 +41,9 @@ sealed partial class PayOuts(SessionFixture session) : FeatureFixture, IScenario
 
     async Task WhenAPayOutIsCreated()
     {
-        var clientCreatePayOutResponse = await session.CreatePayOut(Creditor.UserInformation.UserId, Creditor.Payment.Amount);
-        payout = clientCreatePayOutResponse.PayOut;
-        eTag = clientCreatePayOutResponse.ETag;
+        var createPayOutResponse = await session.CreatePayOut(Creditor.UserInformation.UserId, Creditor.Payment.Amount);
+        payout = createPayOutResponse.PayOut;
+        eTag = createPayOutResponse.ETag;
     }
 
     async Task WhenThePayOutIsDeleted() => await session.DeletePayOut(PayOut.PayOutId, ETag);

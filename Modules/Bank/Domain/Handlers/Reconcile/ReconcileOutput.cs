@@ -1,6 +1,8 @@
 ﻿using Frederikskaj2.Reservations.Orders;
+using Frederikskaj2.Reservations.Persistence;
 using Frederikskaj2.Reservations.Users;
+using LanguageExt;
 
 namespace Frederikskaj2.Reservations.Bank;
 
-record ReconcileOutput(BankTransaction BankTransaction, User User, Transaction Transaction);
+record ReconcileOutput(BankTransaction BankTransaction, User User, Transaction Transaction, Option<ETaggedEntity<PayOut>> PayOutToDelete);

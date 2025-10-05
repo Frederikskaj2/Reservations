@@ -21,11 +21,11 @@
                             <TableRowCell>
                                 @if (item.Type is LineItemType.CancellationFee)
                                 {
-                                    <text>Afbestilling @GetReservationsDescription(item.CancellationFee!)</text>
+                                    @:Afbestilling @GetReservationsDescription(item.CancellationFee!)
                                 }
                                 else if (item.Type is LineItemType.Damages)
                                 {
-                                    <text>Fradrag @GetReservationDescription(item.Damages!.Reservation): @item.Damages.Description</text>
+                                    @:Fradrag @GetReservationDescription(item.Damages!.Reservation): @item.Damages.Description
                                 }
                             </TableRowCell>
                             <TableRowCell Class="text-end">@Formatter.FormatMoneyLong(item.Amount)</TableRowCell>

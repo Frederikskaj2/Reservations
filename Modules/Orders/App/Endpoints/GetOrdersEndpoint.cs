@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using static Frederikskaj2.Reservations.Orders.GetOrdersShell;
 using static Frederikskaj2.Reservations.Orders.Validator;

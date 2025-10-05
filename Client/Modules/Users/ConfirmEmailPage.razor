@@ -21,15 +21,15 @@
                 <Alert Color="Color.Danger" Visible="true">
                     @if (error is ConfirmEmailError.TokenExpired)
                     {
-                        <text>Din bekræftelses-mail er for gammel, så din mail kan ikke bekræftes.</text>
+                        @:Din bekræftelses-mail er for gammel, så din mail kan ikke bekræftes.
                     }
                     else
                     {
-                        <text>Der er sket en fejl, og din mail blev ikke bekræftet.</text>
+                        @:Der er sket en fejl, og din mail blev ikke bekræftet.
                     }
                     @if (email is { Length: > 0 })
                     {
-                        <text>Vi kan sende en ny bekræftelses-mail til @email.</text>
+                        @:Vi kan sende en ny bekræftelses-mail til @email.
                         <div class="alert-button-container">
                             <Button Color="Color.Primary" Class="btn-fixed" Clicked="ResendConfirmEmail">Bekræft mail</Button>
                         </div>

@@ -6,6 +6,7 @@ using System.Threading;
 using static Frederikskaj2.Reservations.LockBox.LockBoxCodesFunctions;
 using static Frederikskaj2.Reservations.Orders.GetMyOrders;
 using static Frederikskaj2.Reservations.Orders.ResidentOrderFactory;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Orders;
@@ -22,6 +23,6 @@ public static class GetMyOrdersShell
 
     static EitherAsync<Failure<Unit>, Seq<Order>> ReadOrders(IEntityReader reader, Seq<OrderId> orderIds, CancellationToken cancellationToken) =>
         !orderIds.IsEmpty
-            ? reader.Query(QueryFactory.Query<Order>().Where(order => orderIds.Contains(order.OrderId)).Project(), cancellationToken).MapReadError()
+            ? reader.Query(Query<Order>().Where(order => orderIds.Contains(order.OrderId)).Project(), cancellationToken).MapReadError()
             : Seq<Order>();
 }

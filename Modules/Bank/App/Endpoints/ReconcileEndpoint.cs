@@ -29,6 +29,7 @@ class ReconcileEndpoint
         [FromServices] IEntityWriter entityWriter,
         [FromServices] IJobScheduler jobScheduler,
         [FromServices] IOptionsSnapshot<OrderingOptions> options,
+        [FromServices] ITimeConverter timeConverter,
         [FromServices] ILogger<ReconcileEndpoint> logger,
         ClaimsPrincipal claimsPrincipal,
         HttpContext httpContext)
@@ -36,7 +37,8 @@ class ReconcileEndpoint
         var either =
             from userId in claimsPrincipal.UserId().ToEitherAsync(Failure.New(HttpStatusCode.Forbidden))
             from command in ValidateReconcile(dateProvider.Now, userId, bankTransactionId, paymentId).ToAsync()
-            from transaction in Reconcile(emailService, jobScheduler, options.Value, entityReader, entityWriter, command, httpContext.RequestAborted)
+            from transaction in Reconcile(
+                emailService, jobScheduler, options.Value, entityReader, timeConverter, entityWriter, command, httpContext.RequestAborted)
             select new ReconcileResponse(CreateBankTransaction(transaction));
         return either.ToResult(logger, httpContext);
     }

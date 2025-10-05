@@ -3,16 +3,17 @@ using Frederikskaj2.Reservations.Persistence;
 using LanguageExt;
 using System.Threading;
 using static Frederikskaj2.Reservations.Bank.GetBankTransactionsRange;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 
 namespace Frederikskaj2.Reservations.Bank;
 
 public static class GetBankTransactionsRangeShell
 {
     static readonly IProjectedQuery<BankTransaction> getEarliestTransactionQuery =
-        QueryFactory.Query<BankTransaction>().Top(1).OrderBy(transaction => transaction.Date).Project();
+        Query<BankTransaction>().Top(1).OrderBy(transaction => transaction.Date).Project();
 
     static readonly IProjectedQuery<BankTransaction> getLatestTransactionQuery =
-        QueryFactory.Query<BankTransaction>().Top(1).OrderByDescending(transaction => transaction.Date).Project();
+        Query<BankTransaction>().Top(1).OrderByDescending(transaction => transaction.Date).Project();
 
     public static EitherAsync<Failure<Unit>, BankTransactionsRange> GetBankTransactionsRange(IEntityReader reader, CancellationToken cancellationToken) =>
         from earliestTransaction in ReadEarliestTransaction(reader, cancellationToken)

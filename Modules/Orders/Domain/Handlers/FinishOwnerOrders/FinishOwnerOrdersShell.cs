@@ -3,14 +3,14 @@ using Frederikskaj2.Reservations.Persistence;
 using LanguageExt;
 using System.Threading;
 using static Frederikskaj2.Reservations.Orders.FinishOwnerOrders;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Orders;
 
 public static class FinishOwnerOrdersShell
 {
-    static readonly IQuery<Order> query = QueryFactory
-        .Query<Order>()
+    static readonly IQuery<Order> query = Query<Order>()
         .Where(order => order.Flags.HasFlag(OrderFlags.IsOwnerOrder) && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder));
 
     public static EitherAsync<Failure<Unit>, Unit> FinishOwnerOrders(

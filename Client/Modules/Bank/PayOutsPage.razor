@@ -23,6 +23,14 @@
             }
             else
             {
+                <Paragraph>Disse beboere har penge til gode som skal udbetales til dem.</Paragraph>
+                @if (payOuts.Any(payOut => payOut.StaleDays.HasValue))
+                {
+                    <Paragraph>
+                        <Strong>Bemærk</Strong> der er en eller flere udbetalinger i næste afsnit som er bestilt for noget tid siden, men som endnu ikke er
+                        afstemt. Hvis de aldrig bliver gennemført og afstemt, skal de slettes fra listen i næste afsnit.
+                    </Paragraph>
+                }
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -69,6 +77,10 @@
             }
             else
             {
+                <Paragraph>
+                    Disse beboere er ved at få overført penge da de har et tilgodehavende. En udbetaling fjernes herfra når den afstemmes i banken, eller den
+                    kan slettes hvis den ikke er ved at blive udbetalt.
+                </Paragraph>
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -77,6 +89,7 @@
                             <TableHeaderCell>Mail</TableHeaderCell>
                             <TableHeaderCell>Telefon</TableHeaderCell>
                             <TableHeaderCell Class="text-end">Beløb</TableHeaderCell>
+                            <TableHeaderCell>Alder</TableHeaderCell>
                             <TableHeaderCell></TableHeaderCell>
                         </TableRow>
                     </TableHeader>
@@ -99,12 +112,34 @@
                                 <TableRowCell>@Formatter.FormatPhone(payOut.UserIdentity.Phone)</TableRowCell>
                                 <TableRowCell Class="text-end">@Formatter.FormatMoneyShort(payOut.Amount)</TableRowCell>
                                 <TableRowCell>
+                                    @if (payOut.StaleDays.HasValue)
+                                    {
+                                        <Icon Name="Blazorise.Icons.FontAwesome.FontAwesomeIcons.TriangleExclamation" TextColor="TextColor.Danger"/>
+                                        if (payOut.StaleDays.Value is 1)
+                                        {
+                                            @:1 dag
+                                        }
+                                        else
+                                        {
+                                            @:@payOut.StaleDays.Value dage
+                                        }
+                                    }
+                                </TableRowCell>
+                                <TableRowCell>
                                     <Button Color="Color.Light" Size="Size.Small" Clicked="() => DeletePayOut(payOut)">Slet</Button>
                                 </TableRowCell>
                             </TableRow>
                         }
                     </TableBody>
                 </Table>
+                @if (payOuts.Any(payOut => payOut.StaleDays.HasValue))
+                {
+                    <Paragraph>
+                        Alder angiver hvor mange dage der er gået fra at udbetalingen blev bestilt til seneste import af bankbevægelser. Hvis en gammel bestilt
+                        udbetaling ikke afstemmes mod en udbetaling i banken, skal den slettes fra listen hvorved den dukker op i listen ovenfor således at
+                        beboeren kan få sit tilgodehavende.
+                    </Paragraph>
+                }
             }
         </Container>
     }

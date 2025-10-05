@@ -5,6 +5,7 @@ using LanguageExt;
 using NodaTime;
 using System.Threading;
 using static Frederikskaj2.Reservations.Orders.ConfirmOrders;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Orders;
@@ -12,7 +13,7 @@ namespace Frederikskaj2.Reservations.Orders;
 public static class ConfirmOrdersShell
 {
     static readonly IQuery<Order> ordersQuery =
-        QueryFactory.Query<Order>().Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder));
+        Query<Order>().Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) && !order.Flags.HasFlag(OrderFlags.IsOwnerOrder));
 
     public static EitherAsync<Failure<Unit>, Unit> ConfirmOrders(
         IOrdersEmailService emailService,
@@ -40,7 +41,7 @@ public static class ConfirmOrdersShell
     static EitherAsync<Failure<Unit>, Seq<ETaggedEntity<User>>> ReadUserEntities(
         IEntityReader reader, HashSet<UserId> residentIds, CancellationToken cancellationToken) =>
         !residentIds.IsEmpty
-            ? reader.QueryWithETag(QueryFactory.Query<User>().Where(user => residentIds.Contains(user.UserId)), cancellationToken).MapReadError()
+            ? reader.QueryWithETag(Query<User>().Where(user => residentIds.Contains(user.UserId)), cancellationToken).MapReadError()
             : Seq<ETaggedEntity<User>>();
 
     static EitherAsync<Failure<Unit>, Seq<TransactionExcerpt>> ReadTransactions(
@@ -64,8 +65,7 @@ public static class ConfirmOrdersShell
         IEntityReader reader, HashSet<UserId> residentIds, Instant onOrAfter, CancellationToken cancellationToken) =>
         reader
             .Query(
-                QueryFactory
-                    .Query<Transaction>()
+                Query<Transaction>()
                     .Where(transaction => residentIds.Contains(transaction.ResidentId) && transaction.Timestamp >= onOrAfter)
                     .Project(transaction =>
                         new TransactionExcerpt(transaction.TransactionId, transaction.AdministratorId, transaction.Timestamp, transaction.ResidentId)),

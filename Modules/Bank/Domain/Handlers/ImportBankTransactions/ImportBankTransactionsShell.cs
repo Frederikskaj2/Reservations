@@ -1,9 +1,9 @@
 ﻿using Frederikskaj2.Reservations.Core;
 using Frederikskaj2.Reservations.Persistence;
 using LanguageExt;
-using NodaTime;
 using System.Threading;
 using static Frederikskaj2.Reservations.Bank.ImportBankTransactions;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Bank;
@@ -24,7 +24,7 @@ public static class ImportBankTransactionsShell
 
     static EitherAsync<Failure<ImportError>, Seq<BankTransaction>> ReadExistingTransactions(IEntityReader reader, CancellationToken cancellationToken) =>
         reader
-            .Query(QueryFactory.Query<BankTransaction>().OrderBy(transaction => transaction.BankTransactionId).Project(), cancellationToken)
+            .Query(Query<BankTransaction>().OrderBy(transaction => transaction.BankTransactionId).Project(), cancellationToken)
             .MapReadError<ImportError, Seq<BankTransaction>>();
 
     static EntityTracker TrackEntities(ImportBankTransactionsOutput output, EntityTracker tracker) =>

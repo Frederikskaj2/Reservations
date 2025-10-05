@@ -8,27 +8,33 @@ namespace Frederikskaj2.Reservations.Core;
 [SuppressMessage("ReSharper", "CommentTypo")]
 public static class HolidaysProvider
 {
-    public static IReadOnlySet<LocalDate> Get(LocalDate today)
+    public static IReadOnlySet<Holiday> Get(LocalDate today)
     {
         var (year, month, _) = today;
         var beginningOfCurrentMonth = new LocalDate(year, month, 1);
         return GetDanishHolidaysForAYear(beginningOfCurrentMonth).ToHashSet();
     }
 
-    static IEnumerable<LocalDate> GetDanishHolidaysForAYear(LocalDate startingFrom)
+    static IEnumerable<Holiday> GetDanishHolidaysForAYear(LocalDate startingFrom)
     {
         // Nytårsdag
-        yield return GetNextDate(startingFrom, 1, 1);
+        yield return new(GetNextDate(startingFrom, 1, 1), IsOnlyBankHoliday: false);
+        // Grundlovsdag
+        yield return new(GetNextDate(startingFrom, 6, 5), IsOnlyBankHoliday: true);
+        // Juleaftensdag
+        yield return new(GetNextDate(startingFrom, 12, 25), IsOnlyBankHoliday: true);
         // Juledag
-        yield return GetNextDate(startingFrom, 12, 25);
+        yield return new(GetNextDate(startingFrom, 12, 25), IsOnlyBankHoliday: false);
         // 2. juledag
-        yield return GetNextDate(startingFrom, 12, 26);
+        yield return new(GetNextDate(startingFrom, 12, 26), IsOnlyBankHoliday: false);
 
         var nextYear = startingFrom.PlusYears(1);
-        foreach (var date in GetEasterRelatedHolidays(GetEaster(startingFrom.Year)).Where(date => startingFrom <= date && date < nextYear))
-            yield return date;
-        foreach (var date in GetEasterRelatedHolidays(GetEaster(nextYear.Year)).Where(date => startingFrom <= date && date < nextYear))
-            yield return date;
+        var thisYearHolidays = GetEasterRelatedHolidays(GetEaster(startingFrom.Year)).Where(holiday => startingFrom <= holiday.Date && holiday.Date < nextYear);
+        var nextYearHolidays = GetEasterRelatedHolidays(GetEaster(nextYear.Year)).Where(holiday => startingFrom <= holiday.Date && holiday.Date < nextYear);
+        foreach (var holiday in thisYearHolidays)
+            yield return holiday;
+        foreach (var holiday in nextYearHolidays)
+            yield return holiday;
     }
 
     static LocalDate GetNextDate(LocalDate date, int month, int day)
@@ -37,22 +43,24 @@ public static class HolidaysProvider
         return date <= thisYear ? thisYear : thisYear.PlusYears(1);
     }
 
-    static IEnumerable<LocalDate> GetEasterRelatedHolidays(LocalDate easter)
+    static IEnumerable<Holiday> GetEasterRelatedHolidays(LocalDate easter)
     {
         // Skærtordag
-        yield return easter.PlusDays(-3);
+        yield return new(easter.PlusDays(days: -3), IsOnlyBankHoliday: false);
         // Langfredag
-        yield return easter.PlusDays(-2);
+        yield return new(easter.PlusDays(days: -2), IsOnlyBankHoliday: false);
         // Påskedag
-        yield return easter;
+        yield return new(easter, IsOnlyBankHoliday: false);
         // 2. påskedag
-        yield return easter.PlusDays(1);
+        yield return new(easter.PlusDays(days: 1), IsOnlyBankHoliday: false);
         // Kristi himmelfartsdag
-        yield return easter.PlusDays(39);
+        yield return new(easter.PlusDays(days: 39), IsOnlyBankHoliday: false);
+        // Kristi himmelfartsdag + 1
+        yield return new(easter.PlusDays(days: 30), IsOnlyBankHoliday: true);
         // Pinsedag
-        yield return easter.PlusDays(49);
+        yield return new(easter.PlusDays(days: 49), IsOnlyBankHoliday: false);
         // 2. pinsedag
-        yield return easter.PlusDays(50);
+        yield return new(easter.PlusDays(days: 50), IsOnlyBankHoliday: false);
     }
 
     static LocalDate GetEaster(int year)

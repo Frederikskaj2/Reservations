@@ -3,12 +3,13 @@ using Frederikskaj2.Reservations.Persistence;
 using Frederikskaj2.Reservations.Users;
 using LanguageExt;
 using System.Threading;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 
 namespace Frederikskaj2.Reservations.Orders;
 
 public static class GetResidentsShell
 {
-    static readonly IProjectedQuery<User> query = QueryFactory.Query<User>()
+    static readonly IProjectedQuery<User> query = Query<User>()
         .Where(user => !user.Flags.HasFlag(UserFlags.IsDeleted) && user.Roles.HasFlag(Roles.Resident))
         .Project();
 

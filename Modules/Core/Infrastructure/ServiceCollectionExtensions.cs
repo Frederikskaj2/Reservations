@@ -16,7 +16,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<JsonConverter, OptionConverter>()
             .AddSingleton<JsonConverter, SeqConverter>()
             .AddSingleton<IJsonTypeInfoResolver, OptionAwareJsonTypeInfoResolver>()
-            .AddScoped<IDateProvider, DateProvider>();
+            .AddScoped<IBankingDateProvider, BankingDateProvider>()
+            .AddScoped<IDateProvider>(serviceProvider => serviceProvider.GetRequiredService<IBankingDateProvider>());
 
     public static IServiceCollection AddJob<TJobRegistration, TJob>(this IServiceCollection services)
         where TJobRegistration : class, IJobRegistration where TJob : class, IJob =>

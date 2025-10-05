@@ -4,12 +4,13 @@ using Frederikskaj2.Reservations.Persistence;
 using LanguageExt;
 using System.Threading;
 using static Frederikskaj2.Reservations.Calendar.GetMyReservedDays;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 
 namespace Frederikskaj2.Reservations.Calendar;
 
 public static class GetMyReservedDaysShell
 {
-    static readonly IProjectedQuery<CalendarReservation> reservationsQuery = QueryFactory.Query<Order>()
+    static readonly IProjectedQuery<CalendarReservation> reservationsQuery = Query<Order>()
         .Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder))
         .Join(
             order => order.Reservations,

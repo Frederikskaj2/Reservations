@@ -4,13 +4,14 @@ using LanguageExt;
 using NodaTime;
 using System.Threading;
 using static Frederikskaj2.Reservations.Orders.GetYearlySummaryRange;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Orders;
 
 public static class GetYearlySummaryRangeShell
 {
-    static readonly IProjectedQuery<LocalDate> getReservationDatesQuery = QueryFactory.Query<Order>()
+    static readonly IProjectedQuery<LocalDate> getReservationDatesQuery = Query<Order>()
         .Where(order => !order.Flags.HasFlag(OrderFlags.IsOwnerOrder))
         .Join<Reservation>(
             order => order.Reservations,

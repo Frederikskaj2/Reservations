@@ -17,5 +17,6 @@ static class PayOutFactory
             CreateUserIdentity(details.User),
             FromUserId(details.User.UserId),
             details.PayOut.Amount,
-            details.ETag);
+            details.ETag,
+            details.StaleDays.ToNullable());
 }

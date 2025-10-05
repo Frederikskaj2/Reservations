@@ -6,6 +6,7 @@ using LanguageExt;
 using NodaTime;
 using System.Threading;
 using static Frederikskaj2.Reservations.Bank.SendDebtReminders;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static Frederikskaj2.Reservations.Users.PaymentIdEncoder;
 using static LanguageExt.Prelude;
 
@@ -58,7 +59,7 @@ public static class SendDebtRemindersShell
         select unit;
 
     static IQuery<User> GetQuery(Instant previousReminder) =>
-        QueryFactory.Query<User>().Where(user => !user.Flags.HasFlag(UserFlags.IsDeleted) && user.LatestDebtReminder <= previousReminder);
+        Query<User>().Where(user => !user.Flags.HasFlag(UserFlags.IsDeleted) && user.LatestDebtReminder <= previousReminder);
 
     static EitherAsync<Failure<Unit>, Seq<(EntityOperation Operation, ETag ETag)>> Write(
         IEntityWriter writer,

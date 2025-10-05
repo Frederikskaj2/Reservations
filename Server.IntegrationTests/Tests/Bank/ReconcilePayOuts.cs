@@ -34,4 +34,28 @@ public partial class ReconcilePayOuts
             ThenTheBankTransactionIsReconciled,
             ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0,
             ThenTheReconciliationIsAudited);
+
+    [Scenario]
+    public Task ReconcileCreditTransactionWhenThereIsAMatchingPayOut() =>
+        Runner.RunScenarioAsync(
+            GivenASettledOrder,
+            GivenAPayOutIsCreated,
+            GivenBankTransactionsAreImported,
+            WhenTheTransactionIsReconciledToTheResident,
+            ThenTheBankTransactionIsReconciled,
+            ThenThePayOutIsDeleted,
+            ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0,
+            ThenTheReconciliationIsAudited);
+
+    [Scenario]
+    public Task ReconcileCreditTransactionWhenThereIsANonMatchingPayOut() =>
+        Runner.RunScenarioAsync(
+            GivenASettledOrder,
+            GivenANonMatchingPayOutIsCreated,
+            GivenBankTransactionsAreImported,
+            WhenTheTransactionIsReconciledToTheResident,
+            ThenTheBankTransactionIsReconciled,
+            ThenThePayOutIsNotDeleted,
+            ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0,
+            ThenTheReconciliationIsAudited);
 }

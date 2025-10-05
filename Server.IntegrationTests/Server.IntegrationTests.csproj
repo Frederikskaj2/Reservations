@@ -49,9 +49,6 @@
         <Compile Update="Tests\Bank\PostingsWithTooMuchPaidOut.Steps.cs">
             <DependentUpon>PostingsWithTooMuchPaidOut.cs</DependentUpon>
         </Compile>
-        <Compile Update="Tests\Orders\UpdateResidentReservations.Steps.cs">
-            <DependentUpon>UpdateResidentReservations.cs</DependentUpon>
-        </Compile>
         <Compile Update="Tests\Bank\ReconcilePayIns.Steps.cs">
             <DependentUpon>ReconcilePayIns.cs</DependentUpon>
         </Compile>
@@ -135,6 +132,9 @@
         </Compile>
         <Compile Update="Tests\Orders\SettleReservation.Steps.cs">
             <DependentUpon>SettleReservation.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Tests\Orders\UpdateResidentReservations.Steps.cs">
+            <DependentUpon>UpdateResidentReservations.cs</DependentUpon>
         </Compile>
         <Compile Update="Tests\Users\AccessTokenCreation.Steps.cs">
             <DependentUpon>AccessTokenCreation.cs</DependentUpon>

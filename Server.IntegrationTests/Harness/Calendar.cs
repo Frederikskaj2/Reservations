@@ -4,6 +4,7 @@ using Frederikskaj2.Reservations.Orders;
 using NodaTime;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 
@@ -36,7 +37,7 @@ class Calendar
 
     static Extent GetNextExtent(LocalDate earliestDate, int nights, PriceGroup priceGroup)
     {
-        var holidays = HolidaysProvider.Get(earliestDate);
+        var holidays = HolidaysProvider.Get(earliestDate).Where(holiday => !holiday.IsOnlyBankHoliday).Select(holiday => holiday.Date).ToHashSet();
         var date = earliestDate;
         while (true)
         {

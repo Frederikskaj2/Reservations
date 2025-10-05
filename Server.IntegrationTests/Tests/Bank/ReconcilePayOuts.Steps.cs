@@ -55,8 +55,17 @@ sealed partial class ReconcilePayOuts(SessionFixture session) : FeatureFixture, 
         payout = clientCreatePayOutResponse.PayOut;
     }
 
-    async Task GivenBankTransactionsAreImported() =>
+    async Task GivenANonMatchingPayOutIsCreated()
+    {
+        var clientCreatePayOutResponse = await session.CreatePayOut(Creditor.UserInformation.UserId, Amount + Amount.FromInt32(100));
+        payout = clientCreatePayOutResponse.PayOut;
+    }
+
+    async Task GivenBankTransactionsAreImported()
+    {
+        session.NowOffset += Period.FromDays(1);
         importedBankTransaction = await session.ImportBankTransaction(PaymentDate, session.UserId(), -Amount);
+    }
 
     async Task WhenTheTransactionIsReconciledWithThePayOut()
     {
@@ -80,6 +89,12 @@ sealed partial class ReconcilePayOuts(SessionFixture session) : FeatureFixture, 
     {
         var getPayOutsResponse = await session.GetPayOuts();
         getPayOutsResponse.PayOuts.Should().NotContainEquivalentOf(new { PayOut.PayOutId });
+    }
+
+    async Task ThenThePayOutIsNotDeleted()
+    {
+        var getPayOutsResponse = await session.GetPayOuts();
+        getPayOutsResponse.PayOuts.Should().ContainEquivalentOf(new { PayOut.PayOutId });
     }
 
     async Task ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0()

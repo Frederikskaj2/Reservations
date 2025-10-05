@@ -6,6 +6,7 @@ using LanguageExt;
 using NodaTime;
 using System.Net;
 using System.Threading;
+using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using OrderId = Frederikskaj2.Reservations.Users.OrderId;
 using static LanguageExt.Prelude;
 
@@ -24,7 +25,7 @@ static class PostingFunctions
         reader.Query(GetPostingsV1Query(month, month.PlusMonths(1)), cancellationToken);
 
     static IProjectedQuery<Posting> GetPostingsV1Query(LocalDate fromDate, LocalDate toDate) =>
-        QueryFactory.Query<Posting>()
+        Query<Posting>()
             .Where(posting => fromDate <= posting.Date && posting.Date < toDate)
             .OrderBy(posting => posting.Date)
             .OrderBy(posting => posting.TransactionId)
@@ -35,7 +36,7 @@ static class PostingFunctions
         select CreatePostings(transactions);
 
     static IProjectedQuery<Transaction> GetPostingsV2Query(LocalDate fromDate, LocalDate toDate) =>
-        QueryFactory.Query<Transaction>()
+        Query<Transaction>()
             .Where(transaction => fromDate <= transaction.Date && transaction.Date < toDate)
             .OrderBy(transaction => transaction.Date)
             .OrderBy(transaction => transaction.TransactionId)
