@@ -2,6 +2,7 @@
 using Frederikskaj2.Reservations.Users;
 using LanguageExt;
 using NodaTime;
+using System;
 using System.Diagnostics;
 using System.Net;
 using static LanguageExt.Prelude;
@@ -52,15 +53,17 @@ static class ImportBankTransactions
             newTransactions,
             !existingTransactions.IsEmpty ? existingTransactions.Last : None,
             toHashSet(
-                existingTransactions.Map(
-                    transaction => new ImportBankTransaction(transaction.Date, transaction.Text, transaction.Amount, transaction.Balance))));
+                existingTransactions
+                    .Map(transaction => new CompareBankTransaction(transaction.Date, transaction.Text, transaction.Amount, transaction.Balance))));
 
     static Either<Failure<ImportError>, Seq<BankTransaction>> ValidateNoMissingTransactions(
-        Seq<ImportBankTransaction> newTransactions, Option<BankTransaction> latestTransactionOption, HashSet<ImportBankTransaction> existingTransactions) =>
+        Seq<ImportBankTransaction> newTransactions, Option<BankTransaction> latestTransactionOption, HashSet<CompareBankTransaction> existingTransactions) =>
         latestTransactionOption.Case switch
         {
-            BankTransaction latestTransaction =>
-                ValidateNoMissingTransactions(newTransactions.Filter(transaction => !existingTransactions.Contains(transaction)), latestTransaction),
+            BankTransaction latestTransaction => ValidateNoMissingTransactions(
+                newTransactions
+                    .Filter(transaction => !existingTransactions.Contains(new(transaction.Date, transaction.Text, transaction.Amount, transaction.Balance))),
+                latestTransaction),
             _ => CreateTransactions(newTransactions, BankTransactionId.FromInt32(1)),
         };
 
@@ -86,7 +89,14 @@ static class ImportBankTransactions
         IsPossiblePayment(transaction) ? BankTransactionStatus.Unknown : BankTransactionStatus.Ignored;
 
     static bool IsPossiblePayment(ImportBankTransaction transaction) =>
-        PaymentIdMatcher.HasPaymentId(transaction.Text);
+        PaymentIdMatcher.HasPaymentId(transaction.Text) || IsSuspiciousPayIn(transaction);
+
+    static bool IsSuspiciousPayIn(ImportBankTransaction transaction) =>
+        transaction.Amount > Amount.Zero &&
+        transaction.Amount.ToDecimal()%50 is 0M &&
+        !PaymentIdMatcher.HasPaymentId(transaction.Text) &&
+        // ReSharper disable once StringLiteralTypo
+        !transaction.Reference.Contains("FISAM.POST", StringComparison.Ordinal);
 
     static Option<LocalDate> GetLatestImportStartDate(Seq<BankTransaction> existingTransactions, Seq<BankTransaction> newTransactions) =>
         newTransactions.IsEmpty

@@ -20,7 +20,11 @@ sealed partial class MyOrders(SessionFixture session) : FeatureFixture, IScenari
     MyOrderDto UpcomingOrder => upcomingOrder.GetValue(nameof(MyOrderDto));
     GetMyOrdersResponse GetMyOrdersResponse => getMyOrdersResponse.GetValue(nameof(GetMyOrdersResponse));
 
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
+    async Task IScenarioSetUp.OnScenarioSetUp()
+    {
+        session.NowOffset = Period.Zero;
+        await session.UpdateLockBoxCodes();
+    }
 
     async Task GivenResidentHasAHistoryOrder()
     {
@@ -39,7 +43,8 @@ sealed partial class MyOrders(SessionFixture session) : FeatureFixture, IScenari
 
     async Task WhenTheResidentRetrievesOrders()
     {
-        session.NowOffset = Period.FromDays(14);
+        var offsetDays = Period.Between(session.TestStartDate, UpcomingOrder.Reservations.Single().Extent.Date, PeriodUnits.Days).Days - 1;
+        session.NowOffset = Period.FromDays(offsetDays);
         getMyOrdersResponse = await session.GetMyOrders();
     }
 

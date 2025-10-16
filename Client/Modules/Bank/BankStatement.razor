@@ -20,6 +20,14 @@
             </Alert>
             <Alert Color="Color.Danger" Visible="showImportErrorAlert" Dismisable="true">
                 Der er sket en fejl, og bankbevægelserne blev ikke importeret.
+                @if (importError is ImportError.MissingTransactions)
+                {
+                    @:Der mangler bankbevægelser efter seneste import. Lav en ny import som starter fra @Formatter.FormatDateShort(latestTransactionDate!.Value).
+                }
+                else if (importError is ImportError.OldTransactions)
+                {
+                    @:Importen indeholder for gamle bankbevægelser. Lav en ny import som starter fra @Formatter.FormatDateShort(latestTransactionDate!.Value).
+                }
                 <CloseButton Clicked="DismissImportErrorAlert"/>
             </Alert>
             <Alert Color="Color.Success" Visible="showReconcileSuccessAlert" Dismisable="true">

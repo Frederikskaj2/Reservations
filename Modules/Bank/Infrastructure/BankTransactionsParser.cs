@@ -19,12 +19,12 @@ class BankTransactionsParser : IBankTransactionsParser
     static readonly SepReaderOptions sepReaderOptions =
         Sep.Reader(options => options with { CultureInfo = CultureInfo.GetCultureInfo("da-DK"), Unescape = true });
 
-    [SuppressMessage("Design", "CA1031", Justification = "Parsing can fail in many ways and it's hard to know the full set of possible exceptions.")]
+    [SuppressMessage("Design", "CA1031", Justification = "Parsing can fail in many ways, and it's hard to know the full set of possible exceptions.")]
     public Either<Failure<ImportError>, Seq<ImportBankTransaction>> ParseBankTransactions(string transactions)
     {
         try
         {
-            // Seq tries to be lazy so to be able to catch exceptions it's
+            // Seq tries to be lazy, so to be able to catch exceptions, it's
             // necessary to create an array.
             return ParseCsv(transactions).ToArray().ToSeq();
         }
@@ -43,8 +43,9 @@ class BankTransactionsParser : IBankTransactionsParser
                 var text = row["Tekst"].ToString();
                 var amount = row["Beløb i DKK"].Parse<decimal>();
                 var balance = row["Bogført saldo i DKK"].Parse<decimal>();
+                var reference = row["Bankens arkivreference"].ToString();
                 // ReSharper restore StringLiteralTypo
-                yield return new(date, text, Amount.FromDecimal(amount), Amount.FromDecimal(balance));
+                yield return new(date, text, Amount.FromDecimal(amount), Amount.FromDecimal(balance), reference);
             }
         }
     }

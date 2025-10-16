@@ -70,7 +70,7 @@ public partial class GetBankTransactions
         new(12, new(2024, 4, 3), "DBT.UD B-YYYY 4426 4426376512", -600, 263149.27M, BankTransactionStatus.Unknown),
         new(13, new(2024, 4, 3), "DBT.UD B-XXXX 5501 6282387857", -4500, 258649.27M, BankTransactionStatus.Unknown),
         new(14, new(2024, 4, 3), "DBT.UD B-WWWW 6695 1007055761", -800, 257849.27M, BankTransactionStatus.Unknown),
-        new(15, new(2024, 4, 3), "Fra Bea Tine Olsson", 900, 258749.27M, BankTransactionStatus.Ignored),
+        new(15, new(2024, 4, 3), "Fra Bea Tine Olsson", 900, 258749.27M, BankTransactionStatus.Unknown),
         new(16, new(2024, 4, 4), @"MSFT * E0400REEZW\ \MSFT AZURE\", -131.28M, 258617.99M, BankTransactionStatus.Ignored),
         new(17, new(2024, 4, 5), "DBT.20602411409 + DEAS A 82568719", -8973.43M, 249644.56M, BankTransactionStatus.Ignored),
         new(18, new(2024, 4, 5), "01877154   FAKTURA", -232.88M, 249411.68M, BankTransactionStatus.Ignored),

@@ -30,6 +30,7 @@ partial class BankStatement
     int currentYear;
     DateRange? dateRange;
     FindResidentDialog findResidentDialog = null!;
+    ImportError? importError;
     bool includeIgnored;
     bool includeReconciled = true;
     bool includeUnknown = true;
@@ -182,7 +183,10 @@ partial class BankStatement
                 await UpdateTransactions();
             }
             else
+            {
+                importError = Enum.TryParse<ImportError>(response.Problem!.Error, out var error) ? error : null;
                 showImportErrorAlert = true;
+            }
         }
         catch (Exception exception)
         {
@@ -276,7 +280,11 @@ partial class BankStatement
 
     void DismissImportSuccessAlert() => showImportSuccessAlert = false;
 
-    void DismissImportErrorAlert() => showImportErrorAlert = false;
+    void DismissImportErrorAlert()
+    {
+        showImportErrorAlert = false;
+        importError = null;
+    }
 
     void DismissReconcileSuccessAlert() => showReconcileSuccessAlert = false;
 
