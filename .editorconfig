@@ -894,6 +894,9 @@ dotnet_diagnostic.ma0006.severity = suggestion
 # MA0008: Add StructLayoutAttribute
 dotnet_diagnostic.ma0008.severity = suggestion
 
+# MA0011: IFormatProvider is missing
+dotnet_diagnostic.ma0011.severity = suggestion
+
 # MA0026: Fix TODO comment
 dotnet_diagnostic.ma0026.severity = suggestion
 

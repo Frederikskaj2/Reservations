@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using static Frederikskaj2.Reservations.Orders.OrdersFunctions;
+using static Frederikskaj2.Reservations.Orders.UpdateResidentReservations;
 using static Frederikskaj2.Reservations.Persistence.IdGenerator;
 using static LanguageExt.Prelude;
 
@@ -32,7 +33,7 @@ public static class UpdateResidentReservationsShell
         from userEntity in reader.ReadWithETag<User>(orderEntity.Value.UserId, cancellationToken).MapReadError()
         from transactionId in CreateId(reader, writer, nameof(Transaction), cancellationToken)
         let input = new UpdateResidentReservationsInput(command, orderEntity.Value, userEntity.Value, transactionId)
-        let output = Orders.UpdateResidentReservations.UpdateResidentReservationsCore(options, holidays, timeConverter, input)
+        let output = UpdateResidentReservationsCore(options, holidays, timeConverter, input)
         from _2 in Write(writer, orderEntity, userEntity, output, cancellationToken)
         from _3 in ConfirmOrders(jobScheduler, output.User).ToRightAsync<Failure<Unit>, Unit>()
         from _4 in UpdateCleaningSchedule(jobScheduler, output.User).ToRightAsync<Failure<Unit>, Unit>()

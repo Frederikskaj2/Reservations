@@ -46,11 +46,11 @@ sealed partial class UpdateResidentReservations(SessionFixture session) : Featur
         await session.PayIn(placeMyOrderResponse.Order.Payment!.PaymentId, placeMyOrderResponse.Order.Price.Total());
     }
 
-    async Task WhenAnAdministratorUpdatesTheReservations()
+    async Task WhenAnAdministratorUpdatesTheReservations(int frederikChange, int kajChange)
     {
         var frederikUpdate =
-            new ReservationUpdateRequest(Extent: new(FrederikReservation.Extent.Date, FrederikReservation.Extent.Nights + 2), ReservationIndex: 1);
-        var kajUpdate = new ReservationUpdateRequest(Extent: new(KajReservation.Extent.Date, KajReservation.Extent.Nights + 1), ReservationIndex: 2);
+            new ReservationUpdateRequest(Extent: new(FrederikReservation.Extent.Date, FrederikReservation.Extent.Nights + frederikChange), ReservationIndex: 1);
+        var kajUpdate = new ReservationUpdateRequest(Extent: new(KajReservation.Extent.Date, KajReservation.Extent.Nights + kajChange), ReservationIndex: 2);
         response = await session.UpdateResidentReservations(Order.OrderId, frederikUpdate, kajUpdate);
     }
 
@@ -66,34 +66,45 @@ sealed partial class UpdateResidentReservations(SessionFixture session) : Featur
         return Task.CompletedTask;
     }
 
-    async Task ThenTheResidentsOrderIsUpdated()
+    async Task ThenTheResidentsOrderIsUpdated(int frederikChange, int kajChange)
     {
         var getMyOrdersResponse = await session.GetMyOrders();
         var myOrder = getMyOrdersResponse.Orders.Single();
         var updatedFrederikReservation = myOrder.Reservations.ElementAt(1);
-        updatedFrederikReservation.Extent.Should().Be(new Extent(FrederikReservation.Extent.Date, FrederikReservation.Extent.Nights + 2));
+        updatedFrederikReservation.Extent.Should().Be(new Extent(FrederikReservation.Extent.Date, FrederikReservation.Extent.Nights + frederikChange));
         var updatedKajReservation = myOrder.Reservations.ElementAt(2);
-        updatedKajReservation.Extent.Should().Be(new Extent(KajReservation.Extent.Date, KajReservation.Extent.Nights + 1));
+        updatedKajReservation.Extent.Should().Be(new Extent(KajReservation.Extent.Date, KajReservation.Extent.Nights + kajChange));
     }
 
-    async Task ThenCalendarIsUpdated()
+    async Task ThenCalendarIsUpdated(int frederikChange, int kajChange)
     {
         var getReservedDaysResponse = await session.GetMyReservedDays();
         var residentReservedDays = getReservedDaysResponse.ReservedDays.Where(reservedDay => reservedDay.IsMyReservation);
         var partyFacilitiesReservedDays = Order.Reservations.First().ToMyReservedDays(Order.OrderId, isMyReservation: true);
         var frederikReservedDays = ReservationExtensions.GenerateReservedDays(
-            FrederikReservation.Extent.Date, FrederikReservation.Extent.Nights + 1, FrederikReservation.ResourceId, Order.OrderId, isMyReservation: true);
+            FrederikReservation.Extent.Date,
+            FrederikReservation.Extent.Nights + frederikChange,
+            FrederikReservation.ResourceId,
+            Order.OrderId,
+            isMyReservation: true);
         var kajReservedDays = ReservationExtensions.GenerateReservedDays(
-            KajReservation.Extent.Date, KajReservation.Extent.Nights + 1, KajReservation.ResourceId, Order.OrderId, isMyReservation: true);
+            KajReservation.Extent.Date, KajReservation.Extent.Nights + kajChange, KajReservation.ResourceId, Order.OrderId, isMyReservation: true);
         IEnumerable<ReservedDayDto> reservedDays = [..partyFacilitiesReservedDays, ..frederikReservedDays, ..kajReservedDays];
         residentReservedDays.Should().Contain(reservedDays);
     }
 
-    async Task ThenTheResidentsBalanceIsUpdated()
+    async Task ThenTheResidentsBalanceIsNegative()
     {
         var getMyTransactionsResponse = await session.GetMyTransactions();
         var balance = getMyTransactionsResponse.Transactions.Select(transaction => transaction.Amount).Sum();
         balance.Should().BeLessThan(Amount.Zero);
+    }
+
+    async Task ThenTheResidentsBalanceIsPositive()
+    {
+        var getMyTransactionsResponse = await session.GetMyTransactions();
+        var balance = getMyTransactionsResponse.Transactions.Select(transaction => transaction.Amount).Sum();
+        balance.Should().BeGreaterThan(Amount.Zero);
     }
 
     async Task ThenTheUpdateIsAudited()
@@ -103,7 +114,7 @@ sealed partial class UpdateResidentReservations(SessionFixture session) : Featur
     }
 
     async ValueTask<ReservationRequest> CreateReservationRequest(ResourceId resourceId) =>
-        new(resourceId, await GetAvailableExtent(resourceId, 2));
+        new(resourceId, await GetAvailableExtent(resourceId, 3));
 
     async ValueTask<Extent> GetAvailableExtent(ResourceId resourceId, int nights)
     {

@@ -59,22 +59,30 @@ static class UpdateResidentReservations
         };
 
     static UpdateResidentReservationsOutput CreateOutput(ITimeConverter timeConverter, UpdateResidentReservationsInput input, Order updatedOrder) =>
-        CreateOutput(input, updatedOrder, CreateTransaction(timeConverter, input, updatedOrder));
+        CreateOutput(input, updatedOrder, CreateTransaction(timeConverter, input, updatedOrder, updatedOrder.Price().Total() - input.Order.Price().Total()));
 
-    static Transaction CreateTransaction(ITimeConverter timeConverter, UpdateResidentReservationsInput input, Order updatedOrder) =>
-        CreateUpdateReservationsTransaction(
-            input.Command.Timestamp,
-            input.Command.AdministratorId,
-            timeConverter.GetDate(input.Command.Timestamp),
-            input.Order,
-            updatedOrder,
-            input.TransactionId,
-            GetAccountsPayableToSpend(input.User, input.Order, updatedOrder));
+    static Transaction CreateTransaction(ITimeConverter timeConverter, UpdateResidentReservationsInput input, Order updatedOrder, Amount priceDifference) =>
+        priceDifference > Amount.Zero
+            ? CreateMoreExpensiveUpdateReservationsTransaction(
+                input.Command.Timestamp,
+                input.Command.AdministratorId,
+                timeConverter.GetDate(input.Command.Timestamp),
+                input.Order,
+                updatedOrder,
+                input.TransactionId,
+                GetAccountsPayableToSpend(input.User, priceDifference))
+            : CreateCheaperUpdateReservationsTransaction(
+                input.Command.Timestamp,
+                input.Command.AdministratorId,
+                timeConverter.GetDate(input.Command.Timestamp),
+                input.Order,
+                updatedOrder,
+                input.TransactionId);
 
-    static Amount GetAccountsPayableToSpend(User user, Order oldOrder, Order newOrder) =>
-        Amount.Max(-(newOrder.Price().Total() - oldOrder.Price().Total()), user.Accounts[Account.AccountsPayable]);
+    static Amount GetAccountsPayableToSpend(User user, Amount priceDifference) =>
+        Amount.Max(-priceDifference, user.Accounts[Account.AccountsPayable]);
 
-    static Transaction CreateUpdateReservationsTransaction(
+    static Transaction CreateMoreExpensiveUpdateReservationsTransaction(
         Instant timestamp,
         UserId administratorId,
         LocalDate date,
@@ -91,6 +99,23 @@ static class UpdateResidentReservations
             originalOrder.UserId,
             CreateDescription(updatedOrder),
             UpdateReservations(originalOrder.Price(), updatedOrder.Price(), accountsPayableToSpend));
+
+    static Transaction CreateCheaperUpdateReservationsTransaction(
+        Instant timestamp,
+        UserId administratorId,
+        LocalDate date,
+        Order originalOrder,
+        Order updatedOrder,
+        TransactionId transactionId) =>
+        new(
+            transactionId,
+            date,
+            administratorId,
+            timestamp,
+            Activity.UpdateOrder,
+            originalOrder.UserId,
+            CreateDescription(updatedOrder),
+            UpdateReservations(originalOrder.Price(), updatedOrder.Price(), Amount.Zero));
 
     static TransactionDescription CreateDescription(Order order) =>
         new ReservationsUpdate(order.OrderId, order.Reservations.Map(reservation => new ReservedDay(reservation.Extent.Date, reservation.ResourceId)));

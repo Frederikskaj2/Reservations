@@ -22,9 +22,9 @@ public static class TransactionAmounts
     public static AccountAmounts UpdateReservations(Price oldPrice, Price newPrice, Amount accountsPayableToSpend)
     {
         if (oldPrice.Total() <= Amount.Zero)
-            throw new ArgumentOutOfRangeException(nameof(oldPrice), oldPrice, "Old price must be greater than zero.");
+            throw new ArgumentOutOfRangeException(nameof(oldPrice), oldPrice, "The old price must be greater than zero.");
         if (newPrice.Total() <= Amount.Zero)
-            throw new ArgumentOutOfRangeException(nameof(newPrice), newPrice, "New price must be greater than zero.");
+            throw new ArgumentOutOfRangeException(nameof(newPrice), newPrice, "The new price must be greater than zero.");
         if (accountsPayableToSpend > Amount.Zero)
             throw new ArgumentOutOfRangeException(nameof(accountsPayableToSpend), accountsPayableToSpend, "Accounts payable to spend must not be positive.");
         return AccountAmounts.Create(
