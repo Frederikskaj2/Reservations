@@ -109,12 +109,19 @@ public static class TransactionAmounts
             (Account.AccountsReceivable, excessAmount));
     }
 
-    public static AccountAmounts Reimburse(Account incomeAccount, Amount amount)
+    public static AccountAmounts Reimburse(Account incomeAccount, Amount amount, Amount accountsPayable, Amount accountsReceivable)
     {
         if (amount <= Amount.Zero)
             throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount must be greater than zero.");
+        if (accountsPayable < Amount.Zero)
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Accounts payable must not be negative.");
+        if (accountsReceivable < Amount.Zero)
+            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Accounts receivable must not be negative.");
+        if (amount != accountsPayable + accountsReceivable)
+            throw new ArgumentException("The sum of accounts payable and accounts receivable must be equal to the amount to reimburse.", nameof(amount));
         return AccountAmounts.Create(
             (incomeAccount, amount),
-            (Account.AccountsPayable, -amount));
+            (Account.AccountsReceivable, -accountsReceivable),
+            (Account.AccountsPayable, -accountsPayable));
     }
 }

@@ -21,10 +21,12 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
     State<MyOrderDto> order;
     State<IEnumerable<PostingDto>> postings;
     State<IEnumerable<MyTransactionDto>> transactions;
+    State<MyOrderDto> unpaidOrder;
 
     MyOrderDto Order => order.GetValue(nameof(Order));
     IEnumerable<PostingDto> Postings => postings.GetValue(nameof(Postings));
     IEnumerable<MyTransactionDto> Transactions => transactions.GetValue(nameof(Transactions));
+    MyOrderDto UnpaidOrder => unpaidOrder.GetValue(nameof(UnpaidOrder));
 
     async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
@@ -38,6 +40,12 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
     }
 
     async Task GivenTheOrderIsSettled() => await session.SettleReservation(Order.OrderId, 0);
+
+    async Task GivenAnUnpaidOrder()
+    {
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.BanquetFacilities.ResourceId));
+        unpaidOrder = getMyOrderResponse.Order;
+    }
 
     async Task WhenTheCleaningIsReimbursed() =>
         await session.Reimburse(session.UserId(), IncomeAccount.Cleaning, reimbursementDescription, Order.Price.Cleaning);
@@ -61,10 +69,23 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
             .Which.Payment.Amount.Should().Be(Order.Price.Deposit + Order.Price.Cleaning);
     }
 
+    async Task ThenTheResidentIsNotOwedAnything()
+    {
+        var getCreditorsResponse = await session.GetCreditors();
+        getCreditorsResponse.Creditors.Should().NotContain(creditor => creditor.UserInformation.UserId == session.UserId());
+    }
+
     Task ThenTheResidentsBalanceIsTheDepositPlusTheReimbursedAmountForLackOfCleaning()
     {
         var balance = Transactions.Select(transaction => transaction.Amount).Sum();
         balance.Should().Be(Order.Price.Deposit + Order.Price.Cleaning);
+        return Task.CompletedTask;
+    }
+
+    Task ThenTheResidentsBalanceIsTheDepositPlusTheReimbursedAmountForLackOfCleaningMinusTheUnpaidOrder()
+    {
+        var balance = Transactions.Select(transaction => transaction.Amount).Sum();
+        balance.Should().Be(Order.Price.Deposit + Order.Price.Cleaning - UnpaidOrder.Price.Total());
         return Task.CompletedTask;
     }
 
@@ -81,7 +102,13 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
         return Task.CompletedTask;
     }
 
-    Task ThenTheLastPostingIsTheReimbursement()
+    Task ThenFivePostingsAreReturned()
+    {
+        Postings.Should().HaveCount(5);
+        return Task.CompletedTask;
+    }
+
+    Task ThenTheLastPostingIsTheReimbursementUsingAccountsPayable()
     {
         var posting = Postings.Last();
         posting.Should().BeEquivalentTo(
@@ -95,6 +122,25 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
                 {
                     new { Account = PostingAccount.Income, Amount = Debit(Order.Price.Cleaning) },
                     new { Account = PostingAccount.AccountsPayable, Amount = Credit(Order.Price.Cleaning) },
+                },
+            });
+        return Task.CompletedTask;
+    }
+
+    Task ThenTheLastPostingIsTheReimbursementUsingAccountsReceivable()
+    {
+        var posting = Postings.Last();
+        posting.Should().BeEquivalentTo(
+            new
+            {
+                Date = session.CurrentDate,
+                Activity = Activity.Reimburse,
+                session.User!.FullName,
+                OrderId = (OrderId?) null,
+                Amounts = new[]
+                {
+                    new { Account = PostingAccount.Income, Amount = Debit(Order.Price.Cleaning) },
+                    new { Account = PostingAccount.AccountsReceivable, Amount = Credit(Order.Price.Cleaning) },
                 },
             });
         return Task.CompletedTask;

@@ -26,5 +26,22 @@ public partial class Reimburse
             ThenTheResidentsBalanceIsTheDepositPlusTheReimbursedAmountForLackOfCleaning,
             ThenTheResidentsLastTransactionIsDescribedAsCleaning,
             ThenFourPostingsAreReturned,
-            ThenTheLastPostingIsTheReimbursement);
+            ThenTheLastPostingIsTheReimbursementUsingAccountsPayable);
+
+    [Scenario]
+    public Task ReimburseCleaningWithNegativeBalance() =>
+        Runner.RunScenarioAsync(
+            GivenAResidentIsSignedIn,
+            GivenAPaidOrder,
+            GivenTheOrderIsSettled,
+            GivenAnUnpaidOrder,
+            WhenTheCleaningIsReimbursed,
+            WhenThePostingsAreRetrieved,
+            WhenTheResidentsTransactionsAreRetrieved,
+            ThenTheResidentIsNotOwedAnything,
+            ThenTheResidentsBalanceIsTheDepositPlusTheReimbursedAmountForLackOfCleaningMinusTheUnpaidOrder,
+            ThenTheResidentsLastTransactionIsDescribedAsCleaning,
+            ThenFivePostingsAreReturned,
+            ThenTheLastPostingIsTheReimbursementUsingAccountsReceivable);
+
 }
