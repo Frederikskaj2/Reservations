@@ -42,7 +42,7 @@ static class ResidentOrderExtensions
 
     public static async ValueTask<GetMyOrderResponse> PlaceAndPayResidentOrder(this SessionFixture session, params TestReservation[] reservations)
     {
-        var response = await PlaceResidentOrder(session, reservations);
+        var response = await session.PlaceResidentOrder(reservations);
         await session.PayIn(response.Order.Payment!.PaymentId, response.Order.Price.Total());
         return await session.GetMyOrder(response.Order.OrderId);
     }
@@ -67,7 +67,7 @@ static class ResidentOrderExtensions
         if (session.User is null)
             throw new InvalidOperationException();
 
-        var request = new UpdateMyOrderRequest(AccountNumber: session.User.AccountNumber, CancelledReservations: reservationIndices.ToHashSet());
+        var request = new UpdateMyOrderRequest(session.User.AccountNumber, CancelledReservations: reservationIndices.ToHashSet());
         return await session.Deserialize<UpdateMyOrderResponse>(await session.Patch($"orders/my/{orderId}", request));
     }
 

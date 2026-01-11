@@ -23,21 +23,55 @@ public partial class PayOuts
             ThenTheRetrievedPayOutsContainThePayout);
 
     [Scenario]
-    public Task DeletePayOut() =>
+    public Task GetPayOut() =>
         Runner.RunScenarioAsync(
             GivenASettledOrder,
             WhenAPayOutIsCreated,
-            WhenThePayOutIsDeleted,
-            WhenPayOutsAreRetrieved,
-            ThenTheRetrievedPayOutsDoesNotContainThePayout);
+            WhenThePayOutIsRetrieved,
+            ThenTheRetrievedPayOutContainsThePayout);
 
     [Scenario]
-    public Task OptimisticConcurrency() =>
+    public Task AddNote() =>
         Runner.RunScenarioAsync(
             GivenASettledOrder,
             WhenAPayOutIsCreated,
-            WhenThePayOutIsDeletedWithInvalidETag,
+            WhenANoteIsAdded,
+            WhenThePayOutIsRetrieved,
+            ThenTheRetrievedPayOutHasTheNote);
+
+    [Scenario]
+    public Task UpdateAccountNumber() =>
+        Runner.RunScenarioAsync(
+            GivenASettledOrder,
+            WhenAPayOutIsCreated,
+            WhenTheAccountNumberIsUpdated,
+            WhenThePayOutIsRetrieved,
+            ThenTheRetrievedPayOutHasTheNewAccountNumber);
+
+    [Scenario]
+    public Task CancelPayOut() =>
+        Runner.RunScenarioAsync(
+            GivenASettledOrder,
+            WhenAPayOutIsCreated,
+            WhenThePayOutIsCancelled,
             WhenPayOutsAreRetrieved,
-            ThenTheRetrievedPayOutsContainThePayout,
-            ThenTheHttpStatusIsPreconditionFailed);
+            WhenThePayOutIsRetrieved,
+            ThenTheRecentlyCancelledPayOutIsStillIncluded,
+            ThenTheRetrievedPayOutIsCancelled);
+
+    [Scenario]
+    public Task OnlyOnePayOutPerResident() =>
+        Runner.RunScenarioAsync(
+            GivenASettledOrder,
+            WhenAPayOutIsCreated,
+            WhenAnotherPayOutIsCreated,
+            ThenTheServerRespondsWithConflict);
+
+    [Scenario]
+    public Task AResidentWithAnInProgressPayOutIsNotACreditor() =>
+        Runner.RunScenarioAsync(
+            GivenASettledOrder,
+            WhenAPayOutIsCreated,
+            WhenCreditorsAreRetrieved,
+            ThenTheResidentIsNotACreditor);
 }

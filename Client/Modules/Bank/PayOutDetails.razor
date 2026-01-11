@@ -1,0 +1,96 @@
+﻿<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">
+            Udbetaling til @PayOut!.UserIdentity.FullName <span class="payment-id">@PayOut.PaymentId</span>
+        </CardTitle>
+    </CardHeader>
+    <CardBody>
+        <div class="outer-container">
+            <Column ColumnSize="ColumnSize.Is9">
+                <Form>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is3">Oprettet</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is6">
+                            <div
+                                class="field-text"
+                                title="@Formatter.FormatTimeLong(TimeConverter.GetTime(PayOut!.CreatedTimestamp))">
+                                @Formatter.FormatHumanizedPastDate(today, TimeConverter.GetDate(PayOut!.CreatedTimestamp))
+                            </div>
+                        </FieldBody>
+                    </Field>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is3">Beløb</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is6">
+                            <TextEdit Text="@Formatter.FormatMoneyShort(PayOut!.Amount)" ReadOnly/>
+                        </FieldBody>
+                    </Field>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is3">Kontonummer</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is6">
+                            <div class="horizontal-container">
+                                <TextEdit Class="inline-control" Text="@PayOut!.AccountNumber" ReadOnly/>
+                                <Button
+                                    Class="btn-fixed"
+                                    Color="Color.Secondary"
+                                    Disabled="@(PayOut.Status is not Reservations.Bank.PayOutStatus.InProgress)"
+                                    Clicked="UpdateAccountNumber">
+                                    Skift...
+                                </Button>
+                            </div>
+                        </FieldBody>
+                    </Field>
+                    <Field Horizontal="true">
+                        <FieldLabel ColumnSize="ColumnSize.Is3">Kontakt</FieldLabel>
+                        <FieldBody ColumnSize="ColumnSize.Is6">
+                            <div class="field-text">
+                                @if (PayOut!.UserIdentity.ApartmentId.HasValue)
+                                {
+                                    @apartments![PayOut.UserIdentity.ApartmentId.Value]
+                                    @:&mdash;
+                                }
+                                @PayOut.UserIdentity.Phone
+                                &mdash;
+                                <a href="mailto:@PayOut.UserIdentity.Email">@PayOut.UserIdentity.Email</a>
+                            </div>
+                        </FieldBody>
+                    </Field>
+                </Form>
+            </Column>
+            <Div Class="float-end vertical-container">
+                <PayOutStatus PayOut="PayOut"/>
+                <Button
+                    Style="margin-top: auto;"
+                    Color="Color.Secondary"
+                    Class="btn-fixed float-end"
+                    Disabled="@(PayOut!.Status is not Reservations.Bank.PayOutStatus.InProgress)"
+                    Clicked="CancelPayOut">
+                    Annullér...
+                </Button>
+            </Div>
+        </div>
+        @if (PayOut!.DelayedDays.HasValue)
+        {
+            <div>
+                <p>
+                    <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger"/>
+                    Der er blevet importeret bankbevægelser
+                    <Strong TextColor="TextColor.Danger">@Formatter.GetNumber(PayOut.DelayedDays.Value) dage efter</Strong> betalingen blev oprettet, men den er
+                    stadig ikke afstemt på trods af dette. Hvis beboeren har penge til gode er det vigtigt at de udbetales, men den endelig registrering sker
+                    først når en udbetaling i banken er afstemt til beboeren.
+                </p>
+                <ul>
+                    <li>
+                        Hvis betalingen ikke kan gennemføres eller hvis beboeren skal have et andet beløb udbetalt kan denne udbetaling annulleres. Når dette
+                        sker vil beboeren igen optræde på listen over udbetalinger der skal gennemføres såfremt der stadig er et tilgodehavende.
+                    </li>
+                    <li>
+                        Hvis der er problemer med udbetalingen som forsinker at den gennemføres, kan kontonummeret ændres og der kan oprettes noter som en hjælp
+                        til den sagsbehandling der er nødvendig for at få beboerens tilgodehavende overført.
+                    </li>
+                </ul>
+            </div>
+        }
+    </CardBody>
+</Card>
+<ConfirmCancelPayOutDialog @ref="confirmCancelPayOutDialog" PayOut="PayOut" OnConfirm="OnCancelPayOut"/>
+<UpdatePayOutAccountNumberDialog @ref="updatePayOutAccountNumberDialog" AccountNumber="@PayOut!.AccountNumber" OnConfirm="OnUpdateAccountNumber"/>

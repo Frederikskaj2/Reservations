@@ -25,7 +25,10 @@ public class AuthorizedTests(ApplicationFactory factory) : IClassFixture<Applica
             // Bank
             Add(HttpMethod.Get, "/bank/pay-outs");
             Add(HttpMethod.Post, "/bank/pay-outs");
-            Add(HttpMethod.Delete, "bank/pay-outs/0");
+            Add(HttpMethod.Get, "/bank/pay-outs/0");
+            Add(HttpMethod.Patch, "/bank/pay-outs/0");
+            Add(HttpMethod.Post, "/bank/pay-outs/0/cancel");
+            Add(HttpMethod.Post, "/bank/pay-outs/0/notes");
             Add(HttpMethod.Get, "bank/transactions");
             Add(HttpMethod.Patch, "bank/transactions/0");
             Add(HttpMethod.Post, "bank/transactions/0/reconcile/0");

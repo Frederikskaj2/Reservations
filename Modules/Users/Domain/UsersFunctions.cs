@@ -2,6 +2,7 @@ using Frederikskaj2.Reservations.Core;
 using Frederikskaj2.Reservations.Persistence;
 using LanguageExt;
 using NodaTime;
+using System.Net;
 using System.Threading;
 using static Frederikskaj2.Reservations.Persistence.QueryFactory;
 using static LanguageExt.Prelude;
@@ -69,12 +70,20 @@ public static class UsersFunctions
             .Where(user => userIds.Contains(user.UserId))
             .Project(user => new UserExcerpt(user.UserId, user.Emails, user.FullName, user.Phone, user.ApartmentId, user.Flags));
 
-    public static EitherAsync<Failure<Unit>, Option<UserExcerpt>> ReadUserExcerpt(IEntityReader reader, UserId userId, CancellationToken cancellationToken) =>
+    public static EitherAsync<Failure<Unit>, UserExcerpt> ReadUserExcerpt(IEntityReader reader, UserId userId, CancellationToken cancellationToken) =>
         from userExcerpts in reader.Query(GetUserExcerptQuery(userId), cancellationToken).MapReadError()
-        select userExcerpts.ToOption();
+        from userExcerpt in GetUserExcerpt(userId, userExcerpts.ToOption()).ToAsync()
+        select userExcerpt;
 
     static IProjectedQuery<UserExcerpt> GetUserExcerptQuery(UserId userId) =>
         Query<User>()
             .Where(user => user.UserId == userId)
             .Project(user => new UserExcerpt(user.UserId, user.Emails, user.FullName, user.Phone, user.ApartmentId, user.Flags));
+
+    static Either<Failure<Unit>, UserExcerpt> GetUserExcerpt(UserId userId, Option<UserExcerpt> userExcerptOption) =>
+        userExcerptOption.Case switch
+        {
+            UserExcerpt userExcerpt => userExcerpt,
+            _ => Failure.New(HttpStatusCode.NotFound, $"User with ID {userId} does not exist."),
+        };
 }

@@ -7,7 +7,6 @@ public static class EndpointRouteBuilderExtensions
 {
     public static IEndpointRouteBuilder MapOrdersEndpoints(this IEndpointRouteBuilder builder, bool isDevelopment)
     {
-        builder.MapGet("creditors", GetCreditorsEndpoint.Handle);
         builder.MapGet("orders", GetOrdersEndpoint.Handle);
         builder.MapGet("orders/{orderId:int}", GetOrderEndpoint.Handle);
         builder.MapGet("orders/my", GetMyOrdersEndpoint.Handle);

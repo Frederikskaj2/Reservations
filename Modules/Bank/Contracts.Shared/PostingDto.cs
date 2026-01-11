@@ -9,7 +9,7 @@ public record PostingDto(
     TransactionId TransactionId,
     LocalDate Date,
     Activity Activity,
-    UserId? ResidentId,
+    UserId ResidentId,
     string FullName,
     PaymentId PaymentId,
     OrderId? OrderId,

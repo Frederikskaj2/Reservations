@@ -2,4 +2,4 @@
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record CreatePayOutRequest(UserId ResidentId, Amount Amount);
+public record CreatePayOutRequest(UserId ResidentId, string? AccountNumber, Amount Amount);

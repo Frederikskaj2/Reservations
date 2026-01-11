@@ -1,4 +1,3 @@
-using Frederikskaj2.Reservations.Core;
 using Frederikskaj2.Reservations.Users;
 using LanguageExt;
 using NodaTime;
@@ -24,11 +23,11 @@ static class OrderDetailsFactory
             CreateResidentReservations(options, today, orderDetails.Order.Reservations),
             orderDetails.Order.Flags.HasFlag(OrderFlags.IsHistoryOrder),
             new(
-                orderDetails.User.AccountNumber.ToNullableReference(),
+                orderDetails.User.AccountNumber.ToNullable()?.ToString(),
                 orderDetails.Order.Specifics.Resident.NoFeeCancellationIsAllowedBefore.ToNullable(),
                 orderDetails.Order.Specifics.Resident.AdditionalLineItems),
             Owner: null,
-            orderDetails.Order.Audits.Map(audit => CreateOrderAudit(audit, orderDetails.AuditsUserFullNames)));
+            orderDetails.Order.Audits.Map(audit => CreateOrderAudit(audit, orderDetails.AuditUserFullNames)));
 
     static Seq<ReservationDto> CreateResidentReservations(OrderingOptions options, LocalDate today, Seq<Reservation> reservations) =>
         reservations.Map(
@@ -56,7 +55,7 @@ static class OrderDetailsFactory
             new(
                 orderDetails.Order.Specifics.AsT1.Description,
                 orderDetails.Order.Flags.HasFlag(OrderFlags.IsCleaningRequired)),
-            orderDetails.Order.Audits.Map(audit => CreateOrderAudit(audit, orderDetails.AuditsUserFullNames)));
+            orderDetails.Order.Audits.Map(audit => CreateOrderAudit(audit, orderDetails.AuditUserFullNames)));
 
     public static IEnumerable<ReservationDto> CreateOwnerReservations(Seq<Reservation> reservations) =>
         reservations.Map(

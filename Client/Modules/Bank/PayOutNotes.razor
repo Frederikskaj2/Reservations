@@ -1,0 +1,47 @@
+﻿<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Noter</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Form>
+            @if (PayOut?.Notes.Any() ?? false)
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Tidspunkt</TableHeaderCell>
+                            <TableHeaderCell>Hvem</TableHeaderCell>
+                            <TableHeaderCell>Note</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var note in PayOut.Notes.OrderByDescending(note => note.Timestamp))
+                        {
+                            var now = DateProvider.Now;
+                            <TableRow>
+                                <TableRowCell title="@Formatter.FormatTimeLong(TimeConverter.GetTime(note.Timestamp))">
+                                    @Formatter.FormatHumanizedPastTime(now, note.Timestamp)
+                                </TableRowCell>
+                                <TableRowCell>@note.FullName</TableRowCell>
+                                <TableRowCell>
+                                    @foreach (var paragraph in note.Note.Split(lineSeparators, StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        <p>@paragraph</p>
+                                    }
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+            }
+            <Button
+                Color="Color.Secondary"
+                Class="btn-fixed float-end"
+                Disabled="@(PayOut?.Status is not (Reservations.Bank.PayOutStatus.InProgress or Reservations.Bank.PayOutStatus.Cancelled))"
+                Clicked="AddNote">
+                Tilføj...
+            </Button>
+        </Form>
+    </CardBody>
+</Card>
+<PayOutNoteDialog @ref="payOutNoteDialog" OnConfirm="OnAddNote"/>

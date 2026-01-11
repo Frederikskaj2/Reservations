@@ -11,13 +11,6 @@ static class HttpStatusCodeExtensions
             _ => HttpStatusCode.ServiceUnavailable,
         };
 
-    public static HttpStatusCode MapNotFoundReadStatusToForbidden(this HttpStatusCode status) =>
-        status switch
-        {
-            HttpStatusCode.NotFound => HttpStatusCode.Forbidden,
-            _ => HttpStatusCode.ServiceUnavailable,
-        };
-
     public static HttpStatusCode MapWriteStatus(this HttpStatusCode status) =>
         status switch
         {

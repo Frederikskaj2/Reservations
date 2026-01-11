@@ -4,89 +4,116 @@ using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
-using LightBDD.XUnit2;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
-using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Bank;
 
-sealed partial class PayOuts(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class PayOuts(SessionFixture session) : PayOutsFixture(session), IScenarioSetUp
 {
-    State<CreditorDto> creditor;
-    State<PayOutDto> payout;
-    State<string?> eTag;
-    State<HttpStatusCode> statusCode;
-    State<IEnumerable<PayOutDto>> retrievedPayOuts;
+    const string note = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+    const string accountNumber = "1234-1234567890";
 
-    CreditorDto Creditor => creditor.GetValue(nameof(Creditor));
-    PayOutDto PayOut => payout.GetValue(nameof(PayOut));
-    string? ETag => eTag.GetValue(nameof(ETag));
-    HttpStatusCode StatusCode => statusCode.GetValue(nameof(StatusCode));
-    IEnumerable<PayOutDto> RetrievedPayOuts => retrievedPayOuts.GetValue(nameof(RetrievedPayOuts));
+    State<HttpResponseMessage> httpResponseMessage;
+    State<IEnumerable<CreditorDto>> creditors;
 
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
+    HttpResponseMessage HttpResponseMessage => httpResponseMessage.GetValue(nameof(HttpResponseMessage));
+    IEnumerable<CreditorDto> Creditors => creditors.GetValue(nameof(Creditors));
 
-    async Task GivenASettledOrder()
+    async Task IScenarioSetUp.OnScenarioSetUp() => await Session.UpdateLockBoxCodes();
+
+    async Task WhenAnotherPayOutIsCreated() =>
+        httpResponseMessage = await Session.CreatePayOutRaw(Creditor.UserInformation.UserId, Creditor.Payment.AccountNumber, Creditor.Payment.Amount);
+
+    async Task WhenANoteIsAdded() => await Session.AddPayOutNote(PayOut.PayOutId, note);
+
+    async Task WhenTheAccountNumberIsUpdated() => await Session.UpdatePayOutAccountNumber(PayOut.PayOutId, accountNumber);
+
+    async Task WhenThePayOutIsCancelled() => await Session.CancelPayOut(PayOut.PayOutId);
+
+    async Task WhenCreditorsAreRetrieved()
     {
-        await session.SignUpAndSignIn();
-        var getMyOrderResponse = await session.PlaceAndPayResidentOrder(new TestReservation(SeedData.Frederik.ResourceId));
-        await session.RunConfirmOrders();
-        await session.SettleReservation(getMyOrderResponse.Order.OrderId, 0);
-        var getCreditorsResponse = await session.GetCreditors();
-        creditor = getCreditorsResponse.Creditors.Single(c => c.UserInformation.UserId == session.UserId());
-    }
-
-    async Task WhenAPayOutIsCreated()
-    {
-        var createPayOutResponse = await session.CreatePayOut(Creditor.UserInformation.UserId, Creditor.Payment.Amount);
-        payout = createPayOutResponse.PayOut;
-        eTag = createPayOutResponse.ETag;
-    }
-
-    async Task WhenThePayOutIsDeleted() => await session.DeletePayOut(PayOut.PayOutId, ETag);
-
-    async Task WhenThePayOutIsDeletedWithInvalidETag()
-    {
-        var response = await session.DeletePayOutRaw(
-            PayOut.PayOutId,
-            """
-            "Invalid ETag"
-            """);
-        statusCode = response.StatusCode;
-    }
-
-    async Task WhenPayOutsAreRetrieved()
-    {
-        var getPayOutsResponse = await session.GetPayOuts();
-        retrievedPayOuts = new(getPayOutsResponse.PayOuts);
+        var getCreditorsResponse = await Session.GetCreditors();
+        creditors = new(getCreditorsResponse.Creditors);
     }
 
     Task ThenThePayOutIsCreated()
     {
         PayOut.UserIdentity.Should().BeEquivalentTo(Creditor.UserInformation);
         PayOut.PaymentId.Should().BeEquivalentTo(Creditor.Payment.PaymentId);
+        PayOut.AccountNumber.Should().BeEquivalentTo(Creditor.Payment.AccountNumber);
         PayOut.Amount.Should().BeEquivalentTo(Creditor.Payment.Amount);
+        PayOut.Status.Should().Be(PayOutStatus.InProgress);
         return Task.CompletedTask;
     }
 
     Task ThenTheRetrievedPayOutsContainThePayout()
     {
-        RetrievedPayOuts.Should().ContainEquivalentOf(new { PayOut.PayOutId });
+        RetrievedPayOuts.Should().ContainEquivalentOf(new { PayOut.PayOutId, Status = PayOutStatus.InProgress, DelayedDays = (int?) null });
         return Task.CompletedTask;
     }
 
-    Task ThenTheRetrievedPayOutsDoesNotContainThePayout()
+    Task ThenTheRecentlyCancelledPayOutIsStillIncluded()
     {
-        RetrievedPayOuts.Should().NotContainEquivalentOf(new { PayOut.PayOutId });
+        RetrievedPayOuts.Should().ContainEquivalentOf(new { PayOut.PayOutId, Status = PayOutStatus.Cancelled, DelayedDays = (int?) null });
         return Task.CompletedTask;
     }
 
-    Task ThenTheHttpStatusIsPreconditionFailed()
+    Task ThenTheRetrievedPayOutContainsThePayout()
     {
-        StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
+        RetrievedPayOut.PayOutId.Should().Be(PayOut.PayOutId);
+        RetrievedPayOut.UserIdentity.Should().BeEquivalentTo(Creditor.UserInformation);
+        RetrievedPayOut.PaymentId.Should().BeEquivalentTo(Creditor.Payment.PaymentId);
+        RetrievedPayOut.AccountNumber.Should().BeEquivalentTo(Creditor.Payment.AccountNumber);
+        RetrievedPayOut.Amount.Should().BeEquivalentTo(Creditor.Payment.Amount);
+        RetrievedPayOut.Status.Should().Be(PayOutStatus.InProgress);
+        RetrievedPayOut.Notes.Should().BeEmpty();
+        RetrievedPayOut.Audits.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new { UserId = SeedData.AdministratorUserId, Type = PayOutAuditType.Create });
+        RetrievedPayOut.DelayedDays.Should().BeNull();
+        return Task.CompletedTask;
+    }
+
+    Task ThenTheRetrievedPayOutHasTheNote()
+    {
+        RetrievedPayOut.Notes.Should().ContainSingle().Which.Should().BeEquivalentTo(new { UserId = SeedData.AdministratorUserId, Note = note });
+        RetrievedPayOut.Audits.Should().BeEquivalentTo([
+            new { UserId = SeedData.AdministratorUserId, Type = PayOutAuditType.Create },
+            new { UserId = SeedData.AdministratorUserId, Type = PayOutAuditType.AddNote },
+        ]);
+        return Task.CompletedTask;
+    }
+
+    Task ThenTheRetrievedPayOutHasTheNewAccountNumber()
+    {
+        RetrievedPayOut.AccountNumber.Should().Be(accountNumber);
+        RetrievedPayOut.Audits.Should().BeEquivalentTo([
+            new { UserId = SeedData.AdministratorUserId, Type = PayOutAuditType.Create },
+            new { UserId = SeedData.AdministratorUserId, Type = PayOutAuditType.UpdateAccountNumber },
+        ]);
+        return Task.CompletedTask;
+    }
+
+    Task ThenTheRetrievedPayOutIsCancelled()
+    {
+        RetrievedPayOut.Status.Should().Be(PayOutStatus.Cancelled);
+        RetrievedPayOut.Audits.Should().BeEquivalentTo([
+            new { UserId = SeedData.AdministratorUserId, Type = PayOutAuditType.Create },
+            new { UserId = SeedData.AdministratorUserId, Type = PayOutAuditType.Cancel },
+        ]);
+        return Task.CompletedTask;
+    }
+
+    Task ThenTheServerRespondsWithConflict()
+    {
+        HttpResponseMessage.StatusCode.Should().Be(System.Net.HttpStatusCode.Conflict);
+        return Task.CompletedTask;
+    }
+
+    Task ThenTheResidentIsNotACreditor()
+    {
+        Creditors.Should().NotContain(c => c.UserInformation.UserId == Session.UserId());
         return Task.CompletedTask;
     }
 }

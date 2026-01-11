@@ -1,5 +1,4 @@
 ﻿using Frederikskaj2.Reservations.Users;
-using System;
 using System.Diagnostics;
 using static Frederikskaj2.Reservations.Orders.TransactionAmounts;
 

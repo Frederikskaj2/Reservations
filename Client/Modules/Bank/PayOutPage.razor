@@ -1,0 +1,24 @@
+﻿@page "/til-udbetaling/{payOutId:int}"
+<PageTitle>@(payOut is not null ? $"Udbetaling til {payOut.UserIdentity.FullName} - " : "")Frederikskaj 2 lokalereservation</PageTitle>
+<main>
+    @if (!isInitialized)
+    {
+        <Spinner/>
+    }
+    else
+    {
+        <Container class="container-min-lg">
+            <Alert Color="Color.Success" Visible="showSuccessAlert" Dismisable="true">
+                Udbetalingen er blevet opdateret.
+                <CloseButton Clicked="DismissSuccessAlert"/>
+            </Alert>
+            <Alert Color="Color.Danger" Visible="showErrorAlert" Dismisable="true">
+                Der er sket en fejl, og udbetalingen blev ikke opdateret.
+                <CloseButton Clicked="DismissErrorAlert"/>
+            </Alert>
+            <PayOutDetails PayOut="payOut" OnCancelPayOut="OnCancelPayOut" OnUpdateAccountNumber="OnUpdateAccountNumber"/>
+            <PayOutNotes PayOut="payOut" OnAddNote="OnAddNote"/>
+            <PayOutAudits PayOut="payOut"/>
+        </Container>
+    }
+</main>

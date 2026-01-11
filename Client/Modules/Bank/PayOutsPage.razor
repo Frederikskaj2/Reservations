@@ -5,32 +5,26 @@
     {
         <Spinner/>
     }
-    else if (apartments is not null && creditors is not null && payOuts is not null)
+    else if (apartments is not null && creditors is not null && inProgressPayOuts is not null && otherPayOuts is not null)
     {
         <Container>
             <Alert Color="Color.Success" Visible="showSuccessAlert" Dismisable="true">
-                Betalingen er blevet opdateret.
+                Udbetalingen er blevet opdateret.
                 <CloseButton Clicked="DismissSuccessAlert"/>
             </Alert>
             <Alert Color="Color.Danger" Visible="showErrorAlert" Dismisable="true">
-                Der er sket en fejl, og betalingen blev ikke opdateret.
+                Der er sket en fejl, og udbetalingen blev ikke opdateret.
                 <CloseButton Clicked="DismissErrorAlert"/>
             </Alert>
-            <h1>Til udbetaling</h1>
-            @if (creditors.Count is 0)
+            <h1>Udbetaling</h1>
+            <h2>Til udbetaling</h2>
+            @if (!creditors.Any())
             {
                 <Paragraph>Der er intet at vise.</Paragraph>
             }
             else
             {
                 <Paragraph>Disse beboere har penge til gode som skal udbetales til dem.</Paragraph>
-                @if (payOuts.Any(payOut => payOut.StaleDays.HasValue))
-                {
-                    <Paragraph>
-                        <Strong>Bemærk</Strong> der er en eller flere udbetalinger i næste afsnit som er bestilt for noget tid siden, men som endnu ikke er
-                        afstemt. Hvis de aldrig bliver gennemført og afstemt, skal de slettes fra listen i næste afsnit.
-                    </Paragraph>
-                }
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -62,7 +56,7 @@
                                 <TableRowCell>@Formatter.FormatPhone(creditor.UserInformation.Phone)</TableRowCell>
                                 <TableRowCell>@creditor.Payment.AccountNumber</TableRowCell>
                                 <TableRowCell Class="text-end">@Formatter.FormatMoneyShort(creditor.Payment.Amount)</TableRowCell>
-                                <TableRowCell>
+                                <TableRowCell Class="text-end">
                                     <Button Color="Color.Light" Size="Size.Small" Clicked="() => RecordPayOut(creditor)">Registrér udbetaling</Button>
                                 </TableRowCell>
                             </TableRow>
@@ -70,76 +64,104 @@
                     </TableBody>
                 </Table>
             }
-            <h1>Bestilte udbetalinger (ej afstemt)</h1>
-            @if (!payOuts.Any())
+            <h2>Igangværende udbetalinger (ej afstemt)</h2>
+            @if (!inProgressPayOuts.Any())
             {
                 <Paragraph>Der er intet at vise.</Paragraph>
             }
             else
             {
-                <Paragraph>
-                    Disse beboere er ved at få overført penge da de har et tilgodehavende. En udbetaling fjernes herfra når den afstemmes i banken, eller den
-                    kan slettes hvis den ikke er ved at blive udbetalt.
-                </Paragraph>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHeaderCell>Navn</TableHeaderCell>
-                            <TableHeaderCell>Adresse</TableHeaderCell>
-                            <TableHeaderCell>Mail</TableHeaderCell>
-                            <TableHeaderCell>Telefon</TableHeaderCell>
-                            <TableHeaderCell Class="text-end">Beløb</TableHeaderCell>
-                            <TableHeaderCell>Alder</TableHeaderCell>
-                            <TableHeaderCell></TableHeaderCell>
+                            <TableHeaderCell Class="name-column">Navn</TableHeaderCell>
+                            <TableHeaderCell Class="amount-column text-end">Beløb</TableHeaderCell>
+                            <TableHeaderCell Class="age-or-status-column">Alder</TableHeaderCell>
+                            <TableHeaderCell Class="button-column"></TableHeaderCell>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        @foreach (var payOut in payOuts)
+                        @foreach (var payOut in inProgressPayOuts)
                         {
                             <TableRow @key="payOut.PayOutId">
                                 <TableRowCell>
                                     <a href="@string.Format(UrlPath.UsersTransactions, payOut.UserIdentity.UserId)">@payOut.UserIdentity.FullName</a>
                                     <span class="payment-id">@payOut.PaymentId</span>
                                 </TableRowCell>
-                                <TableRowCell>
-                                    @(payOut.UserIdentity.ApartmentId.HasValue ? apartments![payOut.UserIdentity.ApartmentId.Value] : "")
-                                </TableRowCell>
-                                <TableRowCell>
-                                    <a href="mailto:@payOut.UserIdentity.Email?subject=Frederikskaj 2 lokaler">
-                                        @Formatter.FormatEmail(payOut.UserIdentity.Email)
-                                    </a>
-                                </TableRowCell>
-                                <TableRowCell>@Formatter.FormatPhone(payOut.UserIdentity.Phone)</TableRowCell>
                                 <TableRowCell Class="text-end">@Formatter.FormatMoneyShort(payOut.Amount)</TableRowCell>
                                 <TableRowCell>
-                                    @if (payOut.StaleDays.HasValue)
+                                    @if (payOut.DelayedDays.HasValue)
                                     {
-                                        <Icon Name="Blazorise.Icons.FontAwesome.FontAwesomeIcons.TriangleExclamation" TextColor="TextColor.Danger"/>
-                                        if (payOut.StaleDays.Value is 1)
+                                        <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger"/>
+                                        if (payOut.DelayedDays.Value is 1)
                                         {
                                             @:1 dag
                                         }
                                         else
                                         {
-                                            @:@payOut.StaleDays.Value dage
+                                            @:@payOut.DelayedDays.Value dage
                                         }
                                     }
                                 </TableRowCell>
-                                <TableRowCell>
-                                    <Button Color="Color.Light" Size="Size.Small" Clicked="() => DeletePayOut(payOut)">Slet</Button>
+                                <TableRowCell Class="text-end">
+                                    <Button
+                                        Color="@(payOut.DelayedDays.HasValue ? Color.Danger : Color.Light)"
+                                        Size="Size.Small"
+                                        Clicked="() => ShowPayOut(payOut)">
+                                        Vis
+                                    </Button>
                                 </TableRowCell>
                             </TableRow>
                         }
                     </TableBody>
                 </Table>
-                @if (payOuts.Any(payOut => payOut.StaleDays.HasValue))
-                {
-                    <Paragraph>
-                        Alder angiver hvor mange dage der er gået fra at udbetalingen blev bestilt til seneste import af bankbevægelser. Hvis en gammel bestilt
-                        udbetaling ikke afstemmes mod en udbetaling i banken, skal den slettes fra listen hvorved den dukker op i listen ovenfor således at
-                        beboeren kan få sit tilgodehavende.
-                    </Paragraph>
-                }
+            }
+            <h2>Afsluttede udbetalinger</h2>
+            @if (!otherPayOuts.Any())
+            {
+                <Paragraph>Der er intet at vise.</Paragraph>
+            }
+            else
+            {
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell Class="name-column">Navn</TableHeaderCell>
+                            <TableHeaderCell Class="amount-column text-end">Beløb</TableHeaderCell>
+                            <TableHeaderCell Class="age-or-status-column">Status</TableHeaderCell>
+                            <TableHeaderCell Class="button-column"></TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (var payOut in otherPayOuts)
+                        {
+                            <TableRow @key="payOut.PayOutId">
+                                <TableRowCell>
+                                    <a href="@string.Format(UrlPath.UsersTransactions, payOut.UserIdentity.UserId)">@payOut.UserIdentity.FullName</a>
+                                    <span class="payment-id">@payOut.PaymentId</span>
+                                </TableRowCell>
+                                <TableRowCell Class="text-end">@Formatter.FormatMoneyShort(payOut.Amount)</TableRowCell>
+                                <TableRowCell>
+                                    @if (payOut.Status is Reservations.Bank.PayOutStatus.Cancelled)
+                                    {
+                                        @:Annulleret
+                                    }
+                                    else if (payOut.Status is Reservations.Bank.PayOutStatus.Reconciled)
+                                    {
+                                        @:Afstemt
+                                    }
+                                    else
+                                    {
+                                        @:?
+                                    }
+                                </TableRowCell>
+                                <TableRowCell Class="text-end">
+                                    <Button Color="Color.Light" Size="Size.Small" Clicked="() => ShowPayOut(payOut)">Vis</Button>
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
             }
         </Container>
     }

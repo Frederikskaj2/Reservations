@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
             .AddMemoryCache()
             .AddTransient<IConfigureOptions<MemoryCacheOptions>, ConfigureMemoryCacheOptions>()
             .AddSingleton<JsonConverter, AccountAmountsConverter>()
+            .AddSingleton<JsonConverter, AccountNumberConverter>()
             .AddSingleton<JsonConverter, DeviceIdConverter>()
             .AddSingleton<JsonConverter, TokenIdConverter>()
             .AddSingleton<IPasswordHasher, PasswordHasher>()

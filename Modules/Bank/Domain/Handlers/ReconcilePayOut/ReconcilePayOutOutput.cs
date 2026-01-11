@@ -3,4 +3,4 @@ using Frederikskaj2.Reservations.Users;
 
 namespace Frederikskaj2.Reservations.Bank;
 
-record ReconcilePayOutOutput(BankTransaction BankTransaction, User User, Transaction Transaction, Amount Amount);
+record ReconcilePayOutOutput(PayOut PayOut, BankTransaction BankTransaction, User Resident, Transaction Transaction, Amount Amount);

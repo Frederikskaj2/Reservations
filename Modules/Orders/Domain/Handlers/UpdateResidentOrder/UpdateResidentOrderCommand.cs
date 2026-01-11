@@ -8,7 +8,7 @@ public record UpdateResidentOrderCommand(
     Instant Timestamp,
     UserId AdministratorId,
     OrderId OrderId,
-    Option<string> AccountNumber,
+    Option<AccountNumber> AccountNumber,
     HashSet<ReservationIndex> CancelledReservations,
     bool WaiveFee,
     bool AllowCancellationWithoutFee);

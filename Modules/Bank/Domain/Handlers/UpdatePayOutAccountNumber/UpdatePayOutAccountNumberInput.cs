@@ -1,0 +1,3 @@
+﻿namespace Frederikskaj2.Reservations.Bank;
+
+record UpdatePayOutAccountNumberInput(UpdatePayOutAccountNumberCommand Command, PayOut PayOut);

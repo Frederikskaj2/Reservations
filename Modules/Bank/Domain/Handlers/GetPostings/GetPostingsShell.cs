@@ -14,6 +14,6 @@ public static class GetPostingsShell
         from postings in GetPostingsV1OrV2(reader, query.Month, cancellationToken).MapReadError()
         let userIds = toHashSet(postings.Map(posting => posting.ResidentId))
         from userExcerpts in ReadUserExcerpts(reader, userIds, cancellationToken)
-        let usersHashMap = toHashMap(userExcerpts.Map(userExcerpt => (userExcerpt.UserId, userExcerpt)))
-        select new PostingsForMonth(postings, usersHashMap);
+        let users = toHashMap(userExcerpts.Map(userExcerpt => (userExcerpt.UserId, userExcerpt)))
+        select new PostingsForMonth(postings, users);
 }

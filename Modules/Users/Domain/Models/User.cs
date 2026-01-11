@@ -18,7 +18,7 @@ public sealed record User(
     public UserFlags Flags { get; init; }
     public Option<Instant> LatestSignIn { get; init; }
     public Option<Instant> LatestDebtReminder { get; init; }
-    public Option<string> AccountNumber { get; init; }
+    public Option<AccountNumber> AccountNumber { get; init; }
     public EmailSubscriptions EmailSubscriptions { get; init; }
     public Option<FailedSignIn> FailedSign { get; init; }
     public AccountAmounts Accounts { get; init; } = AccountAmounts.Empty;

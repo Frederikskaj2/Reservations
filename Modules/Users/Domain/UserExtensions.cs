@@ -15,7 +15,7 @@ public static class UserExtensions
             }
             : user;
 
-    public static User SetAccountNumber(this User user, Instant timestamp, string accountNumber, UserId updatedByUserId) =>
+    public static User SetAccountNumber(this User user, Instant timestamp, AccountNumber accountNumber, UserId updatedByUserId) =>
         user.AccountNumber != accountNumber
             ? user with
             {

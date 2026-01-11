@@ -1,0 +1,39 @@
+﻿<Card Background="Background.Light">
+    <CardHeader>
+        <CardTitle Size="1">Historik</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHeaderCell>Tidspunkt</TableHeaderCell>
+                    <TableHeaderCell>Begivenhed</TableHeaderCell>
+                    <TableHeaderCell>Hvem</TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                @{
+                    var now = DateProvider.Now;
+                    foreach (var audit in PayOut!.Audits.Reverse())
+                    {
+                        <TableRow>
+                            <TableRowCell title="@Formatter.FormatTimeLong(TimeConverter.GetTime(audit.Timestamp))">
+                                @Formatter.FormatHumanizedPastTime(now, audit.Timestamp)
+                            </TableRowCell>
+                            <TableRowCell>
+                                @GetAuditName(audit.Type)
+                            </TableRowCell>
+                            <TableRowCell>
+                                @{
+                                    var userUrl = $"{UrlPath.Users}/{audit.UserId}";
+                                }
+                                <a href="@userUrl">@audit.FullName</a>
+                            </TableRowCell>
+                            <TableRowCell Class="border-0"/>
+                        </TableRow>
+                    }
+                }
+            </TableBody>
+        </Table>
+    </CardBody>
+</Card>

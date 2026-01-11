@@ -1,6 +1,4 @@
-﻿using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.Orders;
-using Frederikskaj2.Reservations.Persistence;
+﻿using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using LanguageExt;
 using static Frederikskaj2.Reservations.Orders.TransactionAmounts;
@@ -10,8 +8,8 @@ namespace Frederikskaj2.Reservations.Bank;
 
 static class Reconcile
 {
-    public static ReconcileOutput ReconcileCore(ITimeConverter timeConverter, ReconcileInput input) =>
-        CreateOutput(timeConverter, input, CreateTransaction(input));
+    public static ReconcileOutput ReconcileCore(ReconcileInput input) =>
+        CreateOutput(input, CreateTransaction(input));
 
     static Transaction CreateTransaction(ReconcileInput input) =>
         input.BankTransaction.Amount > Amount.Zero
@@ -25,12 +23,12 @@ static class Reconcile
             input.Command.AdministratorId,
             input.Command.Timestamp,
             Activity.PayIn,
-            input.User.UserId,
+            input.Resident.UserId,
             None,
-            PayIn(input.BankTransaction.Amount, GetPayInExcessAmount(input.User, input.BankTransaction.Amount)));
+            PayIn(input.BankTransaction.Amount, GetPayInExcessAmount(input.Resident, input.BankTransaction.Amount)));
 
-    static Amount GetPayInExcessAmount(User user, Amount amount) =>
-        GetPayInExcessAmount(amount, user.Accounts[Account.AccountsReceivable]);
+    static Amount GetPayInExcessAmount(User resident, Amount amount) =>
+        GetPayInExcessAmount(amount, resident.Accounts[Account.AccountsReceivable]);
 
     static Amount GetPayInExcessAmount(Amount amount, Amount accountsReceivable) =>
         amount > accountsReceivable ? amount - accountsReceivable : Amount.Zero;
@@ -42,38 +40,50 @@ static class Reconcile
             input.Command.AdministratorId,
             input.Command.Timestamp,
             Activity.PayOut,
-            input.User.UserId,
+            input.Resident.UserId,
             None,
-            PayOut(-input.BankTransaction.Amount, GetPayOutExcessAmount(-input.BankTransaction.Amount, input.User)));
+            PayOut(-input.BankTransaction.Amount, GetPayOutExcessAmount(-input.BankTransaction.Amount, input.Resident)));
 
-    static Amount GetPayOutExcessAmount(Amount amount, User user) =>
-        GetPayOutExcessAmount(amount, user.Accounts[Account.AccountsPayable]);
+    static Amount GetPayOutExcessAmount(Amount amount, User resident) =>
+        GetPayOutExcessAmount(amount, resident.Accounts[Account.AccountsPayable]);
 
     static Amount GetPayOutExcessAmount(Amount amount, Amount accountsPayable) =>
         amount > -accountsPayable ? amount + accountsPayable : Amount.Zero;
 
-    static ReconcileOutput CreateOutput(ITimeConverter timeConverter, ReconcileInput input, Transaction transaction) =>
+    static ReconcileOutput CreateOutput(ReconcileInput input, Transaction transaction) =>
         new(
             input.BankTransaction with { Status = BankTransactionStatus.Reconciled, ReconciledTransactionId = input.TransactionId },
-            UpdateUser(input, transaction),
+            UpdateResident(input, transaction),
             transaction,
-            FindMatchingPayOut(timeConverter, input));
+            TryUpdateResidentPayOut(input));
 
-    static User UpdateUser(ReconcileInput input, Transaction transaction) =>
-        AddAudit(input.Command, input.BankTransaction.Amount, input.User.AddTransaction(transaction), transaction.TransactionId);
+    static User UpdateResident(ReconcileInput input, Transaction transaction) =>
+        AddResidentAudit(input.Command, input.BankTransaction.Amount, input.Resident.AddTransaction(transaction), transaction.TransactionId);
 
-    static User AddAudit(ReconcileCommand command, Amount amount, User user, TransactionId transactionId) =>
-        user with { Audits = user.Audits.Add(CreateAudit(command, amount, transactionId)) };
+    static User AddResidentAudit(ReconcileCommand command, Amount amount, User resident, TransactionId transactionId) =>
+        resident with { Audits = resident.Audits.Add(CreateAudit(command, amount, transactionId)) };
 
     static UserAudit CreateAudit(ReconcileCommand command, Amount amount, TransactionId transactionId) =>
         amount > Amount.Zero
             ? UserAudit.PayIn(command.Timestamp, command.AdministratorId, transactionId)
             : UserAudit.PayOut(command.Timestamp, command.AdministratorId, transactionId);
 
-    static Option<ETaggedEntity<PayOut>> FindMatchingPayOut(ITimeConverter timeConverter, ReconcileInput input) =>
-        input.PayOutEntities
-            .Filter(entity =>
-                timeConverter.GetDate(entity.Value.Timestamp) < input.LatestBankImportDate &&
-                entity.Value.Amount == -input.BankTransaction.Amount)
-            .HeadOrNone();
+    static Option<PayOutToReconcile> TryUpdateResidentPayOut(ReconcileInput input) =>
+        input.ResidentPayOutPairOption.Case switch
+        {
+            PayOutPair payOutPair when payOutPair.PayOutEntity.Value.Amount == -input.BankTransaction.Amount =>
+                new PayOutToReconcile(
+                    payOutPair.PayOutEntity,
+                    payOutPair.InProgressPayOutEntity,
+                    UpdatePayOut(input.Command, payOutPair.PayOutEntity.Value, input.BankTransaction.BankTransactionId, input.TransactionId)),
+            _ => None,
+        };
+
+    static PayOut UpdatePayOut(ReconcileCommand command, PayOut payOut, BankTransactionId bankTransactionId, TransactionId transactionId) =>
+        payOut with
+        {
+            Status = PayOutStatus.Reconciled,
+            Resolution = (PayOutResolution) new Reconciled(command.Timestamp, bankTransactionId, transactionId),
+            Audits = payOut.Audits.Add(new(command.Timestamp, command.AdministratorId, PayOutAuditType.Reconcile)),
+        };
 }

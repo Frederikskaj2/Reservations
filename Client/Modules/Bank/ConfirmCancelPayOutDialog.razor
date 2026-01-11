@@ -1,0 +1,31 @@
+﻿<Modal @ref="modal">
+    <Form>
+        <ModalContent>
+            <ModalHeader>
+                <ModalTitle>Bekræft annullering af udbetaling</ModalTitle>
+                <CloseButton Clicked="Cancel"/>
+            </ModalHeader>
+            <ModalBody>
+                <Row>
+                    <Column>
+                        <Paragraph>
+                            Annullér udbetaling af kr. @Formatter.FormatMoneyShort(PayOut!.Amount) til @PayOut.UserIdentity.FullName?
+                        </Paragraph>
+                        <Paragraph>
+                            Hvis udbetalingen er påbegyndt, men blot ikke afstemt i banken, er det bedre at afstemme for på den måde at afslutte udbetalingen.
+                        </Paragraph>
+                        <Paragraph>
+                            Hvis beboeren stadig har et tilgodehavende efter annulleringen kan der oprettes en ny udbetaling til beboeren.
+                        </Paragraph>
+                    </Column>
+                </Row>
+            </ModalBody>
+            <ModalFooter>
+                <Button @ref="submitButton" Color="Color.Primary" Type="@ButtonType.Submit" PreventDefaultOnSubmit="true" Clicked="Confirm">
+                    Annullér udbetaling
+                </Button>
+                <Button Color="Color.Secondary" Clicked="Cancel">Fortryd</Button>
+            </ModalFooter>
+        </ModalContent>
+    </Form>
+</Modal>

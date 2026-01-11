@@ -11,5 +11,5 @@ public record PlaceResidentOrderCommand(
     string FullName,
     string Phone,
     ApartmentId ApartmentId,
-    string AccountNumber,
+    AccountNumber AccountNumber,
     Seq<ReservationModel> Reservations);

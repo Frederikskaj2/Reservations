@@ -2,4 +2,4 @@
 
 namespace Frederikskaj2.Reservations.Bank;
 
-record ReconcilePayOutInput(ReconcilePayOutCommand Command, BankTransaction BankTransaction, User User, TransactionId TransactionId);
+record ReconcilePayOutInput(ReconcilePayOutCommand Command, PayOut PayOut, BankTransaction BankTransaction, User Resident, TransactionId TransactionId);

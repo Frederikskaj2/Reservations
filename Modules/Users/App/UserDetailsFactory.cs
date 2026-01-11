@@ -6,7 +6,7 @@ namespace Frederikskaj2.Reservations.Users;
 
 public static class UserDetailsFactory
 {
-    public static UserDetailsDto CreateUserDetails(User user, HashMap<UserId, string> userFullNames) =>
+    public static UserDetailsDto CreateUserDetails(User user, HashMap<UserId, string> auditUserFullNames) =>
         new(
             CreateUserIdentity(user),
             user.IsEmailConfirmed(),
@@ -18,15 +18,15 @@ public static class UserDetailsFactory
             -user.Balance(),
             FromUserId(user.UserId),
             user.LatestSignIn.ToNullable(),
-            user.Audits.Map(audit => CreateUserAudit(audit, userFullNames)));
+            user.Audits.Map(audit => CreateUserAudit(audit, auditUserFullNames)));
 
-    static UserAuditDto CreateUserAudit(UserAudit audit, HashMap<UserId, string> userFullNames) =>
+    static UserAuditDto CreateUserAudit(UserAudit audit, HashMap<UserId, string> auditUserFullNames) =>
         new(
             audit.Timestamp,
             audit.UserId.ToNullable(),
             audit.UserId.Case switch
             {
-                UserId userId => userFullNames[userId],
+                UserId userId => auditUserFullNames[userId],
                 _ => null,
             },
             audit.Type,

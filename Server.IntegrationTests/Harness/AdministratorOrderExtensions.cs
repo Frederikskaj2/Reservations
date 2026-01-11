@@ -17,9 +17,10 @@ static class AdministratorOrderExtensions
     public static async ValueTask<PlaceOwnerOrderResponse> PlaceOwnerOrder(
         this SessionFixture session, bool isCleaningRequired, params TestReservation[] reservations)
     {
-        var request = new PlaceOwnerOrderRequest(Description: dataFaker.Lorem.Sentence(), Reservations: reservations
-                .Select(reservation => new ReservationRequest(reservation.ResourceId, session.Calendar.GetAvailableExtent(session, reservation))),
-            IsCleaningRequired: isCleaningRequired);
+        var request = new PlaceOwnerOrderRequest(
+            Description: dataFaker.Lorem.Sentence(),
+            reservations.Select(reservation => new ReservationRequest(reservation.ResourceId, session.Calendar.GetAvailableExtent(session, reservation))),
+            isCleaningRequired);
         return await session.Deserialize<PlaceOwnerOrderResponse>(await session.AdministratorPost("orders/owner", request));
     }
 
@@ -29,9 +30,13 @@ static class AdministratorOrderExtensions
         if (session.User is null)
             throw new InvalidOperationException();
 
-        var request = new PlaceResidentOrderRequest(UserId: session.UserId(), FullName: session.User.FullName, Phone: session.User.Phone,
-            ApartmentId: session.User.ApartmentId, AccountNumber: session.User.AccountNumber, Reservations: reservations
-                .Select(reservation => new ReservationRequest(reservation.ResourceId, session.Calendar.GetAvailableExtent(session, reservation))));
+        var request = new PlaceResidentOrderRequest(
+            session.UserId(),
+            session.User.FullName,
+            session.User.Phone,
+            session.User.ApartmentId,
+            session.User.AccountNumber,
+            reservations.Select(reservation => new ReservationRequest(reservation.ResourceId, session.Calendar.GetAvailableExtent(session, reservation))));
         return await session.Deserialize<PlaceResidentOrderResponse>(await session.AdministratorPost("orders/resident", request));
     }
 

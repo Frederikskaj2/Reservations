@@ -53,7 +53,7 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
     async Task WhenThePostingsAreRetrieved()
     {
         var getPostingsResponse = await session.GetPostings(session.CurrentDate);
-        postings = new(getPostingsResponse.Postings);
+        postings = new(getPostingsResponse.Postings.Where(posting => posting.ResidentId == session.UserId()));
     }
 
     async Task WhenTheResidentsTransactionsAreRetrieved()

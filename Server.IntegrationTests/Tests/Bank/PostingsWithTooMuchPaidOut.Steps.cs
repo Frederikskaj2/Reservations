@@ -45,7 +45,7 @@ sealed partial class PostingsWithTooMuchPaidOut(SessionFixture session) : Featur
     }
 
     async Task GivenTooMuchDepositIsRefunded() =>
-        await session.PayOut(session.UserId(), Creditor.Payment.Amount + excessAmount);
+        await session.PayOut(session.UserId(), Creditor.Payment.AccountNumber, Creditor.Payment.Amount + excessAmount);
 
     async Task WhenThePostingsAreRetrieved()
     {

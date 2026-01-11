@@ -145,15 +145,14 @@ public static class Validator
         return either.MapFailure(HttpStatusCode.UnprocessableEntity);
     }
 
-    static Either<string, Option<string>> ValidateOptionalAccountNumber(string? accountNumber) =>
-        accountNumber is null ? Option<string>.None : Some(ValidateAccountNumber(accountNumber)).Sequence();
+    static Either<string, Option<AccountNumber>> ValidateOptionalAccountNumber(string? accountNumber) =>
+        accountNumber is null ? Option<AccountNumber>.None : Some(ValidateAccountNumber(accountNumber)).Sequence();
 
-    static Either<string, string> ValidateAccountNumber(string? accountNumber) =>
+    public static Either<string, AccountNumber> ValidateAccountNumber(string? accountNumber) =>
         from accountNumberNotNull in IsNotNullOrEmpty(accountNumber, "Account number")
         let trimmedAccountNumber = accountNumberNotNull.Trim()
-        from _1 in IsNotLongerThan(trimmedAccountNumber, ValidationRule.MaximumAccountNumberLength, "Account number")
-        from _2 in IsMatching(trimmedAccountNumber, ValidationRule.AccountNumberRegex, "Account number")
-        select trimmedAccountNumber;
+        from _ in IsMatching(trimmedAccountNumber, ValidationRule.AccountNumberRegex, "Account number")
+        select AccountNumber.FromString(trimmedAccountNumber);
 
     static Either<string, Seq<ReservationModel>> ValidateReservations(Seq<ReservationRequest> reservations) =>
         from seq in IsBoundedCollection(reservations, 1, ValidationRule.MaximumReservationsPerOrder, "Reservations")

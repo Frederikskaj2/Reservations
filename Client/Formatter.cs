@@ -9,26 +9,15 @@ using System.Globalization;
 
 namespace Frederikskaj2.Reservations.Client;
 
-public class Formatter
+public class Formatter(CultureInfo cultureInfo, DateTimeZone dateTimeZone)
 {
     const char noBreakSpace = '\x00A0';
     const char softHyphen = '\x00AD';
-    readonly CultureInfo cultureInfo;
-    readonly DateTimeZone dateTimeZone;
-    readonly LocalDatePattern longDatePattern;
-    readonly LocalDateTimePattern longTimePattern;
-    readonly LocalDatePattern shortDatePattern;
-    readonly LocalDateTimePattern shortTimePattern;
 
-    public Formatter(CultureInfo cultureInfo, DateTimeZone dateTimeZone)
-    {
-        this.cultureInfo = cultureInfo;
-        this.dateTimeZone = dateTimeZone;
-        longTimePattern = LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH':'mm", cultureInfo);
-        shortTimePattern = LocalDateTimePattern.Create("d'-'M'-'yyyy HH':'mm", cultureInfo);
-        longDatePattern = LocalDatePattern.Create("d. MMMM yyyy", cultureInfo);
-        shortDatePattern = LocalDatePattern.Create("dd.MM.yyyy", cultureInfo);
-    }
+    readonly LocalDatePattern longDatePattern = LocalDatePattern.Create("d. MMMM yyyy", cultureInfo);
+    readonly LocalDateTimePattern longTimePattern = LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH':'mm", cultureInfo);
+    readonly LocalDatePattern shortDatePattern = LocalDatePattern.Create("dd.MM.yyyy", cultureInfo);
+    readonly LocalDateTimePattern shortTimePattern = LocalDateTimePattern.Create("d'-'M'-'yyyy HH':'mm", cultureInfo);
 
     public string FormatMoneyLong(Amount value) => value.ToString("C0", cultureInfo);
 
@@ -99,17 +88,37 @@ public class Formatter
         };
     }
 
+    public string FormatHumanizedPastDate(LocalDate today, LocalDate pastDate)
+    {
+        var period = Period.Between(pastDate, today, PeriodUnits.Days);
+        return period.Days switch
+        {
+            0 => "I dag",
+            1 => "I går",
+            < 7 => $"For {GetNumber(period.Days)} dage siden",
+            < 10  => "For en uge siden",
+            < 14 => "For halvanden uge siden",
+            < 31 => $"For {GetNumber(period.Days/7)} uger siden",
+            _ => FormatHumanizedPastDateWhenMoreThanOneMonth(today, pastDate),
+        };
+    }
+
     string FormatHumanizedPastTimeWhenMoreThanOneMonth(Instant now, Instant past)
     {
         var nowDate = now.InZone(dateTimeZone).Date;
         var pastDate = past.InZone(dateTimeZone).Date;
-        var period = Period.Between(pastDate, nowDate, PeriodUnits.Months);
-        if (nowDate.Year == pastDate.Year || period.Months <= 6)
-            return period.Months == 1 ? "For en måned siden" : $"For {GetNumber(period.Months)} måneder siden";
-        return nowDate.Year - 1 == pastDate.Year ? "Sidste år" : $"I {pastDate.Year}";
+        return FormatHumanizedPastDateWhenMoreThanOneMonth(nowDate, pastDate);
     }
 
-    string GetNumber(int number) =>
+    string FormatHumanizedPastDateWhenMoreThanOneMonth(LocalDate today, LocalDate pastDate)
+    {
+        var period = Period.Between(pastDate, today, PeriodUnits.Months);
+        if (today.Year == pastDate.Year || period.Months <= 6)
+            return period.Months == 1 ? "For en måned siden" : $"For {GetNumber(period.Months)} måneder siden";
+        return today.Year - 1 == pastDate.Year ? "Sidste år" : $"I {pastDate.Year}";
+    }
+
+    public string GetNumber(int number) =>
         number switch
         {
             2 => "to",

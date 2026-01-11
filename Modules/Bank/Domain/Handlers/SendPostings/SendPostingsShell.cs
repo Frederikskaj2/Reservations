@@ -17,9 +17,9 @@ public static class SendPostingsShell
         from postings in GetPostingsV1OrV2(reader, command.Month, cancellationToken).MapReadError()
         let userIds = toHashSet(postings.Map(posting => posting.ResidentId))
         from userExcerpts in ReadUserExcerpts(reader, userIds, cancellationToken)
-        let usersHashMap = toHashMap(userExcerpts.Map(userExcerpt => (userExcerpt.UserId, userExcerpt.FullName)))
+        let userFullNames = toHashMap(userExcerpts.Map(userExcerpt => (userExcerpt.UserId, userExcerpt.FullName)))
         from _ in emailService
-            .Send(new(user.Email(), user.FullName, command.Month, postings), usersHashMap, cancellationToken)
+            .Send(new(user.Email(), user.FullName, command.Month, postings), userFullNames, cancellationToken)
             .ToRightAsync<Failure<Unit>, Unit>()
         select user.Email();
 }

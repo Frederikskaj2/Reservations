@@ -7,6 +7,18 @@
     margin-right: 0.5rem;
 }
 
-.open-up {
-    margin-top: 2rem;
+::deep .name-column {
+    width: 60%;
+}
+
+::deep .amount-column {
+    width: 10%;
+}
+
+::deep .age-or-status-column {
+    width: 20%;
+}
+
+::deep .button-column {
+    width: 10%;
 }

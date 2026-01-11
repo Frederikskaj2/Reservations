@@ -31,6 +31,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Update="Tests\Bank\DelayedPayOuts.Steps.cs">
+            <DependentUpon>DelayedPayOuts.cs</DependentUpon>
+        </Compile>
         <Compile Update="Tests\Bank\GetBankTransactions.Steps.cs">
             <DependentUpon>GetBankTransactions.cs</DependentUpon>
         </Compile>

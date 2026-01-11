@@ -16,10 +16,10 @@ partial class ConfirmReconciliationDialog
     [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
     [Inject] public Formatter Formatter { get; set; } = null!;
 
-    [Parameter] public EventCallback<(BankTransactionDto, PayOutDto)> OnConfirmPayOut { get; set; }
+    [Parameter] public EventCallback<(BankTransactionDto, PayOutSummaryDto)> OnConfirmPayOut { get; set; }
     [Parameter] public EventCallback<(BankTransactionDto, ResidentDto)> OnConfirmReconciliation { get; set; }
 
-    PayOutDto? PayOut { get; set; }
+    PayOutSummaryDto? PayOut { get; set; }
     ResidentDto? Resident { get; set; }
     BankTransactionDto? Transaction { get; set; }
 
@@ -33,7 +33,7 @@ partial class ConfirmReconciliationDialog
         return modal.Show();
     }
 
-    public Task Show(BankTransactionDto transaction, ResidentDto resident, PayOutDto payOut)
+    public Task Show(BankTransactionDto transaction, ResidentDto resident, PayOutSummaryDto payOut)
     {
         Transaction = transaction;
         Resident = resident;

@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Frederikskaj2.Reservations.Client.Modules.Orders;
 
-public sealed partial class OrderAudits : IDisposable
+sealed partial class OrderAudits : IDisposable
 {
     Timer? timer;
 
@@ -33,17 +33,17 @@ public sealed partial class OrderAudits : IDisposable
 
     static string GetAuditName(OrderAuditType type) => type switch
     {
-        OrderAuditType.Import => "Import fra tidligere system",
-        OrderAuditType.PlaceOrder => "Oprettelse af bestilling",
-        OrderAuditType.ConfirmOrder => "Bekræftelse af bestilling",
-        OrderAuditType.SettleReservation => "Opgørelse af reservation",
-        OrderAuditType.CancelReservation => "Afbestilling af reservation",
-        OrderAuditType.AllowCancellationWithoutFee => "Tillad afbestilling uden gebyr",
-        OrderAuditType.DisallowCancellationWithoutFee => "Forbyd afbestilling uden gebyr",
-        OrderAuditType.UpdateDescription => "Ændring af beskrivelse",
-        OrderAuditType.UpdateCleaning => "Ændring af rengøring",
-        OrderAuditType.FinishOrder => "Afslutning af bestilling",
-        OrderAuditType.UpdateReservations => "Ændring af reservationer",
+        OrderAuditType.Import => "Importeret fra tidligere system",
+        OrderAuditType.PlaceOrder => "Bestilling oprettet",
+        OrderAuditType.ConfirmOrder => "Bestilling bekræftet",
+        OrderAuditType.SettleReservation => "Reservation opgjort",
+        OrderAuditType.CancelReservation => "Reservation afbestilt",
+        OrderAuditType.AllowCancellationWithoutFee => "Afbestilling uden gebyr tilladt",
+        OrderAuditType.DisallowCancellationWithoutFee => "Afbestilling uden gebyr ej tilladt",
+        OrderAuditType.UpdateDescription => "Beskrivelse ændret",
+        OrderAuditType.UpdateCleaning => "Tilvalg af rengøring ændret",
+        OrderAuditType.FinishOrder => "Bestilling afsluttet",
+        OrderAuditType.UpdateReservations => "Reservationer ændret",
         _ => "?",
     };
 }

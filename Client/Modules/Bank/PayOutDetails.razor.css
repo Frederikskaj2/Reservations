@@ -1,0 +1,25 @@
+﻿.field-text {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+}
+
+.outer-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.horizontal-container {
+    display: flex;
+    gap: 1rem;
+}
+
+.inline-control {
+    display: inline-block;
+    flex-grow: 1;
+}
+
+::deep .vertical-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}

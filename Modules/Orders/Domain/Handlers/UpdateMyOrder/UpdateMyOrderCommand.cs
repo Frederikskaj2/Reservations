@@ -8,5 +8,5 @@ public record UpdateMyOrderCommand(
     Instant Timestamp,
     UserId UserId,
     OrderId OrderId,
-    Option<string> AccountNumber,
+    Option<AccountNumber> AccountNumber,
     HashSet<ReservationIndex> CancelledReservations);

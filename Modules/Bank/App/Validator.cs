@@ -69,23 +69,21 @@ static class Validator
             ? status
             : $"{context} with value '{status}' is not valid.";
 
-    public static Either<Failure<Unit>, CreatePayOutCommand> ValidateCreatePayOut(CreatePayOutRequest request, Instant timestamp)
+    public static Either<Failure<Unit>, CreatePayOutCommand> ValidateCreatePayOut(CreatePayOutRequest request, UserId administratorId, Instant timestamp)
     {
         var either =
+            from accountNumber in ValidateAccountNumber(request.AccountNumber)
             from amount in ValidateAmount(request.Amount, ValidationRule.MinimumAmount, ValidationRule.MaximumAmount, "Amount")
-            select new CreatePayOutCommand(timestamp, request.ResidentId, amount);
+            select new CreatePayOutCommand(timestamp, administratorId, request.ResidentId, request.AccountNumber, amount);
         return either.MapFailure(HttpStatusCode.UnprocessableEntity);
     }
 
-    public static Either<Failure<Unit>, ETag?> ValidateETag(string? eTag) =>
-        eTag is not null && ETag.IsValid(eTag) ? ETag.FromString(eTag) : null;
-
     public static Either<Failure<Unit>, ReconcileCommand> ValidateReconcile(
-        Instant timestamp, UserId createdByUserId, int bankTransactionId, string? paymentId)
+        Instant timestamp, UserId administratorId, int bankTransactionId, string? paymentId)
     {
         var either =
             from userId in ValidatePaymentId(paymentId)
-            select new ReconcileCommand(timestamp, createdByUserId, bankTransactionId, userId);
+            select new ReconcileCommand(timestamp, administratorId, bankTransactionId, userId);
         return either.MapFailure(HttpStatusCode.UnprocessableEntity);
     }
 
@@ -106,4 +104,27 @@ static class Validator
 
     static Either<string, Unit> IsFirstDayOfMonth(LocalDate date, string context) =>
         date.Day == 1 ? unit : $"{context} is not first day of month.";
+
+    public static Either<Failure<Unit>, AddPayOutNoteCommand> ValidateAddPayOutNote(
+        PayOutId payOutId, AddPayOutNoteRequest request, UserId userId, Instant timestamp)
+    {
+        var either =
+            from text in ValidatePayOutNoteText(request.Text)
+            select new AddPayOutNoteCommand(timestamp, payOutId, userId, text);
+        return either.MapFailure(HttpStatusCode.UnprocessableEntity);
+    }
+
+    static Either<string, string> ValidatePayOutNoteText(string? text) =>
+        from nonEmptyString in IsNotNullOrEmpty(text, "Text")
+        from validText in IsNotLongerThan(nonEmptyString, ValidationRule.MaximumPayOutNoteLength, "Text")
+        select validText;
+
+    public static Either<Failure<Unit>, UpdatePayOutAccountNumberCommand> ValidateUpdatePayOutAccountNumber(
+        PayOutId payOutId, UpdatePayOutAccountNumberRequest request, UserId userId, Instant timestamp)
+    {
+        var either =
+            from accountNumber in ValidateAccountNumber(request.AccountNumber)
+            select new UpdatePayOutAccountNumberCommand(timestamp, payOutId, userId, accountNumber);
+        return either.MapFailure(HttpStatusCode.UnprocessableEntity);
+    }
 }

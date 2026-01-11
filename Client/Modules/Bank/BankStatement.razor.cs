@@ -39,7 +39,7 @@ partial class BankStatement
     LocalDate? latestTransactionDate;
     List<int>? months;
     LocalDatePattern? monthPattern;
-    IEnumerable<PayOutDto>? payOuts;
+    IEnumerable<PayOutSummaryDto>? payOuts;
     IEnumerable<ResidentDto>? residents;
     IFileEntry? selectedFile;
     bool showImportErrorAlert;
@@ -250,7 +250,7 @@ partial class BankStatement
             showReconcileErrorAlert = true;
     }
 
-    async Task ReconcilePayOut((BankTransactionDto Transaction, PayOutDto PayOut) tuple)
+    async Task ReconcilePayOut((BankTransactionDto Transaction, PayOutSummaryDto PayOut) tuple)
     {
         DismissAllAlerts();
         var requestUri = $"bank/transactions/{tuple.Transaction.BankTransactionId}/reconcile-pay-out/{tuple.PayOut.PayOutId}";

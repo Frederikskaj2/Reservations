@@ -11,9 +11,9 @@ namespace Frederikskaj2.Reservations.Client.Modules.Bank;
 
 partial class ReconciliationRow
 {
-    List<PayOutDto> otherPayOuts = [];
+    List<PayOutSummaryDto> otherPayOuts = [];
     ResidentDto? suggestedResident;
-    PayOutDto? suggestedPayOut;
+    PayOutSummaryDto? suggestedPayOut;
 
     [Inject] public CultureInfo CultureInfo { get; set; } = null!;
     [Inject] public Formatter Formatter { get; set; } = null!;
@@ -22,7 +22,7 @@ partial class ReconciliationRow
     [Parameter] public IEnumerable<ResidentDto>? Residents { get; set; }
     [Parameter] public FindResidentDialog? FindResidentDialog { get; set; }
     [Parameter] public EventCallback<(BankTransactionId, BankTransactionStatus)> OnSetTransactionStatus { get; set; }
-    [Parameter] public IEnumerable<PayOutDto>? PayOuts { get; set; }
+    [Parameter] public IEnumerable<PayOutSummaryDto>? PayOuts { get; set; }
     [Parameter] public BankTransactionDto? Transaction { get; set; }
 
     protected override void OnParametersSet()
@@ -38,8 +38,14 @@ partial class ReconciliationRow
             suggestedResident = Residents.FirstOrDefault(debtor => debtor.PaymentId == paymentId);
         else
         {
-            suggestedPayOut = PayOuts.FirstOrDefault(payOut => payOut.PaymentId == paymentId && payOut.Amount == -Transaction.Amount);
-            otherPayOuts = PayOuts.Where(payOut => payOut.PaymentId != suggestedPayOut?.PaymentId && payOut.Amount == -Transaction.Amount).ToList();
+            suggestedPayOut = PayOuts.FirstOrDefault(payOut =>
+                payOut.PaymentId == paymentId &&
+                payOut.Status is Reservations.Bank.PayOutStatus.InProgress &&
+                payOut.Amount == -Transaction.Amount);
+            otherPayOuts = PayOuts.Where(payOut =>
+                payOut.PaymentId != suggestedPayOut?.PaymentId &&
+                payOut.Status is Reservations.Bank.PayOutStatus.InProgress &&
+                payOut.Amount == -Transaction.Amount).ToList();
         }
     }
 
@@ -47,7 +53,7 @@ partial class ReconciliationRow
 
     Task FindResident() => FindResidentDialog!.Show(Transaction!);
 
-    Task ReconcilePayOut(PayOutDto payOut)
+    Task ReconcilePayOut(PayOutSummaryDto payOut)
     {
         var resident = Residents!.First(resident => resident.UserIdentity.UserId == payOut.UserIdentity.UserId);
         return ConfirmReconciliationDialog!.Show(Transaction!, resident, payOut);

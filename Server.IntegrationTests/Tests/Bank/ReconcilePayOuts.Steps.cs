@@ -17,7 +17,7 @@ sealed partial class ReconcilePayOuts(SessionFixture session) : FeatureFixture, 
 {
     State<CreditorDto> creditor;
     State<Amount> amount;
-    State<PayOutDto> payout;
+    State<PayOutSummaryDto> payout;
     State<LocalDate> paymentDate;
     State<BankTransactionDto> importedBankTransaction;
     State<BankTransactionDto> reconciledBankTransaction;
@@ -25,7 +25,7 @@ sealed partial class ReconcilePayOuts(SessionFixture session) : FeatureFixture, 
 
     CreditorDto Creditor => creditor.GetValue(nameof(Creditor));
     Amount Amount => amount.GetValue(nameof(Amount));
-    PayOutDto PayOut => payout.GetValue(nameof(PayOut));
+    PayOutSummaryDto PayOut => payout.GetValue(nameof(PayOut));
     LocalDate PaymentDate => paymentDate.GetValue(nameof(PaymentDate));
     BankTransactionDto ImportedBankTransaction => importedBankTransaction.GetValue(nameof(ImportedBankTransaction));
     BankTransactionDto ReconciledBankTransaction => reconciledBankTransaction.GetValue(nameof(ReconciledBankTransaction));
@@ -51,13 +51,13 @@ sealed partial class ReconcilePayOuts(SessionFixture session) : FeatureFixture, 
 
     async Task GivenAPayOutIsCreated()
     {
-        var clientCreatePayOutResponse = await session.CreatePayOut(Creditor.UserInformation.UserId, Amount);
+        var clientCreatePayOutResponse = await session.CreatePayOut(Creditor.UserInformation.UserId, Creditor.Payment.AccountNumber, Amount);
         payout = clientCreatePayOutResponse.PayOut;
     }
 
     async Task GivenANonMatchingPayOutIsCreated()
     {
-        var clientCreatePayOutResponse = await session.CreatePayOut(Creditor.UserInformation.UserId, Amount + Amount.FromInt32(100));
+        var clientCreatePayOutResponse = await session.CreatePayOut(Creditor.UserInformation.UserId, Creditor.Payment.AccountNumber, Amount + Amount.FromInt32(100));
         payout = clientCreatePayOutResponse.PayOut;
     }
 
@@ -85,16 +85,16 @@ sealed partial class ReconcilePayOuts(SessionFixture session) : FeatureFixture, 
         return Task.CompletedTask;
     }
 
-    async Task ThenThePayOutIsDeleted()
+    async Task ThenThePayOutIsReconciled()
     {
-        var getPayOutsResponse = await session.GetPayOuts();
-        getPayOutsResponse.PayOuts.Should().NotContainEquivalentOf(new { PayOut.PayOutId });
+        var getPayOutResponse = await session.GetPayOut(PayOut.PayOutId);
+        getPayOutResponse.PayOut.Status.Should().Be(PayOutStatus.Reconciled);
     }
 
-    async Task ThenThePayOutIsNotDeleted()
+    async Task ThenThePayOutIsNotReconciled()
     {
-        var getPayOutsResponse = await session.GetPayOuts();
-        getPayOutsResponse.PayOuts.Should().ContainEquivalentOf(new { PayOut.PayOutId });
+        var getPayOutResponse = await session.GetPayOut(PayOut.PayOutId);
+        getPayOutResponse.PayOut.Status.Should().Be(PayOutStatus.InProgress);
     }
 
     async Task ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0()

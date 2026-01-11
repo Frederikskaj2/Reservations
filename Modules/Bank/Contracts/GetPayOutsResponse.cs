@@ -2,4 +2,4 @@
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record GetPayOutsResponse(IEnumerable<PayOutDto> PayOuts);
+public record GetPayOutsResponse(IEnumerable<PayOutSummaryDto> PayOuts);

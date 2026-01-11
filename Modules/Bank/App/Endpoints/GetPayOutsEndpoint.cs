@@ -24,7 +24,7 @@ class GetPayOutsEndpoint
     {
         var either =
             from payOuts in GetPayOuts(bankingDateProvider, entityReader, timeConverter, httpContext.RequestAborted)
-            select new GetPayOutsResponse(CreatePayOuts(payOuts));
+            select new GetPayOutsResponse(CreatePayOutSummaries(payOuts));
         return either.ToResult(logger, httpContext);
     }
 }

@@ -54,7 +54,7 @@ sealed partial class DeleteUser(SessionFixture session) : FeatureFixture, IScena
         await session.SettleReservation(Order.OrderId, 0);
 
     async Task WhenTheResidentsBalanceIsRefunded() =>
-        await session.PayOut(Order.UserIdentity.UserId, Order.Price.Deposit);
+        await session.PayOut(Order.UserIdentity.UserId, session.User!.AccountNumber, Order.Price.Deposit);
 
     async Task WhenTheDeleteUsersJobHasExecuted() => await session.RunDeleteUsers();
 

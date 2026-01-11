@@ -24,20 +24,39 @@ public static class ReconcileShell
         ReconcileCommand command,
         CancellationToken cancellationToken) =>
         from bankTransactionEntity in reader.ReadWithETag<BankTransaction>(command.BankTransactionId, cancellationToken).MapReadError()
-        from userEntity in reader.ReadWithETag<User>(command.ResidentId, cancellationToken).MapReadError()
+        from residentEntity in reader.ReadWithETag<User>(command.ResidentId, cancellationToken).MapReadError()
         from transactionId in CreateId(reader, writer, nameof(Transaction), cancellationToken)
         from import in reader.Read<Import>(Import.SingletonId, cancellationToken).MapReadError()
         let latestImportDate = timeConverter.GetDate(import.Timestamp)
-        from payOutEntities in reader.QueryWithETag(GetUserPayOutsQuery(command.ResidentId), cancellationToken).MapReadError()
-        let input = new ReconcileInput(command, bankTransactionEntity.Value, userEntity.Value, transactionId, latestImportDate, payOutEntities)
-        let output = ReconcileCore(timeConverter, input)
-        from _1 in Write(writer, bankTransactionEntity, userEntity, output, cancellationToken)
-        from _2 in SendEmail(emailService, options, output.User, output.BankTransaction.Amount, cancellationToken)
+        from residentPayOutOption in TryGetResidentPayOut(reader, command.ResidentId, cancellationToken)
+        let input = new ReconcileInput(command, bankTransactionEntity.Value, residentEntity.Value, transactionId, residentPayOutOption)
+        let output = ReconcileCore(input)
+        from _1 in Write(writer, bankTransactionEntity, residentEntity, output, cancellationToken)
+        from _2 in SendEmail(emailService, options, output.Resident, output.BankTransaction.Amount, cancellationToken)
         from _3 in ConfirmOrders(jobScheduler, output.BankTransaction.Amount).ToRightAsync<Failure<Unit>, Unit>()
         select output.BankTransaction;
 
-    static IQuery<PayOut> GetUserPayOutsQuery(UserId userId) =>
-        Query<PayOut>().Where(payOut => payOut.UserId == userId);
+    static EitherAsync<Failure<Unit>, Option<PayOutPair>> TryGetResidentPayOut(
+        IEntityReader reader, UserId residentId, CancellationToken cancellationToken) =>
+        from payOutEntities in reader.QueryWithETag(GetResidentPayOutsQuery(residentId), cancellationToken).MapReadError()
+        from residentPayOutOption in TryGetResidentPayOut(reader, payOutEntities.HeadOrNone(), cancellationToken)
+        select residentPayOutOption;
+
+    static EitherAsync<Failure<Unit>, Option<PayOutPair>> TryGetResidentPayOut(
+        IEntityReader reader, Option<ETaggedEntity<PayOut>> payOutEntityOption, CancellationToken cancellationToken) =>
+        payOutEntityOption.Case switch
+        {
+            ETaggedEntity<PayOut> entity => GetResidentPayOut(reader, entity, cancellationToken).Map(Some),
+            _ => Option<PayOutPair>.None,
+        };
+
+    static EitherAsync<Failure<Unit>, PayOutPair> GetResidentPayOut(
+        IEntityReader reader, ETaggedEntity<PayOut> payOutEntity, CancellationToken cancellationToken) =>
+        from inProgressPayOut in reader.ReadWithETag<InProgressPayOut>(payOutEntity.Value.ResidentId, cancellationToken).MapReadError()
+        select new PayOutPair(payOutEntity, inProgressPayOut);
+
+    static IQuery<PayOut> GetResidentPayOutsQuery(UserId residentId) =>
+        Query<PayOut>().Where(payOut => payOut.ResidentId == residentId && (payOut.Status == PayOutStatus.InProgress));
 
     static EitherAsync<Failure<Unit>, Seq<(EntityOperation Operation, ETag ETag)>> Write(
         IEntityWriter writer,
@@ -47,15 +66,27 @@ public static class ReconcileShell
         CancellationToken cancellationToken) =>
         writer
             .Write(
-                collector => collector.Add(bankTransactionEntity).Add(userEntity),
-                tracker => DeletePayOutIfMatched(output.PayOutToDelete, tracker).Update(output.BankTransaction).Update(output.User).Add(output.Transaction),
+                collector => collector.Add(bankTransactionEntity).Add(userEntity).TryAddResidentPayOut(output.PayOutToReconcile),
+                tracker => tracker
+                    .Update(output.BankTransaction)
+                    .Update(output.Resident)
+                    .Add(output.Transaction)
+                    .TryRemoveInProgressPayOut(output.PayOutToReconcile)
+                    .TryUpdate(output.PayOutToReconcile.Map(payOutToReconcile => payOutToReconcile.UpdatedPayOut)),
                 cancellationToken)
             .MapWriteError();
 
-    static EntityTracker DeletePayOutIfMatched(Option<ETaggedEntity<PayOut>> entityOption, EntityTracker tracker) =>
-        entityOption.Case switch
+    static EntityCollector TryAddResidentPayOut(this EntityCollector collector, Option<PayOutToReconcile> payOutToReconcileOption) =>
+        payOutToReconcileOption.Case switch
         {
-            ETaggedEntity<PayOut> entity => tracker.Remove<PayOut>(entity.Value.PayOutId, entity.ETag),
+            PayOutToReconcile payOutToReconcile => collector.Add(payOutToReconcile.OriginalPayOutEntity).Add(payOutToReconcile.InProgressPayOutEntity),
+            _ => collector,
+        };
+
+    static EntityTracker TryRemoveInProgressPayOut(this EntityTracker tracker, Option<PayOutToReconcile> option) =>
+        option.Case switch
+        {
+            PayOutToReconcile payOutToReconcile => tracker.Remove(payOutToReconcile.InProgressPayOutEntity),
             _ => tracker,
         };
 

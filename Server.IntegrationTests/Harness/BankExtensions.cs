@@ -73,22 +73,35 @@ static class BankExtensions
     public static async ValueTask<GetPayOutsResponse> GetPayOuts(this SessionFixture session) =>
         await session.Deserialize<GetPayOutsResponse>(await session.AdministratorGet("bank/pay-outs"));
 
-    public static async ValueTask<ClientCreatePayOutResponse> CreatePayOut(this SessionFixture session, UserId userId, Amount amount)
+    public static async ValueTask<GetPayOutResponse> GetPayOut(this SessionFixture session, PayOutId payOutId) =>
+        await session.Deserialize<GetPayOutResponse>(await session.AdministratorGet($"bank/pay-outs/{payOutId}"));
+
+    public static async ValueTask<CreatePayOutResponse> CreatePayOut(this SessionFixture session, UserId userId, string accountNumber, Amount amount)
     {
-        var httpResponseMessage = await session.AdministratorPost("/bank/pay-outs", new CreatePayOutRequest(userId, amount));
-        var createPayOutResponse = await session.Deserialize<CreatePayOutResponse>(httpResponseMessage);
-        var eTag = httpResponseMessage.Headers.TryGetValues("ETag", out var values) ? values.FirstOrDefault() : null;
-        return new(createPayOutResponse.PayOut, eTag);
+        var httpResponseMessage = await session.CreatePayOutRaw(userId, accountNumber, amount);
+        return await session.Deserialize<CreatePayOutResponse>(httpResponseMessage);
     }
 
-    public static async ValueTask DeletePayOut(this SessionFixture session, PayOutId payOutId, string? eTag)
+    public static ValueTask<HttpResponseMessage> CreatePayOutRaw(this SessionFixture session, UserId userId, string accountNumber, Amount amount) =>
+        session.AdministratorPost("/bank/pay-outs", new CreatePayOutRequest(userId, accountNumber, amount));
+
+    public static async ValueTask<AddPayOutNoteResponse> AddPayOutNote(this SessionFixture session, PayOutId payOutId, string text)
     {
-        var response = await session.AdministratorDelete($"/bank/pay-outs/{payOutId}", eTag);
-        response.EnsureSuccessStatusCode();
+        var httpResponseMessage = await session.AdministratorPost($"bank/pay-outs/{payOutId}/notes", new AddPayOutNoteRequest(text));
+        return await session.Deserialize<AddPayOutNoteResponse>(httpResponseMessage);
     }
 
-    public static ValueTask<HttpResponseMessage> DeletePayOutRaw(this SessionFixture session, PayOutId payOutId, string? eTag) =>
-        session.AdministratorDelete($"/bank/pay-outs/{payOutId}", eTag);
+    public static async ValueTask<AddPayOutNoteResponse> UpdatePayOutAccountNumber(this SessionFixture session, PayOutId payOutId, string accountNumber)
+    {
+        var httpResponseMessage = await session.AdministratorPatch($"bank/pay-outs/{payOutId}", new UpdatePayOutAccountNumberRequest(accountNumber));
+        return await session.Deserialize<AddPayOutNoteResponse>(httpResponseMessage);
+    }
+
+    public static async ValueTask<CancelPayOutResponse> CancelPayOut(this SessionFixture session, PayOutId payOutId)
+    {
+        var httpResponseMessage = await session.AdministratorPost($"bank/pay-outs/{payOutId}/cancel");
+        return await session.Deserialize<CancelPayOutResponse>(httpResponseMessage);
+    }
 
     public static async ValueTask<ReconcilePayOutResponse> ReconcilePayOut(
         this SessionFixture session, BankTransactionId bankTransactionId, PayOutId payOutId) =>
@@ -104,10 +117,10 @@ static class BankExtensions
         return await session.Reconcile(transaction.BankTransactionId, paymentId);
     }
 
-    public static async ValueTask<ReconcilePayOutResponse> PayOut(this SessionFixture session, UserId userId, Amount amount)
+    public static async ValueTask<ReconcilePayOutResponse> PayOut(this SessionFixture session, UserId userId, string accountNumber, Amount amount)
     {
         var transaction = await session.ImportBankTransaction(session.CurrentDate, userId, -amount);
-        var payOut = await session.CreatePayOut(userId, amount);
+        var payOut = await session.CreatePayOut(userId, accountNumber, amount);
         return await session.ReconcilePayOut(transaction.BankTransactionId, payOut.PayOut.PayOutId);
     }
 }

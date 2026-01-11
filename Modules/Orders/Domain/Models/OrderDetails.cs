@@ -3,4 +3,4 @@ using LanguageExt;
 
 namespace Frederikskaj2.Reservations.Orders;
 
-public record OrderDetails(Order Order, User User, HashMap<UserId, string> AuditsUserFullNames);
+public record OrderDetails(Order Order, User User, HashMap<UserId, string> AuditUserFullNames);

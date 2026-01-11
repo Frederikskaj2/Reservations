@@ -49,7 +49,7 @@ sealed partial class PayOut(SessionFixture session) : FeatureFixture, IScenarioS
     {
         var getCreditorsResponse1 = await session.GetCreditors();
         creditor = getCreditorsResponse1.Creditors.Single(c => c.UserInformation.UserId == session.UserId());
-        await session.PayOut(session.UserId(), Creditor.Payment.Amount - missingAmount);
+        await session.PayOut(session.UserId(), Creditor.Payment.AccountNumber, Creditor.Payment.Amount - missingAmount);
         var getCreditorsResponse2 = await session.GetCreditors();
         paidCreditor = getCreditorsResponse2.Creditors.SingleOrDefault(c => c.UserInformation.UserId == session.UserId());
     }

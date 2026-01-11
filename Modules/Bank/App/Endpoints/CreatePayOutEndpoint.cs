@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using static Frederikskaj2.Reservations.Bank.CreatePayOutShell;
 using static Frederikskaj2.Reservations.Bank.PayOutFactory;
@@ -22,12 +24,14 @@ class CreatePayOutEndpoint
         [FromServices] IEntityReader entityReader,
         [FromServices] IEntityWriter entityWriter,
         [FromServices] ILogger<CreatePayOutEndpoint> logger,
+        ClaimsPrincipal claimsPrincipal,
         HttpContext httpContext)
     {
         var either =
-            from command in ValidateCreatePayOut(request, dateProvider.Now).ToAsync()
-            from payOutDetails in CreatePayOut(entityReader, entityWriter, command, httpContext.RequestAborted)
-            select WithETag.Create(new CreatePayOutResponse(CreatePayOut(payOutDetails)), payOutDetails.ETag.ToString());
+            from userId in claimsPrincipal.UserId().ToEitherAsync(Failure.New(HttpStatusCode.Forbidden))
+            from command in ValidateCreatePayOut(request, userId, dateProvider.Now).ToAsync()
+            from payOutSummary in CreatePayOut(entityReader, entityWriter, command, httpContext.RequestAborted)
+            select new CreatePayOutResponse(CreatePayOutSummary(payOutSummary));
         return either.ToResult(logger, httpContext);
     }
 }

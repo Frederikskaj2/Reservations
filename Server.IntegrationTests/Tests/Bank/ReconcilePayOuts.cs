@@ -21,7 +21,7 @@ public partial class ReconcilePayOuts
             GivenBankTransactionsAreImported,
             WhenTheTransactionIsReconciledWithThePayOut,
             ThenTheBankTransactionIsReconciled,
-            ThenThePayOutIsDeleted,
+            ThenThePayOutIsReconciled,
             ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0,
             ThenTheReconciliationIsAudited);
 
@@ -43,7 +43,7 @@ public partial class ReconcilePayOuts
             GivenBankTransactionsAreImported,
             WhenTheTransactionIsReconciledToTheResident,
             ThenTheBankTransactionIsReconciled,
-            ThenThePayOutIsDeleted,
+            ThenThePayOutIsReconciled,
             ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0,
             ThenTheReconciliationIsAudited);
 
@@ -55,7 +55,7 @@ public partial class ReconcilePayOuts
             GivenBankTransactionsAreImported,
             WhenTheTransactionIsReconciledToTheResident,
             ThenTheBankTransactionIsReconciled,
-            ThenThePayOutIsNotDeleted,
+            ThenThePayOutIsNotReconciled,
             ThenThePayOutAppearsOnTheResidentsAccountStatementThatHasABalanceOf0,
             ThenTheReconciliationIsAudited);
 }

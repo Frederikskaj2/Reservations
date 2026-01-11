@@ -1,0 +1,14 @@
+﻿<div>
+    @if (PayOut?.Status is Reservations.Bank.PayOutStatus.InProgress)
+    {
+        <Badge Pill="true" Color="Color.Success">Under udbetaling</Badge>
+    }
+    else if (PayOut?.Status is Reservations.Bank.PayOutStatus.Cancelled)
+    {
+        <Badge Pill="true" Color="Color.Warning">Annulleret</Badge>
+    }
+    else
+    {
+        <Badge Pill="true" Color="Color.Info">Afstemt</Badge>
+    }
+</div>

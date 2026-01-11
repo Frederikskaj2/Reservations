@@ -1,4 +1,3 @@
-using Frederikskaj2.Reservations.Core;
 using static Frederikskaj2.Reservations.Users.UserIdentityFactory;
 
 namespace Frederikskaj2.Reservations.Users;
@@ -12,5 +11,5 @@ public static class MyUserResponseFactory
             user.Roles,
             user.EmailSubscriptions,
             user.Flags.HasFlag(UserFlags.IsPendingDelete),
-            user.AccountNumber.ToNullableReference());
+            user.AccountNumber.ToNullable()?.ToString());
 }

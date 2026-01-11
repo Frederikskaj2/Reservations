@@ -1,0 +1,5 @@
+﻿::deep .badge {
+    display: inline-block;
+    min-width: 7.5rem;
+    padding: 1rem;
+}

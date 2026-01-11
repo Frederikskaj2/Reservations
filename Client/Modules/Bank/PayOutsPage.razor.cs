@@ -14,9 +14,10 @@ namespace Frederikskaj2.Reservations.Client.Modules.Bank;
 partial class PayOutsPage
 {
     IReadOnlyDictionary<ApartmentId, Apartment>? apartments;
-    List<CreditorDto>? creditors;
+    IEnumerable<CreditorDto>? creditors;
+    IEnumerable<PayOutSummaryDto>? inProgressPayOuts;
     bool isInitialized;
-    IEnumerable<PayOutDto>? payOuts;
+    IEnumerable<PayOutSummaryDto>? otherPayOuts;
     bool showErrorAlert;
     bool showSuccessAlert;
 
@@ -38,37 +39,37 @@ partial class PayOutsPage
         var getCreditorsResponse = await ApiClient.Get<GetCreditorsResponse>("creditors");
         if (getCreditorsResponse.IsSuccess)
         {
+            creditors = getCreditorsResponse.Result!.Creditors;
             var getPayOutsResponse = await ApiClient.Get<GetPayOutsResponse>("bank/pay-outs");
-            payOuts = getPayOutsResponse.IsSuccess ? getPayOutsResponse.Result!.PayOuts : null;
-            if (payOuts is not null)
+            if (getPayOutsResponse.IsSuccess)
             {
-                var alreadyPaidAmounts = payOuts
-                    .GroupBy(
-                        payOut => payOut.UserIdentity.UserId,
-                        (userId, userPayOuts) => (UserId: userId, Amount: userPayOuts.Sum(payOut => payOut.Amount)))
-                    .ToDictionary(tuple => tuple.UserId, tuple => tuple.Amount);
-                creditors = getCreditorsResponse.Result!.Creditors
-                    .Select(creditor => SubtractPayoutFromCreditorAmount(creditor, alreadyPaidAmounts))
-                    .Where(creditor => creditor.Payment.Amount > Amount.Zero)
+                inProgressPayOuts = getPayOutsResponse.Result!.PayOuts
+                    .Where(payOut => payOut.Status is Reservations.Bank.PayOutStatus.InProgress)
+                    .OrderByDescending(payOut => payOut.CreatedTimestamp)
                     .ToList();
+                otherPayOuts = getPayOutsResponse.Result!.PayOuts
+                    .Where(payOut => payOut.Status is not Reservations.Bank.PayOutStatus.InProgress)
+                    .OrderByDescending(payOut => payOut.ResolvedTimestamp)
+                    .ToList();
+            }
+            else
+            {
+                inProgressPayOuts = null;
+                otherPayOuts = null;
             }
         }
         else
         {
             creditors = null;
-            payOuts = null;
+            inProgressPayOuts = null;
+            otherPayOuts = null;
         }
     }
-
-    static CreditorDto SubtractPayoutFromCreditorAmount(CreditorDto creditor, Dictionary<UserId, Amount> alreadyPaidAmounts) =>
-        alreadyPaidAmounts.TryGetValue(creditor.UserInformation.UserId, out var amount)
-            ? creditor with { Payment = creditor.Payment with { Amount = creditor.Payment.Amount - amount } }
-            : creditor;
 
     async Task RecordPayOut(CreditorDto creditor)
     {
         DismissAllAlerts();
-        var request = new CreatePayOutRequest(creditor.UserInformation.UserId, creditor.Payment.Amount);
+        var request = new CreatePayOutRequest(creditor.UserInformation.UserId, creditor.Payment.AccountNumber, creditor.Payment.Amount);
         var response = await ApiClient.Post("bank/pay-outs", request);
         if (response.IsSuccess)
         {
@@ -79,18 +80,7 @@ partial class PayOutsPage
             showErrorAlert = true;
     }
 
-    async Task DeletePayOut(PayOutDto payOut)
-    {
-        DismissAllAlerts();
-        var response = await ApiClient.Delete($"bank/pay-outs/{payOut.PayOutId}", payOut.ETag.ToString());
-        if (response.IsSuccess)
-        {
-            await GetData();
-            showSuccessAlert = true;
-        }
-        else
-            showErrorAlert = true;
-    }
+    void ShowPayOut(PayOutSummaryDto payOut) => NavigationManager.NavigateTo($"til-udbetaling/{payOut.PayOutId}");
 
     void DismissSuccessAlert() => showSuccessAlert = false;
 

@@ -1,0 +1,25 @@
+﻿@using ValidationRule = Frederikskaj2.Reservations.Core.ValidationRule
+<Modal @ref="modal">
+    <Form>
+        <ModalContent Size="@ModalSize.Large">
+            <ModalHeader>
+                <ModalTitle>Tilføj note til udbetaling</ModalTitle>
+                <CloseButton Clicked="Cancel"/>
+            </ModalHeader>
+            <ModalBody>
+                <MemoEdit @bind-Text="text" Rows="4" MaxLength="@ValidationRule.MaximumPayOutNoteLength"/>
+            </ModalBody>
+            <ModalFooter>
+                <Button
+                    Color="Color.Primary"
+                    Type="@ButtonType.Submit"
+                    PreventDefaultOnSubmit="true"
+                    Clicked="Confirm"
+                    Disabled="@(text is not { Length: > 0 and <= ValidationRule.MaximumPayOutNoteLength })">
+                    Tilføj note
+                </Button>
+                <Button Color="Color.Secondary" Clicked="Cancel">Fortryd</Button>
+            </ModalFooter>
+        </ModalContent>
+    </Form>
+</Modal>
