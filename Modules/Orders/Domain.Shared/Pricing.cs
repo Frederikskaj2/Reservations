@@ -12,8 +12,9 @@ public static class Pricing
         var priceOptions = options.Prices[resourceType];
         var numberOfHighPriceNights = GetNumberOfHighPriceNights(holidays, extent);
         var rent = numberOfHighPriceNights*priceOptions.HighRentPerNight + (extent.Nights - numberOfHighPriceNights)*priceOptions.LowRentPerNight;
+        var cleaning = priceOptions.Cleaning + (HighPricePolicy.IsSurchargedCleaningDay(extent.Ends(), holidays) ? priceOptions.CleaningSurcharge : 0);
         var deposit = numberOfHighPriceNights > 0 ? priceOptions.HighDeposit : priceOptions.LowDeposit;
-        return new(rent, priceOptions.Cleaning, deposit);
+        return new(rent, cleaning, deposit);
     }
 
     static int GetNumberOfHighPriceNights(IReadOnlySet<LocalDate> holidays, Extent extent) =>

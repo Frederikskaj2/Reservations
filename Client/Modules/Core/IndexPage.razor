@@ -39,7 +39,7 @@
                 <strong>to dage</strong> for at få bedre tid til forberedelse og oprydning. Reglen om to dage gælder ikke når man reserverer festlokalet den
                 sidste dyre dag i en sammenhængende periode af dyre dage. Hvis man vil bruge lokalet søndag behøver man ikke at reservere mandag, men hvis man
                 vil holde fest fredag skal man også reservere torsdag eller lørdag, og hvis man vil holde fest lørdag skal man også reservere fredag eller
-                søndag.
+                søndag. Derudover tilkommer der tillæg ved aflevering på weekend og helligdage, da rengøringen betales weekendtillæg.
             </p>
             <Table Narrow="true">
                 <TableHeader>
@@ -65,6 +65,11 @@
                         <TableRowCell>Slutrengøring</TableRowCell>
                         <TableRowCell Class="text-center">@FormatPrice(options!.Prices[ResourceType.BanquetFacilities].Cleaning)</TableRowCell>
                         <TableRowCell Class="text-center">@FormatPrice(options!.Prices[ResourceType.Bedroom].Cleaning)</TableRowCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableRowCell>Tillæg, rengøring i weekend/helligdag</TableRowCell>
+                        <TableRowCell Class="text-center">@FormatPrice(options!.Prices[ResourceType.BanquetFacilities].CleaningSurcharge)</TableRowCell>
+                        <TableRowCell Class="text-center">@FormatPrice(options!.Prices[ResourceType.Bedroom].CleaningSurcharge)</TableRowCell>
                     </TableRow>
                     <TableRow>
                         <TableRowCell>Depositum</TableRowCell>

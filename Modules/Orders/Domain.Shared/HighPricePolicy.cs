@@ -5,6 +5,9 @@ namespace Frederikskaj2.Reservations.Orders;
 
 public static class HighPricePolicy
 {
+    public static bool IsSurchargedCleaningDay(LocalDate date, IReadOnlySet<LocalDate> holidays) =>
+        date.DayOfWeek is IsoDayOfWeek.Saturday or IsoDayOfWeek.Sunday || holidays.Contains(date);
+
     public static bool IsHighPriceDay(LocalDate date, IReadOnlySet<LocalDate> holidays) =>
         IsHighPriceDayOfWeek(date) || IsHolidayOrDayBeforeHoliday(date, holidays);
 
