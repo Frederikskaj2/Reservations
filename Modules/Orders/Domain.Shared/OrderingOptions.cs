@@ -15,7 +15,7 @@ public class OrderingOptions
                 LowRentPerNight = 500,
                 HighRentPerNight = 750,
                 Cleaning = 700,
-                CleaningSurcharge = 500,
+                CleaningSurcharge = 250,
                 LowDeposit = 1000,
                 HighDeposit = 3000,
             }
@@ -26,7 +26,7 @@ public class OrderingOptions
                 LowRentPerNight = 200,
                 HighRentPerNight = 250,
                 Cleaning = 300,
-                CleaningSurcharge = 300,
+                CleaningSurcharge = 150,
                 LowDeposit = 500,
                 HighDeposit = 500,
             }
