@@ -40,9 +40,8 @@ public static class ReservationPolicies
 
     public static bool IsOwnerReservationDateWithinBounds(OrderingOptions options, LocalDate today, LocalDate date)
     {
-        var reservationsAreNotAllowedBefore = today.PlusDays(1);
         var reservationsAreNotAllowedAfter = today.PlusDays(options.ReservationIsNotAllowedAfterDaysFromNow);
-        return reservationsAreNotAllowedBefore <= date && date <= reservationsAreNotAllowedAfter;
+        return date <= reservationsAreNotAllowedAfter;
     }
 
     public static bool IsResidentReservationDurationWithinBounds(
