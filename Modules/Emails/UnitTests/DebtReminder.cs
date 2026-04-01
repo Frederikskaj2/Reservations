@@ -40,7 +40,7 @@ public class DebtReminder(MessageFactoryFixture fixture) : IClassFixture<Message
                          </tr>
                          <tr>
                              <td>Kontonummer:</td>
-                             <td><strong>{payment.AccountNumber}</strong></td>
+                             <td><strong>{payment.AccountNumber}</strong> (bemærk nyt kontonummer)</td>
                          </tr>
                          <tr>
                              <td>Tekst på indbetaling:</td>

@@ -42,7 +42,7 @@ public class OrderReceived(MessageFactoryFixture fixture) : IClassFixture<Messag
                          </tr>
                          <tr>
                              <td>Kontonummer:</td>
-                             <td><strong>{model.Payment.AccountNumber}</strong></td>
+                             <td><strong>{model.Payment.AccountNumber}</strong> (bemærk nyt kontonummer)</td>
                          </tr>
                          <tr>
                              <td>Tekst på indbetaling:</td>

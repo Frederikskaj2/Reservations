@@ -20,7 +20,7 @@ sealed partial class DelayedPayOuts(SessionFixture session) : PayOutsFixture(ses
 
     Task WhenTimePasses()
     {
-        Session.NowOffset += Period.FromDays(7);
+        Session.NowOffset += Period.FromDays(10);
         return Task.CompletedTask;
     }
 

@@ -42,7 +42,7 @@ public class OrderingOptions
     public Amount CancellationFee { get; init; } = 200;
     public int MinimumCancellationNoticeInDays { get; init; } = 14;
     public Duration CancellationWithoutFeeDuration { get; init; } = Duration.FromDays(5);
-    public string PayInAccountNumber { get; init; } = "9444-12501110";
+    public string PayInAccountNumber { get; init; } = "3000-4816068614";
     public Period RecentOrdersMaximumAge { get; init; } = Period.FromDays(7);
     public Duration RemindUsersAboutDebtInterval { get; init; } = Duration.FromDays(7);
     public Period RevealLockBoxCodeBeforeReservationStart { get; init; } = Period.FromDays(3);
