@@ -85,19 +85,19 @@ public static class TransactionAmounts
             (Account.AccountsPayable, -(price.Deposit - damages)));
     }
 
-    public static AccountAmounts PayIn(Amount amount, Amount excessAmount)
+    public static AccountAmounts PayIn(Amount amount, Amount excessAmount, Account bankAccount)
     {
         if (amount <= Amount.Zero)
             throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount must be greater than zero.");
         if (excessAmount < Amount.Zero)
             throw new ArgumentOutOfRangeException(nameof(excessAmount), excessAmount, "Excess amount must not be negative.");
         return AccountAmounts.Create(
-            (Account.Bank, amount),
+            (bankAccount, amount),
             (Account.AccountsReceivable, excessAmount - amount),
             (Account.AccountsPayable, -excessAmount));
     }
 
-    public static AccountAmounts PayOut(Amount amount, Amount excessAmount)
+    public static AccountAmounts PayOut(Amount amount, Amount excessAmount, Account bankAccount)
     {
         if (amount <= Amount.Zero)
             throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount must be greater than zero.");
@@ -105,7 +105,7 @@ public static class TransactionAmounts
             throw new ArgumentOutOfRangeException(nameof(excessAmount), excessAmount, "Excess amount must not be negative.");
         return AccountAmounts.Create(
             (Account.AccountsPayable, amount - excessAmount),
-            (Account.Bank, -amount),
+            (bankAccount, -amount),
             (Account.AccountsReceivable, excessAmount));
     }
 

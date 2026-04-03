@@ -44,7 +44,7 @@ static class BankExtensions
         using var multipartFormDataContent = new MultipartFormDataContent();
         multipartFormDataContent.Add(byteArrayContent, "csv", "file.csv");
         return await session.Deserialize<ImportBankTransactionsResponse>(
-            await session.AdministratorPostContent("/bank/transactions/import", multipartFormDataContent));
+            await session.AdministratorPostContent("/bank/accounts/3000-4816068614/transactions/import", multipartFormDataContent));
     }
 
     public static async ValueTask<GetBankTransactionsResponse> GetBankTransactions(
@@ -62,7 +62,7 @@ static class BankExtensions
         if (includeReconciled)
             queryParameters.Add("includeReconciled=true");
         var queryString = string.Join('&', queryParameters);
-        return await session.Deserialize<GetBankTransactionsResponse>(await session.AdministratorGet($"bank/transactions?{queryString}"));
+        return await session.Deserialize<GetBankTransactionsResponse>(await session.AdministratorGet($"bank/accounts/3000-4816068614/transactions?{queryString}"));
     }
 
     public static async ValueTask<UpdateBankTransactionResponse> UpdateBankTransaction(

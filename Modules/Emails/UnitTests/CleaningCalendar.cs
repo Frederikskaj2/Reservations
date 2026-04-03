@@ -57,21 +57,19 @@ public class CleaningCalendar(MessageFactoryFixture fixture) : IClassFixture<Mes
         var command = new UpdateCleaningScheduleCommand(today);
         var resourceId = Resources.All.Head().ResourceId;
         var reservationDate = today.PlusDays(1);
-        var orders = Seq1(
-            new Order(
-                OrderId.FromInt32(1),
-                UserId.FromInt32(1),
-                OrderFlags.IsCleaningRequired,
-                now,
-                new Resident(None, Empty),
-                Seq1(
-                    new Reservation(
-                        resourceId,
-                        ReservationStatus.Confirmed,
-                        new(reservationDate, 1),
-                        None,
-                        ReservationEmails.None)),
-                Empty));
+        var orders = new Order(
+            OrderId.FromInt32(1),
+            UserId.FromInt32(1),
+            OrderFlags.IsCleaningRequired,
+            now,
+            new Resident(None, Empty),
+            new Reservation(
+                resourceId,
+                ReservationStatus.Confirmed,
+                new(reservationDate, 1),
+                None,
+                ReservationEmails.None).Cons(),
+            Empty).Cons();
         var input = new UpdateCleaningScheduleInput(command, orders);
         var orderingOptions = new OrderingOptions
         {
@@ -91,38 +89,38 @@ public class CleaningCalendar(MessageFactoryFixture fixture) : IClassFixture<Mes
         message.To.Should().BeEquivalentTo(fixture.ToEmailAddress.ToString());
         message.Subject.Should().Be("Rengøringsplan");
         message.Body.Should().StartWith(
-                $"""
-                 <!DOCTYPE html>
-                 <html lang="da">
-                 <head>
-                     <title>Rengøringsplan</title>
-                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-                     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                 </head>
-                 <body>
-                     <p>Hej {HtmlEncode(fixture.ToFullName)}</p>
-                     <p><strong>Aktuel rengøringsplan</strong></p>
-                     <table>
-                         <thead>
+            $"""
+             <!DOCTYPE html>
+             <html lang="da">
+             <head>
+                 <title>Rengøringsplan</title>
+                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+             </head>
+             <body>
+                 <p>Hej {HtmlEncode(fixture.ToFullName)}</p>
+                 <p><strong>Aktuel rengøringsplan</strong></p>
+                 <table>
+                     <thead>
+                     <tr>
+                         <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse; border-bottom: solid 2px #CCC">Start</th>
+                         <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse; border-bottom: solid 2px #CCC">Slut</th>
+                         <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse; border-bottom: solid 2px #CCC">Tidsrum</th>
+                         <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse; border-bottom: solid 2px #CCC">Lokale</th>
+                     </tr>
+                     </thead>
+                     <tbody>
                          <tr>
-                             <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse; border-bottom: solid 2px #CCC">Start</th>
-                             <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse; border-bottom: solid 2px #CCC">Slut</th>
-                             <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse; border-bottom: solid 2px #CCC">Tidsrum</th>
-                             <th style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse; border-bottom: solid 2px #CCC">Lokale</th>
+                             <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">{HtmlEncode(FormatDate(reservationDate.PlusDays(1)))} kl. 10.00</td>
+                             <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">{HtmlEncode(FormatDate(reservationDate.PlusDays(4)))} kl. 12.00</td>
+                             <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">3 dage og 2 timer</td>
+                             <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Festlokale</td>
                          </tr>
-                         </thead>
-                         <tbody>
-                             <tr>
-                                 <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">{HtmlEncode(FormatDate(reservationDate.PlusDays(1)))} kl. 10.00</td>
-                                 <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">{HtmlEncode(FormatDate(reservationDate.PlusDays(4)))} kl. 12.00</td>
-                                 <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">3 dage og 2 timer</td>
-                                 <td style="padding: 8px; text-align: left; border-top: solid 1px #CCC; border-collapse: collapse">Festlokale</td>
-                             </tr>
-                         </tbody>
-                     </table>
-                     <p><strong>{HtmlEncode(FormatMonth(reservationDate.PlusDays(1)))}</strong></p>
-                 """);
+                     </tbody>
+                 </table>
+                 <p><strong>{HtmlEncode(FormatMonth(reservationDate.PlusDays(1)))}</strong></p>
+             """);
         message.Body.Should().EndWith(
             $"""
                  <p><em>(Dette er en automatisk udsendt besked som ikke skal besvares.)</em></p>

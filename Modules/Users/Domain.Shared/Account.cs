@@ -10,6 +10,7 @@ public enum Account
     Damages,
     // Assets
     Bank = 30,
+    Bank2,
     AccountsReceivable,
     // Liabilities
     Deposits = 40,

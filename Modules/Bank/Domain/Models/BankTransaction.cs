@@ -7,6 +7,7 @@ namespace Frederikskaj2.Reservations.Bank;
 
 public sealed record BankTransaction(
     BankTransactionId BankTransactionId,
+    BankAccountId BankAccountId,
     LocalDate Date,
     string Text,
     Amount Amount,

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using static Frederikskaj2.Reservations.Bank.GetBankTransactionsRangeShell;
+using static Frederikskaj2.Reservations.Bank.Validator;
 
 namespace Frederikskaj2.Reservations.Bank;
 
@@ -15,12 +16,14 @@ class GetBankTransactionsRangeEndpoint
 
     [Authorize(Roles = nameof(Roles.Bookkeeping))]
     public static Task<IResult> Handle(
+        [FromRoute] string bankAccount,
         [FromServices] IEntityReader entityReader,
         [FromServices] ILogger<GetBankTransactionsRangeEndpoint> logger,
         HttpContext httpContext)
     {
         var either =
-            from range in GetBankTransactionsRange(entityReader, httpContext.RequestAborted)
+            from query in ValidateGetBankTransactionsRange(bankAccount).ToAsync()
+            from range in GetBankTransactionsRange(entityReader, query, httpContext.RequestAborted)
             select new GetBankTransactionsRangeResponse(range.DateRange.ToNullableReference(), range.LatestImportStartDate.ToNullable());
         return either.ToResult(logger, httpContext);
     }

@@ -9,26 +9,37 @@ namespace Frederikskaj2.Reservations.Bank;
 
 public static class GetBankTransactionsRangeShell
 {
-    static readonly IProjectedQuery<BankTransaction> getEarliestTransactionQuery =
-        Query<BankTransaction>().Top(1).OrderBy(transaction => transaction.Date).Project();
-
-    static readonly IProjectedQuery<BankTransaction> getLatestTransactionQuery =
-        Query<BankTransaction>().Top(1).OrderByDescending(transaction => transaction.Date).Project();
-
-    public static EitherAsync<Failure<Unit>, BankTransactionsRange> GetBankTransactionsRange(IEntityReader reader, CancellationToken cancellationToken) =>
-        from earliestTransaction in ReadEarliestTransaction(reader, cancellationToken)
-        from latestTransaction in ReadLatestTransaction(reader, cancellationToken)
+    public static EitherAsync<Failure<Unit>, BankTransactionsRange> GetBankTransactionsRange(
+        IEntityReader reader, GetBankTransactionsRangeQuery query, CancellationToken cancellationToken) =>
+        from earliestTransaction in ReadEarliestTransaction(reader, query, cancellationToken)
+        from latestTransaction in ReadLatestTransaction(reader, query, cancellationToken)
         from import in ReadImport(reader, cancellationToken)
-        let output = GetBankTransactionsRangeCore(new(earliestTransaction, latestTransaction, import))
+        let output = GetBankTransactionsRangeCore(new(query, earliestTransaction, latestTransaction, import))
         select new BankTransactionsRange(output.DateRange, output.LatestImportStartDate);
 
-    static EitherAsync<Failure<Unit>, Option<BankTransaction>> ReadEarliestTransaction(IEntityReader reader, CancellationToken cancellationToken) =>
-        from transactions in reader.Query(getEarliestTransactionQuery, cancellationToken).MapReadError()
+    static EitherAsync<Failure<Unit>, Option<BankTransaction>> ReadEarliestTransaction(
+        IEntityReader reader, GetBankTransactionsRangeQuery query, CancellationToken cancellationToken) =>
+        from transactions in reader.Query(GetEarliestTransactionQuery(query.BankAccountId), cancellationToken).MapReadError()
         select transactions.HeadOrNone();
 
-    static EitherAsync<Failure<Unit>, Option<BankTransaction>> ReadLatestTransaction(IEntityReader reader, CancellationToken cancellationToken) =>
-        from transactions in reader.Query(getLatestTransactionQuery, cancellationToken).MapReadError()
+    static IProjectedQuery<BankTransaction> GetEarliestTransactionQuery(BankAccountId bankAccountId) =>
+        Query<BankTransaction>()
+            .Where(bankAccount => bankAccount.BankAccountId == bankAccountId)
+            .Top(1)
+            .OrderBy(transaction => transaction.Date)
+            .Project();
+
+    static EitherAsync<Failure<Unit>, Option<BankTransaction>> ReadLatestTransaction(
+        IEntityReader reader, GetBankTransactionsRangeQuery query, CancellationToken cancellationToken) =>
+        from transactions in reader.Query(GetLatestTransactionQuery(query.BankAccountId), cancellationToken).MapReadError()
         select transactions.HeadOrNone();
+
+    static IProjectedQuery<BankTransaction> GetLatestTransactionQuery(BankAccountId bankAccountId) =>
+        Query<BankTransaction>()
+            .Where(bankAccount => bankAccount.BankAccountId == bankAccountId)
+            .Top(1)
+            .OrderByDescending(transaction => transaction.Date)
+            .Project();
 
     static EitherAsync<Failure<Unit>, Option<Import>> ReadImport(IEntityReader reader, CancellationToken cancellationToken) =>
         reader.Read<Import>(Import.SingletonId, cancellationToken).NotFoundToOption();

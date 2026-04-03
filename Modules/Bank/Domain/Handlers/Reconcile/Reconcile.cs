@@ -25,7 +25,10 @@ static class Reconcile
             Activity.PayIn,
             input.Resident.UserId,
             None,
-            PayIn(input.BankTransaction.Amount, GetPayInExcessAmount(input.Resident, input.BankTransaction.Amount)));
+            PayIn(
+                input.BankTransaction.Amount,
+                GetPayInExcessAmount(input.Resident, input.BankTransaction.Amount),
+                GetBankAccount(input.BankTransaction.BankAccountId)));
 
     static Amount GetPayInExcessAmount(User resident, Amount amount) =>
         GetPayInExcessAmount(amount, resident.Accounts[Account.AccountsReceivable]);
@@ -42,13 +45,19 @@ static class Reconcile
             Activity.PayOut,
             input.Resident.UserId,
             None,
-            PayOut(-input.BankTransaction.Amount, GetPayOutExcessAmount(-input.BankTransaction.Amount, input.Resident)));
+            PayOut(
+                -input.BankTransaction.Amount,
+                GetPayOutExcessAmount(-input.BankTransaction.Amount, input.Resident),
+                GetBankAccount(input.BankTransaction.BankAccountId)));
 
     static Amount GetPayOutExcessAmount(Amount amount, User resident) =>
         GetPayOutExcessAmount(amount, resident.Accounts[Account.AccountsPayable]);
 
     static Amount GetPayOutExcessAmount(Amount amount, Amount accountsPayable) =>
         amount > -accountsPayable ? amount + accountsPayable : Amount.Zero;
+
+    static Account GetBankAccount(BankAccountId bankAccountId) =>
+        bankAccountId is BankAccountId.Shared ? Account.Bank : Account.Bank2;
 
     static ReconcileOutput CreateOutput(ReconcileInput input, Transaction transaction) =>
         new(

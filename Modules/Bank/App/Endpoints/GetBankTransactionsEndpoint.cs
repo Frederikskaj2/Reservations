@@ -18,6 +18,7 @@ class GetBankTransactionsEndpoint
 
     [Authorize(Roles = nameof(Roles.Bookkeeping))]
     public static Task<IResult> Handle(
+        [FromRoute] string bankAccount,
         [FromQuery] DateOnly? endDate,
         [FromQuery] bool? includeIgnored,
         [FromQuery] bool? includeReconciled,
@@ -28,7 +29,7 @@ class GetBankTransactionsEndpoint
         HttpContext httpContext)
     {
         var either =
-            from command in ValidateGetBankTransactions(startDate, endDate, includeUnknown, includeIgnored, includeReconciled).ToAsync()
+            from command in ValidateGetBankTransactions(bankAccount, startDate, endDate, includeUnknown, includeIgnored, includeReconciled).ToAsync()
             from transactions in GetBankTransactions(entityReader, command, httpContext.RequestAborted)
             select new GetBankTransactionsResponse(CreateBankTransactions(transactions));
         return either.ToResult(logger, httpContext);

@@ -45,4 +45,14 @@ public static class EitherAsyncExtensions
                 _ => status,
             })
             .MapReadError();
+
+    public static EitherAsync<Failure<TFailure>, Option<T>> NotFoundToOption<TFailure, T>(this EitherAsync<HttpStatusCode, T> either) where TFailure : struct =>
+        either.BiBind<Option<T>>(
+                value => Some(value),
+                status => status switch
+                {
+                    HttpStatusCode.NotFound => Option<T>.None,
+                    _ => status,
+                })
+            .MapReadError<TFailure, Option<T>>();
 }

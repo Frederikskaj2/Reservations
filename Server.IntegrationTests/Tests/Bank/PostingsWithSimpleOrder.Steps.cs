@@ -78,7 +78,7 @@ sealed partial class PostingsWithSimpleOrder(SessionFixture session) : FeatureFi
                 Amounts = new[]
                 {
                     new { Account = PostingAccount.AccountsReceivable, Amount = Credit(Order.Price.Total()) },
-                    new { Account = PostingAccount.Bank, Amount = Debit(Order.Price.Total()) },
+                    new { Account = PostingAccount.BankDedicated, Amount = Debit(Order.Price.Total()) },
                 },
             });
         return Task.CompletedTask;

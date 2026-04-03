@@ -55,11 +55,14 @@ static class ReconcilePayOut
             Activity.PayOut,
             input.Resident.UserId,
             None,
-            PayOut(amount, GetExcessAmount(amount, input.Resident)));
+            PayOut(amount, GetExcessAmount(amount, input.Resident), GetBankAccount(input.BankTransaction.BankAccountId)));
 
     static Amount GetExcessAmount(Amount amount, User user) =>
         GetExcessAmount(amount, user.Accounts[Account.AccountsPayable]);
 
     static Amount GetExcessAmount(Amount amount, Amount accountsPayable) =>
         amount > -accountsPayable ? amount + accountsPayable : Amount.Zero;
+
+    static Account GetBankAccount(BankAccountId bankAccountId) =>
+        bankAccountId is BankAccountId.Shared ? Account.Bank : Account.Bank2;
 }

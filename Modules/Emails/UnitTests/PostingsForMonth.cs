@@ -17,7 +17,7 @@ public class PostingsForMonth(MessageFactoryFixture fixture) : IClassFixture<Mes
         var accountNames = new AccountName[]
         {
             new(PostingAccount.Income, "1201 \u2013 Udlejning af fælleslokale"),
-            new(PostingAccount.Bank, "4021 \u2013 Bank"),
+            new(PostingAccount.BankShared, "4021 \u2013 Bank"),
             new(PostingAccount.AccountsReceivable, "4401 \u2013 Tilgodehavende fælleslokaler"),
             new(PostingAccount.Deposits, "7601 \u2013 Depositum (IND)"),
             new(PostingAccount.AccountsPayable, "7601 \u2013 Depositum (UD)"),

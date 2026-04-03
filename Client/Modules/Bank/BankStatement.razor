@@ -3,7 +3,7 @@
     {
         <Spinner/>
     }
-    else if (residents is null || payOuts is null || transactions is null)
+    else if (currentBankAccount is null || residents is null || payOuts is null || transactions is null)
     {
         <Container>
             <Alert Color="Color.Danger" Visible="true">
@@ -46,7 +46,25 @@
                 Der er sket en fejl, og bevægelsens status blev ikke ændret.
                 <CloseButton Clicked="DismissStatusUpdateErrorAlert"/>
             </Alert>
-            <h1>Importer bankbevægelser</h1>
+            <h1>Bankkonto</h1>
+            <Form>
+                <Row>
+                    <Column ColumnSize="ColumnSize.Is3">
+                        <Field Horizontal>
+                            <FieldLabel ColumnSize="ColumnSize.Is3">Konto</FieldLabel>
+                            <FieldBody ColumnSize="ColumnSize.Is9">
+                                <Select TValue="string" SelectedValue="currentBankAccount" SelectedValueChanged="BankAccountChanged">
+                                    @foreach (var bankAccount in bankAccounts!)
+                                    {
+                                        <SelectItem>@bankAccount</SelectItem>
+                                    }
+                                </Select>
+                            </FieldBody>
+                        </Field>
+                    </Column>
+                </Row>
+            </Form>
+            <h2>Importer bankbevægelser</h2>
             <Form>
                 <Fields>
                     <Field ColumnSize="ColumnSize.Is6">
@@ -63,7 +81,7 @@
                     </Field>
                 </Fields>
             </Form>
-            <h1>Kontoudtog</h1>
+            <h2>Kontoudtog</h2>
             <Form>
                 <Row>
                     <Column ColumnSize="ColumnSize.Is3">
@@ -117,9 +135,27 @@
                             <FieldLabel>Vis</FieldLabel>
                             <FieldBody>
                                 <Div Flex="Flex.NoWrap" Class="check-row">
-                                    <Check TValue="bool" Checked="includeUnknown" CheckedChanged="ToggleIncludeUnknown">Ikke-afstemte</Check>
-                                    <Check TValue="bool" Checked="includeReconciled" CheckedChanged="ToggleIncludeReconciled">Afstemte</Check>
-                                    <Check TValue="bool" Checked="includeIgnored" CheckedChanged="ToggleIncludeIgnored">Ignorerede</Check>
+                                    <Check
+                                        TValue="bool"
+                                        Disabled="latestTransactionDate is null"
+                                        Checked="includeUnknown"
+                                        CheckedChanged="ToggleIncludeUnknown">
+                                        Ikke-afstemte
+                                    </Check>
+                                    <Check
+                                        TValue="bool"
+                                        Disabled="latestTransactionDate is null"
+                                        Checked="includeReconciled"
+                                        CheckedChanged="ToggleIncludeReconciled">
+                                        Afstemte
+                                    </Check>
+                                    <Check
+                                        TValue="bool"
+                                        Disabled="latestTransactionDate is null"
+                                        Checked="includeIgnored"
+                                        CheckedChanged="ToggleIncludeIgnored">
+                                        Ignorerede
+                                    </Check>
                                 </Div>
                             </FieldBody>
                         </Field>
@@ -136,7 +172,7 @@
                     <TableHeader>
                         <TableRow>
                             <TableHeaderCell Width="Width.Rem(6)">Dato</TableHeaderCell>
-                            <TableHeaderCell>Text</TableHeaderCell>
+                            <TableHeaderCell>Tekst</TableHeaderCell>
                             <TableHeaderCell Width="Width.Rem(6)" Class="text-end">Beløb</TableHeaderCell>
                             <TableHeaderCell Width="Width.Rem(6)" Class="text-end">Saldo</TableHeaderCell>
                             <TableHeaderCell Width="Width.Rem(3)">Status</TableHeaderCell>

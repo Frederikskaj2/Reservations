@@ -27,7 +27,7 @@ public class ImportOverlappingBankTransactions(SessionFixture session) : BankTra
                 """
                 "Bogført dato";"Rentedato";"Tekst";"Antal";"Beløb i DKK";"Bogført saldo i DKK";"Status";"Bankens arkivreference"
                 "02.04.2024";"02.04.2024";"B-BBBB";"";"1400,00";"131093,59";"Udført";"8765      0000000000"
-                "02.04.2024";"02.04.2024";"Ørsted Salg & Service A/";"";"-1339,49";"129754,10";"Udf�rt";"1150      0000000000"
+                "02.04.2024";"02.04.2024";"Ørsted Salg & Service A/";"";"-1339,49";"129754,10";"Udført";"1150      0000000000"
                 """),
             _ => ThenANumberOfNewTransactionsAreCreated(1));
 }

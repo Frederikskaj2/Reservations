@@ -121,7 +121,7 @@ sealed partial class PostingsWithChangedOrder(SessionFixture session) : FeatureF
                 Amounts = new[]
                 {
                     new { Account = PostingAccount.AccountsReceivable, Amount = Credit(Order1.Price.Total()) },
-                    new { Account = PostingAccount.Bank, Amount = Debit(Order1.Price.Total()) },
+                    new { Account = PostingAccount.BankDedicated, Amount = Debit(Order1.Price.Total()) },
                 },
             });
         return Task.CompletedTask;

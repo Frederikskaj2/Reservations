@@ -38,6 +38,9 @@ class BankTransactionsParser : IBankTransactionsParser
             using var reader = sepReaderOptions.FromText(csv);
             foreach (var row in reader)
             {
+                var status = row["Status"].ToString();
+                if (status != "Udført")
+                    continue;
                 // ReSharper disable StringLiteralTypo
                 var date = datePattern.Parse(row["Bogført dato"].ToString()).Value;
                 var text = row["Tekst"].ToString();

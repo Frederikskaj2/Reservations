@@ -18,7 +18,8 @@ public static class ImportBankTransactionsShell
         CancellationToken cancellationToken) =>
         from newTransactions in bankTransactionsParser.ParseBankTransactions(command.Transactions).ToAsync()
         from existingTransactions in ReadExistingTransactions(reader, cancellationToken)
-        from output in ImportBankTransactionsCore(new(command, newTransactions, existingTransactions)).ToAsync()
+        from importOption in ReadImport(reader, cancellationToken)
+        from output in ImportBankTransactionsCore(new(command, newTransactions, existingTransactions, importOption)).ToAsync()
         from _ in writer.Write(tracker => TrackEntities(output, tracker), cancellationToken).Map(_ => unit).MapWriteError<ImportError>()
         select new ImportResult(output.Transactions.Count, output.DateRange, output.LatestImportStartDate);
 
@@ -26,6 +27,9 @@ public static class ImportBankTransactionsShell
         reader
             .Query(Query<BankTransaction>().OrderBy(transaction => transaction.BankTransactionId).Project(), cancellationToken)
             .MapReadError<ImportError, Seq<BankTransaction>>();
+
+    static EitherAsync<Failure<ImportError>, Option<Import>> ReadImport(IEntityReader reader, CancellationToken cancellationToken) =>
+        reader.Read<Import>(Import.SingletonId, cancellationToken).NotFoundToOption<ImportError, Import>();
 
     static EntityTracker TrackEntities(ImportBankTransactionsOutput output, EntityTracker tracker) =>
         TryUpsertImportEntity(output, tracker.Add(output.Transactions));

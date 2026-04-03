@@ -78,7 +78,8 @@ static class PostingFunctions
     static Seq<(PostingAccount Account, Amount Amount)> GetAmounts(Transaction transaction) =>
         Seq(
                 GetIncome(transaction),
-                GetBank(transaction),
+                GetBankShared(transaction),
+                GetBankDedicated(transaction),
                 GetAccountsReceivable(transaction),
                 GetDeposits(transaction),
                 GetAccountsPayable(transaction))
@@ -92,8 +93,11 @@ static class PostingFunctions
             transaction.Amounts[Account.CancellationFees] +
             transaction.Amounts[Account.Damages]);
 
-    static Option<(PostingAccount Account, Amount Amount)> GetBank(Transaction transaction) =>
-        GetAccountAmount(PostingAccount.Bank, transaction.Amounts[Account.Bank]);
+    static Option<(PostingAccount Account, Amount Amount)> GetBankShared(Transaction transaction) =>
+        GetAccountAmount(PostingAccount.BankShared, transaction.Amounts[Account.Bank]);
+
+    static Option<(PostingAccount Account, Amount Amount)> GetBankDedicated(Transaction transaction) =>
+        GetAccountAmount(PostingAccount.BankDedicated, transaction.Amounts[Account.Bank2]);
 
     static Option<(PostingAccount Account, Amount Amount)> GetAccountsReceivable(Transaction transaction) =>
         GetAccountAmount(PostingAccount.AccountsReceivable, transaction.Amounts[Account.AccountsReceivable]);

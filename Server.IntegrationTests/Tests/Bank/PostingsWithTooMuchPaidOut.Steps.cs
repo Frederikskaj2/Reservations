@@ -104,7 +104,7 @@ sealed partial class PostingsWithTooMuchPaidOut(SessionFixture session) : Featur
                 Amounts = new[]
                 {
                     new { Account = PostingAccount.AccountsReceivable, Amount = Credit(Order.Price.Total()) },
-                    new { Account = PostingAccount.Bank, Amount = Debit(Order.Price.Total()) },
+                    new { Account = PostingAccount.BankDedicated, Amount = Debit(Order.Price.Total()) },
                 },
             });
         return Task.CompletedTask;
@@ -143,7 +143,7 @@ sealed partial class PostingsWithTooMuchPaidOut(SessionFixture session) : Featur
                 Amounts = new[]
                 {
                     new { Account = PostingAccount.AccountsReceivable, Amount = Debit(excessAmount) },
-                    new { Account = PostingAccount.Bank, Amount = Credit(Creditor.Payment.Amount + excessAmount) },
+                    new { Account = PostingAccount.BankDedicated, Amount = Credit(Creditor.Payment.Amount + excessAmount) },
                     new { Account = PostingAccount.AccountsPayable, Amount = Debit(Order.Price.Deposit) },
                 },
             });

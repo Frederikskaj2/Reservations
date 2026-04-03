@@ -29,12 +29,13 @@ public class AuthorizedTests(ApplicationFactory factory) : IClassFixture<Applica
             Add(HttpMethod.Patch, "/bank/pay-outs/0");
             Add(HttpMethod.Post, "/bank/pay-outs/0/cancel");
             Add(HttpMethod.Post, "/bank/pay-outs/0/notes");
-            Add(HttpMethod.Get, "bank/transactions");
+            Add(HttpMethod.Get, "bank/accounts");
+            Add(HttpMethod.Get, "bank/accounts/a/transactions");
+            Add(HttpMethod.Post, "bank/accounts/a/transactions/import");
+            Add(HttpMethod.Get, "bank/accounts/a/transactions/range");
             Add(HttpMethod.Patch, "bank/transactions/0");
             Add(HttpMethod.Post, "bank/transactions/0/reconcile/0");
             Add(HttpMethod.Post, "bank/transactions/0/reconcile-pay-out/0");
-            Add(HttpMethod.Post, "bank/transactions/import");
-            Add(HttpMethod.Get, "bank/transactions/range");
             Add(HttpMethod.Get, "postings");
             Add(HttpMethod.Get, "postings/range");
             Add(HttpMethod.Post, "postings/send");

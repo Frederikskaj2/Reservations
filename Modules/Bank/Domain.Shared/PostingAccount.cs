@@ -4,7 +4,8 @@ public enum PostingAccount
 {
     None,
     Income,
-    Bank,
+    BankShared,
+    BankDedicated,
     AccountsReceivable,
     Deposits,
     AccountsPayable,

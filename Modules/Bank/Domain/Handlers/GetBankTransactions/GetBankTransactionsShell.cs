@@ -12,7 +12,6 @@ namespace Frederikskaj2.Reservations.Bank;
 public static class GetBankTransactionsShell
 {
     static readonly Expression<Func<BankTransaction, bool>> falsePredicate = _ => false;
-    static readonly Expression<Func<BankTransaction, bool>> truePredicate = _ => true;
 
     public static EitherAsync<Failure<Unit>, Seq<BankTransaction>> GetBankTransactions(
         IEntityReader reader, GetBankTransactionsQuery query, CancellationToken cancellationToken) =>
@@ -23,7 +22,7 @@ public static class GetBankTransactionsShell
         Query<BankTransaction>().Where(GetFilterPredicate(query)).OrderBy(transaction => transaction.BankTransactionId).Project();
 
     static Expression<Func<BankTransaction, bool>> GetFilterPredicate(GetBankTransactionsQuery query) =>
-        truePredicate
+        FromBankAccount(query.BankAccountId)
             .ConditionallyIncludeStartDate(query)
             .ConditionallyIncludeEndDate(query)
             .And(
@@ -31,6 +30,9 @@ public static class GetBankTransactionsShell
                     .ConditionallyIncludeUnknown(query)
                     .ConditionallyIncludeIgnored(query)
                     .ConditionallyIncludeReconciled(query));
+
+    static Expression<Func<BankTransaction, bool>> FromBankAccount(BankAccountId bankAccountId) =>
+        transaction => transaction.BankAccountId == bankAccountId;
 
     static Expression<Func<BankTransaction, bool>> ConditionallyIncludeStartDate(
         this Expression<Func<BankTransaction, bool>> predicate, GetBankTransactionsQuery query) =>

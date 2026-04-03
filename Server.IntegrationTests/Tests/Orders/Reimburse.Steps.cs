@@ -43,7 +43,7 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
 
     async Task GivenAnUnpaidOrder()
     {
-        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.BanquetFacilities.ResourceId));
+        var getMyOrderResponse = await session.PlaceResidentOrder(new TestReservation(SeedData.Kaj.ResourceId));
         unpaidOrder = getMyOrderResponse.Order;
     }
 

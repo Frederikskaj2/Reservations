@@ -4,6 +4,7 @@ using NodaTime;
 namespace Frederikskaj2.Reservations.Bank;
 
 public record GetBankTransactionsQuery(
+    BankAccountId BankAccountId,
     Option<LocalDate> StartDate,
     Option<LocalDate> EndDate,
     bool IncludeUnknown,

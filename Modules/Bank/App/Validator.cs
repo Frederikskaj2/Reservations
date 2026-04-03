@@ -22,31 +22,37 @@ static class Validator
     static readonly LocalDatePattern datePattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM-dd");
     static readonly Encoding iso8859Encoding = Encoding.GetEncoding("iso-8859-1");
 
-    public static EitherAsync<Failure<ImportError>, ImportBankTransactionsCommand> ValidateFormFile(
-        Instant timestamp, HttpContext httpContext, CancellationToken cancellationToken) =>
+    public static EitherAsync<Failure<ImportError>, ImportBankTransactionsCommand> ValidateImportTransactions(
+        Instant timestamp, string bankAccount, HttpContext httpContext, CancellationToken cancellationToken) =>
+        from bankAccountId in ValidateBankAccount(bankAccount).MapFailure(HttpStatusCode.UnprocessableEntity, ImportError.InvalidRequest).ToAsync()
+        from file in ValidateFormFile(httpContext, cancellationToken)
+        select new ImportBankTransactionsCommand(timestamp, bankAccountId, file);
+
+    static EitherAsync<Failure<ImportError>, string> ValidateFormFile(HttpContext httpContext, CancellationToken cancellationToken) =>
         httpContext.Request.Form.Files.Count is 1
-            ? GetFile(timestamp, httpContext.Request.Form.Files[0], cancellationToken)
+            ? GetFile(httpContext.Request.Form.Files[0], cancellationToken)
             : Failure.New(HttpStatusCode.UnprocessableEntity, ImportError.InvalidRequest, "None or too many files are provided.");
 
-    static EitherAsync<Failure<ImportError>, ImportBankTransactionsCommand> GetFile(Instant timestamp, IFormFile file, CancellationToken cancellationToken)
+    static EitherAsync<Failure<ImportError>, string> GetFile(IFormFile file, CancellationToken cancellationToken)
     {
         return Run().ToAsync();
 
-        async Task<Either<Failure<ImportError>, ImportBankTransactionsCommand>> Run()
+        async Task<Either<Failure<ImportError>, string>> Run()
         {
             await using var memoryStream = new MemoryStream((int) file.Length);
             await file.CopyToAsync(memoryStream, cancellationToken);
-            return new ImportBankTransactionsCommand(timestamp, iso8859Encoding.GetString(memoryStream.ToArray()));
+            return iso8859Encoding.GetString(memoryStream.ToArray());
         }
     }
 
     public static Either<Failure<Unit>, GetBankTransactionsQuery> ValidateGetBankTransactions(
-        DateOnly? startDate, DateOnly? endDate, bool? includeUnknown, bool? includeIgnored, bool? includeReconciled)
+        string bankAccount, DateOnly? startDate, DateOnly? endDate, bool? includeUnknown, bool? includeIgnored, bool? includeReconciled)
     {
         var either =
+            from bankAccountId in ValidateBankAccount(bankAccount)
             from _ in ValidateDates(startDate, endDate)
             select new GetBankTransactionsQuery(
-                GetDateOption(startDate), GetDateOption(endDate), includeUnknown ?? false, includeIgnored ?? false, includeReconciled ?? false);
+                bankAccountId, GetDateOption(startDate), GetDateOption(endDate), includeUnknown ?? false, includeIgnored ?? false, includeReconciled ?? false);
         return either.MapFailure(HttpStatusCode.UnprocessableEntity);
     }
 
@@ -68,6 +74,21 @@ static class Validator
         status is BankTransactionStatus.Unknown or BankTransactionStatus.Ignored
             ? status
             : $"{context} with value '{status}' is not valid.";
+
+    public static Either<Failure<Unit>, GetBankTransactionsRangeQuery> ValidateGetBankTransactionsRange(string bankAccount)
+    {
+        var either =
+            from bankAccountId in ValidateBankAccount(bankAccount)
+            select new GetBankTransactionsRangeQuery(bankAccountId);
+        return either.MapFailure(HttpStatusCode.UnprocessableEntity);
+    }
+
+    static Either<string, BankAccountId> ValidateBankAccount(string bankAccount) =>
+        BankAccounts.GetBankAccountId(bankAccount).Case switch
+        {
+            BankAccountId account => account,
+            _ => "Unknown bank account number.",
+        };
 
     public static Either<Failure<Unit>, CreatePayOutCommand> ValidateCreatePayOut(CreatePayOutRequest request, UserId administratorId, Instant timestamp)
     {

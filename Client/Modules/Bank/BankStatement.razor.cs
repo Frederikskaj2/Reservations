@@ -24,7 +24,9 @@ partial class BankStatement
     static readonly LocalDatePattern datePattern = LocalDatePattern.CreateWithInvariantCulture("yyyy-MM-dd");
     static readonly Encoding encoding = Encoding.GetEncoding("iso-8859-1");
 
+    IEnumerable<string>? bankAccounts;
     ConfirmReconciliationDialog confirmReconciliationDialog = null!;
+    string? currentBankAccount;
     int currentMonth;
     Period currentPeriod;
     int currentYear;
@@ -59,24 +61,46 @@ partial class BankStatement
     protected override async Task OnInitializedAsync()
     {
         monthPattern = LocalDatePattern.Create("MMMM", CultureInfo);
-        var response = await ApiClient.Get<GetBankTransactionsRangeResponse>("bank/transactions/range");
+        if (await GetBankAccounts())
+        {
+            await GetTransactions();
+        }
+        isInitialized = true;
+    }
+
+    async ValueTask<bool> GetBankAccounts()
+    {
+        var response = await ApiClient.Get<GetBankAccountsResponse>("bank/accounts");
+        if (!response.IsSuccess || !response.Result!.BankAccounts.Any())
+            return false;
+        bankAccounts = response.Result!.BankAccounts;
+        currentBankAccount = bankAccounts.First();
+        return true;
+    }
+
+    async ValueTask GetTransactions()
+    {
+        var response = await ApiClient.Get<GetBankTransactionsRangeResponse>($"bank/accounts/{currentBankAccount}/transactions/range");
         if (response.IsSuccess)
         {
             var getBankTransactionsRangeResponse = response.Result!;
             UpdateUi(getBankTransactionsRangeResponse.LatestImportStartDate, getBankTransactionsRangeResponse.DateRange);
             await Update();
         }
-        isInitialized = true;
     }
 
     void UpdateUi(LocalDate? importStartDate, DateRange? range)
     {
         latestImportStartDate = importStartDate;
-        if (latestImportStartDate is not null)
-            currentPeriod =  Period.LatestImport;
+        currentPeriod = latestImportStartDate is not null ? Period.LatestImport : Period.Latest30Days;
         dateRange = range;
         if (dateRange is null)
+        {
+            latestTransactionDate = null;
+            years = null;
+            months = null;
             return;
+        }
         latestTransactionDate = dateRange.LatestDate;
         var earliestYear = dateRange.EarliestDate.Year;
         var latestYear = dateRange.LatestDate.Year;
@@ -126,7 +150,7 @@ partial class BankStatement
 
     async Task UpdateTransactions()
     {
-        var requestUri = $"bank/transactions{Url.FormatQuery(GetQueryParameters())}";
+        var requestUri = $"bank/accounts/{currentBankAccount}/transactions{Url.FormatQuery(GetQueryParameters())}";
         var response = await ApiClient.Get<GetBankTransactionsResponse>(requestUri);
         transactions = response.IsSuccess ? response.Result!.Transactions : null;
         StateHasChanged();
@@ -171,7 +195,8 @@ partial class BankStatement
             byteArrayContent.Headers.ContentType = new("text/csv");
             using var multipartFormDataContent = new MultipartFormDataContent();
             multipartFormDataContent.Add(byteArrayContent, "csv", selectedFile?.Name ?? "file.csv");
-            var response = await ApiClient.Post<ImportBankTransactionsResponse>("/bank/transactions/import", multipartFormDataContent);
+            var response = await ApiClient.Post<ImportBankTransactionsResponse>(
+                $"/bank/accounts/{currentBankAccount}/transactions/import", multipartFormDataContent);
             if (response.IsSuccess)
             {
                 showImportSuccessAlert = true;
@@ -179,7 +204,7 @@ partial class BankStatement
                 UpdateUi(importBankTransactionsResponse.LatestImportStartDate, importBankTransactionsResponse.DateRange);
                 latestImportStartDate = response.Result!.LatestImportStartDate;
                 if (latestImportStartDate is not null)
-                    currentPeriod =  Period.LatestImport;
+                    currentPeriod = Period.LatestImport;
                 await UpdateTransactions();
             }
             else
@@ -194,6 +219,12 @@ partial class BankStatement
             showImportErrorAlert = true;
             Console.WriteLine(exception);
         }
+    }
+
+    async Task BankAccountChanged(string? bankAccount)
+    {
+        currentBankAccount = bankAccount;
+        await GetTransactions();
     }
 
     Task PeriodChanged(Period period)
