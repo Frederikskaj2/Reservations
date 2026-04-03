@@ -56,7 +56,7 @@ public static class ReconcileShell
         select new PayOutPair(payOutEntity, inProgressPayOut);
 
     static IQuery<PayOut> GetResidentPayOutsQuery(UserId residentId) =>
-        Query<PayOut>().Where(payOut => payOut.ResidentId == residentId && (payOut.Status == PayOutStatus.InProgress));
+        Query<PayOut>().Where(payOut => payOut.ResidentId == residentId && payOut.Status == PayOutStatus.InProgress);
 
     static EitherAsync<Failure<Unit>, Seq<(EntityOperation Operation, ETag ETag)>> Write(
         IEntityWriter writer,

@@ -89,7 +89,7 @@ class CosmosExpressionVisitor<T>(string rootPropertyPath) : ExpressionVisitor
         }
 
         if ((node.Method.DeclaringType?.IsGenericType ?? false) && node.Method.DeclaringType.GetGenericTypeDefinition() == typeof(HashSet<>) &&
-            node.Method is { IsGenericMethod: false, Name: nameof(HashSet<object>.Contains) })
+            node.Method is { IsGenericMethod: false, Name: nameof(HashSet<>.Contains) })
         {
             Visit(node.Arguments[0]);
             stringBuilder.Append(" in (");

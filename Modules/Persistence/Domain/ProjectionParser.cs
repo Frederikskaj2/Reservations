@@ -78,16 +78,14 @@ static class ProjectionParser
     {
         readonly StringBuilder stringBuilder = new();
 
-        ParameterExpression? parameter;
-
         public ParameterExpression Parameter
         {
-            get => parameter ?? throw new InvalidOperationException();
+            get => field ?? throw new InvalidOperationException();
             private set
             {
-                if (parameter is not null)
+                if (field is not null)
                     throw new InvalidOperationException();
-                parameter = value;
+                field = value;
             }
         }
 

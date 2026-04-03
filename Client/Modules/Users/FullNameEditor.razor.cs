@@ -9,8 +9,8 @@ partial class FullNameEditor
     TextEdit textEdit = null!;
 
     [Parameter] public bool Disabled { get; set; }
-    [Parameter] public string Value { get; set; } = "";
-    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
 
     public ValueTask Focus() => textEdit.ElementRef.FocusAsync();
 }

@@ -40,9 +40,9 @@ public static class CleaningScheduleFunctions
                 lastDay,
                 orderedResources.Select(resource => resource.ResourceId).ToArray())
             .ToAsyncEnumerable()
-            .SelectAwait(async tuple => new MonthCalendar(
+            .Select(async (tuple, token) => new MonthCalendar(
                 tuple.Month,
-                await GenerateMonthPicture(tuple.Table, cancellationToken)))
+                await GenerateMonthPicture(tuple.Table, token)))
             .ToListAsync(cancellationToken);
         var legend = await GenerateLegend(orderedResources.Select(resource => resource.Name).ToArray(), cancellationToken);
         return new(

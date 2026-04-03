@@ -56,10 +56,10 @@ public partial class ReportsPage
             yearlySummary = response.Result!.YearlySummary;
     }
 
-    async void NavigationManagerOnLocationChanged(object? sender, LocationChangedEventArgs e)
+    void NavigationManagerOnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         if (TryParseQuery(e.Location, out var year) && year != currentYear)
-            await SetYear(year);
+            _ = SetYear(year);
     }
 
     async Task YearChanged(int value)

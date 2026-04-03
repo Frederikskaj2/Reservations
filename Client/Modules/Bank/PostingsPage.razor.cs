@@ -59,10 +59,10 @@ public partial class PostingsPage
             await SetMonth(tuple.Year, tuple.Month);
     }
 
-    async void NavigationManagerOnLocationChanged(object? sender, LocationChangedEventArgs e)
+    void NavigationManagerOnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         if (TryParseQuery(e.Location, out var tuple) && (tuple.Year != currentYear || tuple.Month != currentMonth))
-            await SetMonth(tuple.Year, tuple.Month);
+            _ = SetMonth(tuple.Year, tuple.Month);
     }
 
     async ValueTask InitializeCalendar()

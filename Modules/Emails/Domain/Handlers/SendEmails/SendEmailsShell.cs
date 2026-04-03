@@ -17,7 +17,7 @@ public static class SendEmailsShell
 
         async Task<Either<Failure<Unit>, Unit>> Run()
         {
-            var outputs = emailDequeuer.Dequeue(cancellationToken).SelectAwait(email => SendEmailCore(messageFactory, new(email), cancellationToken));
+            var outputs = emailDequeuer.Dequeue(cancellationToken).Select((email, token) => SendEmailCore(messageFactory, new(email), token));
             await foreach (var output in outputs.WithCancellation(cancellationToken))
                 await emailSender.Send(output.Message, cancellationToken);
             return unit;

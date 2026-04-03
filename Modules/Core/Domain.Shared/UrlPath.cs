@@ -1,5 +1,8 @@
-﻿namespace Frederikskaj2.Reservations.Core;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace Frederikskaj2.Reservations.Core;
+
+[SuppressMessage("Sonar", "S2068:Credentials should not be hard-coded", Justification = "There are no credentials here.")]
 public static class UrlPath
 {
     public const string BankReconciliation = "bank";

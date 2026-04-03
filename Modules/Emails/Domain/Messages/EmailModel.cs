@@ -14,17 +14,11 @@ public abstract record EmailModel(string To, string From, Uri FromUrl, CultureIn
 {
     const char nonBreakingSpace = '\xA0';
 
-    LocalDatePattern? longDatePattern;
-    LocalDateTimePattern? longTimePattern;
-    LocalDatePattern? monthPattern;
-    LocalDatePattern? shortDatePattern;
-    LocalDatePattern? sortableDatePattern;
-
-    LocalDatePattern LongDatePattern => longDatePattern ??= LocalDatePattern.Create("dddd 'den' d. MMMM yyyy", CultureInfo);
-    LocalDateTimePattern LongTimePattern => longTimePattern ??= LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH:mm", CultureInfo);
-    LocalDatePattern MonthPattern => monthPattern ??= LocalDatePattern.Create("yyyy-MM", CultureInfo);
-    LocalDatePattern ShortDatePattern => shortDatePattern ??= LocalDatePattern.Create("d. MMMM yyyy", CultureInfo);
-    LocalDatePattern SortableDatePattern => sortableDatePattern ??= LocalDatePattern.Create("yyyy-MM-dd", CultureInfo);
+    LocalDatePattern LongDatePattern => field ??= LocalDatePattern.Create("dddd 'den' d. MMMM yyyy", CultureInfo);
+    LocalDateTimePattern LongTimePattern => field ??= LocalDateTimePattern.Create("dddd 'den' d. MMMM yyyy 'kl.' HH:mm", CultureInfo);
+    LocalDatePattern MonthPattern => field ??= LocalDatePattern.Create("yyyy-MM", CultureInfo);
+    LocalDatePattern ShortDatePattern => field ??= LocalDatePattern.Create("d. MMMM yyyy", CultureInfo);
+    LocalDatePattern SortableDatePattern => field ??= LocalDatePattern.Create("yyyy-MM-dd", CultureInfo);
 
     public string FormatAmount(Amount amount) => $"{amount.ToDecimal().ToString("N0", CultureInfo)}{nonBreakingSpace}kr.";
 

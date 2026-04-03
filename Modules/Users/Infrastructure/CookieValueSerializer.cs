@@ -1,8 +1,8 @@
 using Frederikskaj2.Reservations.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NeoSmart.Utils;
 using System;
+using System.Buffers.Text;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -42,7 +42,7 @@ sealed class CookieValueSerializer : IDisposable
         using var cryptoStream = new CryptoStream(bytes, encryptor, CryptoStreamMode.Write);
         JsonSerializer.Serialize(cryptoStream, value, serializerOptions);
         cryptoStream.FlushFinalBlock();
-        return UrlBase64.Encode(bytes.ToArray());
+        return Base64Url.EncodeToString(bytes.ToArray());
     }
 
     public T? Deserialize<T>(string? value) where T : class
@@ -76,7 +76,7 @@ sealed class CookieValueSerializer : IDisposable
 
         T? UnsafeDeserialize()
         {
-            using var bytes = new MemoryStream(UrlBase64.Decode(value));
+            using var bytes = new MemoryStream(Base64Url.DecodeFromChars(value));
             var iv = new byte[aes.BlockSize/8];
             var bytesRead = bytes.Read(iv, 0, iv.Length);
             if (bytesRead < iv.Length)

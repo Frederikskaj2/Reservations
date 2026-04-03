@@ -33,7 +33,7 @@ public sealed class AccountAmounts : IEnumerable<(Account Account, Amount Amount
     public override string ToString()
     {
         var stringBuilder = new StringBuilder();
-        stringBuilder.Append(GetType().Name);
+        stringBuilder.Append(nameof(AccountAmounts));
         stringBuilder.Append(" {");
         stringBuilder.AppendJoin(',', this.Filter(tuple => tuple.Amount != Amount.Zero).Map(tuple => $" {tuple.Account} = {tuple.Amount}"));
         stringBuilder.Append(" }");

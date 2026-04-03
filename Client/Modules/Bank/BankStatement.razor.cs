@@ -62,9 +62,7 @@ partial class BankStatement
     {
         monthPattern = LocalDatePattern.Create("MMMM", CultureInfo);
         if (await GetBankAccounts())
-        {
             await GetTransactions();
-        }
         isInitialized = true;
     }
 

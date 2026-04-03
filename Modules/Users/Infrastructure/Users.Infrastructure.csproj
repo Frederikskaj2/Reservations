@@ -6,7 +6,6 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
-        <PackageReference Include="UrlBase64"/>
     </ItemGroup>
 
     <ItemGroup>

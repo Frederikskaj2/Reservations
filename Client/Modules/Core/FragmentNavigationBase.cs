@@ -27,11 +27,12 @@ public class FragmentNavigationBase : ComponentBase, IDisposable
             await NavigateToFragmentAsync();
     }
 
-    async void NavigateToFragment(object? sender, LocationChangedEventArgs args) => await NavigateToFragmentAsync();
+    void NavigateToFragment(object? sender, LocationChangedEventArgs args) => _ = NavigateToFragmentAsync();
 
-    ValueTask NavigateToFragmentAsync()
+    async Task NavigateToFragmentAsync()
     {
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-        return uri.Fragment.Length is not 0 ? JsRuntime.InvokeVoidAsync("fragmentNavigation.scrollIntoView", uri.Fragment[1..]) : ValueTask.CompletedTask;
+        if (uri.Fragment.Length is not 0)
+            await JsRuntime.InvokeVoidAsync("fragmentNavigation.scrollIntoView", uri.Fragment[1..]);
     }
 }

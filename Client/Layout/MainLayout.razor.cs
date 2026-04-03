@@ -76,6 +76,7 @@ partial class MainLayout
         "AsyncFixer",
         "AsyncFixer03:Fire-and-forget async-void methods or delegates",
         Justification = "This event handler has to be async to wait for the provided task.")]
+    // ReSharper disable once AsyncVoidMethod
     async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
     {
         var authenticationState = await task;

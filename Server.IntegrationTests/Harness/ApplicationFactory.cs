@@ -23,11 +23,10 @@ class ApplicationFactory(string id) : WebApplicationFactory<Program>
 {
     CosmosOptions? cosmosOptions;
     EmailQueueOptions? emailQueueOptions;
-    QueueClient? queueClient;
 
     public JsonSerializerOptions JsonSerializerOptions => cosmosOptions?.SerializerOptions ?? throw new InvalidOperationException();
 
-    public QueueClient QueueClient => queueClient ??= CreateQueueClient();
+    public QueueClient QueueClient => field ??= CreateQueueClient();
 
     public LocalDate TestStartDate { get; private set; }
 

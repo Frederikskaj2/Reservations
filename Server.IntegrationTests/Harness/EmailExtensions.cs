@@ -1,7 +1,9 @@
+using Azure.Storage.Queues.Models;
 using Frederikskaj2.Reservations.Emails;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
@@ -16,7 +18,7 @@ static class EmailExtensions
             var response = await queueClient.ReceiveMessagesAsync(32);
             if (response.Value.Length > 0)
                 return (await response.Value.ToAsyncEnumerable()
-                    .SelectAwait(message => session.Deserialize<Email>(message.Body.ToStream()))
+                    .Select((QueueMessage message, CancellationToken _) => session.Deserialize<Email>(message.Body.ToStream()))
                     .ToListAsync())!;
             await Task.Delay(TimeSpan.FromMilliseconds(25));
         }

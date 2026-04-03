@@ -9,9 +9,7 @@ namespace Frederikskaj2.Reservations.Persistence;
 
 class CosmosQuery<TDocument>(CosmosQueryDefinition queryDefinition) : IProjectedQuery<TDocument>
 {
-    string? sql;
-
-    public string Sql => sql ??= queryDefinition.ToSql();
+    public string Sql => field ??= queryDefinition.ToSql();
 
     public IQuery<TDocument> Distinct() =>
         new CosmosQuery<TDocument>(queryDefinition with { Distinct = true });

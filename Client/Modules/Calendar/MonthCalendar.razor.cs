@@ -120,7 +120,7 @@ public sealed partial class MonthCalendar : IDisposable
         var startDay = firstMonday.PlusDays(-1);
         var dayCount = Period.Between(startDay, lastSunday.PlusDays(1), PeriodUnits.Days).Days + 1;
         var days = Enumerable.Range(0, dayCount)
-            .Select(i => startDay.PlusDays(i))
+            .Select(startDay.PlusDays)
             .Select(date =>
                 new Day(date,
                     date == today,
