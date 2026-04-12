@@ -7,7 +7,7 @@ public static class BankAccounts
 {
     public static Seq<BankAccount> All { get; } = new BankAccount[]
     {
-        new(BankAccountId.Dedicated, "3000-4816068614"),
+        new(BankAccountId.Dedicated, "9444-4816068614"),
         new(BankAccountId.Shared, "9444-12501110"),
     }.ToSeq();
 
