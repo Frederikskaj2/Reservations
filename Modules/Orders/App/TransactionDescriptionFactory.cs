@@ -49,7 +49,7 @@ static class TransactionDescriptionFactory
     static string GetDamagesDescription(Option<string> description) =>
         description.Case switch
         {
-            string text => $". {description}{(text.Length > 0 && text[^1] is not '.' ? "." : "")}",
+            string text => $". {text}{(text.Length > 0 && text[^1] is not '.' ? "." : "")}",
             _ => "",
         };
 
