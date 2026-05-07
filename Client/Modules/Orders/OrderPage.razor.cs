@@ -24,10 +24,10 @@ partial class OrderPage
     bool showErrorAlert;
     bool showSuccessAlert;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public IDateProvider DateProvider { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] IDateProvider DateProvider { get; set; } = null!;
 
     [Parameter] public int OrderId { get; set; }
 

@@ -12,8 +12,8 @@ partial class UsersList
 {
     IReadOnlyDictionary<ApartmentId, Apartment>? apartments;
 
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public IEnumerable<UserDto>? Users { get; set; }
 

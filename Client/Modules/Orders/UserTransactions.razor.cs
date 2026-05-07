@@ -9,7 +9,7 @@ partial class UserTransactions
 {
     Amount balance;
 
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public TransactionId? SelectedTransactionId { get; set; }
     [Parameter] public IEnumerable<TransactionDto>? Transactions { get; set; }

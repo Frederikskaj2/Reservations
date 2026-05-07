@@ -14,9 +14,9 @@ partial class OwnerOrdersPage
     bool isInitialized;
     List<OrderSummaryDto>? orders;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

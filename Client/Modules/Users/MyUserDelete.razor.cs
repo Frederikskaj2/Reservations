@@ -10,8 +10,8 @@ partial class MyUserDelete
     bool showErrorAlert;
     bool showPendingDeleteAlert;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public SignOutService SignOutService { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] SignOutService SignOutService { get; set; } = null!;
 
     [Parameter] public GetMyUserResponse User { get; set; } = null!;
 

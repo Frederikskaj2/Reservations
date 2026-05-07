@@ -16,7 +16,7 @@ partial class OrdersPage
     List<OrderSummaryDto>? reservedOrders;
     List<OrderSummaryDto>? unsettledOrders;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

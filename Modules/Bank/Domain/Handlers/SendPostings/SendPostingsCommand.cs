@@ -3,4 +3,4 @@ using NodaTime;
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record SendPostingsCommand(UserId UserId, LocalDate Month);
+public record SendPostingsCommand(UserId UserId, LocalDate FromMonth, LocalDate ToMonth);

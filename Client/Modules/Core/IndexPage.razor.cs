@@ -10,8 +10,8 @@ partial class IndexPage
     bool isInitialized;
     OrderingOptions? options;
 
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

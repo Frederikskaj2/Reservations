@@ -18,7 +18,7 @@ partial class AddressEditor
     int selectedApartmentId;
     char selectedLetter = noLetter;
 
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
 
     [Parameter] public bool IsRequired { get; set; }
     [Parameter] public bool Disabled { get; set; }

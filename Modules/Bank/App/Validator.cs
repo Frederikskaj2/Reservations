@@ -111,14 +111,34 @@ static class Validator
     static Either<string, UserId> ValidatePaymentId(string? paymentId) =>
         IsValid(paymentId) ? ToUserId(PaymentId.FromString(paymentId)) : Left("Invalid payment ID.");
 
-    public static Either<Failure<Unit>, LocalDate> ValidateMonth(string? month)
+    public static Either<Failure<Unit>, GetPostingsQuery> ValidateGetPostings(string? fromMonth, string? toMonth)
     {
-        var either = from nonEmptyMonth in IsNotNullOrEmpty(month, "Month")
-            from date in ValidateDate(nonEmptyMonth, "Month")
-            from _ in IsFirstDayOfMonth(date, "Month")
-            select date;
+        var either =
+            from start in ValidateMonth(fromMonth, "From month")
+            from end in ValidateMonth(toMonth, "To month")
+            from _ in ValidateMonthRange(start, end)
+            select new GetPostingsQuery(start, end);
         return either.MapFailure(HttpStatusCode.UnprocessableEntity);
     }
+
+    public static Either<Failure<Unit>, SendPostingsCommand> ValidateSendPostings(UserId userId, string? fromMonth, string? toMonth)
+    {
+        var either =
+            from start in ValidateMonth(fromMonth, "From month")
+            from end in ValidateMonth(toMonth, "To month")
+            from _ in ValidateMonthRange(start, end)
+            select new SendPostingsCommand(userId, start, end);
+        return either.MapFailure(HttpStatusCode.UnprocessableEntity);
+    }
+
+    static Either<string, LocalDate> ValidateMonth(string? month, string context) =>
+        from nonEmptyMonth in IsNotNullOrEmpty(month, context)
+        from date in ValidateDate(nonEmptyMonth, context)
+        from _ in IsFirstDayOfMonth(date, context)
+        select date;
+
+    static Either<string, Unit> ValidateMonthRange(LocalDate fromMonth, LocalDate toMonth) =>
+        fromMonth <= toMonth ? unit : "From month must be before to month.";
 
     static Either<string, LocalDate> ValidateDate(string date, string context) =>
         datePattern.Parse(date).TryGetValue(default, out var value) ? value : $"{context} is not a valid date.";

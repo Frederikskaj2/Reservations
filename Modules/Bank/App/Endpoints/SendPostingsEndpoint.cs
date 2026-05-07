@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using static Frederikskaj2.Reservations.Bank.SendPostingsShell;
+using static Frederikskaj2.Reservations.Bank.Validator;
 
 namespace Frederikskaj2.Reservations.Bank;
 
@@ -16,7 +18,8 @@ class SendPostingsEndpoint
 
     [Authorize(Roles = nameof(Roles.Bookkeeping))]
     public static Task<IResult> Handle(
-        [FromQuery] string? month,
+        [FromQuery] string? from,
+        [FromQuery] string? to,
         [FromServices] IBankEmailService emailService,
         [FromServices] IEntityReader entityReader,
         [FromServices] ILogger<SendPostingsEndpoint> logger,
@@ -25,9 +28,8 @@ class SendPostingsEndpoint
     {
         var either =
             from userId in claimsPrincipal.UserId().ToEitherAsync(Failure.New(HttpStatusCode.Forbidden))
-            from validMonth in Validator.ValidateMonth(month).ToAsync()
-            let command = new SendPostingsCommand(userId, validMonth)
-            from email in SendPostingsShell.SendPostings(emailService, entityReader, command, httpContext.RequestAborted)
+            from command in ValidateSendPostings(userId, @from, to).ToAsync()
+            from email in SendPostings(emailService, entityReader, command, httpContext.RequestAborted)
             select email;
         return either.ToResult(logger, httpContext);
     }

@@ -22,9 +22,9 @@ public partial class NewPasswordPage
     string? token;
     Validations validations = null!;
 
-    [Inject] public ApiClient ApiClient { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
-    [Inject] public SignInState SignInState { get; set; } = null!;
+    [Inject] ApiClient ApiClient { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] SignInState SignInState { get; set; } = null!;
 
     protected override void OnInitialized()
     {

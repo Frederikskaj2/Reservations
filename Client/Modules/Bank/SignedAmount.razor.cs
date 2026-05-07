@@ -6,7 +6,7 @@ namespace Frederikskaj2.Reservations.Client.Modules.Bank;
 
 partial class SignedAmount
 {
-    [Inject] public CultureInfo CultureInfo { get; set; } = null!;
+    [Inject] CultureInfo CultureInfo { get; set; } = null!;
 
     [Parameter] public Amount Amount { get; set; }
     [Parameter] public bool AlwaysDisplayDecimals { get; set; }

@@ -2,6 +2,7 @@
 using Frederikskaj2.Reservations.Emails;
 using Frederikskaj2.Reservations.Users;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Options;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,13 +39,14 @@ class BankEmailService(IOptionsSnapshot<EmailsOptions> options, IEmailEnqueuer e
         return unit;
     }
 
-    public async Task<Unit> Send(PostingsForMonthEmailModel model, HashMap<UserId, string> userFullNames, CancellationToken cancellationToken)
+    public async Task<Unit> Send(PostingsEmailModel model, HashMap<UserId, UserExcerpt> users, CancellationToken cancellationToken)
     {
-        var (emailAddress, fullName, month, postings) = model;
+        var (emailAddress, fullName, fromMonth, toMonth, postings) = model;
         var email = new Email(emailAddress, fullName, options.BaseUrl)
         {
             PostingsForMonth = new(
-                month,
+                fromMonth,
+                toMonth,
                 AccountNames.All,
                 postings.Map(
                     posting => new PostingDto(
@@ -52,8 +54,9 @@ class BankEmailService(IOptionsSnapshot<EmailsOptions> options, IEmailEnqueuer e
                         posting.Date,
                         posting.Activity,
                         posting.ResidentId,
-                        userFullNames[posting.ResidentId],
+                        users[posting.ResidentId].FullName,
                         FromUserId(posting.ResidentId),
+                        users[posting.ResidentId].ApartmentId.ValueUnsafe(),
                         posting.OrderId.ToNullable(),
                         posting.Amounts.ToSeq().Map(tuple => new AccountAmountDto(tuple.Key, tuple.Value))))),
         };

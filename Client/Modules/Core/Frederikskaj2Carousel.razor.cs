@@ -16,7 +16,7 @@ public sealed partial class Frederikskaj2Carousel : IDisposable
 
     public Frederikskaj2Carousel() => timer = new(OnTimerElapsed);
 
-    [Inject] public IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] IJSRuntime JsRuntime { get; set; } = null!;
 
     [Parameter] public string? BaseName { get; set; }
     [Parameter] public int Count { get; set; }

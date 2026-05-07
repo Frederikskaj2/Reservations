@@ -4,4 +4,4 @@ using System.Collections.Generic;
 
 namespace Frederikskaj2.Reservations.Emails;
 
-public record PostingsForMonthDto(LocalDate Month, IEnumerable<AccountName> AccountNames, IEnumerable<PostingDto> Postings);
+public record PostingsForMonthDto(LocalDate FromMonth, LocalDate ToMonth, IEnumerable<AccountName> AccountNames, IEnumerable<PostingDto> Postings);

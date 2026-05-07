@@ -15,8 +15,8 @@ partial class ReconciliationRow
     ResidentDto? suggestedResident;
     PayOutSummaryDto? suggestedPayOut;
 
-    [Inject] public CultureInfo CultureInfo { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] CultureInfo CultureInfo { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public ConfirmReconciliationDialog? ConfirmReconciliationDialog { get; set; }
     [Parameter] public IEnumerable<ResidentDto>? Residents { get; set; }

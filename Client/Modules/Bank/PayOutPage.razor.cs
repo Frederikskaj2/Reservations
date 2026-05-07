@@ -14,7 +14,7 @@ partial class PayOutPage
     bool showErrorAlert;
     bool showSuccessAlert;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
 
     [Parameter] public int PayOutId { get; set; }
 

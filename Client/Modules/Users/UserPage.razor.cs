@@ -16,9 +16,9 @@ partial class UserPage
     bool showUserUpdatedErrorAlert;
     UserDetailsDto? user;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public TokenAuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] TokenAuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     [Parameter] public int UserId { get; set; }
 

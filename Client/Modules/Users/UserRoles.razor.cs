@@ -11,7 +11,7 @@ public sealed partial class UserRoles
     bool isUserAdministrationDisabled;
     Roles roles;
 
-    [Inject] public TokenAuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    [Inject] TokenAuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
 
     [Parameter] public bool IsReadOnly { get; set; }
     [Parameter] public EventCallback<UpdateUserRequest> OnUpdate { get; set; }

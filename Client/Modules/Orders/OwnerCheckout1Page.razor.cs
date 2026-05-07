@@ -19,11 +19,11 @@ partial class OwnerCheckout1Page
     bool showReservationConflictAlert;
     Validations validations = null!;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public DraftOrder DraftOrder { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] DraftOrder DraftOrder { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     protected override async Task OnInitializedAsync() => options = await DataProvider.GetOptions();
 

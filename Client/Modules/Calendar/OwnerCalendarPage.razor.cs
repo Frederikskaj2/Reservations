@@ -21,10 +21,10 @@ partial class OwnerCalendarPage
     IEnumerable<ReservedDayDto>? reservedDays;
     IReadOnlyDictionary<ResourceId, Resource>? resources;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public DraftOrder DraftOrder { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] DraftOrder DraftOrder { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

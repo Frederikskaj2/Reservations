@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using static Frederikskaj2.Reservations.Bank.GetPostingsShell;
 using static Frederikskaj2.Reservations.Bank.PostingsFactory;
+using static Frederikskaj2.Reservations.Bank.Validator;
 
 namespace Frederikskaj2.Reservations.Bank;
 
@@ -16,16 +17,16 @@ class GetPostingsEndpoint
 
     [Authorize(Roles = nameof(Roles.Bookkeeping))]
     public static Task<IResult> Handle(
-        [FromQuery] string? month,
+        [FromQuery] string? from,
+        [FromQuery] string? to,
         [FromServices] IEntityReader entityReader,
         [FromServices] ILogger<GetPostingsEndpoint> logger,
         HttpContext httpContext)
     {
         var either =
-            from validMonth in Validator.ValidateMonth(month).ToAsync()
-            let query = new GetPostingsQuery(validMonth)
-            from postingsForMonth in GetPostings(entityReader, query, httpContext.RequestAborted)
-            select new GetPostingsResponse(CreatePostings(postingsForMonth));
+            from query in ValidateGetPostings(@from, to).ToAsync()
+            from postings in GetPostings(entityReader, query, httpContext.RequestAborted)
+            select new GetPostingsResponse(CreatePostings(postings));
         return either.ToResult(logger, httpContext);
     }
 }

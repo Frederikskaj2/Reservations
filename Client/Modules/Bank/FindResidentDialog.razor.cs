@@ -21,7 +21,7 @@ partial class FindResidentDialog
     SortColumn sortColumn;
     SortDirection sortDirection;
 
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
 
     [Parameter] public EventCallback<(BankTransactionDto, ResidentDto)> OnSelectResident { get; set; }
     [Parameter] public IEnumerable<ResidentDto>? Residents { get; set; }

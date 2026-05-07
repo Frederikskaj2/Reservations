@@ -29,13 +29,13 @@ partial class Checkout2Page
     Amount totalRentAndCleaning;
     Validations validations = null!;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; init; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; init; } = null!;
-    [Inject] public IDateProvider DateProvider { get; init; } = null!;
-    [Inject] public DraftOrder DraftOrder { get; init; } = null!;
-    [Inject] public Formatter Formatter { get; init; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; init; } = null!;
-    [Inject] public UserOrderInformation OrderInformation { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; init; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; init; } = null!;
+    [Inject] IDateProvider DateProvider { get; init; } = null!;
+    [Inject] DraftOrder DraftOrder { get; init; } = null!;
+    [Inject] Formatter Formatter { get; init; } = null!;
+    [Inject] NavigationManager NavigationManager { get; init; } = null!;
+    [Inject] UserOrderInformation OrderInformation { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

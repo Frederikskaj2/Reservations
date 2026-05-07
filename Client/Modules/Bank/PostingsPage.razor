@@ -1,5 +1,5 @@
 ﻿@page "/posteringer"
-<PageTitle>Bogføring @(currentYear is not 0 ? $"{currentYear:0000}-{currentMonth:00} " : "")- Frederikskaj 2 lokalereservation</PageTitle>
+<PageTitle>Bogføring @(fromYear is not 0 ? $"{fromYear:0000}-{fromMonth:00} " : "")- Frederikskaj 2 lokalereservation</PageTitle>
 <main>
     @if (!isInitialized)
     {
@@ -17,40 +17,68 @@
     {
         var hasPostings = postings.Any();
         <Container>
-            <Alert Color="Color.Success" Visible="showSuccessAlert" Dismisable="true">
-                Posteringerne er blevet sendt til @email.
-                <CloseButton Clicked="DismissSuccessAlert"/>
-            </Alert>
-            <Alert Color="Color.Danger" Visible="showErrorAlert" Dismisable="true">
-                Der er sket en fejl, og posteringerne blev ikke sendt til @email.
-                <CloseButton Clicked="DismissErrorAlert"/>
-            </Alert>
             <h1>Posteringer</h1>
             @if (postingsRange != null)
             {
                 <Form>
                     <Row>
-                        <Column ColumnSize="ColumnSize.IsThird">
+                        <Column ColumnSize="ColumnSize.Is2">
                             <Field>
-                                <FieldLabel>År</FieldLabel>
+                                <FieldLabel>Fra</FieldLabel>
                                 <FieldBody>
-                                    <Select TValue="int" SelectedValue="currentYear" SelectedValueChanged="YearChanged">
-                                        @foreach (var year in years!)
+                                    <Select TValue="int" SelectedValue="fromYear" SelectedValueChanged="FromYearChanged">
+                                        @for (var year = postingsRange.EarliestMonth.Year; year <= Math.Min(postingsRange.LatestMonth.Year, toYear); year += 1)
                                         {
-                                            <SelectItem Value="year">@year</SelectItem>
+                                            var localYear = year;
+                                            <SelectItem Value="localYear">@localYear</SelectItem>
                                         }
                                     </Select>
                                 </FieldBody>
                             </Field>
                         </Column>
-                        <Column ColumnSize="ColumnSize.IsThird">
+                        <Column ColumnSize="ColumnSize.Is2">
                             <Field>
-                                <FieldLabel>Måned</FieldLabel>
+                                <FieldLabel>&nbsp;</FieldLabel>
                                 <FieldBody>
-                                    <Select TValue="int" SelectedValue="currentMonth" SelectedValueChanged="MonthChanged">
-                                        @foreach (var month in months!)
+                                    <Select TValue="int" SelectedValue="fromMonth" SelectedValueChanged="FromMonthChanged">
+                                        @for (
+                                            var month = LocalDate.Max(new LocalDate(fromYear, 1, 1), postingsRange.EarliestMonth);
+                                            month <= LocalDate.Min(new LocalDate(fromYear, 12, 1), new LocalDate(toYear, toMonth, 1));
+                                            month = month.PlusMonths(1))
                                         {
-                                            <SelectItem Value="month">@Capitalize(monthPattern!.Format(new LocalDate(currentYear, month, 1)))</SelectItem>
+                                            var localMonth = month;
+                                            <SelectItem Value="month.Month">@Capitalize(monthPattern!.Format(localMonth))</SelectItem>
+                                        }
+                                    </Select>
+                                </FieldBody>
+                            </Field>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is2">
+                            <Field>
+                                <FieldLabel>Til</FieldLabel>
+                                <FieldBody>
+                                    <Select TValue="int" SelectedValue="toYear" SelectedValueChanged="ToYearChanged">
+                                        @for (var year = fromYear; year <= postingsRange.LatestMonth.Year; year += 1)
+                                        {
+                                            var localYear = year;
+                                            <SelectItem Value="localYear">@localYear</SelectItem>
+                                        }
+                                    </Select>
+                                </FieldBody>
+                            </Field>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is2">
+                            <Field>
+                                <FieldLabel>&nbsp;</FieldLabel>
+                                <FieldBody>
+                                    <Select TValue="int" SelectedValue="toMonth" SelectedValueChanged="ToMonthChanged">
+                                        @for (
+                                            var month = LocalDate.Max(new LocalDate(toYear, 1, 1), new LocalDate(fromYear, fromMonth, 1));
+                                            month <= LocalDate.Min(new LocalDate(toYear, 12, 1), postingsRange.LatestMonth);
+                                            month = month.PlusMonths(1))
+                                        {
+                                            var localMonth = month;
+                                            <SelectItem Value="month.Month">@Capitalize(monthPattern!.Format(localMonth))</SelectItem>
                                         }
                                     </Select>
                                 </FieldBody>
@@ -66,8 +94,8 @@
                                         Block="true"
                                         PreventDefaultOnSubmit="true"
                                         Disabled="@(!hasPostings)"
-                                        Clicked="Send">
-                                        Send posteringer som mail
+                                        Clicked="DownloadPostings">
+                                        Hent posteringer som fil
                                     </Button>
                                 </FieldBody>
                             </Field>
@@ -84,9 +112,14 @@
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHeaderCell Width="Width.Rem(4)">Nummer</TableHeaderCell>
                             <TableHeaderCell Width="Width.Rem(6)">Dato</TableHeaderCell>
+                            <TableHeaderCell Width="Width.Rem(10)">Navn</TableHeaderCell>
+                            <TableHeaderCell Width="Width.Rem(4)">B-kode</TableHeaderCell>
+                            <TableHeaderCell Width="Width.Rem(5)">Adresse</TableHeaderCell>
+                            <TableHeaderCell Width="Width.Rem(4)">Bolig</TableHeaderCell>
                             <TableHeaderCell>Beskrivelse</TableHeaderCell>
-                            <TableHeaderCell Width="Width.Rem(15)">Konto</TableHeaderCell>
+                            <TableHeaderCell Width="Width.Rem(13)">Konto</TableHeaderCell>
                             <TableHeaderCell Width="Width.Rem(4)" Class="text-end">Debet</TableHeaderCell>
                             <TableHeaderCell Width="Width.Rem(4)" Class="text-end">Kredit</TableHeaderCell>
                         </TableRow>
@@ -103,43 +136,64 @@
                                 <TableRow Class="@(isLastRow ? "border-bottom" : "")">
                                     @if (isFirstRow)
                                     {
+                                        var apartment = apartments!.GetValueOrDefault(posting.ApartmentId);
+                                        <TableRowCell>@posting.TransactionId</TableRowCell>
                                         <TableRowCell>@Formatter.FormatDateShort(posting.Date)</TableRowCell>
+                                        <TableRowCell>@posting.FullName</TableRowCell>
+                                        <TableRowCell>@posting.PaymentId</TableRowCell>
+                                        <TableRowCell>@(apartment?.ToString() ?? "Ukendt")</TableRowCell>
+                                        <TableRowCell>
+                                            @switch (apartment?.OccupancyType)
+                                            {
+                                                case OccupancyType.Tenant:
+                                                    @:Lejer
+                                                    break;
+                                                case OccupancyType.Owner:
+                                                    @:Ejer
+                                                    break;
+                                                case OccupancyType.Houseboat:
+                                                    @:Husbåd
+                                                    break;
+                                                default:
+                                                    @:Ukendt
+                                                    break;
+                                            }
+                                        </TableRowCell>
                                         <TableRowCell>
                                             @if (posting.Activity is Activity.PlaceOrder || posting.Activity is Activity.PayIn && posting.OrderId.HasValue)
                                             {
                                                 <a href="@UrlPath.Orders/@posting.OrderId">
-                                                    Oprettelse af bestilling @posting.OrderId (@posting.FullName <span class="payment-id">@posting.PaymentId</span>)
+                                                    Oprettelse af bestilling @posting.OrderId
                                                 </a>
                                             }
                                             else if (posting.Activity is Activity.UpdateOrder)
                                             {
                                                 <a href="@UrlPath.Orders/@posting.OrderId">
-                                                    Ændring af bestilling @posting.OrderId (@posting.FullName <span class="payment-id">@posting.PaymentId</span>)
+                                                    Ændring af bestilling @posting.OrderId
                                                 </a>
                                             }
                                             else if (posting.Activity is Activity.SettleReservation)
                                             {
                                                 <a href="@UrlPath.Orders/@posting.OrderId">
                                                     Opgørelse af reservation på bestilling @posting.OrderId
-                                                    (@posting.FullName <span class="payment-id">@posting.PaymentId</span>)
                                                 </a>
                                             }
                                             else if (posting.Activity is Activity.PayIn)
                                             {
                                                 <a href="@string.Format(UrlPath.UsersTransactionsSpecific, posting.ResidentId, posting.TransactionId)">
-                                                    Indbetaling fra @posting.FullName <span class="payment-id">@posting.PaymentId</span>
+                                                    Indbetaling
                                                 </a>
                                             }
                                             else if (posting.Activity is Activity.PayOut)
                                             {
                                                 <a href="@string.Format(UrlPath.UsersTransactionsSpecific, posting.ResidentId, posting.TransactionId)">
-                                                    Udbetaling til @posting.FullName <span class="payment-id">@posting.PaymentId</span>
+                                                    Udbetaling
                                                 </a>
                                             }
                                             else if (posting.Activity is Activity.Reimburse)
                                             {
                                                 <a href="@string.Format(UrlPath.UsersTransactionsSpecific, posting.ResidentId, posting.TransactionId)">
-                                                    Godtgørelse af @posting.FullName <span class="payment-id">@posting.PaymentId</span>
+                                                    Godtgørelse
                                                 </a>
                                             }
                                             else
@@ -150,7 +204,7 @@
                                     }
                                     else
                                     {
-                                        <TableRowCell Class="border-top-0" ColumnSpan="2"/>
+                                        <TableRowCell Class="border-top-0" ColumnSpan="7"/>
                                     }
                                     <TableRowCell>@accountNames![account]</TableRowCell>
                                     <TableRowCell Class="text-end"><DebitCredit Amount="amount"/></TableRowCell>

@@ -19,8 +19,8 @@ sealed partial class PayOutNotes : IDisposable
 
     [Inject] ApiClient ApiClient { get; set; } = null!;
     [Inject] IDateProvider DateProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
-    [Inject] public ITimeConverter TimeConverter { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
+    [Inject] ITimeConverter TimeConverter { get; set; } = null!;
 
     [Parameter] public EventCallback<string> OnAddNote { get; set; }
 

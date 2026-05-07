@@ -2,4 +2,4 @@
 
 namespace Frederikskaj2.Reservations.Bank;
 
-public record GetPostingsQuery(LocalDate Month);
+public record GetPostingsQuery(LocalDate FromMonth, LocalDate ToMonth);

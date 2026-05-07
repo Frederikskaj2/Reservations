@@ -16,13 +16,20 @@ static class PostingFunctions
 {
     static readonly LocalDate lastPostingsV1Month = new(2022, 8, 1);
 
-    public static EitherAsync<HttpStatusCode, Seq<Posting>> GetPostingsV1OrV2(IEntityReader reader, LocalDate month, CancellationToken cancellationToken) =>
-        month <= lastPostingsV1Month
-            ? GetPostingsV1(reader, month, cancellationToken)
-            : GetPostingsV2(reader, month, cancellationToken);
+    public static EitherAsync<HttpStatusCode, Seq<Posting>> GetPostingsV1OrV2(
+        IEntityReader reader, LocalDate fromMonth, LocalDate toMonth, CancellationToken cancellationToken) =>
+        from postingsV1 in GetPostingsV1(reader, fromMonth, toMonth, cancellationToken)
+        from postingsV2 in GetPostingsV2(reader, fromMonth, toMonth, cancellationToken)
+        select postingsV1.Concat(postingsV2);
 
-    static EitherAsync<HttpStatusCode, Seq<Posting>> GetPostingsV1(IEntityReader reader, LocalDate month, CancellationToken cancellationToken) =>
-        reader.Query(GetPostingsV1Query(month, month.PlusMonths(1)), cancellationToken);
+    static EitherAsync<HttpStatusCode, Seq<Posting>> GetPostingsV1(
+        IEntityReader reader, LocalDate fromMonth, LocalDate toMonth, CancellationToken cancellationToken) =>
+        fromMonth <= lastPostingsV1Month
+            ? reader.Query(GetPostingsV1Query(fromMonth, GetEarliestDate(toMonth, lastPostingsV1Month).PlusMonths(1)), cancellationToken)
+            : (Seq<Posting>) Empty;
+
+    static LocalDate GetEarliestDate(LocalDate date1, LocalDate date2) =>
+        date1 < date2 ? date1 : date2;
 
     static IProjectedQuery<Posting> GetPostingsV1Query(LocalDate fromDate, LocalDate toDate) =>
         Query<Posting>()
@@ -31,9 +38,17 @@ static class PostingFunctions
             .OrderBy(posting => posting.TransactionId)
             .Project();
 
-    static EitherAsync<HttpStatusCode, Seq<Posting>> GetPostingsV2(IEntityReader reader, LocalDate month, CancellationToken cancellationToken) =>
-        from transactions in reader.Query(GetPostingsV2Query(month, month.PlusMonths(1)), cancellationToken)
-        select CreatePostings(transactions);
+    static EitherAsync<HttpStatusCode, Seq<Posting>> GetPostingsV2(
+        IEntityReader reader, LocalDate fromMonth, LocalDate toMonth, CancellationToken cancellationToken) =>
+        toMonth > lastPostingsV1Month
+            ? from transactions in reader.Query(
+                GetPostingsV2Query(GetLatestDate(fromMonth, lastPostingsV1Month.PlusMonths(1)), toMonth.PlusMonths(1)),
+                cancellationToken)
+            select CreatePostings(transactions)
+            : (Seq<Posting>) Empty;
+
+    static LocalDate GetLatestDate(LocalDate date1, LocalDate date2) =>
+        date1 > date2 ? date1 : date2;
 
     static IProjectedQuery<Transaction> GetPostingsV2Query(LocalDate fromDate, LocalDate toDate) =>
         Query<Transaction>()

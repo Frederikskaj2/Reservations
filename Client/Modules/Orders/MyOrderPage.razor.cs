@@ -26,10 +26,10 @@ partial class MyOrderPage
     bool showErrorAlert;
     bool showSuccessAlert;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
-    [Inject] public SignOutService SignOutService { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
+    [Inject] SignOutService SignOutService { get; set; } = null!;
 
     [Parameter] public int OrderId { get; set; }
 

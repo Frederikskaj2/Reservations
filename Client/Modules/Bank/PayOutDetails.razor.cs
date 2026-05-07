@@ -15,10 +15,10 @@ partial class PayOutDetails
     LocalDate today;
     UpdatePayOutAccountNumberDialog updatePayOutAccountNumberDialog = null!;
 
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
-    [Inject] public IDateProvider DateProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
-    [Inject] public ITimeConverter TimeConverter { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] IDateProvider DateProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
+    [Inject] ITimeConverter TimeConverter { get; set; } = null!;
 
     [Parameter] public EventCallback OnCancelPayOut { get; set; }
     [Parameter] public EventCallback<string> OnUpdateAccountNumber { get; set; }

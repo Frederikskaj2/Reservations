@@ -13,8 +13,8 @@ partial class ConfirmReconciliationDialog
     IReadOnlyDictionary<ApartmentId, Apartment>? apartments;
     Modal modal = null!;
 
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public EventCallback<(BankTransactionDto, PayOutSummaryDto)> OnConfirmPayOut { get; set; }
     [Parameter] public EventCallback<(BankTransactionDto, ResidentDto)> OnConfirmReconciliation { get; set; }

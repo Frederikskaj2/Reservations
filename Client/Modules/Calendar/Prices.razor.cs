@@ -5,7 +5,7 @@ namespace Frederikskaj2.Reservations.Client.Modules.Calendar;
 
 partial class Prices
 {
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public Price? Price { get; set; }
 

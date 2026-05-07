@@ -17,8 +17,8 @@ partial class OwnerOrderStatement
     IReadOnlyDictionary<ResourceId, Resource>? resources;
     Validations validations = null!;
 
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public OrderId OrderId { get; set; }
     [Parameter] public bool IsHistoryOrder { get; set; }

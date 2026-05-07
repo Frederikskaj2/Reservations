@@ -17,8 +17,8 @@ partial class SignUpPage
     bool showSuccessAlert;
     Validations validations = null!;
 
-    [Inject] public ApiClient ApiClient { get; set; } = null!;
-    [Inject] public SignUpState SignUpState { get; set; } = null!;
+    [Inject] ApiClient ApiClient { get; set; } = null!;
+    [Inject] SignUpState SignUpState { get; set; } = null!;
 
     protected override void OnInitialized()
     {

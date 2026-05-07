@@ -17,12 +17,12 @@ partial class SignInPage
     SignInError? signInError;
     Validations validations = null!;
 
-    [Inject] public ApiClient ApiClient { get; set; } = null!;
-    [Inject] public AuthenticationService AuthenticationService { get; set; } = null!;
-    [Inject] public EventAggregator EventAggregator { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
-    [Inject] public RedirectState RedirectState { get; set; } = null!;
-    [Inject] public SignInState SignInState { get; set; } = null!;
+    [Inject] ApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticationService AuthenticationService { get; set; } = null!;
+    [Inject] EventAggregator EventAggregator { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] RedirectState RedirectState { get; set; } = null!;
+    [Inject] SignInState SignInState { get; set; } = null!;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

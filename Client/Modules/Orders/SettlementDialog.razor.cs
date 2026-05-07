@@ -23,8 +23,8 @@ partial class SettlementDialog
     string? resourceName;
     IReadOnlyDictionary<ResourceId, Resource>? resources;
 
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public EventCallback<(OrderId OrderId, SettleReservationRequest Request)> OnConfirm { get; set; }
 

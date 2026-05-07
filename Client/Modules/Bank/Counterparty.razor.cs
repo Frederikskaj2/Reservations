@@ -10,8 +10,8 @@ partial class Counterparty
 {
     IReadOnlyDictionary<ApartmentId, Apartment>? apartments;
 
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
-    [Inject] public CultureInfo CultureInfo { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] CultureInfo CultureInfo { get; set; } = null!;
 
     [Parameter] public PaymentId PaymentId { get; set; }
     [Parameter] public Amount Amount { get; set; }

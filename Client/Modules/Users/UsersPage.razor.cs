@@ -16,7 +16,7 @@ partial class UsersPage
     List<UserDto>? residents;
     List<UserDto>? superUsers;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

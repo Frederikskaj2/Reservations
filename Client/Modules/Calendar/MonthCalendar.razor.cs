@@ -32,13 +32,13 @@ public sealed partial class MonthCalendar : IDisposable
     LocalDate? previousMonth;
     Dictionary<OrderId, string>? tooltips;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public CultureInfo CultureInfo { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public IDateProvider DateProvider { get; set; } = null!;
-    [Inject] public DraftOrder DraftOrder { get; set; } = null!;
-    [Inject] public EventAggregator EventAggregator { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] CultureInfo CultureInfo { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] IDateProvider DateProvider { get; set; } = null!;
+    [Inject] DraftOrder DraftOrder { get; set; } = null!;
+    [Inject] EventAggregator EventAggregator { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     [Parameter] public Func<ResourceId, IReadOnlySet<LocalDate>, LocalDate, LocalDate, bool>? IsResourceAvailable { get; set; }
     [Parameter] public string? LegendTheirReservations { get; set; }

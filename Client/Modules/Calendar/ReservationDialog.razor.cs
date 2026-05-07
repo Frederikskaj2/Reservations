@@ -15,9 +15,9 @@ partial class ReservationDialog
     Select<int> select = null!;
     string total = "";
 
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public IDateProvider DateProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] IDateProvider DateProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback OnConfirm { get; set; }

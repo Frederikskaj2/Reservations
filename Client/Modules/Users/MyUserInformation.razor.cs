@@ -16,7 +16,7 @@ partial class MyUserInformation
     GetMyUserResponse user = null!;
     Validations validations = null!;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
 
     [Parameter] public GetMyUserResponse User { get; set; } = null!;
 

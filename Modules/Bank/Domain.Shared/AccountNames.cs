@@ -1,18 +1,16 @@
 using System.Collections.Generic;
 
-// ReSharper disable StringLiteralTypo
-
 namespace Frederikskaj2.Reservations.Bank;
 
 public static class AccountNames
 {
     public static IEnumerable<AccountName> All { get; } =
     [
-        new(PostingAccount.Income, "1201 \u2013 Udlejning af fælleslokale"),
-        new(PostingAccount.BankShared, "4021 \u2013 Bank"),
-        new(PostingAccount.BankDedicated, "???? \u2013 Bank (ny)"),
-        new(PostingAccount.AccountsReceivable, "4401 \u2013 Tilgodehavende fælleslokaler"),
-        new(PostingAccount.Deposits, "7601 \u2013 Depositum (IND)"),
-        new(PostingAccount.AccountsPayable, "7601 \u2013 Depositum (UD)"),
+        new(PostingAccount.Income, "Indtægter"),
+        new(PostingAccount.BankShared, "Bank (gammel)"),
+        new(PostingAccount.BankDedicated, "Bank (ny)"),
+        new(PostingAccount.AccountsReceivable, "Tilgodehavende hos beboerne"),
+        new(PostingAccount.Deposits, "Depositum"),
+        new(PostingAccount.AccountsPayable, "Gæld til beboerne"),
     ];
 }

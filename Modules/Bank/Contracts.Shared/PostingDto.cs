@@ -12,5 +12,6 @@ public record PostingDto(
     UserId ResidentId,
     string FullName,
     PaymentId PaymentId,
+    ApartmentId ApartmentId,
     OrderId? OrderId,
     IEnumerable<AccountAmountDto> Amounts);

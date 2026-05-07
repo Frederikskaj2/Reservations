@@ -15,8 +15,8 @@ partial class UserTransactionsPage
     TransactionId? selectedTransactionId;
     GetUserTransactionsResponse? transactions;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     [Parameter] public int UserId { get; set; }
 

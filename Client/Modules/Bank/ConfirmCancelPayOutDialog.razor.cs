@@ -10,7 +10,7 @@ partial class ConfirmCancelPayOutDialog
     Modal modal = null!;
     Button submitButton = null!;
 
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public EventCallback OnConfirm { get; set; }
     [Parameter] public PayOutDetailsDto? PayOut { get; set; }

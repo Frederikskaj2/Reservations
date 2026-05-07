@@ -14,11 +14,11 @@ public sealed partial class Sidebar : IDisposable
     int reservationCount;
     Price totalPrice = new();
 
-    [Inject] public EventAggregator EventAggregator { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public IDateProvider DateProvider { get; set; } = null!;
-    [Inject] public DraftOrder DraftOrder { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] EventAggregator EventAggregator { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] IDateProvider DateProvider { get; set; } = null!;
+    [Inject] DraftOrder DraftOrder { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public EventCallback OnCheckout { get; set; }
     [Parameter] public bool ShowPrices { get; set; }

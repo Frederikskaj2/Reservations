@@ -27,9 +27,9 @@ public sealed partial class OrderStatement : IDisposable
     Validations validations = null!;
     bool waiveFee;
 
-    [Inject] public IDateProvider DateProvider { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] IDateProvider DateProvider { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public bool IsHistoryOrder { get; set; }
     [Parameter] public string? AccountNumber { get; set; }

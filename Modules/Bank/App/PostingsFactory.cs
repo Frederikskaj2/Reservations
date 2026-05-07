@@ -1,5 +1,6 @@
 ﻿using Frederikskaj2.Reservations.Users;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using static Frederikskaj2.Reservations.Users.PaymentIdEncoder;
 
 namespace Frederikskaj2.Reservations.Bank;
@@ -17,6 +18,7 @@ static class PostingsFactory
             posting.ResidentId,
             users[posting.ResidentId].FullName,
             FromUserId(posting.ResidentId),
+            users[posting.ResidentId].ApartmentId.ValueUnsafe(),
             posting.OrderId.ToNullable(),
             posting.Amounts.ToSeq().Map(tuple => new AccountAmountDto(tuple.Key, tuple.Value)));
 }

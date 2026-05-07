@@ -11,7 +11,7 @@ partial class MyUserPage
     bool isInitialized;
     GetMyUserResponse? user;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

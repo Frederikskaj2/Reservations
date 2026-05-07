@@ -10,5 +10,5 @@ public interface IBankEmailService
     Task<Unit> Send(DebtReminderEmailModel model, CancellationToken cancellationToken);
     Task<Unit> Send(PayInEmailModel model, CancellationToken cancellationToken);
     Task<Unit> Send(PayOutEmailModel model, CancellationToken cancellationToken);
-    Task<Unit> Send(PostingsForMonthEmailModel model, HashMap<UserId, string> userFullNames, CancellationToken cancellationToken);
+    Task<Unit> Send(PostingsEmailModel model, HashMap<UserId, UserExcerpt> users, CancellationToken cancellationToken);
 }

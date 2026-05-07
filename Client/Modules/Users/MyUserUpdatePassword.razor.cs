@@ -17,8 +17,8 @@ partial class MyUserUpdatePassword
     bool showSignedOutEverywhereErrorAlert;
     Validations validations = null!;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public AuthenticationService AuthenticationService { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticationService AuthenticationService { get; set; } = null!;
 
     [Parameter] public GetMyUserResponse User { get; set; } = null!;
 

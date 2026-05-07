@@ -34,6 +34,7 @@ public class PostingsForMonth(MessageFactoryFixture fixture) : IClassFixture<Mes
                 0,
                 fullName,
                 paymentId,
+                ApartmentId.FromInt32(1),
                 orderId,
                 [
                     new(PostingAccount.Income, Amount.FromInt32(-850)),
@@ -41,7 +42,7 @@ public class PostingsForMonth(MessageFactoryFixture fixture) : IClassFixture<Mes
                     new(PostingAccount.Deposits, Amount.FromInt32(-500)),
                 ]),
         };
-        var model = new PostingsForMonthDto(month, accountNames, postings);
+        var model = new PostingsForMonthDto(month, month, accountNames, postings);
 
         var message = await fixture.CreateMessage(model);
 

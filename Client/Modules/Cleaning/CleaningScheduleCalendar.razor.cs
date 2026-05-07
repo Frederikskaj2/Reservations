@@ -30,10 +30,10 @@ public partial class CleaningScheduleCalendar
     LocalDate? previousMonth;
     LocalDate today;
 
-    [Inject] public CultureInfo CultureInfo { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public IDateProvider DateProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] CultureInfo CultureInfo { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] IDateProvider DateProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public IEnumerable<CleaningTask>? CleaningTasks { get; set; }
     [Parameter] public IReadOnlyDictionary<ResourceId, Resource>? Resources { get; set; }

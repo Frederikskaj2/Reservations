@@ -17,10 +17,10 @@ partial class ConfirmEmailPage
     bool showResendErrorAlert;
     bool showResendSuccessAlert;
 
-    [Inject] public ApiClient ApiClient { get; set; } = null!;
-    [Inject] public AuthenticatedApiClient AuthenticatedApiClient { get; set; } = null!;
-    [Inject] public AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] ApiClient ApiClient { get; set; } = null!;
+    [Inject] AuthenticatedApiClient AuthenticatedApiClient { get; set; } = null!;
+    [Inject] AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

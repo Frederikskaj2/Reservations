@@ -13,8 +13,8 @@ public partial class RequestNewPasswordPage
     bool showSuccessAlert;
     Validations validations = null!;
 
-    [Inject] public ApiClient ApiClient { get; set; } = null!;
-    [Inject] public SignInState SignInState { get; set; } = null!;
+    [Inject] ApiClient ApiClient { get; set; } = null!;
+    [Inject] SignInState SignInState { get; set; } = null!;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

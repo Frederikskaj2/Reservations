@@ -18,9 +18,9 @@ public partial class LockBoxCodesPage
     bool showErrorAlert;
     bool showSuccessAlert;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

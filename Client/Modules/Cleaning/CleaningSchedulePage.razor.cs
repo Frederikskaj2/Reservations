@@ -25,8 +25,8 @@ public partial class CleaningSchedulePage
     bool showSuccessAlert;
     bool showErrorAlert;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public ClientDataProvider ClientDataProvider { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] ClientDataProvider ClientDataProvider { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

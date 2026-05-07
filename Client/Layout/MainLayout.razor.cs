@@ -32,9 +32,9 @@ partial class MainLayout
     List<string>? roleUrls;
     ClaimsPrincipal? user;
 
-    [Inject] public AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
-    [Inject] public EventAggregator EventAggregator { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    [Inject] EventAggregator EventAggregator { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

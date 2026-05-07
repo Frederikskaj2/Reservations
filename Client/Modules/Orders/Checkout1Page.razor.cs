@@ -19,10 +19,10 @@ partial class Checkout1Page
     bool showResendConfirmEmailEmailErrorAlert;
     Validations validations = null!;
 
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public DraftOrder DraftOrder { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
-    [Inject] public UserOrderInformation OrderInformation { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] DraftOrder DraftOrder { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] UserOrderInformation OrderInformation { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

@@ -7,7 +7,7 @@ namespace Frederikskaj2.Reservations.Client.Modules.Cleaning;
 
 public partial class CleaningScheduleTable
 {
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public IEnumerable<CleaningTask>? CleaningTasks { get; set; }
     [Parameter] public IReadOnlyDictionary<ResourceId, Resource>? Resources { get; set; }

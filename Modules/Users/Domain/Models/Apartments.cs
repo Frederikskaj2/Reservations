@@ -32,13 +32,12 @@ public static class Apartments
             { 'P', 4 },
             { 'R', 6 },
         };
-        var apartments = stories.SelectMany(
-                kvp => Enumerable.Range(0, kvp.Value + 1)
-                    .SelectMany(story => new[]
-                    {
-                        new ApartmentModel(kvp.Key, story, ApartmentSide.Left),
-                        new ApartmentModel(kvp.Key, story, ApartmentSide.Right),
-                    }))
+        var apartments = stories.SelectMany(kvp => Enumerable.Range(0, kvp.Value + 1)
+                .SelectMany(story => new[]
+                {
+                    new ApartmentModel(kvp.Key, story, ApartmentSide.Left),
+                    new ApartmentModel(kvp.Key, story, ApartmentSide.Right),
+                }))
             .Concat([
                 new('E', 6, default),
                 new('E', 7, default),

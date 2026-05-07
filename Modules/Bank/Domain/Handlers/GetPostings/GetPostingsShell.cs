@@ -11,7 +11,7 @@ namespace Frederikskaj2.Reservations.Bank;
 public static class GetPostingsShell
 {
     public static EitherAsync<Failure<Unit>, PostingsForMonth> GetPostings(IEntityReader reader, GetPostingsQuery query, CancellationToken cancellationToken) =>
-        from postings in GetPostingsV1OrV2(reader, query.Month, cancellationToken).MapReadError()
+        from postings in GetPostingsV1OrV2(reader, query.FromMonth, query.ToMonth, cancellationToken).MapReadError()
         let userIds = toHashSet(postings.Map(posting => posting.ResidentId))
         from userExcerpts in ReadUserExcerpts(reader, userIds, cancellationToken)
         let users = toHashMap(userExcerpts.Map(userExcerpt => (userExcerpt.UserId, userExcerpt)))

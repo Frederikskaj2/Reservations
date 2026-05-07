@@ -11,8 +11,8 @@ partial class AdditionalLineItems
 {
     IReadOnlyDictionary<ResourceId, Resource>? resources;
 
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public Formatter Formatter { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] Formatter Formatter { get; set; } = null!;
 
     [Parameter] public IEnumerable<LineItem>? Items { get; set; }
     [Parameter] public IEnumerable<ReservationDto>? Reservations { get; set; }

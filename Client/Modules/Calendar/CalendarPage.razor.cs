@@ -20,13 +20,13 @@ partial class CalendarPage
     IEnumerable<ReservedDayDto>? reservedDays;
     IReadOnlyDictionary<ResourceId, Resource>? resources;
 
-    [Inject] public ApiClient AnonymousApiClient { get; set; } = null!;
-    [Inject] public AuthenticatedApiClient ApiClient { get; set; } = null!;
-    [Inject] public TokenAuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
-    [Inject] public ClientDataProvider DataProvider { get; set; } = null!;
-    [Inject] public IDateProvider DateProvider { get; set; } = null!;
-    [Inject] public DraftOrder DraftOrder { get; set; } = null!;
-    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] ApiClient AnonymousApiClient { get; set; } = null!;
+    [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
+    [Inject] TokenAuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
+    [Inject] IDateProvider DateProvider { get; set; } = null!;
+    [Inject] DraftOrder DraftOrder { get; set; } = null!;
+    [Inject] NavigationManager NavigationManager { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
