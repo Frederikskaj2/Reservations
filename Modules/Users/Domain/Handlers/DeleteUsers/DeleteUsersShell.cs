@@ -3,6 +3,7 @@ using Frederikskaj2.Reservations.Persistence;
 using LanguageExt;
 using System.Threading;
 using static Frederikskaj2.Reservations.Persistence.QueryFactory;
+using static Frederikskaj2.Reservations.Users.DeleteUsers;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Users;
@@ -44,7 +45,7 @@ public static class DeleteUsersShell
         Seq<ETaggedEntity<User>> userEntities,
         CancellationToken cancellationToken) =>
         from userEmailEntities in ReadUserEmailEntities(reader, userEntities, cancellationToken)
-        let output = Users.DeleteUsers.DeleteUsersCore(new(command, userEntities.ToValues()))
+        let output = DeleteUsersCore(new(command, userEntities.ToValues()))
         from _1 in writer.Write(
             collector => collector.Add(userEntities).Add(userEmailEntities),
             tracker => tracker.Update(output.DeletedUsers.Map(deletedUser => deletedUser.User)).Remove(userEmailEntities),
