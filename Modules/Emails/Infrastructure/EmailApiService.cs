@@ -15,8 +15,8 @@ class EmailApiService(HttpClient httpClient, IOptionsMonitor<EmailApiOptions> op
     public async ValueTask Send(EmailMessage message, CancellationToken cancellationToken)
     {
         // Don't try to stream the JSON by using PostAsJsonAsync. This will
-        // set Content-Length to 0 and the Azure request gateway will strip
-        // the body resulting in an invalid request.
+        // set Content-Length to 0, and the Azure request gateway will strip
+        // the body, resulting in an invalid request.
         using var content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, serializerOptions)));
         content.Headers.Add("Content-Type", "application/json; charset=utf-8");
         var url = options.CurrentValue.Url ?? throw new ConfigurationException("Missing URL value.");

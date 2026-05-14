@@ -21,6 +21,11 @@ else
     <p>Fra @Model.FormatShortDate(datedLockBoxCode.Date): <strong>@datedLockBoxCode.Code</strong></p>
     }
 }
+    <p>Der er WiFi i fælleshuset:</p>
+    <ul>
+        <li>Navn: <strong>Frederikskaj</strong></li>
+        <li>Kode: <strong>FrederikkeOgKaja2</strong></li>
+    </ul>
     <p>Det er <strong>vigtigt</strong> at du overholder den <a href="@Model.GetRulesUrl(Model.Data.ResourceId)">husorden</a> der gælder for brug lokalet.</p>
     <Regards Model="Model"/>
     <ResidentOrderFooter Model="Model" OrderId="Model.Data.OrderId"/>

@@ -38,6 +38,11 @@ public class LockBoxCodes(MessageFactoryFixture fixture) : IClassFixture<Message
                  <p>Hej {HtmlEncode(fixture.ToFullName)}</p>
                  <p>Her er den nøglebokskode du skal bruge for at få adgang til <strong>{HtmlEncode(Resources.GetNameUnsafe(resourceId))}</strong> den {date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}:</p>
                  <p><strong>{datedLockBoxCode.Code}</strong></p>
+                 <p>Der er WiFi i fælleshuset:</p>
+                 <ul>
+                     <li>Navn: <strong>Frederikskaj</strong></li>
+                     <li>Kode: <strong>FrederikkeOgKaja2</strong></li>
+                 </ul>
                  <p>Det er <strong>vigtigt</strong> at du overholder den <a href="{HtmlEncode(fixture.FromUrl.ToString())}husorden/{rulesPath}">husorden</a> der gælder for brug lokalet.</p>
                  <p><em>(Dette er en automatisk udsendt besked som ikke skal besvares.)</em></p>
                  <p>Med venlig hilsen<br>{HtmlEncode(fixture.FromName)}<br><a href="{HtmlEncode(fixture.FromUrl.ToString())}">{HtmlEncode(fixture.FromUrl.ToString())}</a></p>
@@ -79,6 +84,11 @@ public class LockBoxCodes(MessageFactoryFixture fixture) : IClassFixture<Message
                  <p>Her er de nøglebokskoder du skal bruge for at få adgang til <strong>{HtmlEncode(Resources.GetNameUnsafe(resourceId))}</strong> den {date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}:</p>
                  <p>Fra {datedLockBoxCode1.Date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}: <strong>{datedLockBoxCode1.Code}</strong></p>
                  <p>Fra {datedLockBoxCode2.Date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}: <strong>{datedLockBoxCode2.Code}</strong></p>
+                 <p>Der er WiFi i fælleshuset:</p>
+                 <ul>
+                     <li>Navn: <strong>Frederikskaj</strong></li>
+                     <li>Kode: <strong>FrederikkeOgKaja2</strong></li>
+                 </ul>
                  <p>Det er <strong>vigtigt</strong> at du overholder den <a href="{HtmlEncode(fixture.FromUrl.ToString())}husorden/{rulesPath}">husorden</a> der gælder for brug lokalet.</p>
                  <p><em>(Dette er en automatisk udsendt besked som ikke skal besvares.)</em></p>
                  <p>Med venlig hilsen<br>{HtmlEncode(fixture.FromName)}<br><a href="{HtmlEncode(fixture.FromUrl.ToString())}">{HtmlEncode(fixture.FromUrl.ToString())}</a></p>
