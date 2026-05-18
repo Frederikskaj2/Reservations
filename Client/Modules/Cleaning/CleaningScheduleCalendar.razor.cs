@@ -1,7 +1,6 @@
 ﻿using Frederikskaj2.Reservations.Cleaning;
 using Frederikskaj2.Reservations.Client.Modules.Calendar;
 using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Microsoft.AspNetCore.Components;
 using NodaTime;

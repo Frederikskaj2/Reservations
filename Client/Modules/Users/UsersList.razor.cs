@@ -24,7 +24,7 @@ partial class UsersList
         apartments?.TryGetValue(apartmentId ?? Apartment.Deleted.ApartmentId, out var apartment) ?? false ? apartment : null;
 
     static IEnumerable<string> GetRoleNames(Roles roles) =>
-        Enum.GetValues<Roles>().Where(role => role is not Roles.None && roles.HasFlag(role)).Select(GetRoleName);
+        Enum.GetValues<Roles>().Where(role => role is not Roles.None and not Roles.LockBoxCodes && roles.HasFlag(role)).Select(GetRoleName);
 
     static string GetRoleName(Roles role) => role switch
     {
@@ -33,7 +33,6 @@ partial class UsersList
         Roles.Bookkeeping => "Bogføring",
         Roles.UserAdministration => "Brugeradministration",
         Roles.Cleaning => "Rengøring",
-        Roles.LockBoxCodes => "Nøglebokskoder",
         _ => "?",
     };
 }

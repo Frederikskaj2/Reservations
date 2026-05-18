@@ -2,7 +2,6 @@ using FluentAssertions;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Linq;
@@ -11,7 +10,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Orders;
 
-sealed partial class SettleReservation(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class SettleReservation(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     const string description = "Description of damages";
 
@@ -24,8 +23,6 @@ sealed partial class SettleReservation(SessionFixture session) : FeatureFixture,
     MyOrderDto Order => order.GetValue(nameof(Order));
     MyOrderDto AnotherOrder => anotherOrder.GetValue(nameof(AnotherOrder));
     Amount Damages => damages.GetValue(nameof(Damages));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResidentHasAPaidOrder()
     {

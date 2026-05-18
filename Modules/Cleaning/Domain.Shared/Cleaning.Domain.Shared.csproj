@@ -8,6 +8,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\LockBox\Domain.Shared\LockBox.Domain.Shared.csproj"/>
+        <ProjectReference Include="..\..\Orders\Domain.Shared\Orders.Domain.Shared.csproj"/>
     </ItemGroup>
 </Project>

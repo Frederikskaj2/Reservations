@@ -13,14 +13,6 @@ class OrdersEmailService(IOptionsSnapshot<EmailsOptions> options, IEmailEnqueuer
 {
     readonly EmailsOptions options = options.Value;
 
-    public async Task<Unit> Send(LockBoxCodesEmail model, CancellationToken cancellationToken)
-    {
-        var (emailAddress, fullName, orderId, resourceId, date, codes) = model;
-        var email = new Email(emailAddress, fullName, options.BaseUrl) { LockBoxCodes = new(orderId, resourceId, date, codes) };
-        await emailEnqueuer.Enqueue(email, cancellationToken);
-        return unit;
-    }
-
     public async Task<Unit> Send(NewOrderEmailModel model, Seq<EmailUser> users, CancellationToken cancellationToken)
     {
         var orderId = model.OrderId;

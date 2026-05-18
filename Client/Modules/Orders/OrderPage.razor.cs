@@ -17,6 +17,7 @@ partial class OrderPage
     IReadOnlyDictionary<ApartmentId, Apartment>? apartments;
     bool canHandleOrders;
     bool canWaiveFee;
+    List<ReservationEntryCode>? entryCodes;
     bool isInitialized;
     OrderingOptions? options;
     OrderDetailsDto? order;
@@ -49,8 +50,16 @@ partial class OrderPage
         order = response.Result!.Order;
 
         if (order is not null && options is not null)
+        {
             canWaiveFee = canHandleOrders && order.Reservations.Any(
                 reservation => CanReservationBeCancelled(options, DateProvider.Today, reservation.Status, reservation.Extent, alwaysAllowCancellation: true));
+
+            var resources = await DataProvider.GetResources();
+            entryCodes = order.Reservations
+                .Where(reservation => reservation.EntryCode is not null)
+                .Select(reservation => new ReservationEntryCode(resources[reservation.ResourceId].Name, reservation.EntryCode.ToString()!))
+                .ToList();
+        }
 
         isInitialized = true;
     }
@@ -120,4 +129,6 @@ partial class OrderPage
         DismissSuccessAlert();
         DismissErrorAlert();
     }
+
+    record ReservationEntryCode(string ResourceName, string Code);
 }

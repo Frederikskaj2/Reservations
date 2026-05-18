@@ -7,7 +7,6 @@ namespace Frederikskaj2.Reservations.Orders;
 
 public interface IOrdersEmailService
 {
-    Task<Unit> Send(LockBoxCodesEmail model, CancellationToken cancellationToken);
     Task<Unit> Send(NewOrderEmailModel model, Seq<EmailUser> users, CancellationToken cancellationToken);
     Task<Unit> Send(NoFeeCancellationAllowedEmailModel model, CancellationToken cancellationToken);
     Task<Unit> Send(OrderConfirmedEmailModel model, CancellationToken cancellationToken);

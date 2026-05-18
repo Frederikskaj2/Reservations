@@ -31,10 +31,10 @@ sealed partial class ReconcilePayOuts(SessionFixture session) : FeatureFixture, 
     BankTransactionDto ReconciledBankTransaction => reconciledBankTransaction.GetValue(nameof(ReconciledBankTransaction));
     TransactionDto PayOutTransaction => payOutTransaction.GetValue(nameof(PayOutTransaction));
 
-    async Task IScenarioSetUp.OnScenarioSetUp()
+    Task IScenarioSetUp.OnScenarioSetUp()
     {
         session.NowOffset += Period.FromDays(21);
-        await session.UpdateLockBoxCodes();
+        return Task.CompletedTask;
     }
 
     async Task GivenASettledOrder()

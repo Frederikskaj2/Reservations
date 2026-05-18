@@ -91,6 +91,7 @@ static class CancelResidentReservations
             ReservationIndex => reservation with
             {
                 Status = reservation.Status is ReservationStatus.Confirmed ? ReservationStatus.Cancelled : ReservationStatus.Abandoned,
+                EntryCode = null,
             },
             _ => reservation,
         };

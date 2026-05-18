@@ -3,9 +3,9 @@ using Frederikskaj2.Reservations.Calendar;
 using Frederikskaj2.Reservations.Cleaning;
 using Frederikskaj2.Reservations.Core;
 using Frederikskaj2.Reservations.Emails;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Persistence;
+using Frederikskaj2.Reservations.RoomAccess;
 using Frederikskaj2.Reservations.Server;
 using Frederikskaj2.Reservations.Users;
 using Microsoft.AspNetCore.Builder;
@@ -31,8 +31,7 @@ builder.Services
     .AddOrdersInfrastructure()
     .AddOrdersDomain()
     .AddOrdersSharedDomain()
-    .AddLockBoxInfrastructure()
-    .AddLockBoxSharedDomain()
+    .AddRoomAccessInfrastructure()
     .AddUsersInfrastructure()
     .AddUsersDomain()
     .AddUsersSharedDomain()
@@ -72,7 +71,7 @@ app
     .MapCleaningEndpoints(isDevelopment)
     .MapCoreEndpoints()
     .MapEmailsEndpoints(isDevelopment)
-    .MapLockBoxEndpoints(isDevelopment)
+    .MapRoomAccessEndpoints(isDevelopment)
     .MapOrdersEndpoints(isDevelopment)
     .MapUsersEndpoints(isDevelopment)
     .MapFallbackToFile("index.html");

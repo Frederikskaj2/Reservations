@@ -21,5 +21,5 @@ public partial class MyOrders
             WhenTheResidentRetrievesOrders,
             ThenAllOrdersAreRetrieved,
             ThenAHistoryOrderIsRetrieved,
-            ThenTheUpcomingOrderHasLockBoxCodes);
+            ThenTheUpcomingOrderHasRoomEntryCode);
 }

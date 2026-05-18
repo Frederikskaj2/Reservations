@@ -1,5 +1,5 @@
 using Frederikskaj2.Reservations.Cleaning;
-using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 

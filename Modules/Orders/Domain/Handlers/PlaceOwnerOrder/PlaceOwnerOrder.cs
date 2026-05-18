@@ -1,6 +1,8 @@
 ﻿using Frederikskaj2.Reservations.Users;
 using LanguageExt;
 using NodaTime;
+using static Frederikskaj2.Reservations.Orders.EntryCodeFunctions;
+using static Frederikskaj2.Reservations.Orders.OrderAudit;
 using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Orders;
@@ -23,7 +25,7 @@ static class PlaceOwnerOrder
             command.Timestamp,
             new Owner(command.Description),
             CreateOwnerReservations(command),
-            OrderAudit.PlaceOwnerOrder(command.Timestamp, command.UserId).Cons());
+            PlaceOwnerOrder(command.Timestamp, command.UserId).Cons());
 
     static OrderFlags GetFlags(PlaceOwnerOrderCommand command) =>
         OrderFlags.IsOwnerOrder | (command.IsCleaningRequired ? OrderFlags.IsCleaningRequired : OrderFlags.None);
@@ -36,6 +38,7 @@ static class PlaceOwnerOrder
                     ReservationStatus.Confirmed,
                     reservation.Extent,
                     None,
-                    ReservationEmails.None))
+                    ReservationEmails.None,
+                    CreateEntryCode()))
             .ToSeq();
 }

@@ -3,7 +3,6 @@ using Frederikskaj2.Reservations.Bank;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Collections.Generic;
@@ -14,15 +13,13 @@ using static Frederikskaj2.Reservations.Server.IntegrationTests.Harness.AmountFu
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Bank;
 
-sealed partial class PostingsWithSimpleOrder(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class PostingsWithSimpleOrder(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order;
     State<IEnumerable<PostingDto>> postings;
 
     MyOrderDto Order => order.GetValue(nameof(Order));
     IEnumerable<PostingDto> Postings => postings.GetValue(nameof(Postings));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResident() => await session.SignUpAndSignIn();
 

@@ -7,5 +7,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddOrdersSharedDomain(this IServiceCollection services) =>
         services
-            .AddSingleton<JsonConverter, ReservationIndexConverter>();
+            .AddSingleton<JsonConverter, EntryCodeConverter>()
+            .AddSingleton<JsonConverter, ReservationIndexConverter>()
+            .AddSingleton<JsonConverter, ResourceIdConverter>();
 }

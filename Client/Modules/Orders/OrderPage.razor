@@ -37,6 +37,20 @@
                     </div>
                 </CardBody>
             </Card>
+            @if (entryCodes?.Count > 0)
+            {
+                <Card Background="Background.Light">
+                    <CardHeader>
+                        <CardTitle Size="1">Adgangskoder</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        @foreach (var entryCode in entryCodes)
+                        {
+                            <Paragraph>Adgangskode for @entryCode.ResourceName: <strong class="text-primary">@entryCode.Code</strong></Paragraph>
+                        }
+                    </CardBody>
+                </Card>
+            }
             <Card Background="Background.Light">
                 <CardHeader>
                     <CardTitle Size="1">Reservationer</CardTitle>
@@ -80,6 +94,20 @@
                     <Text>Oprettet af <a href="@UrlPath.Users/@order.UserIdentity.UserId">@order.UserIdentity.FullName</a> på vegne af grundejerforeningen</Text>
                 </CardBody>
             </Card>
+            @if (entryCodes?.Count > 0)
+            {
+                <Card Background="Background.Light">
+                    <CardHeader>
+                        <CardTitle Size="1">Adgangskoder</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        @foreach (var entryCode in entryCodes)
+                        {
+                            <Paragraph>Adgangskode for @entryCode.ResourceName: <strong class="text-primary">@entryCode.Code</strong></Paragraph>
+                        }
+                    </CardBody>
+                </Card>
+            }
             <Card Background="Background.Light">
                 <CardHeader>
                     <CardTitle Size="1">Detaljer</CardTitle>

@@ -21,7 +21,6 @@
         <ProjectReference Include="..\Modules\Cleaning\Contracts\Cleaning.Contracts.csproj"/>
         <ProjectReference Include="..\Modules\Core\Contracts\Core.Contracts.csproj"/>
         <ProjectReference Include="..\Modules\Core\Infrastructure.Shared\Core.Infrastructure.Shared.csproj"/>
-        <ProjectReference Include="..\Modules\LockBox\Contracts\LockBox.Contracts.csproj"/>
         <ProjectReference Include="..\Modules\Orders\Contracts\Orders.Contracts.csproj"/>
         <ProjectReference Include="..\Modules\Users\Infrastructure.Shared\Users.Infrastructure.Shared.csproj"/>
     </ItemGroup>

@@ -1,6 +1,3 @@
-using Frederikskaj2.Reservations.LockBox;
-using System.Collections.Generic;
-
 namespace Frederikskaj2.Reservations.Orders;
 
 public record MyReservationDto(
@@ -9,4 +6,4 @@ public record MyReservationDto(
     Price? Price,
     Extent Extent,
     bool CanBeCancelled,
-    IEnumerable<DatedLockBoxCode> LockBoxCodes) : ReservationDto(ResourceId, Status, Price, Extent, CanBeCancelled);
+    EntryCode? EntryCode) : ReservationDto(ResourceId, Status, Price, Extent, CanBeCancelled, EntryCode);

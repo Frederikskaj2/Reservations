@@ -2,7 +2,6 @@
 using Frederikskaj2.Reservations.Bank;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Bank;
 
-sealed partial class PayOuts(SessionFixture session) : PayOutsFixture(session), IScenarioSetUp
+sealed partial class PayOuts(SessionFixture session) : PayOutsFixture(session)
 {
     const string note = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
     const string accountNumber = "1234-1234567890";
@@ -20,8 +19,6 @@ sealed partial class PayOuts(SessionFixture session) : PayOutsFixture(session), 
 
     HttpResponseMessage HttpResponseMessage => httpResponseMessage.GetValue(nameof(HttpResponseMessage));
     IEnumerable<CreditorDto> Creditors => creditors.GetValue(nameof(Creditors));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await Session.UpdateLockBoxCodes();
 
     async Task WhenAnotherPayOutIsCreated() =>
         httpResponseMessage = await Session.CreatePayOutRaw(Creditor.UserInformation.UserId, Creditor.Payment.AccountNumber, Creditor.Payment.Amount);

@@ -3,7 +3,6 @@ using Frederikskaj2.Reservations.Emails;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Collections.Generic;
@@ -13,7 +12,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Orders;
 
-sealed partial class ResidentOrder(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class ResidentOrder(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     readonly List<Email> emails = [];
 
@@ -28,8 +27,6 @@ sealed partial class ResidentOrder(SessionFixture session) : FeatureFixture, ISc
     GetMyTransactionsResponse GetMyTransactionsResponse => getMyTransactionsResponse.GetValue(nameof(GetMyTransactionsResponse));
     UpdateMyOrderResponse UpdateMyOrderResponse => updateMyOrderResponse.GetValue(nameof(UpdateMyOrderResponse));
     Amount CancellationFee => cancellationFee.GetValue(nameof(CancellationFee));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResidentIsSignedIn() => await session.SignUpAndSignIn();
 

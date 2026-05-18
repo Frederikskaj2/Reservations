@@ -1,14 +1,13 @@
 using FluentAssertions;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Cleaning;
 
-sealed partial class SchedulingWithCancelledReservation(SessionFixture session) : CleaningFixture(session), IScenarioSetUp
+sealed partial class SchedulingWithCancelledReservation(SessionFixture session) : CleaningFixture(session)
 {
     State<OrderDetailsDto> ownerOrder;
     State<ReservationDto> reservation1;
@@ -17,8 +16,6 @@ sealed partial class SchedulingWithCancelledReservation(SessionFixture session) 
     OrderDetailsDto OwnerOrder => ownerOrder.GetValue(nameof(OwnerOrder));
     ReservationDto Reservation1 => reservation1.GetValue(nameof(Reservation1));
     ReservationDto Reservation2 => reservation2.GetValue(nameof(Reservation2));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await Session.UpdateLockBoxCodes();
 
     async Task GivenAResident() => await Session.SignUpAndSignIn();
 

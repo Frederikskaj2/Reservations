@@ -89,7 +89,7 @@ static class ConfirmOrders
 
     static Reservation TryConfirmReservation(Reservation reservation) =>
         reservation.Status is ReservationStatus.Reserved
-            ? reservation with { Status = ReservationStatus.Confirmed }
+            ? reservation with { Status = ReservationStatus.Confirmed, EntryCode = EntryCodeFunctions.CreateEntryCode() }
             : reservation;
 
     static Seq<Order> TryAddOrder(Seq<Order> confirmedOrders, Option<Order> orderOption) =>

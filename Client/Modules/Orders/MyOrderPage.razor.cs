@@ -1,10 +1,8 @@
 ﻿using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using NodaTime;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,13 +14,12 @@ partial class MyOrderPage
 {
     string? accountNumber;
     IReadOnlyDictionary<ApartmentId, Apartment>? apartments;
+    List<ReservationEntryCode>? entryCodes;
     bool isInitialized;
     bool linkBanquetFacilitiesRules;
     bool linkBedroomRules;
     MyOrderDto? order;
     string? originalAccountNumber;
-    List<ReservationLockBoxCode>? lockBoxCodes;
-    IReadOnlyDictionary<ResourceId, Resource>? resources;
     bool showErrorAlert;
     bool showSuccessAlert;
 
@@ -44,21 +41,17 @@ partial class MyOrderPage
         {
             order = response.Result!.Order;
 
-            resources = await DataProvider.GetResources();
-            if (resources is not null)
-            {
-                linkBanquetFacilitiesRules = order!.Reservations.Any(
-                    reservation => resources![reservation.ResourceId].Type is ResourceType.BanquetFacilities &&
-                                   reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed);
-                linkBedroomRules = order.Reservations.Any(
-                    reservation => resources![reservation.ResourceId].Type is ResourceType.Bedroom &&
-                                   reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed);
-                lockBoxCodes = order.Reservations
-                    .SelectMany(
-                        reservation => reservation.LockBoxCodes,
-                        (reservation, lockBoxCode) => new ReservationLockBoxCode(resources[reservation.ResourceId].Name, lockBoxCode.Date, lockBoxCode.Code))
-                    .ToList();
-            }
+            var resources = await DataProvider.GetResources();
+            linkBanquetFacilitiesRules = order!.Reservations.Any(
+                reservation => resources![reservation.ResourceId].Type is ResourceType.BanquetFacilities &&
+                               reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed);
+            linkBedroomRules = order.Reservations.Any(
+                reservation => resources![reservation.ResourceId].Type is ResourceType.Bedroom &&
+                               reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed);
+            entryCodes = order.Reservations
+                .Where(reservation => reservation.EntryCode is not null)
+                .Select(reservation => new ReservationEntryCode(resources[reservation.ResourceId].Name, reservation.EntryCode.ToString()!))
+                .ToList();
         }
 
         isInitialized = true;
@@ -109,5 +102,5 @@ partial class MyOrderPage
 
     Apartment GetApartment(ApartmentId apartmentId) => apartments![apartmentId];
 
-    record ReservationLockBoxCode(string ResourceName, LocalDate Date, string Code);
+    record ReservationEntryCode(string ResourceName, string Code);
 }

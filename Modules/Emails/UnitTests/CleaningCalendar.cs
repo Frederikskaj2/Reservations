@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Frederikskaj2.Reservations.Cleaning;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using NodaTime;
@@ -68,7 +67,8 @@ public class CleaningCalendar(MessageFactoryFixture fixture) : IClassFixture<Mes
                 ReservationStatus.Confirmed,
                 new(reservationDate, 1),
                 None,
-                ReservationEmails.None).Cons(),
+                ReservationEmails.None,
+                EntryCode.FromString("999999")).Cons(),
             Empty).Cons();
         var input = new UpdateCleaningScheduleInput(command, orders);
         var orderingOptions = new OrderingOptions

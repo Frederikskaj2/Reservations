@@ -9,16 +9,36 @@ static class FinishOwnerOrders
     public static FinishOwnerOrdersOutput FinishOwnerOrdersCore(OrderingOptions options, ITimeConverter timeConverter, FinishOwnerOrdersInput input) =>
         new(
             input.Orders
-                .Filter(order => ShouldBeHistoryOwnerOrder(options, input.Command.Date, order))
-                .Map(order => MakeHistoryOwnerOrder(timeConverter, order)));
+                .Filter(order => order.Flags.HasFlag(OrderFlags.IsOwnerOrder) && !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) &&
+                                 OwnerOrderNeedsUpdate(options, input.Command.Date, order))
+                .Map(order => UpdateOwnerOrder(options, timeConverter, input.Command.Date, order)));
 
-    static bool ShouldBeHistoryOwnerOrder(OrderingOptions options, LocalDate date, Order order) =>
-        order.Flags.HasFlag(OrderFlags.IsOwnerOrder) &&
-        !order.Flags.HasFlag(OrderFlags.IsHistoryOrder) &&
-        order.Reservations.All(reservation => ReservationIsCancelledOrOld(options, date, reservation));
+    static bool OwnerOrderNeedsUpdate(OrderingOptions options, LocalDate date, Order order) =>
+        order.Reservations.Any(reservation => ReservationIsOld(options, date, reservation) && reservation.EntryCode is not null) ||
+        order.Reservations.All(reservation => ReservationIsOld(options, date, reservation) || reservation.Status is ReservationStatus.Cancelled);
 
-    static bool ReservationIsCancelledOrOld(OrderingOptions options, LocalDate date, Reservation reservation) =>
-        reservation.Status is ReservationStatus.Cancelled || reservation.Extent.Ends().PlusDays(options.AdditionalDaysWhereCleaningCanBeDone) < date;
+    static bool ReservationIsOld(OrderingOptions options, LocalDate date, Reservation reservation) =>
+        reservation.Extent.Ends().PlusDays(options.AdditionalDaysWhereCleaningCanBeDone) < date;
+
+    static Order UpdateOwnerOrder(OrderingOptions options, ITimeConverter timeConverter, LocalDate date, Order order) =>
+        TryMakeHistoryOwnerOrder(options, timeConverter, date, RemoveEntryCodesFromOldReservations(options, date, order));
+
+    static Order RemoveEntryCodesFromOldReservations(OrderingOptions options, LocalDate date, Order order) =>
+        order with
+        {
+            Reservations = order.Reservations.Map(reservation => RemoveEntryCodeFromOldReservation(options, date, reservation)),
+        };
+
+    static Reservation RemoveEntryCodeFromOldReservation(OrderingOptions options, LocalDate date, Reservation reservation) =>
+        reservation.Extent.Ends().PlusDays(options.AdditionalDaysWhereCleaningCanBeDone) < date
+            ? reservation with { EntryCode = null }
+            : reservation;
+
+    static Order TryMakeHistoryOwnerOrder(OrderingOptions options, ITimeConverter timeConverter, LocalDate date, Order order) =>
+        order.Reservations.All(reservation => ReservationIsOld(options, date, reservation) || reservation.Status is ReservationStatus.Cancelled)
+            ? MakeHistoryOwnerOrder(timeConverter, order)
+            : order;
+
 
     static Order MakeHistoryOwnerOrder(ITimeConverter timeConverter, Order order) =>
         MakeHistoryOwnerOrder(GetLatestReservationEndTimestamp(timeConverter, order), order);

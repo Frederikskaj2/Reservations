@@ -1,4 +1,3 @@
-using Frederikskaj2.Reservations.LockBox;
 using LanguageExt;
 
 namespace Frederikskaj2.Reservations.Orders;
@@ -8,7 +7,8 @@ public record Reservation(
     ReservationStatus Status,
     Extent Extent,
     Option<Price> Price,
-    ReservationEmails SentEmails)
+    ReservationEmails SentEmails,
+    EntryCode? EntryCode)
 {
     public override string ToString() => $"{ResourceId} {Extent}";
 }

@@ -15,7 +15,6 @@ public static class UrlPath
     public const string ConfirmEmail = "bekraeft-mail";
     public const string Consent = "samtykke";
     public const string InventoryBanquetFacilities = "inventarliste.pdf";
-    public const string LockBoxCodes = "noeglebokskoder";
     public const string MyAccount = "bruger/konto";
     public const string MyOrders = "bruger/bestillinger";
     public const string MyTransactions = "bruger/kontoudtog";

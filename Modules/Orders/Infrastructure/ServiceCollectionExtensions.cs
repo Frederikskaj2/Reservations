@@ -12,6 +12,5 @@ public static class ServiceCollectionExtensions
             .AddJob<ConfirmOrdersJobRegistration, ConfirmOrdersJob>()
             .AddJob<FinishOwnerOrdersJobRegistration, FinishOwnerOrdersJob>()
             .AddJob<RemoveAccountNumbersJobRegistration, RemoveAccountNumbersJob>()
-            .AddJob<SendLockBoxCodesJobRegistration, SendLockBoxCodesJob>()
             .AddJob<SendSettlementNeededRemindersJobRegistration, SendSettlementNeededRemindersJob>();
 }

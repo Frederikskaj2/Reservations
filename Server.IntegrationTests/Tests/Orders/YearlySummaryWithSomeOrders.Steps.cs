@@ -1,5 +1,4 @@
 using FluentAssertions;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
@@ -25,10 +24,10 @@ sealed partial class YearlySummaryWithSomeOrders(SessionFixture session) : Featu
     YearlySummary YearlySummary => yearlySummary.GetValue(nameof(YearlySummary));
     IReadOnlyList<MyOrderDto> Orders => orders.GetValue(nameof(Orders));
 
-    async Task IScenarioSetUp.OnScenarioSetUp()
+    Task IScenarioSetUp.OnScenarioSetUp()
     {
         session.NowOffset = Period.Zero;
-        await session.UpdateLockBoxCodes();
+        return Task.CompletedTask;
     }
 
     async Task GivenAFewOrders()

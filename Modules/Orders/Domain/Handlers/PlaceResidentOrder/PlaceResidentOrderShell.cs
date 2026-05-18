@@ -5,7 +5,6 @@ using LanguageExt;
 using NodaTime;
 using System.Collections.Generic;
 using System.Threading;
-using static Frederikskaj2.Reservations.LockBox.LockBoxCodesFunctions;
 using static Frederikskaj2.Reservations.Orders.OrdersFunctions;
 using static Frederikskaj2.Reservations.Orders.OrdersQueries;
 using static Frederikskaj2.Reservations.Orders.PlaceResidentOrder;
@@ -36,16 +35,15 @@ public static class PlaceResidentOrderShell
         from allActiveOrderEntities in reader.QueryWithETag(GetAllActiveOrdersQuery, cancellationToken).MapReadError()
         let today = timeConverter.GetDate(command.Timestamp)
         from _2 in ValidateReservations(ValidateByAdministrator(options), command.Reservations, GetActiveReservations(allActiveOrderEntities), today)
-        from lockBoxCodesEntity in ReadLockBoxCodes(reader, cancellationToken)
         from subscribedEmailUsers in ReadSubscribedEmailUsers(reader, EmailSubscriptions.NewOrder, cancellationToken)
         from orderId in CreateId(reader, writer, nameof(Order), cancellationToken)
         from transactionId in CreateId(reader, writer, nameof(Transaction), cancellationToken)
-        let input = new PlaceResidentOrderInput(command, today, administratorEntity.Value, userEntity.Value, lockBoxCodesEntity, orderId, transactionId)
+        let input = new PlaceResidentOrderInput(command, today, administratorEntity.Value, userEntity.Value, orderId, transactionId)
         let output = PlaceResidentOrderCore(holidays, options, input)
         from _3 in Write(writer, userEntity, administratorEntity, output, cancellationToken)
         from _4 in SendEmails(emailService, subscribedEmailUsers, output.User, output.Order, output.Payment, cancellationToken)
         from _5 in ConfirmOrders(jobScheduler, output.User).ToRightAsync<Failure<Unit>, Unit>()
-        select CreateResidentOrder(options, today, output.Order, output.User, output.LockBoxCodesForOrder);
+        select CreateResidentOrder(options, today, output.Order, output.User);
 
     static EitherAsync<Failure<Unit>, Seq<(EntityOperation Operation, ETag ETag)>> Write(
         IEntityWriter writer,

@@ -1,7 +1,4 @@
-﻿using Frederikskaj2.Reservations.LockBox;
-using LanguageExt;
-
-namespace Frederikskaj2.Reservations.Orders;
+﻿namespace Frederikskaj2.Reservations.Orders;
 
 public record ResidentReservation(
     ResourceId ResourceId,
@@ -9,4 +6,4 @@ public record ResidentReservation(
     Price Price,
     Extent Extent,
     bool CanBeCancelled,
-    Seq<DatedLockBoxCode> LockBoxCodes);
+    EntryCode? EntryCode);

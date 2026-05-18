@@ -1,5 +1,4 @@
-﻿using Frederikskaj2.Reservations.LockBox;
-using Frederikskaj2.Reservations.Users;
+﻿using Frederikskaj2.Reservations.Users;
 using NodaTime;
 using System.Collections.Generic;
 
@@ -35,7 +34,6 @@ public class OrderingOptions
 
     public int ReservationIsNotAllowedBeforeDaysFromNow { get; init; } = 10;
     public int ReservationIsNotAllowedAfterDaysFromNow { get; init; } = 274;
-    // The key code logic expects that at most two key codes are required for a single reservation.
     public int MaximumAllowedReservationNights { get; init; } = 7;
     public LocalTime CheckInTime { get; init; } = new(12, 0);
     public LocalTime CheckOutTime { get; init; } = new(10, 0);
@@ -45,7 +43,8 @@ public class OrderingOptions
     public string PayInAccountNumber { get; init; } = "9444-4816068614";
     public Period RecentOrdersMaximumAge { get; init; } = Period.FromDays(7);
     public Duration RemindUsersAboutDebtInterval { get; init; } = Duration.FromDays(7);
-    public Period RevealLockBoxCodeBeforeReservationStart { get; init; } = Period.FromDays(3);
+    public Period RevealEntryCodeBeforeReservationStart { get; init; } = Period.FromDays(3);
+    public Period ExtendSmartLockEntryCodePeriod { get; init; } = Period.FromHours(1);
     public int CleaningSchedulePeriodInDays { get; init; } = 45;
     public int AdditionalDaysWhereCleaningCanBeDone { get; init; } = 3;
     public Duration RemoveAccountNumberAfter { get; init; } = Duration.FromDays(90);

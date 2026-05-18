@@ -11,7 +11,7 @@ using static LanguageExt.Prelude;
 
 namespace Frederikskaj2.Reservations.Orders;
 
-static class OrdersFunctions
+public static class OrdersFunctions
 {
     public static EitherAsync<Failure<Unit>, ETaggedEntity<Order>> ReadResidentOrderEntity(
         IEntityReader reader, OrderId orderId, CancellationToken cancellationToken) =>
@@ -74,7 +74,7 @@ static class OrdersFunctions
     public static Seq<ReservationWithOrder> GetActiveReservationsWithOrders(Seq<ETaggedEntity<Order>> activeOrders) =>
         activeOrders.Bind(
             order => order.Value.Reservations
-                .Map((index, reservation) => new ReservationWithOrder(reservation, order.Value, index))
+                .Map(reservation => new ReservationWithOrder(reservation, order.Value))
                 .Filter(reservationWithOrder => reservationWithOrder.Reservation.Status is ReservationStatus.Reserved or ReservationStatus.Confirmed)
                 .ToSeq());
 

@@ -18,11 +18,11 @@
         <ProjectReference Include="..\Modules\Core\Infrastructure.Shared\Core.Infrastructure.Shared.csproj"/>
         <ProjectReference Include="..\Modules\Emails\App\Emails.App.csproj"/>
         <ProjectReference Include="..\Modules\Emails\Infrastructure\Emails.Infrastructure.csproj"/>
-        <ProjectReference Include="..\Modules\LockBox\App\LockBox.App.csproj"/>
-        <ProjectReference Include="..\Modules\LockBox\Infrastructure\LockBox.Infrastructure.csproj"/>
         <ProjectReference Include="..\Modules\Orders\App\Orders.App.csproj"/>
         <ProjectReference Include="..\Modules\Orders\Infrastructure\Orders.Infrastructure.csproj"/>
         <ProjectReference Include="..\Modules\Persistence\Infrastructure\Persistence.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Modules\RoomAccess\App\RoomAccess.App.csproj"/>
+        <ProjectReference Include="..\Modules\RoomAccess\Infrastructure\RoomAccess.Infrastructure.csproj"/>
         <ProjectReference Include="..\Modules\Users\App\Users.App.csproj"/>
         <ProjectReference Include="..\Modules\Users\Infrastructure\Users.Infrastructure.csproj"/>
     </ItemGroup>

@@ -6,6 +6,6 @@ namespace Frederikskaj2.Reservations.Orders;
 public enum ReservationEmails
 {
     None,
-    LockBoxCode,
-    NeedsSettlement = LockBoxCode << 1,
+    RoomEntryCode,
+    NeedsSettlement = RoomEntryCode << 1,
 }

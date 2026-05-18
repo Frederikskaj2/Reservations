@@ -65,7 +65,7 @@ class JobScheduler : BackgroundService, IJobScheduler
 
         if (schedule.Count is 0)
         {
-            logger.LogWarning("No jobs are scheduled jobs");
+            logger.LogWarning("No jobs are scheduled");
             return;
         }
 

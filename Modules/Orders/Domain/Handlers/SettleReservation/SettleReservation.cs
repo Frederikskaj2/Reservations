@@ -104,6 +104,6 @@ static class SettleReservation
 
     static Reservation UpdateReservation(ReservationIndex indexToUpdate, Reservation reservation, ReservationIndex index) =>
         indexToUpdate == index
-            ? reservation with { Status = ReservationStatus.Settled }
+            ? reservation with { Status = ReservationStatus.Settled, EntryCode = null }
             : reservation;
 }

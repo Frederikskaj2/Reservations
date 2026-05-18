@@ -23,7 +23,6 @@ partial class MainLayout
         { UrlPath.Postings, "Bogføring" },
         { UrlPath.Reports, "Rapporter" },
         { UrlPath.CleaningSchedule, "Rengøringsplan" },
-        { UrlPath.LockBoxCodes, "Nøglebokskoder" },
         { UrlPath.Users, "Brugere" },
     };
 
@@ -57,7 +56,7 @@ partial class MainLayout
         //
         // Because there's no simple way to determine if an expired access
         // token can be refreshed, it's just assumed that it can. In the case
-        // where it can't (the cookie has expired) the user will be prompted to
+        // where it can't (the cookie has expired), the user will be prompted to
         // log in at the next API call. It's a bit weird, so there's room for
         // improvement.
         user = authenticationState.User;
@@ -111,7 +110,5 @@ partial class MainLayout
             yield return UrlPath.Users;
         if (user.IsInRole(nameof(Roles.Cleaning)))
             yield return UrlPath.CleaningSchedule;
-        if (user.IsInRole(nameof(Roles.LockBoxCodes)))
-            yield return UrlPath.LockBoxCodes;
     }
 }

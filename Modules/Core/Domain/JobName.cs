@@ -9,8 +9,8 @@ public enum JobName
     SendCleaningScheduleUpdate,
     SendDebtReminders,
     SendEmails,
-    SendLockBoxCodes,
+    SendRoomEntryCodes,
     SendSettlementNeededReminders,
     UpdateCleaningSchedule,
-    UpdateLockBoxCodes,
+    UpdateSmartLockAuthorizations,
 }

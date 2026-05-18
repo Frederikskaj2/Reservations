@@ -37,8 +37,8 @@ partial class UsersPage
     static UserType GetUserType(UserDto user) =>
         user.Roles switch
         {
-            Roles.None => UserType.Other,
-            Roles.Resident => UserType.Resident,
+            Roles.None or Roles.LockBoxCodes => UserType.Other,
+            Roles.Resident or (Roles.Resident | Roles.LockBoxCodes) => UserType.Resident,
             _ => UserType.SuperUser,
         };
 

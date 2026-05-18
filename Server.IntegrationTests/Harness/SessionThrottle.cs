@@ -5,7 +5,7 @@ namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 
 static class SessionThrottle
 {
-    const int maximumConcurrency = 6;
+    const int maximumConcurrency = 5;
 
     static readonly SemaphoreSlim semaphore = new(maximumConcurrency);
 

@@ -1,17 +1,14 @@
 using FluentAssertions;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Cleaning;
 
-sealed partial class SchedulingWithTwoOrders(SessionFixture session) : CleaningFixture(session), IScenarioSetUp
+sealed partial class SchedulingWithTwoOrders(SessionFixture session) : CleaningFixture(session)
 {
-    async Task IScenarioSetUp.OnScenarioSetUp() => await Session.UpdateLockBoxCodes();
-
     State<ReservationDto> reservation1;
     State<ReservationDto> reservation2;
 

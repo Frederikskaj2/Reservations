@@ -1,5 +1,4 @@
-﻿using Frederikskaj2.Reservations.LockBox;
-using Frederikskaj2.Reservations.Users;
+﻿using Frederikskaj2.Reservations.Users;
 
 namespace Frederikskaj2.Reservations.Orders;
 

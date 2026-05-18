@@ -3,7 +3,6 @@ using Frederikskaj2.Reservations.Bank;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Linq;
@@ -12,7 +11,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Bank;
 
-sealed partial class ReconcilePayIns(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class ReconcilePayIns(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order;
     State<BankTransactionDto> importedBankTransaction;
@@ -23,8 +22,6 @@ sealed partial class ReconcilePayIns(SessionFixture session) : FeatureFixture, I
     BankTransactionDto ImportedBankTransaction => importedBankTransaction.GetValue(nameof(ImportedBankTransaction));
     BankTransactionDto ReconciledBankTransaction => reconciledBankTransaction.GetValue(nameof(ReconciledBankTransaction));
     GetMyTransactionsResponse GetMyTransactionsResponse => getMyTransactionsResponse.GetValue(nameof(GetMyTransactionsResponse));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAnUnpaidOrder()
     {

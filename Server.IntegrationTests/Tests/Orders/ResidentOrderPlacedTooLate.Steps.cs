@@ -2,7 +2,6 @@ using FluentAssertions;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Linq;
@@ -13,15 +12,13 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Orders;
 
-sealed partial class ResidentOrderPlacedTooLate(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class ResidentOrderPlacedTooLate(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order;
     State<HttpResponseMessage> response;
 
     MyOrderDto Order => order.GetValue(nameof(Order));
     HttpResponseMessage Response => response.GetValue(nameof(Response));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResident() => await session.SignUpAndSignIn();
 

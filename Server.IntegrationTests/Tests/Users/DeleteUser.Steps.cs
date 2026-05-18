@@ -2,7 +2,6 @@
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Linq;
@@ -11,7 +10,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Users;
 
-sealed partial class DeleteUser(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class DeleteUser(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order;
     State<DeleteUserResponse> deleteUserResponse;
@@ -20,8 +19,6 @@ sealed partial class DeleteUser(SessionFixture session) : FeatureFixture, IScena
     MyOrderDto Order => order.GetValue(nameof(Order));
     DeleteUserResponse DeleteUserResponse => deleteUserResponse.GetValue(nameof(DeleteUserResponse));
     UpdateMyOrderResponse UpdateMyOrderResponse => updateMyOrderResponse.GetValue(nameof(UpdateMyOrderResponse));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAUserIsSignedIn() => await session.SignUpAndSignIn();
 

@@ -5,7 +5,6 @@ using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using NodaTime;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -20,10 +19,10 @@ sealed partial class MyOrders(SessionFixture session) : FeatureFixture, IScenari
     MyOrderDto UpcomingOrder => upcomingOrder.GetValue(nameof(MyOrderDto));
     GetMyOrdersResponse GetMyOrdersResponse => getMyOrdersResponse.GetValue(nameof(GetMyOrdersResponse));
 
-    async Task IScenarioSetUp.OnScenarioSetUp()
+    Task IScenarioSetUp.OnScenarioSetUp()
     {
         session.NowOffset = Period.Zero;
-        await session.UpdateLockBoxCodes();
+        return Task.CompletedTask;
     }
 
     async Task GivenResidentHasAHistoryOrder()
@@ -64,14 +63,13 @@ sealed partial class MyOrders(SessionFixture session) : FeatureFixture, IScenari
                 new
                 {
                     Status = ReservationStatus.Settled,
-                    LockBoxCodes = Array.Empty<DatedLockBoxCode>(),
                 },
             },
         });
         return Task.CompletedTask;
     }
 
-    Task ThenTheUpcomingOrderHasLockBoxCodes()
+    Task ThenTheUpcomingOrderHasRoomEntryCode()
     {
         AssertionOptions.FormattingOptions.MaxDepth = 100;
         GetMyOrdersResponse.Orders.Should().ContainEquivalentOf(new
@@ -82,16 +80,10 @@ sealed partial class MyOrders(SessionFixture session) : FeatureFixture, IScenari
                 new
                 {
                     Status = ReservationStatus.Confirmed,
-                    LockBoxCodes = new[]
-                    {
-                        new
-                        {
-                            UpcomingOrder.Reservations.Single().Extent.Date,
-                        },
-                    },
                 },
             },
         });
+        GetMyOrdersResponse.Orders.Single(order => order.OrderId == UpcomingOrder.OrderId).Reservations.Single().EntryCode.Should().NotBeNull();
         return Task.CompletedTask;
     }
 }

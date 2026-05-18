@@ -16,10 +16,10 @@ sealed partial class SchedulingWithReservationInThePast(SessionFixture session) 
     State<ReservationDto> reservation;
     ReservationDto Reservation => reservation.GetValue(nameof(Reservation));
 
-    async Task IScenarioSetUp.OnScenarioSetUp()
+    Task IScenarioSetUp.OnScenarioSetUp()
     {
         Session.NowOffset = Period.Zero;
-        await Session.UpdateLockBoxCodes();
+        return Task.CompletedTask;
     }
 
     async Task GivenAResident() => await Session.SignUpAndSignIn();

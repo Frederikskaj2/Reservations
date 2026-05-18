@@ -2,7 +2,6 @@ using FluentAssertions;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Linq;
@@ -11,7 +10,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Orders;
 
-sealed partial class PaymentTransferFourOrders(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class PaymentTransferFourOrders(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order1;
     State<MyOrderDto> order2;
@@ -24,8 +23,6 @@ sealed partial class PaymentTransferFourOrders(SessionFixture session) : Feature
     MyOrderDto Order3 => order3.GetValue(nameof(Order3));
     MyOrderDto Order4 => order4.GetValue(nameof(Order4));
     MyOrderDto CancelledOrder1 => cancelledOrder1.GetValue(nameof(CancelledOrder1));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResidentHasPlacedAndPaidAnOrderWithAMediumPrice()
     {

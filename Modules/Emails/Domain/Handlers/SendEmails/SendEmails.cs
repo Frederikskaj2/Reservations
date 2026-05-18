@@ -18,9 +18,6 @@ static class SendEmails
                     email.ToEmail, email.ToFullName, email.FromUrl, await CreateCleaningCalendar(email.CleaningScheduleOverview, cancellationToken)),
             { ConfirmEmail: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.ConfirmEmail),
             { DebtReminder: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.DebtReminder),
-            { LockBoxCodes: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.LockBoxCodes),
-            { LockBoxCodesOverview: not null } =>
-                await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.LockBoxCodesOverview),
             { NewOrder: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.NewOrder),
             { NewPassword: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.NewPassword),
             { NoFeeCancellationAllowed: not null } =>
@@ -33,6 +30,7 @@ static class SendEmails
             { ReservationsCancelled: not null } =>
                 await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.ReservationsCancelled),
             { ReservationSettled: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.ReservationSettled),
+            { RoomEntryCode: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.RoomEntryCode),
             { SettlementNeeded: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.SettlementNeeded),
             { UserDeleted: not null } => await messageFactory.CreateMessage(email.ToEmail, email.ToFullName, email.FromUrl, email.UserDeleted),
             _ => throw new ArgumentException("Empty or unknown email.", nameof(email)),

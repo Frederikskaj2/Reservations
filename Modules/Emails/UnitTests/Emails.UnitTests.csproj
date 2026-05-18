@@ -24,7 +24,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Cleaning\Domain\Cleaning.Domain.csproj"/>
-        <ProjectReference Include="..\..\LockBox\Domain\LockBox.Domain.csproj"/>
         <ProjectReference Include="..\Domain\Emails.Domain.csproj"/>
     </ItemGroup>
 </Project>

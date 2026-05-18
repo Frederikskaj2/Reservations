@@ -2,7 +2,6 @@ using FluentAssertions;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Linq;
@@ -11,7 +10,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Orders;
 
-sealed partial class PayOut(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class PayOut(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order1;
     State<MyOrderDto> order2;
@@ -22,8 +21,6 @@ sealed partial class PayOut(SessionFixture session) : FeatureFixture, IScenarioS
     MyOrderDto Order2 => order2.GetValue(nameof(Order2));
     CreditorDto Creditor => creditor.GetValue(nameof(Creditor));
     CreditorDto? PaidCreditor => paidCreditor.GetValue(nameof(PaidCreditor));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResident() => await session.SignUpAndSignIn();
 

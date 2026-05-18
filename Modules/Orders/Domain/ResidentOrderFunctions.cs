@@ -104,7 +104,8 @@ static class ResidentOrderFunctions
                         ReservationStatus.Reserved,
                         reservation.Extent,
                         GetPrice(options, holidays, reservation.Extent, reservation.ResourceType),
-                        ReservationEmails.None))
+                        ReservationEmails.None,
+                        EntryCode: null))
             .ToSeq();
 
     public static Amount GetAccountsPayableToSpend(User user, Order order) =>

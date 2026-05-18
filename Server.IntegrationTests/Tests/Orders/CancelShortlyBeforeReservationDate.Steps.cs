@@ -20,10 +20,10 @@ sealed partial class CancelShortlyBeforeReservationDate(SessionFixture session) 
     MyOrderDto Order => order.GetValue(nameof(Order));
     HttpResponseMessage Response => response.GetValue(nameof(Response));
 
-    async Task IScenarioSetUp.OnScenarioSetUp()
+    Task IScenarioSetUp.OnScenarioSetUp()
     {
         session.NowOffset = Period.Zero;
-        await session.UpdateLockBoxCodes();
+        return Task.CompletedTask;
     }
 
     async Task GivenAConfirmedOrder()

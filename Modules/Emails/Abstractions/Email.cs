@@ -10,8 +10,6 @@ public record Email(EmailAddress ToEmail, string ToFullName, Uri FromUrl)
     public CleaningScheduleOverviewDto? CleaningScheduleOverview { get; init; }
     public ConfirmEmailDto? ConfirmEmail { get; init; }
     public DebtReminderDto? DebtReminder { get; init; }
-    public LockBoxCodesDto? LockBoxCodes { get; init; }
-    public LockBoxCodesOverviewDto? LockBoxCodesOverview { get; init; }
     public NewOrderDto? NewOrder { get; init; }
     public NewPasswordDto? NewPassword { get; init; }
     public NoFeeCancellationAllowedDto? NoFeeCancellationAllowed { get; init; }
@@ -22,6 +20,7 @@ public record Email(EmailAddress ToEmail, string ToFullName, Uri FromUrl)
     public PostingsForMonthDto? PostingsForMonth { get; init; }
     public ReservationsCancelledDto? ReservationsCancelled { get; init; }
     public ReservationSettledDto? ReservationSettled { get; init; }
+    public RoomEntryCodeDto? RoomEntryCode { get; init; }
     public SettlementNeededDto? SettlementNeeded { get; init; }
     public UserDeletedDto? UserDeleted { get; init; }
 

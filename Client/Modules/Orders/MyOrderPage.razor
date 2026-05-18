@@ -47,26 +47,16 @@
                     </CardBody>
                 </Card>
             }
-            @if (lockBoxCodes?.Count > 0)
+            @if (entryCodes?.Count > 0)
             {
                 <Card Background="Background.Light">
                     <CardHeader>
-                        <CardTitle Size="1">Nøglebokskoder</CardTitle>
+                        <CardTitle Size="1">Adgangskoder</CardTitle>
                     </CardHeader>
                     <CardBody>
-                        @if (lockBoxCodes.Count is 1)
+                        @foreach (var entryCode in entryCodes)
                         {
-                            <Paragraph>Nøglebokskode for @lockBoxCodes[0].ResourceName: <strong class="text-primary">@lockBoxCodes[0].Code</strong></Paragraph>
-                        }
-                        else
-                        {
-                            foreach (var lockBoxCode in lockBoxCodes)
-                            {
-                                <Paragraph>
-                                    Nøglebokskode for @lockBoxCode.ResourceName (fra @Formatter.FormatDate(lockBoxCode.Date)):
-                                    <strong class="text-primary">@lockBoxCode.Code</strong>
-                                </Paragraph>
-                            }
+                            <Paragraph>Adgangskode for @entryCode.ResourceName: <strong class="text-primary">@entryCode.Code</strong></Paragraph>
                         }
                     </CardBody>
                 </Card>

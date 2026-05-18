@@ -1,7 +1,6 @@
 ﻿using Frederikskaj2.Reservations.Users;
 using NodaTime;
 using System.Collections.Generic;
-using static Frederikskaj2.Reservations.Orders.OrdersLockBoxCodesFunctions;
 using static Frederikskaj2.Reservations.Orders.PaymentFunctions;
 using static Frederikskaj2.Reservations.Orders.ResidentOrderFunctions;
 using static LanguageExt.Prelude;
@@ -32,7 +31,7 @@ static class PlaceMyOrder
             CreatePlaceOrderTransaction(input.Command.UserId, input.Date, order, input.TransactionId, GetAccountsPayableToSpend(input.User, order)));
 
     static PlaceMyOrderOutput CreateOutput(OrderingOptions options, PlaceMyOrderInput input, Order order, Transaction transaction) =>
-        CreateOutput(options, input, order, transaction, UpdateResident(input.Command, input.User, order.OrderId, transaction));
+        CreateOutput(options, order, transaction, UpdateResident(input.Command, input.User, order.OrderId, transaction));
 
     static User UpdateResident(PlaceMyOrderCommand command, User user, OrderId orderId, Transaction transaction) =>
         user
@@ -56,11 +55,10 @@ static class PlaceMyOrder
             ? user with { LatestDebtReminder = timestamp }
             : user with { LatestDebtReminder = None };
 
-    static PlaceMyOrderOutput CreateOutput(OrderingOptions options, PlaceMyOrderInput input, Order order, Transaction transaction, User updatedUser) =>
+    static PlaceMyOrderOutput CreateOutput(OrderingOptions options, Order order, Transaction transaction, User updatedUser) =>
         new(
             updatedUser,
             order,
             transaction,
-            GetPaymentInformation(options, updatedUser),
-            CreateLockBoxCodesForOrder(options, input.Date, order, input.LockBoxCodes));
+            GetPaymentInformation(options, updatedUser));
 }

@@ -75,9 +75,6 @@
         <Compile Update="Tests\Cleaning\SchedulingWithTwoOrders.Steps.cs">
             <DependentUpon>SchedulingWithTwoOrders.cs</DependentUpon>
         </Compile>
-        <Compile Update="Tests\LockBox\LockBoxCodes.Steps.cs">
-            <DependentUpon>LockBoxCodes.cs</DependentUpon>
-        </Compile>
         <Compile Update="Tests\Orders\AccountNumber.Steps.cs">
             <DependentUpon>AccountNumber.cs</DependentUpon>
         </Compile>
@@ -90,8 +87,8 @@
         <Compile Update="Tests\Orders\CancelShortlyBeforeReservationDate.Steps.cs">
             <DependentUpon>CancelShortlyBeforeReservationDate.cs</DependentUpon>
         </Compile>
-        <Compile Update="Tests\Orders\LockBoxCodes.Steps.cs">
-            <DependentUpon>LockBoxCodes.cs</DependentUpon>
+        <Compile Update="Tests\Orders\RoomEntryCode.Steps.cs">
+            <DependentUpon>RoomEntryCode.cs</DependentUpon>
         </Compile>
         <Compile Update="Tests\Orders\MyOrders.Steps.cs">
             <DependentUpon>MyOrders.cs</DependentUpon>
@@ -131,6 +128,9 @@
         </Compile>
         <Compile Update="Tests\Orders\ResidentOrderPlacedTooLate.Steps.cs">
             <DependentUpon>ResidentOrderPlacedTooLate.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Tests\Orders\RoomEntryCode.Steps.cs">
+            <DependentUpon>RoomEntryCode.cs</DependentUpon>
         </Compile>
         <Compile Update="Tests\Orders\SettleReservation.Steps.cs">
             <DependentUpon>SettleReservation.cs</DependentUpon>

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Frederikskaj2.Reservations.Orders;
+using Frederikskaj2.Reservations.RoomAccess;
 using Frederikskaj2.Reservations.Users;
 using NodaTime;
 using Xunit;
@@ -169,6 +170,26 @@ public class CosmosSqlTests(ITestOutputHelper output)
             .Be(
                 """
                 select value root.v from root join child in root.v.reservations where root.d = "Order" and (is_defined(root.v.flags) and root.v.flags & 1 = 1) and (child.extent.date >= "2025-06-04")
+                """);
+    }
+
+    [Fact]
+    public void JoinWithNullableProperty()
+    {
+        var startNoLaterThan = new LocalDate(2026, 5, 19);
+        var query = QueryFactory.Query<Order>()
+            .Where(order => !order.Flags.HasFlag(OrderFlags.IsHistoryOrder))
+            .Join(
+                order => order.Reservations,
+                reservation => reservation.EntryCode != null && reservation.Extent.Date <= startNoLaterThan,
+                (order, reservation) => new ReservationInformation(order.OrderId, reservation.ResourceId, reservation.Extent, reservation.EntryCode!.Value));
+
+        var sql = query.Sql;
+        output.WriteLine(sql);
+        sql.Should()
+            .Be(
+                """
+                select root.v.orderId as orderId, child.resourceId as resourceId, child.extent as extent, child.entryCode as entryCode from root join child in root.v.reservations where root.d = "Order" and not ((is_defined(root.v.flags) and root.v.flags & 2 = 2)) and ((child.entryCode != null) and (child.extent.date <= "2026-05-19"))
                 """);
     }
 }

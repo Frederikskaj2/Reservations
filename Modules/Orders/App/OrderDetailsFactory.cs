@@ -3,6 +3,7 @@ using LanguageExt;
 using NodaTime;
 using System.Collections.Generic;
 using System.Diagnostics;
+using static Frederikskaj2.Reservations.Orders.ReservationPolicies;
 using static Frederikskaj2.Reservations.Users.UserIdentityFactory;
 
 namespace Frederikskaj2.Reservations.Orders;
@@ -12,7 +13,7 @@ static class OrderDetailsFactory
     public static OrderDetailsDto CreateOrderDetails(OrderingOptions options, LocalDate today, OrderDetails orderDetails) =>
         !orderDetails.Order.Flags.HasFlag(OrderFlags.IsOwnerOrder)
             ? CreateResidentOrderDetails(options, today, orderDetails)
-            : CreateOwnerOrderDetails(orderDetails);
+            : CreateOwnerOrderDetails(options, today, orderDetails);
 
     static OrderDetailsDto CreateResidentOrderDetails(OrderingOptions options, LocalDate today, OrderDetails orderDetails) =>
         new(
@@ -30,26 +31,26 @@ static class OrderDetailsFactory
             orderDetails.Order.Audits.Map(audit => CreateOrderAudit(audit, orderDetails.AuditUserFullNames)));
 
     static Seq<ReservationDto> CreateResidentReservations(OrderingOptions options, LocalDate today, Seq<Reservation> reservations) =>
-        reservations.Map(
-            reservation =>
-                new ReservationDto(
-                    reservation.ResourceId,
-                    reservation.Status,
-                    reservation.Price.Case switch
-                    {
-                        Price price => price,
-                        _ => throw new UnreachableException(),
-                    },
-                    reservation.Extent,
-                    ReservationPolicies.CanReservationBeCancelled(options, today, reservation.Status, reservation.Extent, alwaysAllowCancellation: true)));
+        reservations.Map(reservation =>
+            new ReservationDto(
+                reservation.ResourceId,
+                reservation.Status,
+                reservation.Price.Case switch
+                {
+                    Price price => price,
+                    _ => throw new UnreachableException(),
+                },
+                reservation.Extent,
+                CanReservationBeCancelled(options, today, reservation.Status, reservation.Extent, alwaysAllowCancellation: true),
+                GetEntryCode(options, today, reservation)));
 
-    static OrderDetailsDto CreateOwnerOrderDetails(OrderDetails orderDetails) =>
+    static OrderDetailsDto CreateOwnerOrderDetails(OrderingOptions options, LocalDate today, OrderDetails orderDetails) =>
         new(
             orderDetails.Order.OrderId,
             OrderType.Owner,
             orderDetails.Order.CreatedTimestamp,
             CreateUserIdentity(orderDetails.User),
-            CreateOwnerReservations(orderDetails.Order.Reservations),
+            CreateOwnerReservations(options, today, orderDetails.Order.Reservations),
             orderDetails.Order.Flags.HasFlag(OrderFlags.IsHistoryOrder),
             Resident: null,
             new(
@@ -57,15 +58,15 @@ static class OrderDetailsFactory
                 orderDetails.Order.Flags.HasFlag(OrderFlags.IsCleaningRequired)),
             orderDetails.Order.Audits.Map(audit => CreateOrderAudit(audit, orderDetails.AuditUserFullNames)));
 
-    public static IEnumerable<ReservationDto> CreateOwnerReservations(Seq<Reservation> reservations) =>
-        reservations.Map(
-            reservation =>
-                new ReservationDto(
-                    reservation.ResourceId,
-                    reservation.Status,
-                    Price: null,
-                    reservation.Extent,
-                    CanBeCancelled: true));
+    public static IEnumerable<ReservationDto> CreateOwnerReservations(OrderingOptions options, LocalDate today, Seq<Reservation> reservations) =>
+        reservations.Map(reservation =>
+            new ReservationDto(
+                reservation.ResourceId,
+                reservation.Status,
+                Price: null,
+                reservation.Extent,
+                CanBeCancelled: true,
+                GetEntryCode(options, today, reservation)));
 
     static OrderAuditDto CreateOrderAudit(OrderAudit audit, HashMap<UserId, string> userFullNames) =>
         new(
@@ -78,4 +79,11 @@ static class OrderDetailsFactory
             },
             audit.Type,
             audit.TransactionId.ToNullable());
+
+    static EntryCode? GetEntryCode(OrderingOptions options, LocalDate today, Reservation reservation) =>
+        reservation.EntryCode is not null &&
+        reservation.Extent.Date.Minus(options.RevealEntryCodeBeforeReservationStart) <= today &&
+        today <= reservation.Extent.Ends().PlusDays(1)
+            ? reservation.EntryCode
+            : null;
 }

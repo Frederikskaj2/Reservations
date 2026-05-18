@@ -3,7 +3,6 @@ using Frederikskaj2.Reservations.Bank;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ using static Frederikskaj2.Reservations.Server.IntegrationTests.Harness.AmountFu
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Orders;
 
-sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     const string reimbursementDescription = "Cleaning";
 
@@ -27,8 +26,6 @@ sealed partial class Reimburse(SessionFixture session) : FeatureFixture, IScenar
     IEnumerable<PostingDto> Postings => postings.GetValue(nameof(Postings));
     IEnumerable<MyTransactionDto> Transactions => transactions.GetValue(nameof(Transactions));
     MyOrderDto UnpaidOrder => unpaidOrder.GetValue(nameof(UnpaidOrder));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResidentIsSignedIn() => await session.SignUpAndSignIn();
 

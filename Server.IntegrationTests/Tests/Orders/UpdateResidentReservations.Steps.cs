@@ -1,10 +1,8 @@
 using FluentAssertions;
 using Frederikskaj2.Reservations.Calendar;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Collections.Generic;
@@ -16,7 +14,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Orders;
 
-sealed partial class UpdateResidentReservations(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class UpdateResidentReservations(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order;
     State<HttpResponseMessage> response;
@@ -25,8 +23,6 @@ sealed partial class UpdateResidentReservations(SessionFixture session) : Featur
     MyReservationDto FrederikReservation => Order.Reservations.ElementAt(1);
     MyReservationDto KajReservation => Order.Reservations.ElementAt(2);
     HttpResponseMessage Response => response.GetValue(nameof(Response));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAConfirmedResidentOrder()
     {

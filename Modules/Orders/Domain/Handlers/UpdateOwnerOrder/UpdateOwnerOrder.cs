@@ -78,6 +78,7 @@ static class UpdateOwnerOrder
             ReservationIndex => reservation with
             {
                 Status = ReservationStatus.Cancelled,
+                EntryCode = null,
             },
             _ => reservation,
         };

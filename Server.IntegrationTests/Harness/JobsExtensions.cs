@@ -22,9 +22,9 @@ static class JobsExtensions
         response.EnsureSuccessStatusCode();
     }
 
-    public static async ValueTask RunSendLockBoxCodes(this SessionFixture session)
+    public static async ValueTask RunSendRoomEntryCodes(this SessionFixture session)
     {
-        var response = await session.AdministratorPost("jobs/send-lock-box-codes/run");
+        var response = await session.AdministratorPost("jobs/send-room-entry-codes/run");
         response.EnsureSuccessStatusCode();
     }
 

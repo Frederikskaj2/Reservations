@@ -44,10 +44,10 @@ static class EmailExtensions
         return emails.Last(email => email.UserDeleted is not null);
     }
 
-    public static async ValueTask<Email?> DequeueLockBoxCodesEmail(this SessionFixture session)
+    public static async ValueTask<Email?> DequeueRoomEntryCodeEmail(this SessionFixture session)
     {
         var emails = await session.DequeueEmails();
-        return emails.LastOrDefault(email => email.LockBoxCodes is not null);
+        return emails.LastOrDefault(email => email.RoomEntryCode is not null);
     }
 
     public static Email? OrderReceived(this IEnumerable<Email> emails) =>
@@ -61,7 +61,4 @@ static class EmailExtensions
 
     public static Email? ReservationsCancelled(this IEnumerable<Email> emails) =>
         emails.SingleOrDefault(email => email.ReservationsCancelled is not null);
-
-    public static Email? LockBoxCodesOverview(this IEnumerable<Email> emails) =>
-        emails.SingleOrDefault(email => email.LockBoxCodesOverview is not null);
 }

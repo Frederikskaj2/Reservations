@@ -45,9 +45,6 @@ public class AuthorizedTests(ApplicationFactory factory) : IClassFixture<Applica
             // Cleaning
             Add(HttpMethod.Get, "cleaning-schedule");
             Add(HttpMethod.Post, "cleaning-schedule/send");
-            // LockBox
-            Add(HttpMethod.Get, "lock-box-codes");
-            Add(HttpMethod.Post, "lock-box-codes/send");
             // Orders
             Add(HttpMethod.Get, "creditors");
             Add(HttpMethod.Get, "orders");

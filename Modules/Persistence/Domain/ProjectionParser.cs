@@ -104,11 +104,19 @@ static class ProjectionParser
             }
             else
             {
-                var propertyPath = $".{node.Member.Name.ToCamelCase()}";
-                stringBuilder.Append(propertyPath);
+                if (!IsNullableValueField(node))
+                {
+                    var propertyPath = $".{node.Member.Name.ToCamelCase()}";
+                    stringBuilder.Append(propertyPath);
+                }
             }
             return node;
         }
+
+        static bool IsNullableValueField(MemberExpression node) =>
+            node.Member.DeclaringType?.IsGenericType is true &&
+            node.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+            node.Member.Name is nameof(Nullable<>.Value);
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {

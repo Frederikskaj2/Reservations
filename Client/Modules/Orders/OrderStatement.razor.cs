@@ -1,6 +1,5 @@
 using Blazorise;
 using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Microsoft.AspNetCore.Components;
 using NodaTime;

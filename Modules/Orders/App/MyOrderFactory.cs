@@ -30,5 +30,5 @@ static class MyOrderFactory
                 reservation.Price,
                 reservation.Extent,
                 reservation.CanBeCancelled,
-                reservation.LockBoxCodes));
+                reservation.EntryCode));
 }

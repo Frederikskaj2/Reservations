@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Frederikskaj2.Reservations.Client;
 using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -54,7 +53,6 @@ static void ConfigureServices(IServiceCollection services, Uri baseAddress)
         .AddSingleton<IJsonTypeInfoResolver, DefaultJsonTypeInfoResolver>()
         .AddBankSharedDomain()
         .AddCoreSharedDomain()
-        .AddLockBoxSharedDomain()
         .AddOrdersSharedDomain()
         .AddUsersSharedDomain()
         .AddOptions<JsonSerializerOptions>();

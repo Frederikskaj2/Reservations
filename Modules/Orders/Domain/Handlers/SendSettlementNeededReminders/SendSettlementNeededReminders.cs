@@ -12,7 +12,7 @@ static class SendSettlementNeededReminders
     static Seq<ReservationWithOrder> GetReservationsToSettle(Seq<Order> orders, LocalDate endBefore) =>
         orders.Bind(
                 order => order.Reservations
-                    .Map((index, reservation) => new ReservationWithOrder(reservation, order, index))
+                    .Map(reservation => new ReservationWithOrder(reservation, order))
                     .Filter(
                         reservationWithOrder =>
                             reservationWithOrder.Reservation.Status is ReservationStatus.Confirmed &&

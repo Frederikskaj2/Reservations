@@ -1,7 +1,6 @@
 using Frederikskaj2.Reservations.Bank;
 using Frederikskaj2.Reservations.Cleaning;
 using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using NodaTime;
@@ -15,12 +14,6 @@ namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 
 static class AdministratorExtensions
 {
-    public static async ValueTask UpdateLockBoxCodes(this SessionFixture session)
-    {
-        var response = await session.AdministratorPost("jobs/update-lock-box-codes/run");
-        response.EnsureSuccessStatusCode();
-    }
-
     public static async ValueTask<GetUserResponse> GetUser(this SessionFixture session, UserId userId) =>
         await session.Deserialize<GetUserResponse>(await session.AdministratorGet($"users/{userId}"));
 
@@ -57,7 +50,7 @@ static class AdministratorExtensions
         await session.Deserialize<GetCleaningScheduleResponse>(await session.AdministratorGet("cleaning-schedule"));
 
     public static async ValueTask<GetPostingsResponse> GetPostings(this SessionFixture session, LocalDate date) =>
-        await session.Deserialize<GetPostingsResponse>(await session.AdministratorGet($"postings?month={GetMonth(date)}"));
+        await session.Deserialize<GetPostingsResponse>(await session.AdministratorGet($"postings?from={GetMonth(date)}&to={GetMonth(date.PlusMonths(1))}"));
 
     static string GetMonth(LocalDate date) =>
         date.ToString("yyyy-MM", CultureInfo.InvariantCulture) + "-01";
@@ -102,12 +95,6 @@ static class AdministratorExtensions
         var response = await session.AdministratorPost($"users/{userId}/reimburse", request);
         response.EnsureSuccessStatusCode();
     }
-
-    public static async ValueTask<GetLockBoxCodesResponse> GetLockBoxCodes(this SessionFixture session) =>
-        await session.Deserialize<GetLockBoxCodesResponse>(await session.AdministratorGet("lock-box-codes"));
-
-    public static async ValueTask<SendLockBoxCodesResponse> SendLockBoxCodes(this SessionFixture session) =>
-        await session.Deserialize<SendLockBoxCodesResponse>(await session.AdministratorPost("lock-box-codes/send"));
 
     public static async ValueTask<GetYearlySummaryRangeResponse> GetYearlySummaryRange(this SessionFixture session) =>
         await session.Deserialize<GetYearlySummaryRangeResponse>(await session.AdministratorGet("reports/yearly-summary/range"));

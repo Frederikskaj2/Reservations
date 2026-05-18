@@ -610,7 +610,7 @@ dotnet_diagnostic.ca2229.severity = warning
 dotnet_diagnostic.ca2231.severity = warning
 
 # CA2234: Pass system uri objects instead of strings
-dotnet_diagnostic.ca2234.severity = warning
+dotnet_diagnostic.ca2234.severity = silent
 
 # CA2235: Mark all non-serializable fields
 dotnet_diagnostic.ca2235.severity = warning

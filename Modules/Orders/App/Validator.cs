@@ -1,5 +1,4 @@
 ﻿using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Users;
 using LanguageExt;
 using NodaTime;

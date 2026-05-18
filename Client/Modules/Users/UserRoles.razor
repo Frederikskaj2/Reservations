@@ -50,15 +50,6 @@
                     Rengøring
                 </ChildContent>
             </Check>
-            <Check
-                TValue="bool"
-                Checked="roles.HasFlag(Roles.LockBoxCodes)"
-                CheckedChanged="isChecked => CheckRole(isChecked, Roles.LockBoxCodes)"
-                Disabled="isDisabled">
-                <ChildContent>
-                    Nøglebokskoder
-                </ChildContent>
-            </Check>
             <Button
                 Color="Color.Primary"
                 Type="@ButtonType.Submit"

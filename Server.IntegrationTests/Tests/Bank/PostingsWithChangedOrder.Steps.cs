@@ -3,7 +3,6 @@ using Frederikskaj2.Reservations.Bank;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Bank;
 
-sealed partial class PostingsWithChangedOrder(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class PostingsWithChangedOrder(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order1;
     State<ReservationDto> reservationToCancel;
@@ -31,8 +30,6 @@ sealed partial class PostingsWithChangedOrder(SessionFixture session) : FeatureF
     IEnumerable<PostingDto> Postings => postings.GetValue(nameof(Postings));
     IEnumerable<ResidentDto> Residents => residents.GetValue(nameof(Residents));
     IEnumerable<CreditorDto> Creditors => creditors.GetValue(nameof(Creditors));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResident() => await session.SignUpAndSignIn();
 

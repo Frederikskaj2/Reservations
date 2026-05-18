@@ -1,4 +1,4 @@
-using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 

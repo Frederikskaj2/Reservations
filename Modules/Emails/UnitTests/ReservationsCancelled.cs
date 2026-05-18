@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using System.Threading.Tasks;
 using Xunit;

@@ -3,9 +3,7 @@ using Frederikskaj2.Reservations.Persistence;
 using Frederikskaj2.Reservations.Users;
 using LanguageExt;
 using System.Threading;
-using static Frederikskaj2.Reservations.LockBox.LockBoxCodesFunctions;
 using static Frederikskaj2.Reservations.Orders.OrdersFunctions;
-using static Frederikskaj2.Reservations.Orders.OrdersLockBoxCodesFunctions;
 using static Frederikskaj2.Reservations.Orders.ResidentOrderFactory;
 using static Frederikskaj2.Reservations.Orders.UpdateMyOrder;
 using static Frederikskaj2.Reservations.Persistence.IdGenerator;
@@ -26,7 +24,6 @@ public static class UpdateMyOrderShell
         CancellationToken cancellationToken) =>
         from userEntity in reader.ReadWithETag<User>(command.UserId, cancellationToken).MapReadError()
         from orderEntity in ReadResidentOrderEntity(reader, command.OrderId, cancellationToken)
-        from lockBoxCodes in ReadLockBoxCodes(reader, cancellationToken)
         from transactionIdOption in CreateTransactionIdIfNeeded(reader, writer, command.CancelledReservations, cancellationToken)
         let input = new UpdateMyOrderInput(command, userEntity.Value, orderEntity.Value, transactionIdOption)
         from output in UpdateMyOrderCore(options, timeConverter, input).ToAsync()
@@ -36,8 +33,7 @@ public static class UpdateMyOrderShell
         from _3 in ConfirmOrders(jobScheduler, output.User).ToRightAsync<Failure<Unit>, Unit>()
         from _4 in UpdateCleaningSchedule(jobScheduler, output.User).ToRightAsync<Failure<Unit>, Unit>()
         let today = timeConverter.GetDate(command.Timestamp)
-        let lockBoxCodesForOrder = CreateLockBoxCodesForOrder(options, today, output.Order, lockBoxCodes)
-        select new UpdateMyOrderResult(CreateResidentOrder(options, today, output.Order, output.User, lockBoxCodesForOrder), output.IsUserDeletionConfirmed);
+        select new UpdateMyOrderResult(CreateResidentOrder(options, today, output.Order, output.User), output.IsUserDeletionConfirmed);
 
     static EitherAsync<Failure<Unit>, Option<TransactionId>> CreateTransactionIdIfNeeded(
         IEntityReader reader, IEntityWriter writer, HashSet<ReservationIndex> cancelledReservations, CancellationToken cancellationToken) =>

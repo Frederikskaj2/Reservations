@@ -2,7 +2,6 @@
 using Frederikskaj2.Reservations.Calendar;
 using Frederikskaj2.Reservations.Client.Modules.Core;
 using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using Microsoft.AspNetCore.Authorization;

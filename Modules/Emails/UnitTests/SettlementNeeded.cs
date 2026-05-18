@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using Frederikskaj2.Reservations.LockBox;
+using Frederikskaj2.Reservations.Orders;
 using System.Threading.Tasks;
 using Xunit;
 using static Frederikskaj2.Reservations.Emails.UnitTests.HtmlEntityEncoder;

@@ -9,10 +9,10 @@ namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Bank;
 
 sealed partial class DelayedPayOuts(SessionFixture session) : PayOutsFixture(session), IScenarioSetUp
 {
-    async Task IScenarioSetUp.OnScenarioSetUp()
+    Task IScenarioSetUp.OnScenarioSetUp()
     {
         Session.NowOffset = Period.Zero;
-        await Session.UpdateLockBoxCodes();
+        return Task.CompletedTask;
     }
 
     async Task WhenBankTransactionsAreImported() =>

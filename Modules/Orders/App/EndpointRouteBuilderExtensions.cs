@@ -30,7 +30,6 @@ public static class EndpointRouteBuilderExtensions
             builder.MapPost("jobs/confirm-orders/run", ConfirmOrdersEndpoint.Handle);
             builder.MapPost("jobs/finish-owner-orders/run", FinishOwnerOrdersEndpoint.Handle);
             builder.MapPost("jobs/remove-account-numbers/run", RemoveAccountNumbersEndpoint.Handle);
-            builder.MapPost("jobs/send-lock-box-codes/run", SendLockBoxCodesEndpoint.Handle);
             builder.MapPost("jobs/send-settlement-needed-reminders/run", SendSettlementNeededRemindersEndpoint.Handle);
         }
         return builder;

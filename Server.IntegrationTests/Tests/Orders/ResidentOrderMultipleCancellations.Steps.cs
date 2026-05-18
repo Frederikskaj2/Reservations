@@ -2,7 +2,6 @@ using FluentAssertions;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Server.IntegrationTests.Harness;
 using Frederikskaj2.Reservations.Users;
-using LightBDD.Core.Extensibility.Execution;
 using LightBDD.Framework;
 using LightBDD.XUnit2;
 using System.Linq;
@@ -11,7 +10,7 @@ using Xunit;
 
 namespace Frederikskaj2.Reservations.Server.IntegrationTests.Tests.Orders;
 
-sealed partial class ResidentOrderMultipleCancellations(SessionFixture session) : FeatureFixture, IScenarioSetUp, IClassFixture<SessionFixture>
+sealed partial class ResidentOrderMultipleCancellations(SessionFixture session) : FeatureFixture, IClassFixture<SessionFixture>
 {
     State<MyOrderDto> order;
     State<UpdateMyOrderResponse> updateMyOrderResponse1;
@@ -24,8 +23,6 @@ sealed partial class ResidentOrderMultipleCancellations(SessionFixture session) 
     UpdateMyOrderResponse UpdateMyOrderResponse2 => updateMyOrderResponse2.GetValue(nameof(UpdateMyOrderResponse2));
     Amount CancellationFee1 => cancellationFee1.GetValue(nameof(CancellationFee1));
     Amount CancellationFee2 => cancellationFee1.GetValue(nameof(CancellationFee2));
-
-    async Task IScenarioSetUp.OnScenarioSetUp() => await session.UpdateLockBoxCodes();
 
     async Task GivenAResidentIsSignedIn() => await session.SignUpAndSignIn();
 

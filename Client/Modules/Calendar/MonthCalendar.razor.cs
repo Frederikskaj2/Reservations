@@ -1,6 +1,5 @@
 ﻿using Frederikskaj2.Reservations.Calendar;
 using Frederikskaj2.Reservations.Core;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using Microsoft.AspNetCore.Components;
@@ -34,7 +33,6 @@ public sealed partial class MonthCalendar : IDisposable
 
     [Inject] AuthenticatedApiClient ApiClient { get; set; } = null!;
     [Inject] CultureInfo CultureInfo { get; set; } = null!;
-    [Inject] ClientDataProvider DataProvider { get; set; } = null!;
     [Inject] IDateProvider DateProvider { get; set; } = null!;
     [Inject] DraftOrder DraftOrder { get; set; } = null!;
     [Inject] EventAggregator EventAggregator { get; set; } = null!;

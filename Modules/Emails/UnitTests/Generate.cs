@@ -1,10 +1,8 @@
 using Bogus;
-using Frederikskaj2.Reservations.LockBox;
 using Frederikskaj2.Reservations.Orders;
 using Frederikskaj2.Reservations.Users;
 using NodaTime;
 using System;
-using System.Linq;
 
 namespace Frederikskaj2.Reservations.Emails.UnitTests;
 
@@ -12,9 +10,6 @@ static class Generate
 {
     static readonly Faker faker = new("sv");
     static readonly Random random = new();
-
-    static readonly Faker<DatedLockBoxCode> datedLockBoxCodeFaker = new Faker<DatedLockBoxCode>()
-        .CustomInstantiator(_ => new(Date(), LockBoxCode()));
 
     static readonly Faker<PaymentInformation> paymentInformationFaker = new Faker<PaymentInformation>()
         .CustomInstantiator(_ => new(PaymentId(), Amount(), AccountNumber()));
@@ -27,16 +22,17 @@ static class Generate
     public static Amount AmountBelow(Amount maximum) => Users.Amount.FromInt32(faker.Random.Int(1, (int) maximum.ToDecimal()));
     public static string DamagesDescription() => faker.Random.String2(10, 100);
     public static LocalDate Date() => LocalDate.FromDateOnly(faker.Date.FutureDateOnly());
-    public static DatedLockBoxCode DatedLockBoxCode() => datedLockBoxCodeFaker.Generate();
     public static EmailAddress Email() => EmailAddress.FromString(faker.Internet.Email());
     public static string FullName() => faker.Name.FullName();
 
-    static string LockBoxCode()
+    public static EntryCode EntryCode()
     {
-        var digits = Enumerable.Range(0, 10).ToArray();
-        random.Shuffle(digits);
-        var lockBoxCode = digits.Take(faker.Random.Int(4, 6));
-        return string.Join("", lockBoxCode);
+        while (true)
+        {
+            var entryCode = random.GetString("123456789", 6);
+            if (Orders.EntryCode.IsValid(entryCode))
+                return Orders.EntryCode.FromString(entryCode);
+        }
     }
 
     public static LocalDate Month()
