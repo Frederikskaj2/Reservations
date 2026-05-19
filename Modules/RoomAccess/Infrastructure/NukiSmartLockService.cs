@@ -9,6 +9,7 @@ using NodaTime.Text;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
@@ -47,7 +48,9 @@ partial class NukiSmartLockService(HttpClient httpClient, ILogger<NukiSmartLockS
                     Instant.FromDateTimeUtc(tuple.Authorization.AllowedFromDate),
                     Instant.FromDateTimeUtc(tuple.Authorization.AllowedUntilDate),
                     EntryCode.FromString(tuple.Authorization.Code.ToString(CultureInfo.InvariantCulture))),
-                tuple.Authorization.Id));
+                tuple.Authorization.Id))
+            .ToSeq();
+        logger.LogDebug("Got {Count} smart lock authorizations", tuples.Count);
         return new NukiSmartLockAuthorizationContext(tuples);
     }
 
@@ -58,6 +61,7 @@ partial class NukiSmartLockService(HttpClient httpClient, ILogger<NukiSmartLockS
             return unit;
 
         var context = (NukiSmartLockAuthorizationContext) smartLockAuthorizationContext;
+        logger.LogDebug("Synchronizing smart lock authorizations");
         foreach (var (authorization, id) in context.ToDelete)
             await DeleteSmartLockAuthorization(id, authorization, cancellationToken);
         foreach (var authorization in context.AuthorizationsToAdd)
