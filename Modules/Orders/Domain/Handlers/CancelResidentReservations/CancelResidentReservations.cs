@@ -29,7 +29,15 @@ static class CancelResidentReservations
         from _2 in ValidateReservationsCanBeCancelled(options, input.CancelledReservations, input.AlwaysAllowCancellation, input.Order, date)
         let fee = GetFee(options, input.WaiveFee, input.Order)
         let cancelledReservations = input.CancelledReservations.Order().Map(index => input.Order.Reservations[index.ToInt32()]).ToSeq()
-        let transaction = CreateTransaction(input.Timestamp, input.AdministratorId, cancelledReservations, input.Order, transactionId, date, fee)
+        let transaction = CreateTransaction(
+            input.Timestamp,
+            input.AdministratorId,
+            cancelledReservations,
+            input.Order,
+            transactionId,
+            date,
+            fee,
+            input.User.Accounts[Account.AccountsReceivable])
         let user = UpdateResidentBalance(input.User, transaction)
         let order = UpdateOrder(input.Timestamp, input.AdministratorId, input.CancelledReservations, input.Order, transactionId, fee)
         let tuple = TryMakeHistoryOrder(input.Timestamp, user, order)
@@ -45,7 +53,8 @@ static class CancelResidentReservations
         Order order,
         TransactionId transactionId,
         LocalDate date,
-        Amount fee) =>
+        Amount fee,
+        Amount accountsReceivable) =>
         new(
             transactionId,
             date,
@@ -54,15 +63,15 @@ static class CancelResidentReservations
             Activity.UpdateOrder,
             order.UserId,
             CreateDescription(order.OrderId, cancelledReservations),
-            GetCancelReservationsAmounts(cancelledReservations, fee));
+            GetCancelReservationsAmounts(cancelledReservations, fee, accountsReceivable));
 
     static TransactionDescription CreateDescription(OrderId orderId, Seq<Reservation> cancelledReservations) =>
         new(new Cancellation(orderId, cancelledReservations.Map(reservation => new ReservedDay(reservation.Extent.Date, reservation.ResourceId))));
 
-    static AccountAmounts GetCancelReservationsAmounts(Seq<Reservation> cancelledReservations, Amount fee) =>
+    static AccountAmounts GetCancelReservationsAmounts(Seq<Reservation> cancelledReservations, Amount fee, Amount accountsReceivable) =>
         cancelledReservations.Any(reservation => reservation.Status is ReservationStatus.Confirmed)
             ? CancelPaidReservation(GetCancelledReservationsPrice(cancelledReservations), fee)
-            : CancelUnpaidReservation(GetCancelledReservationsPrice(cancelledReservations), fee);
+            : CancelUnpaidReservation(GetCancelledReservationsPrice(cancelledReservations), accountsReceivable);
 
     static Price GetCancelledReservationsPrice(Seq<Reservation> cancelledReservations) =>
         cancelledReservations.Fold(

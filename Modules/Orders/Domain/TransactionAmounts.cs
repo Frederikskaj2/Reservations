@@ -60,18 +60,16 @@ public static class TransactionAmounts
             (Account.Deposits, price.Deposit));
     }
 
-    public static AccountAmounts CancelUnpaidReservation(Price price, Amount fee)
+    public static AccountAmounts CancelUnpaidReservation(Price price, Amount accountsReceivable)
     {
         if (price.Total() <= Amount.Zero)
             throw new ArgumentOutOfRangeException(nameof(price), price, "Price must be greater than zero.");
-        if (fee < Amount.Zero)
-            throw new ArgumentOutOfRangeException(nameof(fee), fee, "Fee must not be negative.");
-        var amountToRefund = price.Total() - fee;
+        var amountToRefund = price.Total() - accountsReceivable;
         return AccountAmounts.Create(
             (Account.Rent, price.Rent),
             (Account.Cleaning, price.Cleaning),
-            (Account.CancellationFees, -fee),
-            (Account.AccountsReceivable, -amountToRefund),
+            (Account.AccountsReceivable, -accountsReceivable),
+            (Account.AccountsPayable, -amountToRefund),
             (Account.Deposits, price.Deposit));
     }
 
