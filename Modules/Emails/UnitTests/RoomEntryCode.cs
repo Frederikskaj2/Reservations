@@ -38,7 +38,7 @@ public class RoomEntryCode(MessageFactoryFixture fixture) : IClassFixture<Messag
                  <p>Hej {HtmlEncode(fixture.ToFullName)}</p>
                  <p>Her er den adgangskode du skal bruge for at få adgang til <strong>{HtmlEncode(Resources.GetNameUnsafe(resourceId))}</strong> den {date.ToDateOnly().ToString("d. MMMM yyyy", fixture.CultureInfo)}:</p>
                  <p><strong>{entryCode}</strong></p>
-                 <p>Låse op udenfor: Indtast adgangskoden på tastaturet og tryk på pilen.</p>
+                 <p>Låse op udenfor: Indtast adgangskoden på tastaturet.</p>
                  <p>Låse op indenfor: Drej låsen eller tryk på knappen i midten.</p>
                  <p>Låse af udenfor: Løft dørhåndtaget op og tryk dernæst på pilen på tastaturet.</p>
                  <p>Låse af indenfor: Løft dørhåndtaget op og drej dernæst låsen eller tryk på knappen i midten.</p>
