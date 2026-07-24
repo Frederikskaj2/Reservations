@@ -43,6 +43,7 @@ public sealed partial class Sidebar : IDisposable
     {
         reservationCount = DraftOrder.Reservations.Count();
         totalPrice = DraftOrder.Reservations.Sum(GetPrice);
+        StateHasChanged();
     }
 
     Price GetPrice(DraftReservation reservation) =>
